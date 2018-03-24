@@ -33,7 +33,7 @@ import static vulkan.VKUtil.translateVulkanResult;
  */
 public class TriangleDemo_ {
 
-    private static final boolean validation = Boolean.parseBoolean(System.getProperty("vulkan.validation", "false"));
+    private static final boolean validation = true;
 
     private static ByteBuffer[] layers = {
             memUTF8("VK_LAYER_LUNARG_standard_validation"),
@@ -854,7 +854,7 @@ public class TriangleDemo_ {
                 .pDepthStencilState(depthStencilState)
                 .pStages(shaderStages)
                 .pDynamicState(dynamicState);
-
+        vkDestroyDevice(device, null);
         // Create rendering pipeline
         LongBuffer pPipelines = memAllocLong(1);
         err = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, pipelineCreateInfo, null, pPipelines);

@@ -500,9 +500,7 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     inline fun mVkQueueFamilyProperties(capacity: IntBuffer): VkQueueFamilyProperties.Buffer = VkQueueFamilyProperties.create(nmalloc(VkQueueFamilyProperties.ALIGNOF, capacity[0] * VkQueueFamilyProperties.SIZEOF), capacity[0])
     inline fun mVkSurfaceFormatKHR(capacity: IntBuffer): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(nmalloc(VkSurfaceFormatKHR.ALIGNOF, capacity[0] * VkSurfaceFormatKHR.SIZEOF), capacity[0])
 
-    inline fun cVkAttachmentDescription(capacity: Int): VkAttachmentDescription.Buffer = VkAttachmentDescription.create(ncalloc(VkAttachmentDescription.ALIGNOF, capacity, VkAttachmentDescription.SIZEOF), capacity)
-    inline fun cVkAttachmentDescription(capacity: Int, block: VkAttachmentDescription.() -> Unit) = cVkAttachmentDescription(capacity).apply { get(0).block() }
-
+    inline fun cVkAttachmentDescription(capacity: Int): VkAttachmentDescription.Buffer = VkAttachmentDescription.create(ncalloc(VkAttachmentDescription.ALIGNOF, capacity, VkSurfaceFormatKHR.SIZEOF), capacity)
     inline fun cVkApplicationInfo() = VkApplicationInfo.create(ncalloc(VkApplicationInfo.ALIGNOF, 1, VkApplicationInfo.SIZEOF))
 
     inline fun cVkApplicationInfo(block: VkApplicationInfo.() -> Unit) = cVkApplicationInfo().also(block)

@@ -21,7 +21,6 @@ import uno.kotlin.buffers.capacity
 import vkn.*
 import vkn.ArrayList_Long.resize
 import vkn.VkMemoryStack.Companion.withStack
-import vulkan.TriangleDemo_.loadShader
 import vulkan.base.VulkanExampleBase
 import vulkan.base.initializers.commandBufferBeginInfo
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
@@ -832,7 +831,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
                     code = shaderCode
                 }
 
-                vkCreateShaderModule(device, moduleCreateInfo, null, shaderModule)
+                vkCreateShaderModule(device, moduleCreateInfo, null, shaderModule).check()
             }
 
             shaderModule[0]
@@ -1094,18 +1093,17 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         shaderStages[0].sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
                 .stage(VK_SHADER_STAGE_VERTEX_BIT)
-                .module(loadShader("shaders/triangle/triangle.vert.spv", device))
+                .module(loadSPIRVShader("shaders/triangle/triangle.vert.spv"))
                 .pName("main".utf8)
         assert(shaderStages[0].module != VK_NULL_HANDLE)
 
         shaderStages[1].sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
                 .stage(VK_SHADER_STAGE_FRAGMENT_BIT)
-                .module(loadShader("shaders/triangle/triangle.frag.spv", device))
+                .module(loadSPIRVShader("shaders/triangle/triangle.frag.spv"))
                 .pName("main".utf8)
         assert(shaderStages[1].module != VK_NULL_HANDLE)
 
-        pipelineCreateInfo
-                .pStages(shaderStages)
+        pipelineCreateInfo.pStages(shaderStages)
                 .pVertexInputState(vertexInputState)
                 .pInputAssemblyState(inputAssemblyState)
                 .pRasterizationState(rasterizationState)
