@@ -1,0 +1,80 @@
+import org.gradle.internal.os.OperatingSystem
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+// jitpack
+apply plugin: 'maven'
+group = 'com.github.kotlin-graphics'
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+buildscript {
+
+    ext.kotlinVersion = '1.2.30'
+
+    repositories {
+        jcenter()   // shadow
+        mavenCentral()
+        maven { url = 'https://dl.bintray.com/kotlin/kotlin-eap' }
+        maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+    }
+}
+
+dependencies {
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+
+    compile 'com.github.kotlin-graphics:uno-sdk:3186392e1a1bb2f3cad082c2e9484bb77930c1f6'
+
+    testCompile 'io.kotlintest:kotlintest:2.0.7'
+
+    switch (OperatingSystem.current()) {
+        case OperatingSystem.WINDOWS:
+            ext.lwjglNatives = "natives-windows"
+            break
+        case OperatingSystem.LINUX:
+            ext.lwjglNatives = "natives-linux"
+            break
+        case OperatingSystem.MAC_OS:
+            ext.lwjglNatives = "natives-macos"
+            break
+    }
+    ext.lwjglVersion = "3.1.7-SNAPSHOT"
+    compile "org.lwjgl:lwjgl:$lwjglVersion"
+    compile "org.lwjgl:lwjgl-glfw:$lwjglVersion"
+    compile "org.lwjgl:lwjgl-openal:$lwjglVersion"
+    compile "org.lwjgl:lwjgl-stb:$lwjglVersion"
+    compile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
+    runtime "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
+    runtime "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
+    runtime "org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives"
+    runtime "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
+}
+
+repositories {
+    mavenCentral()
+    maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
+    maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
+    maven { setUrl('https://jitpack.io') }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
