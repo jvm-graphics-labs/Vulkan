@@ -71,7 +71,7 @@ object tools {
                 VkFormat_D16_UNORM_S8_UINT,
                 VkFormat_D16_UNORM).forEach {
 
-            val formatProps = mVkFormatProperties()
+            val formatProps = cVkFormatProperties()
             VK10.vkGetPhysicalDeviceFormatProperties(physicalDevice, it, formatProps)
             // Format must support depth stencil attachment for optimal tiling
             if (formatProps.optimalTilingFeatures has VkFormatFeature_DEPTH_STENCIL_ATTACHMENT_BIT) {

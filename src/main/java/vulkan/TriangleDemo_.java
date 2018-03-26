@@ -608,7 +608,7 @@ public class TriangleDemo_ {
         }
     }
 
-    static long loadShader(String classPath, VkDevice device) throws IOException {
+    private static long loadShader(String classPath, VkDevice device) throws IOException {
         ByteBuffer shaderCode = ioResourceToByteBuffer(classPath, 1024);
         int err;
         VkShaderModuleCreateInfo moduleCreateInfo = VkShaderModuleCreateInfo.calloc()
@@ -626,7 +626,7 @@ public class TriangleDemo_ {
         return shaderModule;
     }
 
-    static VkPipelineShaderStageCreateInfo loadShader(VkDevice device, String classPath, int stage) throws IOException {
+    private static VkPipelineShaderStageCreateInfo loadShader(VkDevice device, String classPath, int stage) throws IOException {
         VkPipelineShaderStageCreateInfo shaderStage = VkPipelineShaderStageCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
                 .stage(stage)
@@ -649,12 +649,12 @@ public class TriangleDemo_ {
         return false;
     }
 
-    static class Vertices {
+    private static class Vertices {
         long verticesBuf;
         VkPipelineVertexInputStateCreateInfo createInfo;
     }
 
-    static Vertices createVertices(VkPhysicalDeviceMemoryProperties deviceMemoryProperties, VkDevice device) {
+    private static Vertices createVertices(VkPhysicalDeviceMemoryProperties deviceMemoryProperties, VkDevice device) {
         ByteBuffer vertexBuffer = memAlloc(3 * 2 * 4);
         FloatBuffer fb = vertexBuffer.asFloatBuffer();
         // The triangle will showup upside-down, because Vulkan does not do proper viewport transformation to
@@ -854,7 +854,7 @@ public class TriangleDemo_ {
                 .pDepthStencilState(depthStencilState)
                 .pStages(shaderStages)
                 .pDynamicState(dynamicState);
-        vkDestroyDevice(device, null);
+
         // Create rendering pipeline
         LongBuffer pPipelines = memAllocLong(1);
         err = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, pipelineCreateInfo, null, pPipelines);

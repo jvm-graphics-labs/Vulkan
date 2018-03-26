@@ -15,6 +15,8 @@ val VkPipelineCacheHeaderVersion_RANGE_SIZE = VkPipelineCacheHeaderVersion_ONE -
 
 typealias VkResult = Int
 
+typealias VkBool32 = Int
+
 val Vk_SUCCESS: VkResult = 0
 val Vk_NOT_READY: VkResult = 1
 val Vk_TIMEOUT: VkResult = 2

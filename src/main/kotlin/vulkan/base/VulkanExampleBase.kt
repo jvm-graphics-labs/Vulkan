@@ -7,7 +7,6 @@ import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
-import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.system.Platform
@@ -17,8 +16,9 @@ import org.lwjgl.vulkan.KHRSurface.VK_KHR_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRWin32Surface.VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.intBufferOf
+import uno.glfw.glfw
 import vkn.*
-import vkn.ArrayList_Long.resize
+import vkn.ArrayListLong.resize
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.initializers.commandBufferAllocateInfo
 import vulkan.base.initializers.semaphoreCreateInfo
@@ -181,6 +181,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //    } mouseButtons;
 
     var window = NULL
+    var surface = NULL
 
     init {
 
@@ -463,14 +464,14 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         glfwDefaultWindowHints()
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-        window = glfwCreateWindow(800, 600, "GLFW Vulkan Demo", NULL, NULL)
+        window = glfwCreateWindow(size.x, size.y, "GLFW Vulkan Demo", NULL, NULL)
         glfwSetKeyCallback(window, { window, key, scancode, action, mods ->
             if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
                 glfwSetWindowShouldClose(window, true)
         })
         val pSurface = memAllocLong(1)
         val err = glfwCreateWindowSurface(instance, window, null, pSurface)
-        val surface = pSurface.get(0)
+        surface = pSurface.get(0)
         if (err != VK_SUCCESS)
             throw AssertionError("Failed to create surface: ${err.string}")
     }
@@ -491,8 +492,9 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
             apiVersion = VK_API_VERSION_1_0
         }
 
-        val requiredExtensions = glfwGetRequiredInstanceExtensions()!!
-        val instanceExtensions = mallocPointer(requiredExtensions.remaining() + 3)
+        val requiredExtensions = glfw.requiredInstanceExtensions
+        val instanceExtensions = ArrayList<String>()
+        instanceExtensions += requiredExtensions
         instanceExtensions += VK_KHR_SURFACE_EXTENSION_NAME
         // Enable surface extensions depending on os TODO others
         if (Platform.get() == Platform.WINDOWS)
@@ -504,13 +506,13 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
             type = VkStructureType_INSTANCE_CREATE_INFO
             next = NULL
             applicationInfo = appInfo
-            if (instanceExtensions.position() >= 0) {
+            if (instanceExtensions.isNotEmpty()) {
                 if (settings.validation)
                     instanceExtensions += VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-                enabledExtensionNames = instanceExtensions.flip()
+                enabledExtensionNames = instanceExtensions.toPointerBuffer()
             }
             if (settings.validation)
-                enabledLayerNames = debug.validationLayerNames
+                enabledLayerNames = debug.validationLayerNames.toPointerBuffer()
         }
         return vkCreateInstance(instanceCreateInfo, null, ::instance)
     }
@@ -530,11 +532,11 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //    // Called when the window has been resized
 //    // Can be overriden in derived class to recreate or rebuild resources attached to the frame buffer / swapchain
 //    virtual void windowResized();
-//    // Pure virtual function to be overriden by the dervice class
-//    // Called in case of an event where e.g. the framebuffer has to be rebuild and thus
-//    // all command buffers that may reference this
-//    virtual void buildCommandBuffers();
-//
+    /** Pure virtual function to be overriden by the dervice class
+     *  Called in case of an event where e.g. the framebuffer has to be rebuild and thus
+     *  all command buffers that may reference this */
+    abstract fun buildCommandBuffers()
+
     /** Creates a new (graphics) command pool object storing command buffers    */
     fun createCommandPool() = withStack {
 
@@ -586,7 +588,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
             }
         }
 
-        val memReqs = mVkMemoryRequirements()
+        val memReqs = cVkMemoryRequirements()
 
         vkCreateImage(device, image, null, depthStencil::image)
         vkGetImageMemoryRequirements(device, depthStencil.image, memReqs)
@@ -603,7 +605,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
      *  Can be overriden in derived class to setup a custom framebuffer (e.g. for MSAA) */
     open fun setupFrameBuffer() = withStack {
 
-        val attachments = mVkImageView(2)
+        val attachments = cVkImageView(2)
 
         // Depth/Stencil attachment is the same for all frame buffers
         attachments[1] = depthStencil.view
@@ -611,10 +613,10 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         val frameBufferCreateInfo = cVkFramebufferCreateInfo {
             type = VkStructureType_FRAMEBUFFER_CREATE_INFO
             next = NULL
-            renderPass = renderPass
+            renderPass = this@VulkanExampleBase.renderPass
             this.attachments = attachments
-            width = width
-            height = height
+            width = size.x
+            height = size.y
             layers = 1
         }
 
@@ -665,6 +667,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         val subpassDescription = cVkSubpassDescription(1) {
             pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS
+            colorAttachmentCount= 1
             colorAttachments = colorReference
             depthStencilAttachment = depthReference
             inputAttachments = null
@@ -673,7 +676,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         }
 
         // Subpass dependencies for layout transitions
-        val dependencies = mVkSubpassDependency(2)
+        val dependencies = cVkSubpassDependency(2)
 
         with(dependencies[0]) {
             srcSubpass = VK_SUBPASS_EXTERNAL
@@ -709,7 +712,10 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     open fun getEnabledFeatures() {} // Can be overriden in derived class
 
     /** Connect and prepare the swap chain  */
-    fun initSwapchain() = swapChain.initSurface()
+    fun initSwapchain() {
+        swapChain.surface = surface
+        swapChain.initSurface(size)
+    }
 
     /** Create swap chain images    */
     fun setupSwapChain() = swapChain.create(size, settings.vsync)
@@ -724,7 +730,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         val cmdBufAllocateInfo = commandBufferAllocateInfo(
                 cmdPool,
                 VkCommandBufferLevel_PRIMARY,
-                drawCmdBuffers.size)
+                swapChain.imageCount)
 
         vkAllocateCommandBuffers(device, cmdBufAllocateInfo, swapChain.imageCount, drawCmdBuffers).check()
     }

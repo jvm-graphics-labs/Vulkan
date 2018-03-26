@@ -45,83 +45,65 @@ class VulkanSwapChain {
     var queueNodeIndex = Int.MAX_VALUE
 
     /** @brief Creates the platform specific surface abstraction of the native platform window used for presentation */
-    fun initSurface() {
+    fun initSurface(size: Vec2i) = withStack {
 
-        VkMemoryStack.withStack {
+        // Get available queue family properties
+        val queueProps = vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice)
 
-            // Create GLFW window
-            glfwDefaultWindowHints()
-            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
-            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-            val window = glfwCreateWindow(800, 600, "GLFW Vulkan Demo", NULL, NULL)
-            glfwSetKeyCallback(window, { window, key, scancode, action, mods ->
-                if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
-                    glfwSetWindowShouldClose(window, true)
-            })
-            val pSurface = memAllocLong(1)
-            val err = glfwCreateWindowSurface(instance, window, null, pSurface)
-            surface = pSurface.get(0)
-            if (err())
-                throw AssertionError("Failed to create surface: $err")
+        /*  Iterate over each queue to learn whether it supports presenting:
+            Find a queue with present support
+            Will be used to present the swap chain images to the windowing system   */
+        val supportsPresent = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueProps.size, surface)
 
-            // Get available queue family properties
-            val queueProps = vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice)
+        // Search for a graphics and a present queue in the array of queue families, try to find one that supports both
+        var graphicsQueueNodeIndex = Int.MAX_VALUE
+        var presentQueueNodeIndex = Int.MAX_VALUE
+        for (i in queueProps.indices) {
 
-            /*  Iterate over each queue to learn whether it supports presenting:
-                Find a queue with present support
-                Will be used to present the swap chain images to the windowing system   */
-            val supportsPresent = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueProps.size, surface)
+            if (queueProps[i].queueFlags has VkQueue_GRAPHICS_BIT) {
 
-            // Search for a graphics and a present queue in the array of queue families, try to find one that supports both
-            var graphicsQueueNodeIndex = Int.MAX_VALUE
-            var presentQueueNodeIndex = Int.MAX_VALUE
-            for (i in queueProps.indices) {
+                if (graphicsQueueNodeIndex == Int.MAX_VALUE)
+                    graphicsQueueNodeIndex = i
 
-                if (queueProps[i].queueFlags has VkQueue_GRAPHICS_BIT) {
-
-                    if (graphicsQueueNodeIndex == Int.MAX_VALUE)
-                        graphicsQueueNodeIndex = i
-
-                    if (supportsPresent[i]) {
-                        graphicsQueueNodeIndex = i
-                        presentQueueNodeIndex = i
-                        break
-                    }
+                if (supportsPresent[i]) {
+                    graphicsQueueNodeIndex = i
+                    presentQueueNodeIndex = i
+                    break
                 }
             }
-            if (presentQueueNodeIndex == Int.MAX_VALUE) {
-                // If there's no queue that supports both present and graphics, try to find a separate present queue
-                val index = supportsPresent.indexOfFirst { it }
-                if (index != -1)
-                    presentQueueNodeIndex = index
-            }
+        }
+        if (presentQueueNodeIndex == Int.MAX_VALUE) {
+            // If there's no queue that supports both present and graphics, try to find a separate present queue
+            val index = supportsPresent.indexOfFirst { it }
+            if (index != -1)
+                presentQueueNodeIndex = index
+        }
 
-            // Exit if either a graphics or a presenting queue hasn't been found
-            if (graphicsQueueNodeIndex == Int.MAX_VALUE || presentQueueNodeIndex == Int.MAX_VALUE)
-                tools.exitFatal("Could not find a graphics and/or presenting queue!", -1)
+        // Exit if either a graphics or a presenting queue hasn't been found
+        if (graphicsQueueNodeIndex == Int.MAX_VALUE || presentQueueNodeIndex == Int.MAX_VALUE)
+            tools.exitFatal("Could not find a graphics and/or presenting queue!", -1)
 
-            // todo : Add support for separate graphics and presenting queue
-            if (graphicsQueueNodeIndex != presentQueueNodeIndex)
-                tools.exitFatal("Separate graphics and presenting queues are not supported yet!", -1)
+        // todo : Add support for separate graphics and presenting queue
+        if (graphicsQueueNodeIndex != presentQueueNodeIndex)
+            tools.exitFatal("Separate graphics and presenting queues are not supported yet!", -1)
 
-            queueNodeIndex = graphicsQueueNodeIndex
+        queueNodeIndex = graphicsQueueNodeIndex
 
-            // Get list of supported surface formats
-            val surfaceFormats = ArrayList<VkSurfaceFormatKHR>()
-            vrGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, surfaceFormats).check()
+        // Get list of supported surface formats
+        val surfaceFormats = ArrayList<VkSurfaceFormatKHR>()
+        vrGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, surfaceFormats).check()
 
-            /*  If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
-                there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM             */
-            if (surfaceFormats.size == 1 && surfaceFormats[0].format == VkFormat_UNDEFINED) {
-                colorFormat = VK10.VK_FORMAT_B8G8R8A8_UNORM
-                colorSpace = surfaceFormats[0].colorSpace
-            } else {
-                /*  iterate over the list of available surface format and check for the presence of
-                    VK_FORMAT_B8G8R8A8_UNORM, in case it's not available select the first available color format                 */
-                val bgra8unorm = surfaceFormats.find { it.format == VkFormat_B8G8R8A8_UNORM }
-                colorFormat = bgra8unorm?.format ?: surfaceFormats[0].format
-                colorSpace = bgra8unorm?.colorSpace ?: surfaceFormats[0].colorSpace
-            }
+        /*  If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
+            there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM             */
+        if (surfaceFormats.size == 1 && surfaceFormats[0].format == VkFormat_UNDEFINED) {
+            colorFormat = VK10.VK_FORMAT_B8G8R8A8_UNORM
+            colorSpace = surfaceFormats[0].colorSpace
+        } else {
+            /*  iterate over the list of available surface format and check for the presence of
+                VK_FORMAT_B8G8R8A8_UNORM, in case it's not available select the first available color format                 */
+            val bgra8unorm = surfaceFormats.find { it.format == VkFormat_B8G8R8A8_UNORM }
+            colorFormat = bgra8unorm?.format ?: surfaceFormats[0].format
+            colorSpace = bgra8unorm?.colorSpace ?: surfaceFormats[0].colorSpace
         }
     }
 
@@ -230,7 +212,7 @@ class VulkanSwapChain {
         }
 
         // Set additional usage flag for blitting from the swapchain images if supported
-        val formatProps = mVkFormatProperties()
+        val formatProps = cVkFormatProperties()
         vkGetPhysicalDeviceFormatProperties(physicalDevice, colorFormat, formatProps)
         if (formatProps.optimalTilingFeatures has VkFormatFeature_TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures has VkFormatFeature_BLIT_SRC_BIT)
             swapchainCI.imageUsage = swapchainCI.imageUsage or VkImageUsage_TRANSFER_SRC_BIT
@@ -246,13 +228,14 @@ class VulkanSwapChain {
         }
 
         // Get the swap chain images
-        images = vkGetSwapchainImagesKHR(device, swapChain)
+        vkGetSwapchainImagesKHR(device, swapChain, images)
+        imageCount = images.size
 
         // Get the swap chain buffers containing the image and imageview
         buffers resize images.size
         for (i in images.indices) {
 
-            val colorAttachmentView = mVkImageViewCreateInfo().apply {
+            val colorAttachmentView = cVkImageViewCreateInfo().apply {
                 type = VkStructureType_IMAGE_VIEW_CREATE_INFO
                 next = NULL
                 format = colorFormat
