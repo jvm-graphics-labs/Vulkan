@@ -6,13 +6,17 @@ import glm_.i
 import glm_.set
 import glm_.vec4.Vec4
 import org.lwjgl.PointerBuffer
+import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.Configuration
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_FALSE
+import uno.glfw.glfw
 import uno.kotlin.buffers.toCollection
-import vkn.ArrayList_Long.set
+import vkn.ArrayListLong.set
+import vkn.VkMemoryStack.Companion.withStack
+import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
@@ -20,12 +24,11 @@ import kotlin.reflect.KMutableProperty0
 
 class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 
-    fun vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice,
-                                                 queueFamilyProperties: ArrayList<VkQueueFamilyProperties>? = null)
+    fun vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice, queueFamilyProperties: ArrayList<VkQueueFamilyProperties>? = null)
             : ArrayList<VkQueueFamilyProperties> {
         val count = mallocInt()
         VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, null)
-        val pQueueFamilyProperties = mVkQueueFamilyProperties(count)
+        val pQueueFamilyProperties = cVkQueueFamilyProperties(count[0])
         VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, pQueueFamilyProperties)
         return pQueueFamilyProperties.toCollection(queueFamilyProperties ?: arrayListOf())
     }
@@ -35,7 +38,7 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         val formatCount = mallocInt()
         KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, null)
         assert(formatCount[0] > 0)
-        val pSurfaceFormats = mVkSurfaceFormatKHR(formatCount)
+        val pSurfaceFormats = cVkSurfaceFormatKHR(formatCount[0])
         return KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, pSurfaceFormats).also {
             pSurfaceFormats.toCollection(surfaceFormats)
         }
@@ -70,32 +73,38 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     }
 
 
-    fun vkEnumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String? = null): ArrayList<String> {
-        val extensions = ArrayList<String>()
+    fun vkEnumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String?,
+                                             extensions: ArrayList<String>): VkResult {
         val count = mallocInt()
         VK10.vkEnumerateDeviceExtensionProperties(physicalDevice, layerName, count, null)
+        var res = Vk_SUCCESS
         if (count[0] > 0) {
-            val properties = VkExtensionProperties_mallocStack(count)
-            if (VK10.vkEnumerateDeviceExtensionProperties(physicalDevice, layerName, count, properties) == Vk_SUCCESS)
-                properties.map { it.extensionName }.toCollection(extensions)
+            val properties = cVkExtensionProperties(count[0])
+            val ret = VK10.vkEnumerateDeviceExtensionProperties(physicalDevice, layerName, count, properties)
+            if (ret == Vk_SUCCESS)
+                properties.map { it.extensionName.utf8 }.toCollection(extensions)
+            else res = ret
         }
-        return extensions
+        return res
     }
 
 
-    fun vkGetSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR): ArrayList<VkImage> {
+    fun vkGetSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR, images: ArrayList<VkImageView>): VkResult {
         val count = mallocInt()
-        KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, null)
-        val images = mallocLong(count)
-        KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, images).check()
-        return images.toCollection(arrayListOf())
+        val ret = KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, null)
+        if(ret()) return ret
+        val pImages = mallocLong(count)
+        return KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, pImages).also {
+            pImages.toCollection(images)
+        }
     }
 
     fun vkCreateDebugReportCallback(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
                                     allocator: VkAllocationCallbacks?, callback: VkDebugReportCallbackI?): VkResult {
-        val pCallback = mallocLong()
+        vkDebugReportCallback = VkDebugReportCallback().apply { cb = callback }
+        val pCallback = longs(vkDebugReportCallback!!.address)
         return EXTDebugReport.vkCreateDebugReportCallbackEXT(instance, createInfo, allocator, pCallback).also {
-            vkDebugReportCallback = VkDebugReportCallback(pCallback[0]).apply{ cb = callback }
+//                        vkDebugReportCallback = VkDebugReportCallback(pCallback[0]).apply { cb = callback }
         }
     }
 
@@ -301,21 +310,34 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         }
     }
 
+
+    fun ArrayList<VkDeviceQueueCreateInfo>.toBuffer(): VkDeviceQueueCreateInfo.Buffer {
+        val buffer = VkDeviceQueueCreateInfo.calloc(size)
+        for (i in indices)
+            buffer += get(i)
+        return buffer.flip()
+    }
+
+    inline fun <R>VkMemoryStack.withLong(block: VkMemoryStack.(LongBuffer) -> R): Long {
+        val pLong = mallocLong()
+        block(pLong)
+        return pLong[0]
+    }
+
 //fun <R>Struct.use(block: (Struct) -> R) = block(this).also { free() }
 
 
-    fun VkExtensionProperties_mallocStack(size: IntBuffer) = VkExtensionProperties.mallocStack(size[0])
     fun KMutableProperty0<Long>.set(longBuffer: LongBuffer) = set(longBuffer[0])
     fun KMutableProperty0<Int>.set(intBuffer: IntBuffer) = set(intBuffer[0])
 
-    val VkExtensionProperties.extensionName get() = extensionNameString()
+    val VkExtensionProperties.extensionName get() = extensionName()
     var VkApplicationInfo.type: VkStructureType
         get() = sType()
         set(value) {
             sType(value)
         }
     var VkApplicationInfo.applicationName
-        get() = pApplicationNameString()
+        get() = pApplicationNameString()// TODO
         set(value) {
             pApplicationName(value?.utf8)
         }
@@ -454,7 +476,7 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         }
 
     fun VkClearValue.color(x: Float, y: Float, z: Float, w: Float) {
-        val floats = memFloatBuffer(address, Vec4.length)
+        val floats = memByteBuffer(address, Vec4.size).asFloatBuffer()
         floats[0] = x
         floats[1] = y
         floats[2] = z
@@ -466,6 +488,18 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         bytes.putFloat(0, float)
         bytes.putInt(Float.BYTES, int)
     }
+
+
+    val glfw.requiredInstanceExtensions: ArrayList<String>
+        get() {
+            // extensionsBuffer is cleaned by GLFW
+            val extensionsBuffer = GLFWVulkan.glfwGetRequiredInstanceExtensions() ?: return arrayListOf()
+            val count = extensionsBuffer.remaining()
+            val res = ArrayList<String>(count)
+            for (i in 0 until count)
+                res += extensionsBuffer[i].utf8
+            return res
+        }
 
 //    typedef union VkClearValue {
 //        VkClearColorValue           color;
@@ -497,12 +531,15 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 //        return res
 //    }
 
-    inline fun mVkQueueFamilyProperties(capacity: IntBuffer): VkQueueFamilyProperties.Buffer = VkQueueFamilyProperties.create(nmalloc(VkQueueFamilyProperties.ALIGNOF, capacity[0] * VkQueueFamilyProperties.SIZEOF), capacity[0])
-    inline fun mVkSurfaceFormatKHR(capacity: IntBuffer): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(nmalloc(VkSurfaceFormatKHR.ALIGNOF, capacity[0] * VkSurfaceFormatKHR.SIZEOF), capacity[0])
+    //    inline fun mVkQueueFamilyProperties(capacity: IntBuffer): VkQueueFamilyProperties.Buffer = VkQueueFamilyProperties.create(nmalloc(VkQueueFamilyProperties.ALIGNOF, capacity[0] * VkQueueFamilyProperties.SIZEOF), capacity[0])
+    inline fun cVkQueueFamilyProperties(capacity: Int): VkQueueFamilyProperties.Buffer = VkQueueFamilyProperties.create(ncalloc(VkQueueFamilyProperties.ALIGNOF, capacity, VkQueueFamilyProperties.SIZEOF), capacity)
+
+    inline fun cVkSurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ncalloc(VkSurfaceFormatKHR.ALIGNOF, capacity, VkSurfaceFormatKHR.SIZEOF), capacity)
+    //    inline fun mVkSurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(nmalloc(VkSurfaceFormatKHR.ALIGNOF, capacity * VkSurfaceFormatKHR.SIZEOF), capacity)
+//    inline fun mVkExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(nmalloc(VkExtensionProperties.ALIGNOF, capacity * VkExtensionProperties.SIZEOF), capacity)
+    inline fun cVkExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ncalloc(VkExtensionProperties.ALIGNOF, capacity, VkExtensionProperties.SIZEOF), capacity)
 
     inline fun cVkAttachmentDescription(capacity: Int): VkAttachmentDescription.Buffer = VkAttachmentDescription.create(ncalloc(VkAttachmentDescription.ALIGNOF, capacity, VkAttachmentDescription.SIZEOF), capacity)
-    inline fun cVkAttachmentDescription(capacity: Int, block: VkAttachmentDescription.() -> Unit) = cVkAttachmentDescription(capacity).apply { get(0).block() }
-
     inline fun cVkApplicationInfo() = VkApplicationInfo.create(ncalloc(VkApplicationInfo.ALIGNOF, 1, VkApplicationInfo.SIZEOF))
 
     inline fun cVkApplicationInfo(block: VkApplicationInfo.() -> Unit) = cVkApplicationInfo().also(block)
@@ -513,14 +550,16 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     inline fun cVkDebugReportCallbackCreateInfoEXT(): VkDebugReportCallbackCreateInfoEXT = VkDebugReportCallbackCreateInfoEXT.create(ncalloc(VkDebugReportCallbackCreateInfoEXT.ALIGNOF, 1, VkDebugReportCallbackCreateInfoEXT.SIZEOF))
     inline fun cVkDebugReportCallbackCreateInfoEXT(block: VkDebugReportCallbackCreateInfoEXT.() -> Unit) = cVkDebugReportCallbackCreateInfoEXT().also(block)
 
-    inline fun mVkDeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(nmalloc(VkInstanceCreateInfo.ALIGNOF, capacity * VkInstanceCreateInfo.SIZEOF), capacity)
+//    inline fun mVkDeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(nmalloc(VkDeviceQueueCreateInfo.ALIGNOF, capacity * VkDeviceQueueCreateInfo.SIZEOF), capacity)
+    inline fun cVkDeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ncalloc(VkDeviceQueueCreateInfo.ALIGNOF, capacity, VkDeviceQueueCreateInfo.SIZEOF), capacity)
     inline fun cVkDeviceQueueCreateInfo(): VkDeviceQueueCreateInfo = VkDeviceQueueCreateInfo.create(ncalloc(VkInstanceCreateInfo.ALIGNOF, 1, VkInstanceCreateInfo.SIZEOF))
     inline fun cVkDeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit) = cVkDeviceQueueCreateInfo().also(block)
 
     inline fun cVkCommandPoolCreateInfo(): VkCommandPoolCreateInfo = VkCommandPoolCreateInfo.create(ncalloc(VkCommandPoolCreateInfo.ALIGNOF, 1, VkCommandPoolCreateInfo.SIZEOF))
     inline fun cVkCommandPoolCreateInfo(block: VkCommandPoolCreateInfo.() -> Unit) = cVkCommandPoolCreateInfo().also(block)
 
-    inline fun mVkFormatProperties(): VkFormatProperties = VkFormatProperties.create(nmalloc(VkFormatProperties.ALIGNOF, VkFormatProperties.SIZEOF))
+//    inline fun mVkFormatProperties(): VkFormatProperties = VkFormatProperties.create(nmalloc(VkFormatProperties.ALIGNOF, VkFormatProperties.SIZEOF))
+    inline fun cVkFormatProperties(): VkFormatProperties = VkFormatProperties.create(ncalloc(VkFormatProperties.ALIGNOF, 1, VkFormatProperties.SIZEOF))
 
     inline fun cVkSemaphoreCreateInfo(): VkSemaphoreCreateInfo = VkSemaphoreCreateInfo.create(ncalloc(VkSemaphoreCreateInfo.ALIGNOF, 1, VkSemaphoreCreateInfo.SIZEOF))
     inline fun cVkSemaphoreCreateInfo(block: VkSemaphoreCreateInfo.() -> Unit) = cVkSemaphoreCreateInfo().also(block)
@@ -544,23 +583,23 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     inline fun cVkDeviceCreateInfo(): VkDeviceCreateInfo = VkDeviceCreateInfo.create(ncalloc(VkDeviceCreateInfo.ALIGNOF, 1, VkDeviceCreateInfo.SIZEOF))
     inline fun cVkDeviceCreateInfo(block: VkDeviceCreateInfo.() -> Unit) = cVkDeviceCreateInfo().also(block)
 
-    inline fun mVkImageViewCreateInfo(): VkImageViewCreateInfo = VkImageViewCreateInfo.create(nmalloc(VkImageViewCreateInfo.ALIGNOF, VkImageViewCreateInfo.SIZEOF))
-    inline fun mVkImageViewCreateInfo(block: VkImageViewCreateInfo.() -> Unit) = mVkImageViewCreateInfo().also(block)
+//    inline fun mVkImageViewCreateInfo(): VkImageViewCreateInfo = VkImageViewCreateInfo.create(nmalloc(VkImageViewCreateInfo.ALIGNOF, VkImageViewCreateInfo.SIZEOF))
+//    inline fun mVkImageViewCreateInfo(block: VkImageViewCreateInfo.() -> Unit) = mVkImageViewCreateInfo().also(block)
+    inline fun cVkImageViewCreateInfo(): VkImageViewCreateInfo = VkImageViewCreateInfo.create(ncalloc(VkImageViewCreateInfo.ALIGNOF, 1, VkImageViewCreateInfo.SIZEOF))
+    inline fun cVkImageViewCreateInfo(block: VkImageViewCreateInfo .() -> Unit) = cVkImageViewCreateInfo().also(block)
 
     inline fun cVkCommandBufferAllocateInfo(): VkCommandBufferAllocateInfo = VkCommandBufferAllocateInfo.create(ncalloc(VkCommandBufferAllocateInfo.ALIGNOF, 1, VkCommandBufferAllocateInfo.SIZEOF))
     inline fun cVkCommandBufferAllocateInfo(block: VkCommandBufferAllocateInfo.() -> Unit) = cVkCommandBufferAllocateInfo().also(block)
-    inline fun mVkCommandBufferAllocateInfo(): VkCommandBufferAllocateInfo = VkCommandBufferAllocateInfo.create(nmalloc(VkCommandBufferAllocateInfo.ALIGNOF, VkCommandBufferAllocateInfo.SIZEOF))
-    inline fun mVkCommandBufferAllocateInfo(block: VkCommandBufferAllocateInfo.() -> Unit) = mVkCommandBufferAllocateInfo().also(block)
+//    inline fun mVkCommandBufferAllocateInfo(): VkCommandBufferAllocateInfo = VkCommandBufferAllocateInfo.create(nmalloc(VkCommandBufferAllocateInfo.ALIGNOF, VkCommandBufferAllocateInfo.SIZEOF))
+//    inline fun mVkCommandBufferAllocateInfo(block: VkCommandBufferAllocateInfo.() -> Unit) = mVkCommandBufferAllocateInfo().also(block)
 
     inline fun cVkImageCreateInfo(): VkImageCreateInfo = VkImageCreateInfo.create(ncalloc(VkImageCreateInfo.ALIGNOF, 1, VkImageCreateInfo.SIZEOF))
     inline fun cVkImageCreateInfo(block: VkImageCreateInfo.() -> Unit) = cVkImageCreateInfo().also(block)
 
-    inline fun cVkImageViewCreateInfo(): VkImageViewCreateInfo = VkImageViewCreateInfo.create(ncalloc(VkImageViewCreateInfo.ALIGNOF, 1, VkImageViewCreateInfo.SIZEOF))
-    inline fun cVkImageViewCreateInfo(block: VkImageViewCreateInfo .() -> Unit) = cVkImageViewCreateInfo().also(block)
 
     inline fun cVkMemoryAllocateInfo(): VkMemoryAllocateInfo = VkMemoryAllocateInfo.create(ncalloc(VkMemoryAllocateInfo.ALIGNOF, 1, VkMemoryAllocateInfo.SIZEOF))
     inline fun cVkMemoryAllocateInfo(block: VkMemoryAllocateInfo.() -> Unit) = cVkMemoryAllocateInfo().also(block)
-    inline fun mVkMemoryRequirements(): VkMemoryRequirements = VkMemoryRequirements.create(nmalloc(VkMemoryRequirements.ALIGNOF, VkMemoryRequirements.SIZEOF))
+    inline fun cVkMemoryRequirements(): VkMemoryRequirements = VkMemoryRequirements.create(ncalloc(VkMemoryRequirements.ALIGNOF, 1, VkMemoryRequirements.SIZEOF))
 
     inline fun cVkAttachmentReference(): VkAttachmentReference = VkAttachmentReference.create(ncalloc(VkAttachmentReference.ALIGNOF, 1, VkAttachmentReference.SIZEOF))
     inline fun cVkAttachmentReference(block: VkAttachmentReference.() -> Unit) = cVkAttachmentReference().also(block)
@@ -574,8 +613,8 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     inline fun cVkSubpassDescription(capacity: Int): VkSubpassDescription.Buffer = VkSubpassDescription.create(ncalloc(VkSubpassDescription.ALIGNOF, capacity, VkSubpassDescription.SIZEOF), capacity)
     inline fun cVkSubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit) = cVkSubpassDescription(capacity).apply { get(0).block() }
 
-    inline fun mVkSubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(nmalloc(VkSubpassDependency.ALIGNOF, capacity * VkSubpassDependency.SIZEOF), capacity)
-    inline fun mVkSubpassDependency(capacity: Int, block: VkSubpassDependency.() -> Unit) = mVkSubpassDependency(capacity).apply { get(0).block() }
+    inline fun cVkSubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ncalloc(VkSubpassDependency.ALIGNOF, capacity, VkSubpassDependency.SIZEOF), capacity)
+    inline fun cVkSubpassDependency(capacity: Int, block: VkSubpassDependency.() -> Unit) = cVkSubpassDependency(capacity).apply { get(0).block() }
 
     inline fun cVkRenderPassCreateInfo(): VkRenderPassCreateInfo = VkRenderPassCreateInfo.create(ncalloc(VkRenderPassCreateInfo.ALIGNOF, 1, VkRenderPassCreateInfo.SIZEOF))
     inline fun cVkRenderPassCreateInfo(block: VkRenderPassCreateInfo.() -> Unit) = cVkRenderPassCreateInfo().also(block)
@@ -597,8 +636,8 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 
     inline fun cVkDescriptorSetLayoutBinding(): VkDescriptorSetLayoutBinding = VkDescriptorSetLayoutBinding.create(ncalloc(VkDescriptorSetLayoutBinding.ALIGNOF, 1, VkDescriptorSetLayoutBinding.SIZEOF))
     inline fun cVkDescriptorSetLayoutBinding(block: VkDescriptorSetLayoutBinding.() -> Unit) = cVkDescriptorSetLayoutBinding().also(block)
-    inline fun mVkDescriptorSetLayoutBinding(capacity: Int): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(nmalloc(VkDescriptorSetLayoutBinding.ALIGNOF, capacity * VkDescriptorSetLayoutBinding.SIZEOF), capacity)
-    inline fun mVkDescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit) = mVkDescriptorSetLayoutBinding(capacity).apply { get(0).block() }
+    inline fun cVkDescriptorSetLayoutBinding(capacity: Int): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ncalloc(VkDescriptorSetLayoutBinding.ALIGNOF, capacity, VkDescriptorSetLayoutBinding.SIZEOF), capacity)
+    inline fun cVkDescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit) = cVkDescriptorSetLayoutBinding(capacity).apply { get(0).block() }
 
     inline fun cVkDescriptorSetLayoutCreateInfo(): VkDescriptorSetLayoutCreateInfo = VkDescriptorSetLayoutCreateInfo.create(ncalloc(VkDescriptorSetLayoutCreateInfo.ALIGNOF, 1, VkDescriptorSetLayoutCreateInfo.SIZEOF))
     inline fun cVkDescriptorSetLayoutCreateInfo(block: VkDescriptorSetLayoutCreateInfo .() -> Unit) = cVkDescriptorSetLayoutCreateInfo().also(block)
@@ -641,8 +680,8 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     inline fun cVkPipelineShaderStageCreateInfo(capacity: Int): VkPipelineShaderStageCreateInfo.Buffer = VkPipelineShaderStageCreateInfo.create(ncalloc(VkPipelineShaderStageCreateInfo.ALIGNOF, capacity, VkPipelineShaderStageCreateInfo.SIZEOF), capacity)
     inline fun cVkPipelineShaderStageCreateInfo(capacity: Int, block: VkPipelineShaderStageCreateInfo.() -> Unit) = cVkPipelineShaderStageCreateInfo(capacity).apply { get(0).block() }
 
-    inline fun mVkDescriptorPoolSize(capacity: Int): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(nmalloc(VkDescriptorPoolSize.ALIGNOF, capacity * VkDescriptorPoolSize.SIZEOF), capacity)
-    inline fun mVkDescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit) = mVkDescriptorPoolSize(capacity).apply { get(0).block() }
+    inline fun cVkDescriptorPoolSize(capacity: Int): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ncalloc(VkDescriptorPoolSize.ALIGNOF, capacity, VkDescriptorPoolSize.SIZEOF), capacity)
+    inline fun cVkDescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit) = cVkDescriptorPoolSize(capacity).apply { get(0).block() }
 
     inline fun cVkPipelineVertexInputStateCreateInfo(): VkPipelineVertexInputStateCreateInfo = VkPipelineVertexInputStateCreateInfo.create(ncalloc(VkPipelineVertexInputStateCreateInfo.ALIGNOF, 1, VkPipelineVertexInputStateCreateInfo.SIZEOF))
     inline fun cVkPipelineVertexInputStateCreateInfo(block: VkPipelineVertexInputStateCreateInfo.() -> Unit) = cVkPipelineVertexInputStateCreateInfo().also(block)
@@ -661,31 +700,31 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 
     inline fun cVkViewport(): VkViewport = VkViewport.create(ncalloc(VkViewport.ALIGNOF, 1, VkViewport.SIZEOF))
     inline fun cVkViewport(block: VkViewport .() -> Unit) = cVkViewport().also(block)
-    inline fun mVkViewport(capacity: Int): VkViewport.Buffer = VkViewport.create(nmalloc(VkViewport.ALIGNOF, capacity * VkViewport.SIZEOF), capacity)
-    inline fun mVkViewport(capacity: Int, block: VkViewport.() -> Unit) = mVkViewport(capacity).apply { get(0).block() }
+    inline fun cVkViewport(capacity: Int): VkViewport.Buffer = VkViewport.create(ncalloc(VkViewport.ALIGNOF, capacity, VkViewport.SIZEOF), capacity)
+    inline fun cVkViewport(capacity: Int, block: VkViewport.() -> Unit) = cVkViewport(capacity).apply { get(0).block() }
 
     inline fun cVkRect2D(): VkRect2D = VkRect2D.create(ncalloc(VkRect2D.ALIGNOF, 1, VkRect2D.SIZEOF))
     inline fun cVkRect2D(block: VkRect2D .() -> Unit) = cVkRect2D().also(block)
-    inline fun mVkRect2D(capacity: Int): VkRect2D.Buffer = VkRect2D.create(nmalloc(VkRect2D.ALIGNOF, capacity * VkRect2D.SIZEOF), capacity)
-    inline fun mVkRect2D(capacity: Int, block: VkRect2D.() -> Unit) = mVkRect2D(capacity).apply { get(0).block() }
+    inline fun cVkRect2D(capacity: Int): VkRect2D.Buffer = VkRect2D.create(ncalloc(VkRect2D.ALIGNOF, capacity, VkRect2D.SIZEOF), capacity)
+    inline fun cVkRect2D(capacity: Int, block: VkRect2D.() -> Unit) = cVkRect2D(capacity).apply { get(0).block() }
 
     inline fun cVkWriteDescriptorSet(): VkWriteDescriptorSet = VkWriteDescriptorSet.create(ncalloc(VkWriteDescriptorSet.ALIGNOF, 1, VkWriteDescriptorSet.SIZEOF))
     inline fun cVkWriteDescriptorSet(block: VkWriteDescriptorSet.() -> Unit) = cVkWriteDescriptorSet().also(block)
-    inline fun mVkWriteDescriptorSet(capacity: Int): VkWriteDescriptorSet.Buffer = VkWriteDescriptorSet.create(nmalloc(VkWriteDescriptorSet.ALIGNOF, capacity * VkWriteDescriptorSet.SIZEOF), capacity)
-    inline fun mVkWriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit) = mVkWriteDescriptorSet(capacity).apply { get(0).block() }
+    inline fun cVkWriteDescriptorSet(capacity: Int): VkWriteDescriptorSet.Buffer = VkWriteDescriptorSet.create(ncalloc(VkWriteDescriptorSet.ALIGNOF, capacity, VkWriteDescriptorSet.SIZEOF), capacity)
+    inline fun cVkWriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit) = cVkWriteDescriptorSet(capacity).apply { get(0).block() }
 
     inline fun cVkClearValue(): VkClearValue = VkClearValue.create(ncalloc(VkClearValue.ALIGNOF, 1, VkClearValue.SIZEOF))
     inline fun cVkClearValue(block: VkClearValue.() -> Unit) = cVkClearValue().also(block)
-    inline fun mVkClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(nmalloc(VkClearValue.ALIGNOF, capacity * VkClearValue.SIZEOF), capacity)
-    inline fun mVkClearValue(capacity: Int, block: VkClearValue.() -> Unit) = mVkClearValue(capacity).apply { get(0).block() }
+    inline fun cVkClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(ncalloc(VkClearValue.ALIGNOF, capacity, VkClearValue.SIZEOF), capacity)
+    inline fun cVkClearValue(capacity: Int, block: VkClearValue.() -> Unit) = cVkClearValue(capacity).apply { get(0).block() }
 
 //    inline fun cVkStencilOpState(): VkStencilOpState = VkStencilOpState.create(ncalloc(VkStencilOpState.ALIGNOF, 1, VkStencilOpState.SIZEOF))
 //    inline fun cVkStencilOpState(block: VkStencilOpState.() -> Unit) = cVkStencilOpState().also(block)
 
     inline fun cVkBufferCopy(): VkBufferCopy = VkBufferCopy.create(ncalloc(VkBufferCopy.ALIGNOF, 1, VkBufferCopy.SIZEOF))
     inline fun cVkBufferCopy(block: VkBufferCopy.() -> Unit) = cVkBufferCopy().also(block)
-    inline fun mVkBufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(nmalloc(VkBufferCopy.ALIGNOF, capacity * VkBufferCopy.SIZEOF), capacity)
-    inline fun mVkBufferCopy(capacity: Int, block: VkBufferCopy.() -> Unit) = mVkBufferCopy(capacity).apply { get(0).block() }
+    inline fun cVkBufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ncalloc(VkBufferCopy.ALIGNOF, capacity, VkBufferCopy.SIZEOF), capacity)
+    inline fun cVkBufferCopy(capacity: Int, block: VkBufferCopy.() -> Unit) = cVkBufferCopy(capacity).apply { get(0).block() }
 
     inline fun cVkVertexInputAttributeDescription(capacity: Int): VkVertexInputAttributeDescription.Buffer = VkVertexInputAttributeDescription.create(ncalloc(VkVertexInputAttributeDescription.ALIGNOF, capacity, VkVertexInputAttributeDescription.SIZEOF), capacity)
     inline fun cVkVertexInputAttributeDescription(capacity: Int, block: VkVertexInputAttributeDescription.() -> Unit) = cVkVertexInputAttributeDescription(capacity).apply { get(0).block() }
@@ -695,11 +734,15 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     inline fun cVkPipelineColorBlendAttachmentState(capacity: Int): VkPipelineColorBlendAttachmentState.Buffer = VkPipelineColorBlendAttachmentState.create(ncalloc(VkPipelineColorBlendAttachmentState.ALIGNOF, capacity, VkPipelineColorBlendAttachmentState.SIZEOF), capacity)
     inline fun cVkPipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit) = cVkPipelineColorBlendAttachmentState(capacity).apply { get(0).block() }
 
-    inline fun mVkImageView(capacity: Int) = mallocLong(capacity)
-    inline fun vkImageViewOf(view0:VkImageView, view1:VkImageView): VkImageViewPtr = longs(view0, view1)
+    inline fun cVkImageView(capacity: Int) = callocLong(capacity)
+    inline fun vkImageViewOf(view0: VkImageView, view1: VkImageView): VkImageViewPtr = longs(view0, view1)
 
     operator fun PointerBuffer.plusAssign(string: String) {
         put(string.utf8)
+    }
+
+    operator fun PointerBuffer.plusAssign(pointerBuffer: PointerBuffer) {
+        put(pointerBuffer)
     }
 
     operator fun PointerBuffer.plusAssign(collection: Collection<String>) {
@@ -783,18 +826,24 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
                 }
         }
     }
+
+    val Long.utf8: String get() = MemoryUtil.memUTF8(this)
+    val ByteBuffer.utf8: String get() = MemoryUtil.memUTF8(this)
 }
 
 typealias VkDebugReportCallbackI = (VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, Long, Long, Int, String, String, Any?) -> Boolean
 
 var vkDebugReportCallback: VkDebugReportCallback? = null
 
-class VkDebugReportCallback(address: Long) : VkDebugReportCallbackEXT() {
-    val instance: VkDebugReportCallbackEXT = create(address)
+class VkDebugReportCallback : VkDebugReportCallbackEXT() {
+//    val instance: VkDebugReportCallbackEXT = create(address)
     var cb: VkDebugReportCallbackI? = null
     override fun invoke(flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT, `object`: Long, location: Long,
-                        messageCode: Int, layerPrefix: Long, message: Long, userData: Long) =
-            cb?.invoke(flags, objectType, `object`, location, messageCode, layerPrefix.utf8, message.utf8, userData)?.i ?: VK_FALSE
+                        messageCode: Int, pLayerPrefix: Long, pMessage: Long, userData: Long): VkBool32 = withStack {
+        val layerPrefix = getString(pLayerPrefix)
+        val message = getString(pMessage)
+        println("ou")
+        return cb?.invoke(flags, objectType, `object`, location, messageCode, layerPrefix, message, userData)?.i
+                ?: VK_FALSE
+    }
 }
-
-val Long.utf8: String get() = MemoryUtil.memUTF8(this)

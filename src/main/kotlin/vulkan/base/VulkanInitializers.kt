@@ -38,7 +38,7 @@ object initializers {
 //
     fun VkMemoryStack.commandBufferBeginInfo() = cVkCommandBufferBeginInfo { type = VkStructureType_COMMAND_BUFFER_BEGIN_INFO }
 
-//    inline VkCommandBufferInheritanceInfo commandBufferInheritanceInfo()
+    //    inline VkCommandBufferInheritanceInfo commandBufferInheritanceInfo()
 //    {
 //        VkCommandBufferInheritanceInfo cmdBufferInheritanceInfo {};
 //        cmdBufferInheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -115,9 +115,7 @@ object initializers {
 //        return framebufferCreateInfo;
 //    }
 //
-    fun VkMemoryStack.semaphoreCreateInfo() = cVkSemaphoreCreateInfo {
-        type = VkStructureType_SEMAPHORE_CREATE_INFO
-    }
+    fun VkMemoryStack.semaphoreCreateInfo() = cVkSemaphoreCreateInfo { type = VkStructureType_SEMAPHORE_CREATE_INFO }
 
     //
 //    inline VkFenceCreateInfo fenceCreateInfo(VkFenceCreateFlags flags = 0)
@@ -135,9 +133,7 @@ object initializers {
 //        return eventCreateInfo;
 //    }
 //
-    fun VkMemoryStack.submitInfo() = cVkSubmitInfo {
-        type = VkStructureType_SUBMIT_INFO
-    }
+    fun VkMemoryStack.submitInfo() = cVkSubmitInfo { type = VkStructureType_SUBMIT_INFO }
 //
 //    inline VkViewport viewport(
 //            float width,

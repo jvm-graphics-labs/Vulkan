@@ -11,15 +11,13 @@ import vkn.VkMemoryStack.Companion.withStack
 
 object debug {
     /** Default validation layers   */
-    val validationLayerNames = memAllocPointer(1).apply {
-        put(memUTF8("VK_LAYER_LUNARG_standard_validation"))
-        flip()
-    }
+    val validationLayerNames = arrayListOf("VK_LAYER_LUNARG_standard_validation")
 
     /** Default debug callback  */
     val messageCallback: VkDebugReportCallbackI = { flags, objType, srcObject, location, msgCode, layerPrefix, msg, userData ->
         /*  Select prefix depending on flags passed to the callback
             Note that multiple flags may be set for a single validation message         */
+        println("messageCallback") // TODO remove
         val prefix = StringBuilder()
 
         // Error that may result in undefined behaviour
@@ -63,29 +61,22 @@ object debug {
         val dbgCreateInfo = cVkDebugReportCallbackCreateInfoEXT {
             type = VkStructureType_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
             pNext(NULL)
-//            callback = callBack ?: messageCallback
-            pfnCallback { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
-                println("whatever")
-                0
-            }
+            callback = callBack ?: messageCallback
             pUserData(NULL)
             this.flags = flags
         }
 
-//        val err = vkCreateDebugReportCallback(
-//                instance,
-//                dbgCreateInfo,
-//                null,
-//                messageCallback)
-
-        val p = mallocLong()
-        val err = EXTDebugReport.vkCreateDebugReportCallbackEXT(instance, dbgCreateInfo, null, p)
+        val err = vkCreateDebugReportCallback(
+                instance,
+                dbgCreateInfo,
+                null,
+                messageCallback)
 
         assert(err())
     }
 
     /** Clear debug callback    */
-    fun freeDebugCallback(instance: VkInstance) = vkDebugReportCallback?.instance?.address()?.let { vkDestroyDebugReportCallback(instance, it) }
+    fun freeDebugCallback(instance: VkInstance) = Unit//TODOvkDebugReportCallback?.instance?.address?.let { vkDestroyDebugReportCallback(instance, it) }
 }
 
 /** Setup and functions for the VK_EXT_debug_marker_extension

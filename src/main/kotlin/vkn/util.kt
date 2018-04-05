@@ -3,10 +3,12 @@ package vkn
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3i
 import org.lwjgl.PointerBuffer
+import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
+import uno.glfw.glfw
 import vkn.VkMemoryStack.Companion.withStack
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -32,6 +34,15 @@ fun vkGetDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, q
     val pQueue = mallocPointer()
     VK10.vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue)
     queue.set(VkQueue(pQueue[0], device))
+}
+
+fun vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice, queueFamilyProperties: ArrayList<VkQueueFamilyProperties>? = null)
+        : ArrayList<VkQueueFamilyProperties> {
+    val count = memAllocInt(1)
+    VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, null)
+    val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count[0])
+    VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, pQueueFamilyProperties)
+    return pQueueFamilyProperties.toCollection(queueFamilyProperties ?: arrayListOf()).also { memFree(count) }
 }
 
 
@@ -426,7 +437,11 @@ var VkSubpassDescription.inputAttachments
     set(value) {
         pInputAttachments(value)
     }
-val VkSubpassDescription.colorAttachmentCount get() = colorAttachmentCount()
+var VkSubpassDescription.colorAttachmentCount
+    get() = colorAttachmentCount()
+    set(value) {
+        colorAttachmentCount(value)
+    }
 var VkSubpassDescription.colorAttachments
     get() = pColorAttachments()
     set(value) {
@@ -481,9 +496,9 @@ var VkSubpassDependency.dstAccessMask: VkAccessFlags
         dstAccessMask(value)
     }
 var VkSubpassDependency.dependencyFlags: VkDependencyFlags
-    get() = dstAccessMask()
+    get() = dependencyFlags()
     set(value) {
-        dstAccessMask(value)
+        dependencyFlags(value)
     }
 
 
@@ -566,7 +581,7 @@ var VkFramebufferCreateInfo.renderPass: VkRenderPass
         renderPass(value)
     }
 val VkFramebufferCreateInfo.attachmentCount get() = attachmentCount()
-var VkFramebufferCreateInfo.attachments:VkImageViewPtr?
+var VkFramebufferCreateInfo.attachments: VkImageViewPtr?
     get() = pAttachments()
     set(value) {
         pAttachments(value)
@@ -734,7 +749,7 @@ operator fun VkComponentMapping.invoke(r: Int, g: Int, b: Int, a: Int) {
     a(a)
 }
 
-object ArrayList_Long {
+object ArrayListLong {
     operator fun ArrayList<Long>.set(index: Int, long: LongBuffer) {
         set(index, long[0])
     }
@@ -763,27 +778,28 @@ inline fun vkDestroyShaderModule(device: VkDevice, shaderModules: Iterable<VkSha
 }
 inline fun vkDestroyShaderModule(device: VkDevice, shaderModules: VkPipelineShaderStageCreateInfo.Buffer, allocator: VkAllocationCallbacks? = null) {
     for (i in shaderModules)
-        VK10.vkDestroyShaderModule(device, i.address, allocator)
+        VK10.vkDestroyShaderModule(device, i.module, allocator)
 }
 
 inline fun vkDestroyFence(device: VkDevice, fences: Iterable<VkFence>, allocator: VkAllocationCallbacks? = null) {
     for (i in fences)
         VK10.nvkDestroyFence(device, i, allocator?.address() ?: NULL)
 }
-
+// @formatter:on
 inline fun vkDestroyImageView(device: VkDevice, imageView: VkImageView) = VK10.nvkDestroyImageView(device, imageView, NULL)
-inline fun vkDestroyImage(device: VkDevice, image: VkImage) = VK10.nvkDestroyImage(device, image, NULL)
-inline fun vkFreeMemory(device: VkDevice, memory: VkDeviceMemory) = VK10.nvkFreeMemory(device, memory,  NULL)
-inline fun vkDestroyPipelineCache(device: VkDevice, pipelineCache: VkPipelineCache) = VK10.nvkDestroyPipelineCache(device, pipelineCache, NULL)
-inline fun vkDestroyCommandPool(device: VkDevice, commandPool: VkCommandPool)  = VK10.nvkDestroyCommandPool(device, commandPool,NULL)
-inline fun vkDestroySemaphore(device: VkDevice, semaphore: VkSemaphore) = VK10.nvkDestroySemaphore(device, semaphore,  NULL)
 
-inline fun vkDestroyDebugReportCallback(instance: VkInstance, callbackAddress: Long) = EXTDebugReport.nvkDestroyDebugReportCallbackEXT(instance, callbackAddress,NULL)
-inline fun vkDestroyInstance(instance: VkInstance) = VK10.nvkDestroyInstance(instance,  NULL)
-inline fun vkDestroyPipeline(device: VkDevice, pipeline: VkPipeline) = VK10.nvkDestroyPipeline(device, pipeline,  NULL)
+inline fun vkDestroyImage(device: VkDevice, image: VkImage) = VK10.nvkDestroyImage(device, image, NULL)
+inline fun vkFreeMemory(device: VkDevice, memory: VkDeviceMemory) = VK10.nvkFreeMemory(device, memory, NULL)
+inline fun vkDestroyPipelineCache(device: VkDevice, pipelineCache: VkPipelineCache) = VK10.nvkDestroyPipelineCache(device, pipelineCache, NULL)
+inline fun vkDestroyCommandPool(device: VkDevice, commandPool: VkCommandPool) = VK10.nvkDestroyCommandPool(device, commandPool, NULL)
+inline fun vkDestroySemaphore(device: VkDevice, semaphore: VkSemaphore) = VK10.nvkDestroySemaphore(device, semaphore, NULL)
+
+inline fun vkDestroyDebugReportCallback(instance: VkInstance, callbackAddress: Long) = EXTDebugReport.nvkDestroyDebugReportCallbackEXT(instance, callbackAddress, NULL)
+inline fun vkDestroyInstance(instance: VkInstance) = VK10.nvkDestroyInstance(instance, NULL)
+inline fun vkDestroyPipeline(device: VkDevice, pipeline: VkPipeline) = VK10.nvkDestroyPipeline(device, pipeline, NULL)
 inline fun vkDestroyPipelineLayout(device: VkDevice, pipelineLayout: VkPipelineLayout) = VK10.nvkDestroyPipelineLayout(device, pipelineLayout, NULL)
-inline fun vkDestroyDescriptorSetLayout(device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout)  = VK10.nvkDestroyDescriptorSetLayout(device, descriptorSetLayout, NULL)
-inline fun vkDestroyBuffer(device: VkDevice, buffer: VkBuffer)  = VK10.nvkDestroyBuffer(device, buffer, NULL)
+inline fun vkDestroyDescriptorSetLayout(device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout) = VK10.nvkDestroyDescriptorSetLayout(device, descriptorSetLayout, NULL)
+inline fun vkDestroyBuffer(device: VkDevice, buffer: VkBuffer) = VK10.nvkDestroyBuffer(device, buffer, NULL)
 inline fun vkDestroyShaderModule(device: VkDevice, shaderModule: VkShaderModule) = VK10.vkDestroyShaderModule(device, shaderModule, null)
 
 
@@ -794,5 +810,5 @@ val Pointer.address get() = address()
 
 // TODO glm
 operator fun Vec3i.invoke(v: Vec2i, i: Int) {
-    put(v.x,v.y,i)
+    put(v.x, v.y, i)
 }

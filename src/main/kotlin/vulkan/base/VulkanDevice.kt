@@ -9,6 +9,7 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
+import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
 
 class VulkanDevice
@@ -24,13 +25,13 @@ constructor(
     /** @brief Logical device representation (application's view of the device) */
     var logicalDevice: VkDevice? = null
     /** @brief Properties of the physical device including limits that the application can check against */
-    var properties = VkPhysicalDeviceProperties.malloc()
+    var properties = VkPhysicalDeviceProperties.calloc()
     /** @brief Features of the physical device that an application can use to check if a feature is supported */
-    var features = VkPhysicalDeviceFeatures.malloc()
+    var features = VkPhysicalDeviceFeatures.calloc()
     /** @brief Features that have been enabled for use on the physical device */
     var enabledFeatures: VkPhysicalDeviceFeatures? = null
     /** @brief Memory types and heaps of the physical device */
-    val memoryProperties = VkPhysicalDeviceMemoryProperties.malloc()
+    val memoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
     /** @brief Queue family properties of the physical device */
     val queueFamilyProperties = ArrayList<VkQueueFamilyProperties>()
     /** @brief List of extensions supported by the device */
@@ -50,13 +51,10 @@ constructor(
         vkGetPhysicalDeviceFeatures(physicalDevice, features)
         // Memory properties are used regularly for creating all kinds of buffers
         vkGetPhysicalDeviceMemoryProperties(physicalDevice, memoryProperties)
-        withStack {
-            // Queue family properties, used for setting up requested queues upon device creation
-            vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, queueFamilyProperties)
-
-            // Get list of supported extensions
-            supportedExtensions += vkEnumerateDeviceExtensionProperties(physicalDevice)
-        }
+        // Queue family properties, used for setting up requested queues upon device creation
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, queueFamilyProperties)
+        // Get list of supported extensions
+        withStack { vkEnumerateDeviceExtensionProperties(physicalDevice, null, supportedExtensions) }
     }
 
     /** @brief Contains queue family indices */
@@ -159,7 +157,7 @@ constructor(
             Due to differing queue family configurations of Vulkan implementations this can be a bit tricky,
             especially if the application requests different queue types    */
 
-        val queueCreateInfos = mVkDeviceQueueCreateInfo(3)
+        val queueCreateInfos = ArrayList<VkDeviceQueueCreateInfo>()
 
         /*  Get queue family indices for the requested queue family types
             Note that the indices may overlap depending on the implementation         */
@@ -205,14 +203,14 @@ constructor(
                 } else queueFamilyIndices.graphics  // Else we use the same queue
 
         // Create the logical device representation
-        val deviceExtensions = mallocPointer(enabledExtensions.size + 2)
+        val deviceExtensions = ArrayList<String>(enabledExtensions)
         if (useSwapChain)
         // If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
         val deviceCreateInfo = cVkDeviceCreateInfo {
             type = VkStructureType_DEVICE_CREATE_INFO
-            this.queueCreateInfos = queueCreateInfos.flip()
+            this.queueCreateInfos = queueCreateInfos.toBuffer()
             this.enabledFeatures = enabledFeatures
         }
 
@@ -222,8 +220,8 @@ constructor(
             enableDebugMarkers = true
         }
 
-        if (deviceExtensions.position() >= 0)
-            deviceCreateInfo.enabledExtensionNames = deviceExtensions.flip()
+        if (deviceExtensions.isNotEmpty())
+            deviceCreateInfo.enabledExtensionNames = deviceExtensions.toPointerBuffer()
 
         val result = vkCreateDevice(physicalDevice, deviceCreateInfo, null, ::logicalDevice)
 
@@ -379,10 +377,9 @@ constructor(
             this.queueFamilyIndex = queueFamilyIndex
             flags = createFlags
         }
-        val cmdPool = mallocLong()
-        vkCreateCommandPool(logicalDevice!!, cmdPoolInfo, null, cmdPool).check()
-        return cmdPool[0]
+        return withLong { vkCreateCommandPool(logicalDevice!!, cmdPoolInfo, null, it).check() }
     }
+
 //
 //    /**
 //     * Allocate a command buffer from the command pool
