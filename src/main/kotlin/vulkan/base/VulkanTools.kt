@@ -3,6 +3,7 @@ package vulkan.base
 import gli_.has
 import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VkFormatProperties
 import org.lwjgl.vulkan.VkPhysicalDevice
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
@@ -62,7 +63,7 @@ object tools {
 //        }
 //    }
 //
-    fun getSupportedDepthFormat(physicalDevice: VkPhysicalDevice, depthFormat: KMutableProperty0<VkFormat>): Boolean = withStack {
+    fun getSupportedDepthFormat(physicalDevice: VkPhysicalDevice, depthFormat: KMutableProperty0<VkFormat>): Boolean {
         /*  Since all depth formats may be optional, we need to find a suitable depth format to use
             Start with the highest precision packed format         */
         arrayOf(VkFormat_D32_SFLOAT_S8_UINT,
@@ -71,10 +72,10 @@ object tools {
                 VkFormat_D16_UNORM_S8_UINT,
                 VkFormat_D16_UNORM).forEach {
 
-            val formatProps = cVkFormatProperties()
+            val formatProps = VkFormatProperties.calloc()
             VK10.vkGetPhysicalDeviceFormatProperties(physicalDevice, it, formatProps)
             // Format must support depth stencil attachment for optimal tiling
-            if (formatProps.optimalTilingFeatures has VkFormatFeature_DEPTH_STENCIL_ATTACHMENT_BIT) {
+            if (formatProps.optimalTilingFeatures() has VkFormatFeature_DEPTH_STENCIL_ATTACHMENT_BIT) {
                 depthFormat.set(it)
                 return true
             }

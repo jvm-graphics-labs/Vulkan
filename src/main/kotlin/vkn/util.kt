@@ -3,12 +3,10 @@ package vkn
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3i
 import org.lwjgl.PointerBuffer
-import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
-import uno.glfw.glfw
 import vkn.VkMemoryStack.Companion.withStack
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -17,21 +15,21 @@ import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
 
 
-fun vkEnumeratePhysicalDevices(instance: VkInstance, physicalDevices: ArrayList<VkPhysicalDevice>): VkResult = withStack {
+fun vkEnumeratePhysicalDevices(instance: VkInstance, physicalDevices: ArrayList<VkPhysicalDevice>): VkResult  {
     // Physical device
-    val count = mallocInt()
+    val count = memAllocInt(1)
     // Get number of available physical devices
     VK10.vkEnumeratePhysicalDevices(instance, count, null).check()
     // Enumerate devices
-    val devices = mallocPointer(count)
-    val ret = VK10.vkEnumeratePhysicalDevices(instance, count, devices)
-    for (i in 0 until count)
-        physicalDevices += VkPhysicalDevice(devices[i], instance)
-    return ret
+    val devices = memAllocPointer(count[0])
+    return VK10.vkEnumeratePhysicalDevices(instance, count, devices).also {
+        for (i in 0 until count)
+            physicalDevices += VkPhysicalDevice(devices[i], instance)
+    }
 }
 
-fun vkGetDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: KMutableProperty0<VkQueue>) = withStack {
-    val pQueue = mallocPointer()
+fun vkGetDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: KMutableProperty0<VkQueue>)  {
+    val pQueue = memAllocPointer(1)
     VK10.vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue)
     queue.set(VkQueue(pQueue[0], device))
 }
@@ -92,11 +90,11 @@ var VkSwapchainCreateInfoKHR.flags: VkSwapchainCreateFlagsKHR
     set(value) {
         flags(value)
     }
-var VkSwapchainCreateInfoKHR.surface: VkSurfaceKHR
-    get() = surface()
-    set(value) {
-        surface(value)
-    }
+//var VkSwapchainCreateInfoKHR.surface: VkSurfaceKHR
+//    get() = surface()
+//    set(value) {
+//        surface(value)
+//    }
 var VkSwapchainCreateInfoKHR.minImageCount
     get() = minImageCount()
     set(value) {
@@ -112,11 +110,11 @@ var VkSwapchainCreateInfoKHR.imageColorSpace: VkFormat
     set(value) {
         imageColorSpace(value)
     }
-var VkSwapchainCreateInfoKHR.imageExtent: VkExtent2D
-    get() = imageExtent()
-    set(value) {
-        imageExtent(value)
-    }
+//var VkSwapchainCreateInfoKHR.imageExtent: VkExtent2D
+//    get() = imageExtent()
+//    set(value) {
+//        imageExtent(value)
+//    }
 var VkSwapchainCreateInfoKHR.imageArrayLayers
     get() = imageArrayLayers()
     set(value) {
@@ -560,54 +558,54 @@ var VkPipelineCacheCreateInfo.pInitialData
     }
 
 
-var VkFramebufferCreateInfo.type: VkStructureType
-    get() = sType()
-    set(value) {
-        sType(value)
-    }
-var VkFramebufferCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
-var VkFramebufferCreateInfo.flags: VkFramebufferCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-var VkFramebufferCreateInfo.renderPass: VkRenderPass
-    get() = renderPass()
-    set(value) {
-        renderPass(value)
-    }
-val VkFramebufferCreateInfo.attachmentCount get() = attachmentCount()
-var VkFramebufferCreateInfo.attachments: VkImageViewPtr?
-    get() = pAttachments()
-    set(value) {
-        pAttachments(value)
-    }
-var VkFramebufferCreateInfo.width
-    get() = width()
-    set(value) {
-        width(value)
-    }
-var VkFramebufferCreateInfo.height
-    get() = height()
-    set(value) {
-        height(value)
-    }
-var VkFramebufferCreateInfo.layers
-    get() = layers()
-    set(value) {
-        layers(value)
-    }
-var VkFramebufferCreateInfo.size
-    get() = Vec3i(width, height, layers)
-    set(value) {
-        width = value.x
-        height = value.y
-        layers = value.z
-    }
+//var VkFramebufferCreateInfo.type: VkStructureType
+//    get() = sType()
+//    set(value) {
+//        sType(value)
+//    }
+//var VkFramebufferCreateInfo.next
+//    get() = pNext()
+//    set(value) {
+//        pNext(value)
+//    }
+//var VkFramebufferCreateInfo.flags: VkFramebufferCreateFlags
+//    get() = flags()
+//    set(value) {
+//        flags(value)
+//    }
+//var VkFramebufferCreateInfo.renderPass: VkRenderPass
+//    get() = renderPass()
+//    set(value) {
+//        renderPass(value)
+//    }
+//val VkFramebufferCreateInfo.attachmentCount get() = attachmentCount()
+//var VkFramebufferCreateInfo.attachments: VkImageViewPtr?
+//    get() = pAttachments()
+//    set(value) {
+//        pAttachments(value)
+//    }
+//var VkFramebufferCreateInfo.width
+//    get() = width()
+//    set(value) {
+//        width(value)
+//    }
+//var VkFramebufferCreateInfo.height
+//    get() = height()
+//    set(value) {
+//        height(value)
+//    }
+//var VkFramebufferCreateInfo.layers
+//    get() = layers()
+//    set(value) {
+//        layers(value)
+//    }
+//var VkFramebufferCreateInfo.size
+//    get() = Vec3i(width, height, layers)
+//    set(value) {
+//        width = value.x
+//        height = value.y
+//        layers = value.z
+//    }
 
 
 var VkPresentInfoKHR.type: VkStructureType

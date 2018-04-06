@@ -2,6 +2,8 @@ package vulkan.base
 
 import gli_.has
 import gli_.hasnt
+import glm_.i
+import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
@@ -9,7 +11,6 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
-import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
 
 class VulkanDevice
@@ -54,7 +55,7 @@ constructor(
         // Queue family properties, used for setting up requested queues upon device creation
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, queueFamilyProperties)
         // Get list of supported extensions
-        withStack { vkEnumerateDeviceExtensionProperties(physicalDevice, null, supportedExtensions) }
+        vkEnumerateDeviceExtensionProperties(physicalDevice, null, supportedExtensions)
     }
 
     /** @brief Contains queue family indices */
@@ -76,7 +77,7 @@ constructor(
      * @note Frees the logical device
      */
     fun destroy() {
-//        if (commandPool) vkDestroyCommandPool(logicalDevice, commandPool, nullptr)
+        if (commandPool != NULL) vkDestroyCommandPool(logicalDevice!!, commandPool, null)
         logicalDevice?.let { vkDestroyDevice(it, null) }
     }
 
@@ -151,8 +152,8 @@ constructor(
      * @return VkResult of the device creation call
      */
     fun createLogicalDevice(enabledFeatures: VkPhysicalDeviceFeatures, enabledExtensions: ArrayList<String>,
-                            useSwapChain: Boolean = true, requestedQueueTypes: Int = VkQueue_GRAPHICS_BIT or VkQueue_COMPUTE_BIT)
-            : VkResult = withStack {
+                            useSwapChain: Boolean = true,
+                            requestedQueueTypes: Int = VkQueue_GRAPHICS_BIT or VkQueue_COMPUTE_BIT): VkResult {
         /*  Desired queues need to be requested upon logical device creation
             Due to differing queue family configurations of Vulkan implementations this can be a bit tricky,
             especially if the application requests different queue types    */
@@ -162,30 +163,30 @@ constructor(
         /*  Get queue family indices for the requested queue family types
             Note that the indices may overlap depending on the implementation         */
 
-        val defaultQueuePriority = floats(0f)
+        val defaultQueuePriority = MemoryUtil.memCallocFloat(1)
 
         queueFamilyIndices.graphics =
                 if (requestedQueueTypes has VkQueue_GRAPHICS_BIT) { // Graphics queue
-                    queueCreateInfos += cVkDeviceQueueCreateInfo {
-                        type = VkStructureType_DEVICE_QUEUE_CREATE_INFO
-                        queueFamilyIndex = queueFamilyIndices.graphics
-                        queuePriorities = defaultQueuePriority
+                    queueCreateInfos += VkDeviceQueueCreateInfo.calloc().apply {
+                        sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                        queueFamilyIndex(queueFamilyIndices.graphics)
+                        pQueuePriorities(defaultQueuePriority)
                     }
-                    getQueueFamilyIndex(VkQueue_GRAPHICS_BIT)
-                } else 0
+                    getQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT)
+                } else NULL.i
 
 
         queueFamilyIndices.compute =
                 if (requestedQueueTypes has VkQueue_COMPUTE_BIT) {   // Dedicated compute queue
                     if (queueFamilyIndices.compute != queueFamilyIndices.graphics) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
-                        queueCreateInfos += cVkDeviceQueueCreateInfo {
-                            type = VkStructureType_DEVICE_QUEUE_CREATE_INFO
-                            queueFamilyIndex = queueFamilyIndices.compute
-                            queuePriorities = defaultQueuePriority
+                        queueCreateInfos += VkDeviceQueueCreateInfo.calloc().apply {
+                            sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                            queueFamilyIndex(queueFamilyIndices.compute)
+                            pQueuePriorities(defaultQueuePriority)
                         }
                     }
-                    getQueueFamilyIndex(VkQueue_COMPUTE_BIT)
+                    getQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT)
                 } else queueFamilyIndices.graphics  // Else we use the same queue
 
 
@@ -193,10 +194,10 @@ constructor(
                 if (requestedQueueTypes has VkQueue_TRANSFER_BIT) { // Dedicated transfer queue
                     if (queueFamilyIndices.transfer != queueFamilyIndices.graphics && queueFamilyIndices.transfer != queueFamilyIndices.compute) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
-                        queueCreateInfos += cVkDeviceQueueCreateInfo {
-                            type = VkStructureType_DEVICE_QUEUE_CREATE_INFO
-                            queueFamilyIndex = queueFamilyIndices.transfer
-                            queuePriorities = defaultQueuePriority
+                        queueCreateInfos += VkDeviceQueueCreateInfo.calloc().apply {
+                            sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                            queueFamilyIndex(queueFamilyIndices.transfer)
+                            pQueuePriorities(defaultQueuePriority)
                         }
                     }
                     getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT)
@@ -208,10 +209,10 @@ constructor(
         // If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
-        val deviceCreateInfo = cVkDeviceCreateInfo {
-            type = VkStructureType_DEVICE_CREATE_INFO
-            this.queueCreateInfos = queueCreateInfos.toBuffer()
-            this.enabledFeatures = enabledFeatures
+        val deviceCreateInfo = VkDeviceCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
+            pQueueCreateInfos(queueCreateInfos.toBuffer())
+            pEnabledFeatures(enabledFeatures)
         }
 
         // Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
@@ -221,7 +222,7 @@ constructor(
         }
 
         if (deviceExtensions.isNotEmpty())
-            deviceCreateInfo.enabledExtensionNames = deviceExtensions.toPointerBuffer()
+            deviceCreateInfo.ppEnabledExtensionNames(deviceExtensions.toPointerBuffer())
 
         val result = vkCreateDevice(physicalDevice, deviceCreateInfo, null, ::logicalDevice)
 
@@ -229,9 +230,9 @@ constructor(
         // Create a default command pool for graphics command buffers
             commandPool = createCommandPool(queueFamilyIndices.graphics)
 
-        this@VulkanDevice.enabledFeatures = enabledFeatures
+        this.enabledFeatures = enabledFeatures
 
-        result
+        return result
     }
 
 //    /**
@@ -369,13 +370,13 @@ constructor(
      *
      * @return A handle to the created command buffer
      */
-    fun VkMemoryStack.createCommandPool(queueFamilyIndex: Int, createFlags: VkCommandPoolCreateFlags =
-            VkCommandPoolCreate_RESET_COMMAND_BUFFER_BIT): VkCommandPool {
+    fun createCommandPool(queueFamilyIndex: Int, createFlags: VkCommandPoolCreateFlags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+            : VkCommandPool {
 
-        val cmdPoolInfo = cVkCommandPoolCreateInfo {
-            type = VkStructureType_COMMAND_POOL_CREATE_INFO
-            this.queueFamilyIndex = queueFamilyIndex
-            flags = createFlags
+        val cmdPoolInfo = VkCommandPoolCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
+            queueFamilyIndex(queueFamilyIndex)
+            flags(createFlags)
         }
         return withLong { vkCreateCommandPool(logicalDevice!!, cmdPoolInfo, null, it).check() }
     }

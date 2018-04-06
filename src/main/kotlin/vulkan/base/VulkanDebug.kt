@@ -1,23 +1,30 @@
 package vulkan.base
 
 import gli_.has
-import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.vulkan.EXTDebugReport
-import org.lwjgl.vulkan.VkDevice
-import org.lwjgl.vulkan.VkInstance
+import glm_.i
+import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.vulkan.*
 import uno.kotlin.plusAssign
 import vkn.*
-import vkn.VkMemoryStack.Companion.withStack
+import java.nio.LongBuffer
+
+typealias PFN_vkCreateDebugReportCallbackEXT = (VkInstance, VkDebugReportCallbackCreateInfoEXT, VkAllocationCallbacks?, LongBuffer) -> VkResult
+typealias PFN_vkDestroyDebugReportCallbackEXT = (VkInstance, VkDebugReportCallbackCreateInfoEXT, VkAllocationCallbacks?, LongBuffer) -> VkResult
 
 object debug {
+
     /** Default validation layers   */
     val validationLayerNames = arrayListOf("VK_LAYER_LUNARG_standard_validation")
+
+    lateinit var createDebugReportCallback: PFN_vkCreateDebugReportCallbackEXT
+
+    val msgCallback = MemoryUtil.memCallocLong(1)   // TODO long?
 
     /** Default debug callback  */
     val messageCallback: VkDebugReportCallbackI = { flags, objType, srcObject, location, msgCode, layerPrefix, msg, userData ->
         /*  Select prefix depending on flags passed to the callback
             Note that multiple flags may be set for a single validation message         */
-        println("messageCallback") // TODO remove
         val prefix = StringBuilder()
 
         // Error that may result in undefined behaviour
@@ -56,27 +63,33 @@ object debug {
 
     /** Load debug function pointers and set debug callback
      *  @param flags = VkDebugReportFlagBitsEXT */
-    fun setupDebugging(instance: VkInstance, flags: Int, callBack: VkDebugReportCallbackI?) = withStack {
+    fun setupDebugging(instance: VkInstance, flags: Int, callBack: VkDebugReportCallbackI?) {
 
-        val dbgCreateInfo = cVkDebugReportCallbackCreateInfoEXT {
-            type = VkStructureType_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
-            pNext(NULL)
-            callback = callBack ?: messageCallback
-            pUserData(NULL)
-            this.flags = flags
+        createDebugReportCallback = EXTDebugReport::vkCreateDebugReportCallbackEXT
+
+        val dbgCreateInfo = VkDebugReportCallbackCreateInfoEXT.calloc().apply {
+            sType(EXTDebugReport.VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT)
+            pfnCallback { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
+                val f = callBack ?: messageCallback
+                f(flags, objectType, `object`, location, messageCode, pLayerPrefix.utf8, pMessage.utf8, pUserData as Any).i
+            }
+            flags(flags)
         }
 
-        val err = vkCreateDebugReportCallback(
+        val err = createDebugReportCallback(
                 instance,
                 dbgCreateInfo,
                 null,
-                messageCallback)
+                msgCallback)
 
         assert(err())
     }
 
     /** Clear debug callback    */
-    fun freeDebugCallback(instance: VkInstance) = Unit//TODOvkDebugReportCallback?.instance?.address?.let { vkDestroyDebugReportCallback(instance, it) }
+    fun freeDebugCallback(instance: VkInstance) {
+        if(msgCallback[0] != NULL)
+            EXTDebugReport.vkDestroyDebugReportCallbackEXT(instance, msgCallback[0], null)
+    }
 }
 
 /** Setup and functions for the VK_EXT_debug_marker_extension

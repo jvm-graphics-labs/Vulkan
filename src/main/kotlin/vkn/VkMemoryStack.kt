@@ -294,18 +294,18 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         }
     }
 
-    fun vkCmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout, firstSet: Int,
-                                descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: IntBuffer?) {
-        val pDescriptorSets = mallocLong()
-        return VK10.vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, pDescriptorSets, dynamicOffsets).also {
+    fun vkCmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
+                                firstSet: Int, descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: IntBuffer?) {
+        val pDescriptorSets = callocLong().apply { set(0, descriptorSets()) }
+        VK10.vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, pDescriptorSets, dynamicOffsets).also {
             descriptorSets.set(pDescriptorSets)
         }
     }
 
     fun vkCmdBindVertexBuffers(commandBuffer: VkCommandBuffer, firstBinding: Int, buffers: KMutableProperty0<VkBuffer>,
                                offsets: LongBuffer) {
-        val pBuffer = mallocLong()
-        return VK10.vkCmdBindVertexBuffers(commandBuffer, firstBinding, pBuffer, offsets).also {
+        val pBuffer = mallocLong().apply { set(0, buffers()) }
+        VK10.vkCmdBindVertexBuffers(commandBuffer, firstBinding, pBuffer, offsets).also {
             buffers.set(pBuffer)
         }
     }
@@ -489,17 +489,6 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         bytes.putInt(Float.BYTES, int)
     }
 
-
-    val glfw.requiredInstanceExtensions: ArrayList<String>
-        get() {
-            // extensionsBuffer is cleaned by GLFW
-            val extensionsBuffer = GLFWVulkan.glfwGetRequiredInstanceExtensions() ?: return arrayListOf()
-            val count = extensionsBuffer.remaining()
-            val res = ArrayList<String>(count)
-            for (i in 0 until count)
-                res += extensionsBuffer[i].utf8
-            return res
-        }
 
 //    typedef union VkClearValue {
 //        VkClearColorValue           color;

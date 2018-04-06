@@ -23,16 +23,15 @@ class Camera {
 
         val transM = Mat4(1f) translate position
 
-        matrices.view =
-                if (type == CameraType.firstperson)
-                    rotM * transM
-                else
-                    transM * rotM
+        matrices.view = when (type) {
+            CameraType.firstPerson -> rotM * transM
+            else -> transM * rotM
+        }
     }
 
-    enum class CameraType { lookat, firstperson }
+    enum class CameraType { lookAt, firstPerson }
 
-    val type = CameraType.lookat
+    val type = CameraType.lookAt
 
     val rotation = Vec3()
     val position = Vec3()
@@ -45,7 +44,9 @@ class Camera {
         var view = Mat4()
     }
 
-    private val keys = object {
+    val keys = Keys()
+
+    class Keys {
         var left = false
         var right = false
         var up = false
@@ -61,37 +62,37 @@ class Camera {
         matrices.perspective = glm.perspective(fov.rad, aspect, zNear, zFar)
     }
 
-    fun updateAspectRatio(aspect: Float) {
+    infix fun updateAspectRatio(aspect: Float) {
         matrices.perspective = glm.perspective(fov.rad, aspect, zNear, zFar)
     }
 
-    fun setPosition(position: Vec3) {
+    infix fun setPosition(position: Vec3) {
         this.position(position)
         updateViewMatrix()
     }
 
-    fun setRotation(rotation: Vec3) {
+    infix fun setRotation(rotation: Vec3) {
         this.rotation(rotation)
         updateViewMatrix()
     }
 
-    fun rotate(delta: Vec3) {
+    infix fun rotate(delta: Vec3) {
         rotation += delta
         updateViewMatrix()
     }
 
-    fun setTranslation(translation: Vec3) {
+    infix fun setTranslation(translation: Vec3) {
         position(translation)
         updateViewMatrix()
     }
 
-    fun translate(delta: Vec3) {
+    infix fun translate(delta: Vec3) {
         position += delta
         updateViewMatrix()
     }
 
     infix fun update(deltaTime: Float) {
-        if (type == CameraType.firstperson) {
+        if (type == CameraType.firstPerson) {
             if (moving) {
                 val camFront = Vec3(
                         x = -rotation.x.rad.cos * rotation.y.rad.sin,
@@ -120,7 +121,7 @@ class Camera {
 
         var retVal = false
 
-        if (type == CameraType.firstperson) {
+        if (type == CameraType.firstPerson) {
             // Use the common console thumbstick layout
             // Left = view, right = move
 

@@ -2,23 +2,26 @@ package vulkan.base
 
 import glm_.f
 import glm_.i
-import glm_.set
+import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
+import org.lwjgl.glfw.*
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
+import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.system.Platform
+import org.lwjgl.system.windows.User32.VK_ESCAPE
+import org.lwjgl.system.windows.User32.VK_F1
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSurface.VK_KHR_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRWin32Surface.VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
+import uno.buffer.doubleBufferBig
 import uno.buffer.intBufferOf
 import uno.glfw.glfw
 import vkn.*
-import vkn.ArrayListLong.resize
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.initializers.commandBufferAllocateInfo
 import vulkan.base.initializers.semaphoreCreateInfo
@@ -28,7 +31,7 @@ import kotlin.system.measureTimeMillis
 abstract class VulkanExampleBase(enableValidation: Boolean) {
 
     /** fps timer (one second interval) */
-    var fpsTimer = 0.0f
+    var fpsTimer = 0f
     /** Get window title with example name, device, et. */
     val windowTitle: String
         get() {
@@ -44,10 +47,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     val destSize = Vec2i()
     var resizing = false
     var uiOverlay: UIOverlay? = null
-    /** Called if the window is resized and some resources have to be recreated    */
-//    void windowResize()
-//    void handleMouseMove(int32_t x, int32_t y)
-//    protected:
+
     /** Frame counter to display fps    */
     var frameCounter = 0
     var lastFPS = 0
@@ -147,12 +147,12 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     var timerSpeed = 0.25f
 
     var paused = false
-    //
-//    // Use to adjust mouse rotation speed
-//    float rotationSpeed = 1.0f;
-//    // Use to adjust mouse zoom speed
-//    float zoomSpeed = 1.0f;
-//
+
+    /** Use to adjust mouse rotation speed  */
+    var rotationSpeed = 1f
+    /** Use to adjust mouse zoom speed  */
+    var zoomSpeed = 1f
+
     val camera = Camera()
 
     val rotation = Vec3()
@@ -181,7 +181,6 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //    } mouseButtons;
 
     var window = NULL
-    var surface = NULL
 
     init {
 
@@ -433,47 +432,52 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         swapChain.connect(instance, physicalDevice, device)
 
-        withStack {
-            // Create synchronization objects
-            val semaphoreCreateInfo = semaphoreCreateInfo()
-            /*  Create a semaphore used to synchronize image presentation
-                Ensures that the image is displayed before we start submitting new commands to the queu             */
-            vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::presentComplete).check()
-            /*  Create a semaphore used to synchronize command submission
-                Ensures that the image is not presented until all commands have been sumbitted and executed             */
-            vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::renderComplete).check()
-            // Create a semaphore used to synchronize command submission
-            // Ensures that the image is not presented until all commands for the UI overlay have been sumbitted and executed
-            // Will be inserted after the render complete semaphore if the UI overlay is enabled
-            vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::overlayComplete).check()
+        // Create synchronization objects
+        val semaphoreCreateInfo = semaphoreCreateInfo()
+        /*  Create a semaphore used to synchronize image presentation
+            Ensures that the image is displayed before we start submitting new commands to the queu             */
+        vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::presentComplete).check()
+        /*  Create a semaphore used to synchronize command submission
+            Ensures that the image is not presented until all commands have been sumbitted and executed             */
+        vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::renderComplete).check()
+        // Create a semaphore used to synchronize command submission
+        // Ensures that the image is not presented until all commands for the UI overlay have been sumbitted and executed
+        // Will be inserted after the render complete semaphore if the UI overlay is enabled
+        vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::overlayComplete).check()
 
-            /*  Set up submit info structure
-                Semaphores will stay the same during application lifetime
-                Command buffer submission info is set by each example   */
-            submitInfo = submitInfo().apply {
-                waitDstStageMask = submitPipelineStages
-                waitSemaphoreCount = 1
-                waitSemaphores = longs(semaphores.presentComplete)
-                signalSemaphores = longs(semaphores.renderComplete)
-            }
+        /*  Set up submit info structure
+            Semaphores will stay the same during application lifetime
+            Command buffer submission info is set by each example   */
+        submitInfo = submitInfo().apply {
+            pWaitDstStageMask(submitPipelineStages)
+            waitSemaphoreCount(1)
+            pWaitSemaphores(semaphores.presentComplete.toLongBuffer())
+            pSignalSemaphores(semaphores.renderComplete.toLongBuffer())
         }
     }
 
+    /** Create GLFW window  */
     fun setupWindow() {
-        // Create GLFW window
-        glfwDefaultWindowHints()
+        val fullscreen = false
+        glfwInit()
+        if (!glfwVulkanSupported()) throw AssertionError("GLFW failed to find the Vulkan loader")
+//        glfwDefaultWindowHints()
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-        window = glfwCreateWindow(size.x, size.y, "GLFW Vulkan Demo", NULL, NULL)
-        glfwSetKeyCallback(window, { window, key, scancode, action, mods ->
-            if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
-                glfwSetWindowShouldClose(window, true)
-        })
-        val pSurface = memAllocLong(1)
-        val err = glfwCreateWindowSurface(instance, window, null, pSurface)
-        surface = pSurface.get(0)
-        if (err != VK_SUCCESS)
-            throw AssertionError("Failed to create surface: ${err.string}")
+//        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
+        window = when {
+            fullscreen -> {
+                val monitor = glfwGetPrimaryMonitor()
+                val mode = glfwGetVideoMode(monitor)!!
+                glfwCreateWindow(mode.width(), mode.height(), windowTitle, monitor, NULL)
+            }
+            else -> glfwCreateWindow(size.x, size.y, windowTitle, NULL, NULL)
+        }
+        glfwSetKeyCallback(window, keyboardHandler)
+        glfwSetMouseButtonCallback(window, mouseHandler)
+        glfwSetCursorPosCallback(window, mouseMoveHandler)
+        glfwSetWindowCloseCallback(window, closeHandler)
+        glfwSetFramebufferSizeCallback(window, framebufferSizeHandler)
+        glfwSetScrollCallback(window, mouseScrollHandler)
     }
 
     /**
@@ -481,38 +485,38 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
      *
      * @note Virtual, can be overriden by derived example class for custom instance creation
      */
-    open fun createInstance(enableValidation: Boolean): VkResult = withStack {
+    open fun createInstance(enableValidation: Boolean): VkResult {
 
         settings.validation = enableValidation
 
-        val appInfo = cVkApplicationInfo {
-            type = VkStructureType_APPLICATION_INFO
-            applicationName = name
-            engineName = name
-            apiVersion = VK_API_VERSION_1_0
+        val appInfo = VkApplicationInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
+            pApplicationName(name.utf8)
+            pEngineName(name.utf8)
+            apiVersion(VK_API_VERSION_1_0)
         }
 
-        val requiredExtensions = glfw.requiredInstanceExtensions
-        val instanceExtensions = ArrayList<String>()
-        instanceExtensions += requiredExtensions
-        instanceExtensions += VK_KHR_SURFACE_EXTENSION_NAME
-        // Enable surface extensions depending on os TODO others
-        if (Platform.get() == Platform.WINDOWS)
-            instanceExtensions += VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+        val instanceExtensions = arrayListOf(VK_KHR_SURFACE_EXTENSION_NAME)
+        instanceExtensions += glfw.requiredInstanceExtensions
+        // Enable surface extensions depending on os
+        instanceExtensions += when (Platform.get()) {
+            Platform.WINDOWS -> VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+            else -> TODO()
+        }
         if (enabledInstanceExtensions.isNotEmpty())
             instanceExtensions += enabledInstanceExtensions
 
-        val instanceCreateInfo = cVkInstanceCreateInfo {
-            type = VkStructureType_INSTANCE_CREATE_INFO
-            next = NULL
-            applicationInfo = appInfo
+        val instanceCreateInfo = VkInstanceCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO)
+            pNext(NULL)
+            pApplicationInfo(appInfo)
             if (instanceExtensions.isNotEmpty()) {
                 if (settings.validation)
                     instanceExtensions += VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-                enabledExtensionNames = instanceExtensions.toPointerBuffer()
+                ppEnabledExtensionNames(instanceExtensions.toPointerBuffer())
             }
             if (settings.validation)
-                enabledLayerNames = debug.validationLayerNames.toPointerBuffer()
+                ppEnabledLayerNames(debug.validationLayerNames.toPointerBuffer())
         }
         return vkCreateInstance(instanceCreateInfo, null, ::instance)
     }
@@ -529,22 +533,22 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //    virtual void keyPressed(uint32_t);
 //    /** @brief (Virtual) Called after th mouse cursor moved and before internal events (like camera rotation) is handled */
 //    virtual void mouseMoved(double x, double y, bool &handled);
-//    // Called when the window has been resized
-//    // Can be overriden in derived class to recreate or rebuild resources attached to the frame buffer / swapchain
-//    virtual void windowResized();
+    /** Called when the window has been resized
+     *  Can be overriden in derived class to recreate or rebuild resources attached to the frame buffer / swapchain */
+    open fun windowResized() {}
+
     /** Pure virtual function to be overriden by the dervice class
      *  Called in case of an event where e.g. the framebuffer has to be rebuild and thus
      *  all command buffers that may reference this */
     abstract fun buildCommandBuffers()
 
     /** Creates a new (graphics) command pool object storing command buffers    */
-    fun createCommandPool() = withStack {
+    fun createCommandPool() {
 
-        val cmdPoolInfo = cVkCommandPoolCreateInfo {
-            type = VkStructureType_COMMAND_POOL_CREATE_INFO
-            queueFamilyIndex = swapChain.queueNodeIndex
-            flags = VkCommandPoolCreate_RESET_COMMAND_BUFFER_BIT
-
+        val cmdPoolInfo = VkCommandPoolCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
+            queueFamilyIndex(swapChain.queueNodeIndex)
+            flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
         }
         vkCreateCommandPool(device, cmdPoolInfo, null, ::cmdPool).check()
     }
@@ -603,29 +607,29 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
     /** Create framebuffers for all requested swap chain images
      *  Can be overriden in derived class to setup a custom framebuffer (e.g. for MSAA) */
-    open fun setupFrameBuffer() = withStack {
-
-        val attachments = cVkImageView(2)
-
-        // Depth/Stencil attachment is the same for all frame buffers
-        attachments[1] = depthStencil.view
-
-        val frameBufferCreateInfo = cVkFramebufferCreateInfo {
-            type = VkStructureType_FRAMEBUFFER_CREATE_INFO
-            next = NULL
-            renderPass = this@VulkanExampleBase.renderPass
-            this.attachments = attachments
-            width = size.x
-            height = size.y
-            layers = 1
-        }
-
-        // Create frame buffers for every swap chain image
-        frameBuffers resize swapChain.imageCount
-        for (i in frameBuffers.indices) {
-            attachments[0] = swapChain.buffers[i].view
-            vkCreateFramebuffer(device, frameBufferCreateInfo, null, frameBuffers, i).check()
-        }
+    open fun setupFrameBuffer() {
+        TODO()
+//        val attachments = cVkImageView(2)
+//
+//        // Depth/Stencil attachment is the same for all frame buffers
+//        attachments[1] = depthStencil.view
+//
+//        val frameBufferCreateInfo = cVkFramebufferCreateInfo {
+//            type = VkStructureType_FRAMEBUFFER_CREATE_INFO
+//            next = NULL
+//            renderPass = this@VulkanExampleBase.renderPass
+//            this.attachments = attachments
+//            width = size.x
+//            height = size.y
+//            layers = 1
+//        }
+//
+//        // Create frame buffers for every swap chain image
+//        frameBuffers resize swapChain.imageCount
+//        for (i in frameBuffers.indices) {
+//            attachments[0] = swapChain.buffers[i].view
+//            vkCreateFramebuffer(device, frameBufferCreateInfo, null, frameBuffers, i).check()
+//        }
     }
 //    // Setup a default render pass
     /** Can be overriden in derived class to setup a custom render pass (e.g. for MSAA) */
@@ -667,7 +671,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         val subpassDescription = cVkSubpassDescription(1) {
             pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS
-            colorAttachmentCount= 1
+            colorAttachmentCount = 1
             colorAttachments = colorReference
             depthStencilAttachment = depthReference
             inputAttachments = null
@@ -712,10 +716,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     open fun getEnabledFeatures() {} // Can be overriden in derived class
 
     /** Connect and prepare the swap chain  */
-    fun initSwapchain() {
-        swapChain.surface = surface
-        swapChain.initSurface(size)
-    }
+    fun initSwapchain() = swapChain.initSurface(instance, window)
 
     /** Create swap chain images    */
     fun setupSwapChain() = swapChain.create(size, settings.vsync)
@@ -723,13 +724,13 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //    // Check if command buffers are valid (!= VK_NULL_HANDLE)
 //    bool checkCommandBuffers();
     /** Create command buffers for drawing commands */
-    fun createCommandBuffers() = withStack {
+    fun createCommandBuffers() {
         // Create one command buffer for each swap chain image and reuse for rendering
         drawCmdBuffers.ensureCapacity(swapChain.imageCount)
 
         val cmdBufAllocateInfo = commandBufferAllocateInfo(
                 cmdPool,
-                VkCommandBufferLevel_PRIMARY,
+                VK_COMMAND_BUFFER_LEVEL_PRIMARY,
                 swapChain.imageCount)
 
         vkAllocateCommandBuffers(device, cmdBufAllocateInfo, swapChain.imageCount, drawCmdBuffers).check()
@@ -748,12 +749,10 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //
     /** Create a cache pool for rendering pipelines */
     fun createPipelineCache() {
-        withStack {
-            val pipelineCacheCreateInfo = cVkPipelineCacheCreateInfo {
-                type = VkStructureType_PIPELINE_CACHE_CREATE_INFO
-            }
-            vkCreatePipelineCache(device, pipelineCacheCreateInfo, null, ::pipelineCache)
+        val pipelineCacheCreateInfo = VkPipelineCacheCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO)
         }
+        vkCreatePipelineCache(device, pipelineCacheCreateInfo, null, ::pipelineCache).check()
     }
 
     /** Prepare commonly used Vulkan functions  */
@@ -832,7 +831,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
             render()
             frameCounter++
         }
-        frameTimer = tDiff.f / 1000.0f
+        frameTimer = tDiff.f / 1000f
         camera update frameTimer
         if (camera.moving)
             viewUpdated = true
@@ -841,7 +840,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         if (!paused) {
             timer += timerSpeed * frameTimer
             if (timer > 1.0) {
-                timer -= 1.0f
+                timer -= 1f
             }
         }
         fpsTimer += tDiff.f
@@ -909,4 +908,132 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //    virtual void OnSetupUIOverlay(vks::UIOverlayCreateInfo &createInfo);
 //    /** @brief (Virtual) Called when the UI overlay is updating, can be used to add custom elements to the overlay */
 //    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay);
+
+    /** Called if the window is resized and some resources have to be recreated    */
+    fun windowResize(newSize: Vec2) {
+        if (!prepared) return
+        prepared = false
+
+        // Ensure all operations on the device have been finished before destroying resources
+        vkDeviceWaitIdle(device)
+
+        // Recreate swap chain
+        size put newSize
+        setupSwapChain()
+
+        // Recreate the frame buffers
+        vkDestroyImageView(device, depthStencil.view, null)
+        vkDestroyImage(device, depthStencil.image, null)
+        vkFreeMemory(device, depthStencil.mem, null)
+        setupDepthStencil()
+        frameBuffers.forEach { vkDestroyFramebuffer(device, it, null) }
+        setupFrameBuffer()
+
+        // Command buffers need to be recreated as they may store
+        // references to the recreated frame buffer
+        destroyCommandBuffers()
+        createCommandBuffers()
+        buildCommandBuffers()
+
+        vkDeviceWaitIdle(device)
+
+        if (settings.overlay)
+            uiOverlay!!.resize(size, frameBuffers)
+
+        camera.updateAspectRatio(size.aspect)
+
+        // Notify derived class
+        windowResized()
+        viewChanged()
+
+        prepared = true
+    }
+//    void handleMouseMove(int32_t x, int32_t y)
+
+    var keyboardHandler = GLFWKeyCallbackI { _, key, _, action, _ ->
+        when (action) {
+            GLFW_PRESS -> keyPressBase(key)
+            GLFW_RELEASE -> keyReleaseBase(key)
+        }
+    }
+
+    var mouseHandler = GLFWMouseButtonCallbackI { window, _, action, _ ->
+        if (action == GLFW_PRESS) {
+            val x = doubleBufferBig(1)
+            val y = doubleBufferBig(1)
+            glfwGetCursorPos(window, x, y)
+            mousePos.put(x[0], y[0])
+        }
+    }
+
+    var mouseMoveHandler = GLFWCursorPosCallbackI { _, xPos, yPos -> mouseMoved(Vec2(xPos, yPos)) }
+
+    var closeHandler = GLFWWindowCloseCallbackI {
+        prepared = false
+        glfwSetWindowShouldClose(it, true)
+    }
+
+    var framebufferSizeHandler = GLFWFramebufferSizeCallbackI { _, width, height -> windowResize(Vec2(width, height)) }
+
+    var mouseScrollHandler = GLFWScrollCallbackI { _, _, yOffset -> mouseScrolled(yOffset.f) }
+
+    fun keyPressBase(key: Int) {
+        when (key) {
+            GLFW_KEY_P -> paused = !paused
+            GLFW_KEY_F1 -> if (settings.overlay) TODO() //textOverlay->visible = !textOverlay->visible;
+            GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true)
+        }
+        if (camera.type == Camera.CameraType.firstPerson)
+            when (key) {
+                GLFW_KEY_W -> camera.keys.up = true
+                GLFW_KEY_S -> camera.keys.down = true
+                GLFW_KEY_A -> camera.keys.left = true
+                GLFW_KEY_D -> camera.keys.right = true
+            }
+        keyPressed(key)
+    }
+
+    /** Can be overriden in derived class */
+    open fun keyPressed(keyCode: Int) {}
+
+    fun keyReleaseBase(key: Int) {
+        if (camera.type == Camera.CameraType.firstPerson)
+            when (key) {
+                GLFW_KEY_W -> camera.keys.up = false
+                GLFW_KEY_S -> camera.keys.down = false
+                GLFW_KEY_A -> camera.keys.left = false
+                GLFW_KEY_D -> camera.keys.right = false
+            }
+    }
+
+    fun mouseMoved(newPos: Vec2) {
+        val deltaPos = mousePos - newPos
+        if (deltaPos.x == 0 && deltaPos.y == 0) return
+        if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)) {
+            zoom += deltaPos.y * .005f * zoomSpeed
+            camera translate Vec3(0f, 0f, deltaPos.y * .005f * zoomSpeed)
+            mousePos put newPos
+            viewChanged()
+        }
+        if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)) {
+            val deltaPos3 = Vec3(deltaPos.y, -deltaPos.x, 0f) * 1.25f * rotationSpeed
+            rotation += deltaPos3
+            camera rotate deltaPos3
+            mousePos put newPos
+            viewChanged()
+        }
+        if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE)) {
+            val deltaPos3 = Vec3(deltaPos, 0f) * 0.01f
+            cameraPos -= deltaPos3
+            camera translate -deltaPos3
+            mousePos put newPos
+            viewChanged()
+        }
+    }
+
+    fun mouseScrolled(wheelDelta: Float) {
+        zoom += wheelDelta * 0.005f * zoomSpeed
+        camera translate Vec3(0f, 0f, wheelDelta * 0.005f * zoomSpeed)
+        viewChanged()
+    }
 }

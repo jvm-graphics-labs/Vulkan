@@ -2,17 +2,13 @@ package vulkan.base
 
 import gli_.has
 import glm_.vec2.Vec2i
-import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
+import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.system.MemoryUtil.memAllocLong
+import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR
-import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR
-import org.lwjgl.vulkan.KHRSwapchain.vkDestroySwapchainKHR
-import org.lwjgl.vulkan.KHRSwapchain.vkQueuePresentKHR
-import org.lwjgl.vulkan.VK10.vkDestroyImageView
-import org.lwjgl.vulkan.VK10.vkGetPhysicalDeviceFormatProperties
+import org.lwjgl.vulkan.KHRSurface.*
+import org.lwjgl.vulkan.KHRSwapchain.*
+import org.lwjgl.vulkan.VK10.*
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
 import kotlin.reflect.KMutableProperty0
@@ -42,11 +38,17 @@ class VulkanSwapChain {
     var images = ArrayList<VkImage>()
     val buffers = ArrayList<SwapChainBuffer>()
     /** @brief Queue family index of the detected graphics and presenting device queue */
-    var queueNodeIndex = Int.MAX_VALUE
+    var queueNodeIndex = UINT32_MAX
 
     /** @brief Creates the platform specific surface abstraction of the native platform window used for presentation */
-    fun initSurface(size: Vec2i) = withStack {
+    fun initSurface(instance: VkInstance, window: Long) {
 
+        // Create the os-specific surface
+        surface = withLong {
+            val err = GLFWVulkan.glfwCreateWindowSurface(instance, window, null, it)
+            if (err != VK_SUCCESS)
+                throw AssertionError("Failed to create surface: ${err.string}")
+        }
         // Get available queue family properties
         val queueProps = vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice)
 
@@ -56,13 +58,13 @@ class VulkanSwapChain {
         val supportsPresent = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueProps.size, surface)
 
         // Search for a graphics and a present queue in the array of queue families, try to find one that supports both
-        var graphicsQueueNodeIndex = Int.MAX_VALUE
-        var presentQueueNodeIndex = Int.MAX_VALUE
+        var graphicsQueueNodeIndex = UINT32_MAX
+        var presentQueueNodeIndex = UINT32_MAX
         for (i in queueProps.indices) {
 
             if (queueProps[i].queueFlags has VkQueue_GRAPHICS_BIT) {
 
-                if (graphicsQueueNodeIndex == Int.MAX_VALUE)
+                if (graphicsQueueNodeIndex == UINT32_MAX)
                     graphicsQueueNodeIndex = i
 
                 if (supportsPresent[i]) {
@@ -72,7 +74,7 @@ class VulkanSwapChain {
                 }
             }
         }
-        if (presentQueueNodeIndex == Int.MAX_VALUE) {
+        if (presentQueueNodeIndex == UINT32_MAX) {
             // If there's no queue that supports both present and graphics, try to find a separate present queue
             val index = supportsPresent.indexOfFirst { it }
             if (index != -1)
@@ -80,7 +82,7 @@ class VulkanSwapChain {
         }
 
         // Exit if either a graphics or a presenting queue hasn't been found
-        if (graphicsQueueNodeIndex == Int.MAX_VALUE || presentQueueNodeIndex == Int.MAX_VALUE)
+        if (graphicsQueueNodeIndex == UINT32_MAX || presentQueueNodeIndex == UINT32_MAX)
             tools.exitFatal("Could not find a graphics and/or presenting queue!", -1)
 
         // todo : Add support for separate graphics and presenting queue
@@ -128,28 +130,28 @@ class VulkanSwapChain {
      * @param height Pointer to the height of the swapchain (may be adjusted to fit the requirements of the swapchain)
      * @param vsync (Optional) Can be used to force vsync'd rendering (by using VK_PRESENT_MODE_FIFO_KHR as presentation mode)
      */
-    fun create(size: Vec2i, vsync: Boolean = false) = withStack {
+    fun create(size: Vec2i, vsync: Boolean = false) {
 
         val oldSwapchain = swapChain
 
         // Get physical device surface properties and formats
-        val surfCaps = cVkSurfaceCapabilitiesKHR()
+        val surfCaps = VkSurfaceCapabilitiesKHR.calloc()
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, surfCaps).check()
 
         // Get available present modes
         val presentModes = ArrayList<VkPresentModeKHR>()
         vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, presentModes).check()
 
-        var swapchainExtent = cVkExtent2D()
+        var swapchainExtent = VkExtent2D.calloc()
         // If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
-        if (surfCaps.currentExtent.width == -1)
+        if (surfCaps.currentExtent().width() == -1)
         // If the surface size is undefined, the size is set to the size of the images requested.
             swapchainExtent.size(size)
         else {
             // If the surface size is defined, the swap chain size must match
-            swapchainExtent = surfCaps.currentExtent
+            swapchainExtent = surfCaps.currentExtent()
 //            size(surfCaps.currentExtent.size)   TODO BUG
-            size.put(surfCaps.currentExtent.width, surfCaps.currentExtent.height)
+            size.put(surfCaps.currentExtent.width(), surfCaps.currentExtent.height())
         }
 
 
@@ -157,18 +159,18 @@ class VulkanSwapChain {
 
             The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
             This mode waits for the vertical blank ("v-sync")   */
-        var swapchainPresentMode: VkPresentModeKHR = VkPresentMode_FIFO_KHR
+        var swapchainPresentMode: VkPresentModeKHR = VK_PRESENT_MODE_FIFO_KHR
 
         /*  If v-sync is not requested, try to find a mailbox mode
             It's the lowest latency non-tearing present mode available         */
         if (!vsync)
             for (i in presentModes.indices) {
-                if (presentModes[i] == VkPresentMode_MAILBOX_KHR) {
-                    swapchainPresentMode = VkPresentMode_MAILBOX_KHR
+                if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+                    swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR
                     break
                 }
-                if (swapchainPresentMode != VkPresentMode_MAILBOX_KHR && presentModes[i] == VkPresentMode_IMMEDIATE_KHR)
-                    swapchainPresentMode = VkPresentMode_IMMEDIATE_KHR
+                if (swapchainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR && presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
+                    swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR
             }
 
         // Determine the number of images
@@ -178,43 +180,43 @@ class VulkanSwapChain {
 
         // Find the transformation of the surface
         val preTransform =
-                if (surfCaps.supportedTransforms has VkSurfaceTransform_IDENTITY_BIT_KHR)
+                if (surfCaps.supportedTransforms has VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
                 // We prefer a non-rotated transform
-                    VkSurfaceTransform_IDENTITY_BIT_KHR
+                    VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
                 else surfCaps.currentTransform
 
         // Find a supported composite alpha format (not all devices support alpha opaque), Simply select the first composite alpha format available
-        val compositeAlpha = arrayOf(VkCompositeAlpha_OPAQUE_BIT_KHR,
-                VkCompositeAlpha_PRE_MULTIPLIED_BIT_KHR,
-                VkCompositeAlpha_POST_MULTIPLIED_BIT_KHR,
-                VkCompositeAlpha_INHERIT_BIT_KHR).find { surfCaps.supportedCompositeAlpha has it }
+        val compositeAlpha = arrayOf(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+                VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+                VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
+                VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR).find { surfCaps.supportedCompositeAlpha has it }
                 ?: VkCompositeAlpha_OPAQUE_BIT_KHR
 
 
-        val swapchainCI = cVkSwapchainCreateInfoKHR {
-            type = VkStructureType_SWAPCHAIN_CREATE_INFO_KHR
-            next = NULL
-            surface = this@VulkanSwapChain.surface
-            minImageCount = desiredNumberOfSwapchainImages
-            imageFormat = colorFormat
-            imageColorSpace = colorSpace
-            imageExtent(swapchainExtent.width, swapchainExtent.height)
-            imageUsage = VkImageUsage_COLOR_ATTACHMENT_BIT
-            this.preTransform = preTransform
-            imageArrayLayers = 1
-            imageSharingMode = VkSharingMode_EXCLUSIVE
-            queueFamilyIndices = null
-            presentMode = swapchainPresentMode
-            this.oldSwapchain = oldSwapchain
+        val swapchainCI = VkSwapchainCreateInfoKHR.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR)
+            pNext(NULL)
+            surface(surface)
+            minImageCount(desiredNumberOfSwapchainImages)
+            imageFormat(colorFormat)
+            imageColorSpace(colorSpace)
+            imageExtent().set(swapchainExtent.width(), swapchainExtent.height())
+            imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+            preTransform(preTransform)
+            imageArrayLayers(1)
+            imageSharingMode(VK_SHARING_MODE_EXCLUSIVE)
+            pQueueFamilyIndices(null)
+            presentMode(swapchainPresentMode)
+            oldSwapchain(oldSwapchain)
             // Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area
-            clipped = true
-            this.compositeAlpha = compositeAlpha
+            clipped(true)
+            compositeAlpha(compositeAlpha)
         }
 
         // Set additional usage flag for blitting from the swapchain images if supported
-        val formatProps = cVkFormatProperties()
+        val formatProps = VkFormatProperties.calloc()
         vkGetPhysicalDeviceFormatProperties(physicalDevice, colorFormat, formatProps)
-        if (formatProps.optimalTilingFeatures has VkFormatFeature_TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures has VkFormatFeature_BLIT_SRC_BIT)
+        if (formatProps.optimalTilingFeatures() has VkFormatFeature_TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures() has VkFormatFeature_BLIT_SRC_BIT)
             swapchainCI.imageUsage = swapchainCI.imageUsage or VkImageUsage_TRANSFER_SRC_BIT
 
         vkCreateSwapchainKHR(device, swapchainCI, null, ::swapChain)
@@ -228,31 +230,36 @@ class VulkanSwapChain {
         }
 
         // Get the swap chain images
-        vkGetSwapchainImagesKHR(device, swapChain, images)
+        vkGetSwapchainImagesKHR(device, swapChain, images).check()
         imageCount = images.size
 
         // Get the swap chain buffers containing the image and imageview
         buffers resize images.size
         for (i in images.indices) {
 
-            val colorAttachmentView = cVkImageViewCreateInfo().apply {
-                type = VkStructureType_IMAGE_VIEW_CREATE_INFO
-                next = NULL
-                format = colorFormat
-                components(VkComponentSwizzle_R, VkComponentSwizzle_G, VkComponentSwizzle_B, VkComponentSwizzle_A)
-                subresourceRange.apply {
-                    aspectMask = VkImageAspect_COLOR_BIT
-                    baseMipLevel = 0
-                    levelCount = 1
-                    baseArrayLayer = 0
-                    layerCount = 1
+            val colorAttachmentView = VkImageViewCreateInfo.calloc().apply {
+                sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
+                pNext(NULL)
+                format(colorFormat)
+                components().set(
+                        VK_COMPONENT_SWIZZLE_R,
+                        VK_COMPONENT_SWIZZLE_G,
+                        VK_COMPONENT_SWIZZLE_B,
+                        VK_COMPONENT_SWIZZLE_A)
+                subresourceRange().apply {
+                    aspectMask(VK_IMAGE_ASPECT_COLOR_BIT)
+                    baseMipLevel(0)
+                    levelCount(1)
+                    baseArrayLayer(0)
+                    layerCount(1)
                 }
-                viewType = VkImageViewType_2D
-                flags = 0
+                viewType(VK_IMAGE_VIEW_TYPE_2D)
+                flags(0)
 
-                buffers[i].image = images[i]
-
-                image = buffers[i].image
+                images[i].let {
+                    buffers[i].image = it
+                    image(it)
+                }
             }
 
             vkCreateImageView(device, colorAttachmentView, null, buffers[i]::view).check()
@@ -272,7 +279,7 @@ class VulkanSwapChain {
     fun acquireNextImage(presentCompleteSemaphore: VkSemaphore, imageIndex: KMutableProperty0<Int>): VkResult = withStack {
         // By setting timeout to UINT64_MAX we will always wait until the next image has been acquired or an actual error is thrown
         // With that we don't have to handle VK_NOT_READY
-        vkAcquireNextImageKHR(device, swapChain, Long.MAX_VALUE, presentCompleteSemaphore, NULL, imageIndex)
+        vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, presentCompleteSemaphore, NULL, imageIndex)
     }
 
     /**
@@ -286,13 +293,14 @@ class VulkanSwapChain {
      */
     fun queuePresent(queue: VkQueue, imageIndex: Int, waitSemaphore: VkSemaphore = NULL): VkResult = withStack {
         val presentInfo = cVkPresentInfoKHR {
-            type = VkStructureType_PRESENT_INFO_KHR
-            next = NULL
-            swapchains = longs(swapChain)
-            imageIndices = ints(imageIndex)
+            sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR)
+            pNext(NULL)
+            swapchainCount(1)
+            pSwapchains(longs(swapChain))
+            pImageIndices(ints(imageIndex))
             // Check if a wait semaphore has been specified to wait for before presenting the image
             if (waitSemaphore != NULL)
-                this.waitSemaphores = longs(waitSemaphore)
+                pWaitSemaphores(longs(waitSemaphore))
         }
         return vkQueuePresentKHR(queue, presentInfo)
     }
@@ -302,10 +310,9 @@ class VulkanSwapChain {
      * Destroy and free Vulkan resources used for the swapchain
      */
     fun cleanup() {
-        if (swapChain != NULL) {
+        if (swapChain != NULL)
             for (i in 0 until imageCount)
                 vkDestroyImageView(device, buffers[i].view, null)
-        }
         if (surface != NULL) {
             vkDestroySwapchainKHR(device, swapChain, null)
             vkDestroySurfaceKHR(instance, surface, null)

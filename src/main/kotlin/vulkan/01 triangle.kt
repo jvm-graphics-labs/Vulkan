@@ -1,14 +1,16 @@
 package vulkan
 
-import glm_.*
+import glm_.L
 import glm_.func.rad
+import glm_.glm
 import glm_.mat4x4.Mat4
+import glm_.set
+import glm_.size
 import glm_.vec3.Vec3
-import org.lwjgl.glfw.GLFW.glfwInit
+import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.system.MemoryUtil.memCopy
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.floatBufferOf
@@ -26,9 +28,6 @@ import java.io.File
 
 
 fun main(args: Array<String>) {
-
-    if (!glfwInit()) throw RuntimeException("Failed to initialize GLFW")
-    if (!glfwVulkanSupported()) throw AssertionError("GLFW failed to find the Vulkan loader")
 
     VulkanExample().apply {
         initVulkan()
@@ -52,6 +51,8 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         title = "Vulkan Example - Basic indexed triangle"
         // Values not set here are initialized in the base class constructor
     }
+
+    val memoryPropertiesFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 
     /** Vertex layout used in this example  */
     object Vertex {
@@ -141,8 +142,11 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     val waitFences = ArrayList<VkFence>()
 
     override fun destroy() {
-        super.destroy()
 
+        glfwDestroyWindow(window)
+        glfwTerminate()
+
+        vkQueueWaitIdle(queue)
         /*  Clean up used Vulkan resources
             Note: Inherited destructor cleans up resources stored in base class         */
         vkDestroyPipeline(device, pipeline)
@@ -163,6 +167,8 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         vkDestroySemaphore(device, renderCompleteSemaphore)
 
         vkDestroyFence(device, waitFences)
+
+        super.destroy()
     }
 
     /** This function is used to request a device memory type that supports all the property flags we request
@@ -183,11 +189,11 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     }
 
     /** Create the Vulkan synchronization primitives used in this example   */
-    fun prepareSynchronizationPrimitives() = withStack {
+    fun prepareSynchronizationPrimitives() {
         // Semaphores (Used for correct command ordering)
-        val semaphoreCreateInfo = cVkSemaphoreCreateInfo {
-            type = VkStructureType_SEMAPHORE_CREATE_INFO
-            next = NULL
+        val semaphoreCreateInfo = VkSemaphoreCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO)
+            pNext(NULL)
         }
 
         // Semaphore used to ensures that image presentation is complete before starting to submit again
@@ -197,10 +203,10 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         vkCreateSemaphore(device, semaphoreCreateInfo, null, ::renderCompleteSemaphore).check()
 
         // Fences (Used to check draw command buffer completion)
-        val fenceCreateInfo = cVkFenceCreateInfo {
-            type = VkStructureType_FENCE_CREATE_INFO
+        val fenceCreateInfo = VkFenceCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO)
             // Create in signaled state so we don't wait on first render of each command buffer
-            flags = VkFenceCreateFlag_SIGNALED_BIT
+            flags(VK_FENCE_CREATE_SIGNALED_BIT)
         }
         waitFences resize drawCmdBuffers.size
         vkCreateFences(device, fenceCreateInfo, null, waitFences)  // check inside singularly
@@ -208,16 +214,16 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
     /** Get a new command buffer from the command pool
      *  If begin is true, the command buffer is also started so we can start adding commands    */
-    fun getCommandBuffer(begin: Boolean): VkCommandBuffer = withStack {
+    fun getCommandBuffer(begin: Boolean): VkCommandBuffer  {
 
-        val cmdBufAllocateInfo = cVkCommandBufferAllocateInfo {
-            type = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO
-            commandPool = cmdPool
-            level = VK_COMMAND_BUFFER_LEVEL_PRIMARY
-            commandBufferCount = 1
+        val cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
+            commandPool(cmdPool)
+            level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+            commandBufferCount(1)
         }
 
-        val pCmdBuffer = mallocPointer()
+        val pCmdBuffer = memAllocPointer(1)
         vkAllocateCommandBuffers(device, cmdBufAllocateInfo, pCmdBuffer).check()
 
         val cmdBuffer = VkCommandBuffer(pCmdBuffer[0], device)
@@ -231,25 +237,23 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
     /** End the command buffer and submit it to the queue
      *  Uses a fence to ensure command buffer has finished executing before deleting it */
-    fun flushCommandBuffer(commandBuffer: VkCommandBuffer) = withStack {
+    fun flushCommandBuffer(commandBuffer: VkCommandBuffer)  {
 
         assert(commandBuffer.address != NULL)
 
         vkEndCommandBuffer(commandBuffer).check()
 
-        val submitInfo = cVkSubmitInfo {
-            type = VkStructureType_SUBMIT_INFO
-            submitInfo.commandBuffers = commandBuffer.toPointerBuffer()
+        val submitInfo = VkSubmitInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_SUBMIT_INFO)
+            pCommandBuffers(commandBuffer.toPointerBuffer())
         }
 
         // Create fence to ensure that the command buffer has finished executing
-        val fenceCreateInfo = cVkFenceCreateInfo {
-            type = VkStructureType_FENCE_CREATE_INFO
-            flags = 0
+        val fenceCreateInfo = VkFenceCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO)
+            flags(0)
         }
-        val pFence = mallocLong()
-        vkCreateFence(device, fenceCreateInfo, null, pFence).check()
-        val fence: VkFence = pFence[0]
+        val fence: VkFence = withLong { vkCreateFence(device, fenceCreateInfo, null, it).check() }
 
         // Submit to the queue
         vkQueueSubmit(queue, submitInfo, fence).check()
@@ -292,11 +296,13 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         // Specify clear color (cornflower blue)
         val clearValues = VkClearValue.calloc(2)
         clearValues[0].color()
-                .float32(0, 100 / 255.0f)
-                .float32(1, 149 / 255.0f)
-                .float32(2, 237 / 255.0f)
-                .float32(3, 1.0f)
-        clearValues[1].depthStencil(1f, 0)
+                .float32(0, 0f)
+                .float32(1, 0f)
+                .float32(2, 0.2f)
+                .float32(3, 1f)
+        clearValues[1].depthStencil()
+                .depth(1f)
+                .stencil(0)
 //        // Specify everything to begin a render pass
         val renderPassBeginInfo = VkRenderPassBeginInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
@@ -304,14 +310,14 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
                 .renderPass(renderPass)
                 .pClearValues(clearValues)
 //        val renderArea = renderPassBeginInfo.renderArea
-        renderPassBeginInfo.renderArea.offset().set(0, 0)
-        renderPassBeginInfo.renderArea.extent().set(size.x, size.y)
+        renderPassBeginInfo.renderArea().offset().set(0, 0)
+        renderPassBeginInfo.renderArea().extent().set(size.x, size.y)
 //        renderArea.offset().set(0, 0)
 //        renderArea.extent().set(size.x, size.y)
 
-        for (i in 0 until drawCmdBuffers.size) {
+        for (i in drawCmdBuffers.indices) {
             // Set target frame buffer
-            renderPassBeginInfo.framebuffer = frameBuffers[i]
+            renderPassBeginInfo.framebuffer(frameBuffers[i])
 
             vkBeginCommandBuffer(drawCmdBuffers[i], cmdBufInfo).check()
 
@@ -361,29 +367,29 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         }
     }
 
-    fun draw() = withStack {
+    fun draw() {
         // Get next image in the swap chain (back/front buffer)
         swapChain.acquireNextImage(presentCompleteSemaphore, ::currentBuffer).check()
 
         // Use a fence to wait until the command buffer has finished execution before using it again
-        vkWaitForFences(device, waitFences[currentBuffer], true, Long.MAX_VALUE).check()
+        vkWaitForFences(device, waitFences[currentBuffer], true, UINT64_MAX).check()
         vkResetFences(device, waitFences[currentBuffer]).check()
 
         // Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
-        val waitStageMask = ints(VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT)
+        val waitStageMask = MemoryUtil.memAllocInt(1).apply { set(0, VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT) }
         // The submit info structure specifices a command buffer queue submission batch
-        val submitInfo = cVkSubmitInfo {
-            type = VkStructureType_SUBMIT_INFO
+        val submitInfo = VkSubmitInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_SUBMIT_INFO)
             // Pointer to the list of pipeline stages that the semaphore waits will occur at
-            waitDstStageMask = waitStageMask
+            pWaitDstStageMask(waitStageMask)
             // Semaphore(s) to wait upon before the submitted command buffer starts executing
-            waitSemaphores = presentCompleteSemaphore.toLongBuffer()
+            pWaitSemaphores(presentCompleteSemaphore.toLongBuffer())
             // One wait semaphore
-            waitSemaphoreCount = 1
+            waitSemaphoreCount(1)
             // Semaphore(s) to be signaled when command buffers have completed
-            signalSemaphores = renderCompleteSemaphore.toLongBuffer()
+            pSignalSemaphores(renderCompleteSemaphore.toLongBuffer())
             // One signal semaphore + Command buffers(s) to execute in this batch (submission)
-            submitInfo.commandBuffers(drawCmdBuffers, currentBuffer)
+            pCommandBuffers(memAllocPointer(1).apply { set(0, drawCmdBuffers[currentBuffer]) })
         }
 
         // Submit to the graphics queue passing a wait fence
@@ -399,7 +405,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     /** Prepare vertex and index buffers for an indexed triangle
      *  Also uploads them to device local memory using staging and initializes vertex input and attribute binding
      *  to match the vertex shader  */
-    fun prepareVertices(useStagingBuffers: Boolean) = withStack {
+    fun prepareVertices(useStagingBuffers: Boolean) {
         /*  A note on memory management in Vulkan in general:
             This is a very complex topic and while it's fine for an example application to to small individual memory
             allocations that is not what should be done a real-world application, where you should allocate large
@@ -419,11 +425,10 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         indices.count = indexBuffer.capacity
         val indexBufferSize = indexBuffer.size.L
 
-        val memAlloc = cVkMemoryAllocateInfo { type = VkStructureType_MEMORY_ALLOCATE_INFO }
+        val memAlloc = VkMemoryAllocateInfo.calloc().apply { sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO) }
+        val memReqs = VkMemoryRequirements.calloc()
 
-        val memReqs = cVkMemoryRequirements()
-
-        val data = mallocPointer()
+        val data = memAllocPointer(1)
 
         if (useStagingBuffers) {
             /*  Static data like vertex and index buffer should be stored on the device memory for optimal (and fastest)
@@ -448,46 +453,46 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             }
 
             // Vertex buffer
-            val vertexBufferInfo = cVkBufferCreateInfo {
-                type = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO
-                size = vertexBufferSize
+            val vertexBufferInfo = VkBufferCreateInfo.calloc().apply {
+                sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+                size(vertexBufferSize)
                 // Buffer is used as the copy source
-                usage = VkImageUsage_TRANSFER_SRC_BIT
+                usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
             }
             // Create a host-visible buffer to copy the vertex data to (staging buffer)
             vkCreateBuffer(device, vertexBufferInfo, null, stagingBuffers.vertices::buffer).check()
             vkGetBufferMemoryRequirements(device, stagingBuffers.vertices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
+            memAlloc.allocationSize(memReqs.size())
             // Request a host visible memory type that can be used to copy our data do
             // Also request it to be coherent, so that writes are visible to the GPU right after unmapping the buffer
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_HOST_VISIBLE_BIT or VkMemoryProperty_HOST_COHERENT_BIT)
+            memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
             vkAllocateMemory(device, memAlloc, null, stagingBuffers.vertices::memory).check()
             // Map and copy
-            vkMapMemory(device, stagingBuffers.vertices.memory, 0, memAlloc.allocationSize, 0, data).check()
+            vkMapMemory(device, stagingBuffers.vertices.memory, 0, memAlloc.allocationSize(), 0, data).check()
             memCopy(vertexBuffer.address, data[0], vertexBufferSize)
             vkUnmapMemory(device, stagingBuffers.vertices.memory)
             vkBindBufferMemory(device, stagingBuffers.vertices.buffer, stagingBuffers.vertices.memory, 0).check()
 
             // Create a device local buffer to which the (host local) vertex data will be copied and which will be used for rendering
-            vertexBufferInfo.usage = VkBufferUsage_VERTEX_BUFFER_BIT or VkBufferUsage_TRANSFER_DST_BIT
+            vertexBufferInfo.usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT or VK_BUFFER_USAGE_TRANSFER_DST_BIT)
             vkCreateBuffer(device, vertexBufferInfo, null, vertices::buffer).check()
             vkGetBufferMemoryRequirements(device, vertices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_DEVICE_LOCAL_BIT)
+            memAlloc.allocationSize(memReqs.size())
+            memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
             vkAllocateMemory(device, memAlloc, null, vertices::memory).check()
             vkBindBufferMemory(device, vertices.buffer, vertices.memory, 0).check()
 
             // Index buffer
-            val indexbufferInfo = cVkBufferCreateInfo {
-                type = VkStructureType_BUFFER_CREATE_INFO
-                size = indexBufferSize
-                usage = VkImageUsage_TRANSFER_SRC_BIT
+            val indexbufferInfo = VkBufferCreateInfo.calloc().apply {
+                sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+                size(indexBufferSize)
+                usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
             }
             // Copy index data to a buffer visible to the host (staging buffer)
             vkCreateBuffer(device, indexbufferInfo, null, stagingBuffers.indices::buffer).check()
             vkGetBufferMemoryRequirements(device, stagingBuffers.indices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_HOST_VISIBLE_BIT or VkMemoryProperty_HOST_COHERENT_BIT)
+            memAlloc.allocationSize(memReqs.size())
+            memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
             vkAllocateMemory(device, memAlloc, null, stagingBuffers.indices::memory).check()
             vkMapMemory(device, stagingBuffers.indices.memory, 0, indexBufferSize, 0, data).check()
             memCopy(indexBuffer.address, data[0], indexBufferSize)
@@ -495,17 +500,17 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             vkBindBufferMemory(device, stagingBuffers.indices.buffer, stagingBuffers.indices.memory, 0).check()
 
             // Create destination buffer with device only visibility
-            indexbufferInfo.usage = VkBufferUsage_INDEX_BUFFER_BIT or VkBufferUsage_TRANSFER_DST_BIT
+            indexbufferInfo.usage(VK_BUFFER_USAGE_INDEX_BUFFER_BIT or VK_BUFFER_USAGE_TRANSFER_DST_BIT)
             vkCreateBuffer(device, indexbufferInfo, null, indices::buffer).check()
             vkGetBufferMemoryRequirements(device, indices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_DEVICE_LOCAL_BIT)
+            memAlloc.allocationSize(memReqs.size())
+            memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
             vkAllocateMemory(device, memAlloc, null, indices::memory).check()
             vkBindBufferMemory(device, indices.buffer, indices.memory, 0).check()
 
-            val cmdBufferBeginInfo = cVkCommandBufferBeginInfo {
-                type = VkStructureType_COMMAND_BUFFER_BEGIN_INFO
-                next = NULL
+            val cmdBufferBeginInfo = VkCommandBufferBeginInfo.calloc().apply {
+                sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
+                pNext(NULL)
             }
 
             /*  Buffer copies have to be submitted to a queue, so we need a command buffer for them
@@ -514,12 +519,12 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             val copyCmd = getCommandBuffer(true)
 
             // Put buffer region copies into command buffer
-            val copyRegion = cVkBufferCopy(1)
+            val copyRegion = VkBufferCopy.calloc(1)
             // Vertex buffer
-            copyRegion.size = vertexBufferSize
+            copyRegion.size(vertexBufferSize)
             vkCmdCopyBuffer(copyCmd, stagingBuffers.vertices.buffer, vertices.buffer, copyRegion)
             // Index buffer
-            copyRegion.size = indexBufferSize
+            copyRegion.size(indexBufferSize)
             vkCmdCopyBuffer(copyCmd, stagingBuffers.indices.buffer, indices.buffer, copyRegion)
 
 
@@ -538,36 +543,36 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
                 result in lower rendering performance             */
 
             // Vertex buffer
-            val vertexBufferInfo = cVkBufferCreateInfo {
-                type = VkStructureType_BUFFER_CREATE_INFO
-                size = vertexBufferSize
-                usage = VkBufferUsage_VERTEX_BUFFER_BIT
+            val vertexBufferInfo = VkBufferCreateInfo.calloc().apply {
+                sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+                size(vertexBufferSize)
+                usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
             }
 
             // Copy vertex data to a buffer visible to the host
             vkCreateBuffer(device, vertexBufferInfo, null, vertices::buffer).check()
             vkGetBufferMemoryRequirements(device, vertices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
+            memAlloc.allocationSize(memReqs.size())
             // VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT is host visible memory, and VK_MEMORY_PROPERTY_HOST_COHERENT_BIT makes sure writes are directly visible
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_HOST_VISIBLE_BIT or VkMemoryProperty_HOST_COHERENT_BIT)
+            memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
             vkAllocateMemory(device, memAlloc, null, vertices::memory).check()
-            vkMapMemory(device, vertices.memory, 0, memAlloc.allocationSize, 0, data).check()
+            vkMapMemory(device, vertices.memory, 0, memAlloc.allocationSize(), 0, data).check()
             memCopy(vertexBuffer.address, data[0], vertexBufferSize)
             vkUnmapMemory(device, vertices.memory)
             vkBindBufferMemory(device, vertices.buffer, vertices.memory, 0).check()
 
             // Index buffer
-            val indexbufferInfo = cVkBufferCreateInfo {
-                type = VkStructureType_BUFFER_CREATE_INFO
-                size = indexBufferSize
-                usage = VkBufferUsage_INDEX_BUFFER_BIT
+            val indexbufferInfo = VkBufferCreateInfo.calloc().apply {
+                sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+                size(indexBufferSize)
+                usage(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
             }
 
             // Copy index data to a buffer visible to the host
             vkCreateBuffer(device, indexbufferInfo, null, indices::buffer).check()
             vkGetBufferMemoryRequirements(device, indices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_HOST_VISIBLE_BIT or VkMemoryProperty_HOST_COHERENT_BIT)
+            memAlloc.allocationSize(memReqs.size())
+            memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags))
             vkAllocateMemory(device, memAlloc, null, indices::memory).check()
             vkMapMemory(device, indices.memory, 0, indexBufferSize, 0, data).check()
             memCopy(indexBuffer.address, data[0], indexBufferSize)
@@ -600,33 +605,33 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         vkCreateDescriptorPool(device, descriptorPoolInfo, null, ::descriptorPool).check()
     }
 
-    fun setupDescriptorSetLayout() = withStack {
+    fun setupDescriptorSetLayout() {
         /*  Setup layout of descriptors used in this example
             Basically connects the different shader stages to descriptors for binding uniform buffers, image samplers, etc.
             So every shader binding should map to one descriptor set layout binding */
 
         // Binding 0: Uniform buffer (Vertex shader)
-        val layoutBinding = cVkDescriptorSetLayoutBinding(1) {
-            descriptorType = VkDescriptorType_UNIFORM_BUFFER
-            descriptorCount = 1
-            stageFlags = VkShaderStage_VERTEX_BIT
-            immutableSamplers = null
+        val layoutBinding = VkDescriptorSetLayoutBinding.calloc(1).apply {
+            descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+            descriptorCount(1)
+            stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
+            pImmutableSamplers(null)
         }
 
-        val descriptorLayout = cVkDescriptorSetLayoutCreateInfo {
-            type = VkStructureType_DESCRIPTOR_SET_LAYOUT_CREATE_INFO
-            next = NULL
-            bindings = layoutBinding
+        val descriptorLayout = VkDescriptorSetLayoutCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO)
+            pNext(NULL)
+            pBindings(layoutBinding)
         }
 
         vkCreateDescriptorSetLayout(device, descriptorLayout, null, ::descriptorSetLayout).check()
 
         // Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
         // In a more complex scenario you would have different pipeline layouts for different descriptor set layouts that could be reused
-        val pipelineLayoutCreateInfo = cVkPipelineLayoutCreateInfo {
-            type = VkStructureType_PIPELINE_LAYOUT_CREATE_INFO
-            next = NULL
-            setLayouts = descriptorSetLayout.toLongBuffer()
+        val pipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO)
+            pNext(NULL)
+            pSetLayouts(descriptorSetLayout.toLongBuffer())
         }
 
         vkCreatePipelineLayout(device, pipelineLayoutCreateInfo, null, ::pipelineLayout).check()
@@ -659,30 +664,30 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
     /** Create the depth (and stencil) buffer attachments used by our framebuffers
      *  Note: Override of virtual function in the base class and called from within VulkanExampleBase::prepare  */
-    override fun setupDepthStencil() = withStack {
+    override fun setupDepthStencil() {
         // Create an optimal image used as the depth stencil attachment
-        val image = cVkImageCreateInfo {
-            type = VkStructureType_IMAGE_CREATE_INFO
-            imageType = VkImageViewType_2D
-            format = depthFormat
+        val image = VkImageCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO)
+            imageType(VK_IMAGE_TYPE_2D)
+            format(depthFormat)
             // Use example's height and width
-            extent.wtf(size.x, size.y, 1)
-            mipLevels = 1
-            arrayLayers = 1
-            samples = VkSampleCount_1_BIT
-            tiling = VkImageTiling_OPTIMAL
-            usage = VkImageUsage_DEPTH_STENCIL_ATTACHMENT_BIT or VkImageUsage_TRANSFER_SRC_BIT
-            initialLayout = VkImageLayout_UNDEFINED
+            extent().set(size.x, size.y, 1)
+            mipLevels(1)
+            arrayLayers(1)
+            samples(VK_SAMPLE_COUNT_1_BIT)
+            tiling(VK_IMAGE_TILING_OPTIMAL)
+            usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT or VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
+            initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
         }
         vkCreateImage(device, image, null, depthStencil::image)
 
         // Allocate memory for the image (device local) and bind it to our image
-        val memAlloc = cVkMemoryAllocateInfo {
-            type = VkStructureType_MEMORY_ALLOCATE_INFO
-            val memReqs = cVkMemoryRequirements()
+        val memAlloc = VkMemoryAllocateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
+            val memReqs = VkMemoryRequirements.calloc()
             vkGetImageMemoryRequirements(device, depthStencil.image, memReqs)
-            allocationSize = memReqs.size
-            memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_DEVICE_LOCAL_BIT)
+            allocationSize(memReqs.size())
+            memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
         }
         vkAllocateMemory(device, memAlloc, null, depthStencil::mem).check()
         vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0).check()
@@ -690,41 +695,42 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         /*  Create a view for the depth stencil image
             Images aren't directly accessed in Vulkan, but rather through views described by a subresource range
             This allows for multiple views of one image with differing ranges (e.g. for different layers)   */
-        val depthStencilView = cVkImageViewCreateInfo {
-            type = VkStructureType_IMAGE_VIEW_CREATE_INFO
-            viewType = VkImageViewType_2D
-            format = depthFormat
-            with(subresourceRange) {
-                aspectMask = VkImageAspect_DEPTH_BIT or VkImageAspect_STENCIL_BIT
-                baseMipLevel = 0
-                levelCount = 1
-                baseArrayLayer = 0
-                layerCount = 1
+        val depthStencilView = VkImageViewCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
+            viewType(VK_IMAGE_VIEW_TYPE_2D)
+            format(depthFormat)
+            subresourceRange().apply {
+                aspectMask(VK_IMAGE_ASPECT_DEPTH_BIT or VK_IMAGE_ASPECT_STENCIL_BIT)
+                baseMipLevel(0)
+                levelCount(1)
+                baseArrayLayer(0)
+                layerCount(1)
             }
-            this.image = depthStencil.image
+            image(depthStencil.image)
         }
         vkCreateImageView(device, depthStencilView, null, depthStencil::view).check()
     }
 
     /** Create a frame buffer for each swap chain image
      *  Note: Override of virtual function in the base class and called from within VulkanExampleBase::prepare  */
-    override fun setupFrameBuffer() = withStack {
+    override fun setupFrameBuffer() {
         // Create a frame buffer for every image in the swapchain
         frameBuffers resize swapChain.imageCount
         for (i in frameBuffers.indices) {
-            val attachments = vkImageViewOf(
-                    swapChain.buffers[i].view,  // Color attachment is the view of the swapchain image
-                    depthStencil.view)          // Depth/Stencil attachment is the same for all frame buffers
+            val attachments = MemoryUtil.memAllocLong(2).apply {
+                set(0, swapChain.buffers[i].view)  // Color attachment is the view of the swapchain image
+                set(1, depthStencil.view)          // Depth/Stencil attachment is the same for all frame buffers
+            }
 
-            val frameBufferCreateInfo = cVkFramebufferCreateInfo().also {
-                it.type = VkStructureType_FRAMEBUFFER_CREATE_INFO
+            val frameBufferCreateInfo = VkFramebufferCreateInfo.calloc().apply {
+                sType(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
                 // All frame buffers use the same renderpass setup
-                it.renderPass = renderPass
-                it.attachments = attachments
+                renderPass(renderPass)
+                pAttachments(attachments)
                 //it.size(size, 1) TODO
-                it.width = size.x
-                it.height = size.y
-                it.layers = 1
+                width(size.x)
+                height(size.y)
+                layers(1)
             }
             // Create the framebuffer
             vkCreateFramebuffer(device, frameBufferCreateInfo, null, frameBuffers, i).check()
@@ -739,56 +745,56 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
      *  Using sub pass dependencies also adds implicit layout transitions for the attachment used, so we don't need
      *  to add explicit image memory barriers to transform them
      *  Note: Override of virtual function in the base class and called from within VulkanExampleBase::prepare  */
-    override fun setupRenderPass() = withStack {
+    override fun setupRenderPass() {
         // This example will use a single render pass with one subpass
 
         // Descriptors for the attachments used by this renderpass
-        val attachments = cVkAttachmentDescription(2)
+        val attachments = VkAttachmentDescription.calloc(2)
 
         // Color attachment
-        with(attachments[0]) {
-            format = swapChain.colorFormat                  // Use the color format selected by the swapchain
-            samples = VkSampleCount_1_BIT                   // We don't use multi sampling in this example
-            loadOp = VkAttachmentLoadOp_CLEAR               // Clear this attachment at the start of the render pass
-            storeOp = VkAttachmentStoreOp_STORE             // Keep it's contents after the render pass is finished (for displaying it)
-            stencilLoadOp = VkAttachmentLoadOp_DONT_CARE    // We don't use stencil, so don't care for load
-            stencilStoreOp = VkAttachmentStoreOp_DONT_CARE  // Same for store
-            initialLayout = VkImageLayout_UNDEFINED         // Layout at render pass start. Initial doesn't matter, so we use undefined
-            finalLayout = VkImageLayout_PRESENT_SRC_KHR     // Layout to which the attachment is transitioned when the render pass is finished
+        attachments[0].apply {
+            format(swapChain.colorFormat)                  // Use the color format selected by the swapchain
+            samples(VK_SAMPLE_COUNT_1_BIT)                   // We don't use multi sampling in this example
+            loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)               // Clear this attachment at the start of the render pass
+            storeOp(VK_ATTACHMENT_STORE_OP_STORE)             // Keep it's contents after the render pass is finished (for displaying it)
+            stencilLoadOp(VK_ATTACHMENT_LOAD_OP_DONT_CARE)    // We don't use stencil, so don't care for load
+            stencilStoreOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)  // Same for store
+            initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)         // Layout at render pass start. Initial doesn't matter, so we use undefined
+            finalLayout(KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)     // Layout to which the attachment is transitioned when the render pass is finished
         }
         // As we want to present the color buffer to the swapchain, we transition to PRESENT_KHR
         // Depth attachment
-        with(attachments[1]) {
-            format = depthFormat                                            // A proper depth format is selected in the example base
-            samples = VkSampleCount_1_BIT
-            loadOp = VkAttachmentLoadOp_CLEAR                               // Clear depth at start of first subpass
-            storeOp = VkAttachmentStoreOp_DONT_CARE                         // We don't need depth after render pass has finished (DONT_CARE may result in better performance)
-            stencilLoadOp = VkAttachmentLoadOp_DONT_CARE                    // No stencil
-            stencilStoreOp = VkAttachmentStoreOp_DONT_CARE                  // No Stencil
-            initialLayout = VkImageLayout_UNDEFINED                         // Layout at render pass start. Initial doesn't matter, so we use undefined
-            finalLayout = VkImageLayout_DEPTH_STENCIL_ATTACHMENT_OPTIMAL    // Transition to depth/stencil attachment
+        attachments[1].apply {
+            format(depthFormat)                                            // A proper depth format is selected in the example base
+            samples(VK_SAMPLE_COUNT_1_BIT)
+            loadOp(VK_SAMPLE_COUNT_1_BIT)                               // Clear depth at start of first subpass
+            storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)                         // We don't need depth after render pass has finished (DONT_CARE may result in better performance)
+            stencilLoadOp(VK_ATTACHMENT_LOAD_OP_DONT_CARE)                    // No stencil
+            stencilStoreOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)                  // No Stencil
+            initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)                         // Layout at render pass start. Initial doesn't matter, so we use undefined
+            finalLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)    // Transition to depth/stencil attachment
         }
 
         // Setup attachment references
-        val colorReference = cVkAttachmentReference(1) {
-            attachment = 0                                      // Attachment 0 is color
-            layout = VkImageLayout_COLOR_ATTACHMENT_OPTIMAL     // Attachment layout used as color during the subpass
+        val colorReference = VkAttachmentReference.calloc(1).apply {
+            attachment(0)                                      // Attachment 0 is color
+            layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)     // Attachment layout used as color during the subpass
         }
 
-        val depthReference = cVkAttachmentReference {
-            attachment = 1                                              // Attachment 1 is color
-            layout = VkImageLayout_DEPTH_STENCIL_ATTACHMENT_OPTIMAL     // Attachment used as depth/stemcil used during the subpass
+        val depthReference = VkAttachmentReference.calloc().apply {
+            attachment(1)                                              // Attachment 1 is color
+            layout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)     // Attachment used as depth/stemcil used during the subpass
         }
 
         // Setup a single subpass reference
-        val subpassDescription = cVkSubpassDescription(1) {
-            pipelineBindPoint = VkPipelineBindPoint_GRAPHICS
-            colorAttachmentCount = 1
-            colorAttachments = colorReference                   // Reference to the color attachment in slot 0
-            depthStencilAttachment = depthReference             // Reference to the depth attachment in slot 1
-            inputAttachments = null                             // (Input attachments not used by this example)
-            preserveAttachments = null                          // (Preserve attachments not used by this example)
-            resolveAttachments = null                           // Resolve attachments are resolved at the end of a sub pass and can be used for e.g. multi sampling
+        val subpassDescription = VkSubpassDescription.calloc(1).apply {
+            pipelineBindPoint(VK_PIPELINE_BIND_POINT_GRAPHICS)
+            colorAttachmentCount(1)
+            pColorAttachments(colorReference)                   // Reference to the color attachment in slot 0
+            pDepthStencilAttachment(depthReference)             // Reference to the depth attachment in slot 1
+            pInputAttachments(null)                             // (Input attachments not used by this example)
+            pPreserveAttachments(null)                          // (Preserve attachments not used by this example)
+            pResolveAttachments(null)                           // Resolve attachments are resolved at the end of a sub pass and can be used for e.g. multi sampling
         }
 
         /*  Setup subpass dependencies
@@ -797,38 +803,38 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             Each subpass dependency will introduce a memory and execution dependency between the source and dest subpass described by
             srcStageMask, dstStageMask, srcAccessMask, dstAccessMask (and dependencyFlags is set)
             Note: VK_SUBPASS_EXTERNAL is a special constant that refers to all commands executed outside of the actual renderpass)  */
-        val dependencies = cVkSubpassDependency(2)
+        val dependencies = VkSubpassDependency.calloc(2)
 
         /*  First dependency at the start of the renderpass
             Does the transition from final to initial layout         */
-        with(dependencies[0]) {
-            srcSubpass = VK_SUBPASS_EXTERNAL    // Producer of the dependency
-            dstSubpass = 0                      // Consumer is our single subpass that will wait for the execution depdendency
-            srcStageMask = VkPipelineStage_BOTTOM_OF_PIPE_BIT
-            dstStageMask = VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT
-            srcAccessMask = VkAccess_MEMORY_READ_BIT
-            dstAccessMask = VkAccess_COLOR_ATTACHMENT_READ_BIT or VkAccess_COLOR_ATTACHMENT_WRITE_BIT
-            dependencyFlags = VkDependency_BY_REGION_BIT
+        dependencies[0].apply {
+            srcSubpass(VK_SUBPASS_EXTERNAL)     // Producer of the dependency
+            dstSubpass(0)                      // Consumer is our single subpass that will wait for the execution depdendency
+            srcStageMask(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT)
+            dstStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+            srcAccessMask(VK_ACCESS_MEMORY_READ_BIT)
+            dstAccessMask(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
+            dependencyFlags(VK_DEPENDENCY_BY_REGION_BIT)
         }
 
         /*  Second dependency at the end the renderpass
             Does the transition from the initial to the final layout         */
-        with(dependencies[1]) {
-            srcSubpass = 0                      // Producer of the dependency is our single subpass
-            dstSubpass = VK_SUBPASS_EXTERNAL    // Consumer are all commands outside of the renderpass
-            srcStageMask = VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT
-            dstStageMask = VkPipelineStage_BOTTOM_OF_PIPE_BIT
-            srcAccessMask = VkAccess_COLOR_ATTACHMENT_READ_BIT or VkAccess_COLOR_ATTACHMENT_WRITE_BIT
-            dstAccessMask = VkAccess_MEMORY_READ_BIT
-            dependencyFlags = VkDependency_BY_REGION_BIT
+        dependencies[1].apply {
+            srcSubpass(0)                      // Producer of the dependency is our single subpass
+            dstSubpass(VK_SUBPASS_EXTERNAL)    // Consumer are all commands outside of the renderpass
+            srcStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+            dstStageMask(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT)
+            srcAccessMask(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
+            dstAccessMask(VK_ACCESS_MEMORY_READ_BIT)
+            dependencyFlags(VK_DEPENDENCY_BY_REGION_BIT)
         }
 
         // Create the actual renderpass
-        val renderPassInfo = cVkRenderPassCreateInfo {
-            type = VkStructureType_RENDER_PASS_CREATE_INFO
-            this.attachments = attachments                  // Descriptions of the attachments used by the render pass
+        val renderPassInfo = VkRenderPassCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO)
+            pAttachments(attachments)                  // Descriptions of the attachments used by the render pass
             // We only use one subpass in this example, Description of that subpass
-            subpasses = subpassDescription
+            pSubpasses(subpassDescription)
             this.dependencies = dependencies                // Subpass dependencies used by the render pass
         }
 
@@ -1046,52 +1052,52 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         vkDestroyShaderModule(device, shaderStages)
     }
 
-    fun prepareUniformBuffers() = withStack {
+    fun prepareUniformBuffers() {
         /*  Prepare and initialize a uniform buffer block containing shader uniforms
             Single uniforms like in OpenGL are no longer present in Vulkan. All Shader uniforms are passed
             via uniform buffer blocks         */
-        val memReqs = cVkMemoryRequirements()
+        val memReqs = VkMemoryRequirements.calloc()
 
         // Vertex shader uniform buffer block
-        val allocInfo = cVkMemoryAllocateInfo {
-            type = VkStructureType_MEMORY_ALLOCATE_INFO
-            next = NULL
-            allocationSize = 0
-            memoryTypeIndex = 0
+        val allocInfo = VkMemoryAllocateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
+            pNext(NULL)
+            allocationSize(0)
+            memoryTypeIndex(0)
         }
 
-        val bufferInfo = cVkBufferCreateInfo {
-            type = VkStructureType_BUFFER_CREATE_INFO
-            size = uboVS.size
+        val bufferInfo = VkBufferCreateInfo.calloc().apply {
+            sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+            size(uboVS.size)
             // This buffer will be used as a uniform buffer
-            usage = VkBufferUsage_UNIFORM_BUFFER_BIT
+            usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
         }
 
         // Create a new buffer
         vkCreateBuffer(device, bufferInfo, null, uniformBufferVS::buffer).check()
         // Get memory requirements including size, alignment and memory type
         vkGetBufferMemoryRequirements(device, uniformBufferVS.buffer, memReqs)
-        allocInfo.allocationSize = memReqs.size
+        allocInfo.allocationSize(memReqs.size())
         /*  Get the memory type index that supports host visibile memory access
             Most implementations offer multiple memory types and selecting the correct one to allocate memory from is crucial
             We also want the buffer to be host coherent so we don't have to flush (or sync after every update.
             Note: This may affect performance so you might not want to do this in a real world application that updates
             buffers on a regular base   */
-        allocInfo.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty_HOST_VISIBLE_BIT or VkMemoryProperty_HOST_COHERENT_BIT)
+        allocInfo.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
         // Allocate memory for the uniform buffer
         vkAllocateMemory(device, allocInfo, null, uniformBufferVS::memory).check()
         // Bind memory to buffer
         vkBindBufferMemory(device, uniformBufferVS.buffer, uniformBufferVS.memory, 0).check()
 
         // Store information in the uniform's descriptor that is used by the descriptor set
-        uniformBufferVS.descriptor.buffer = uniformBufferVS.buffer
-        uniformBufferVS.descriptor.offset = 0
-        uniformBufferVS.descriptor.range = uboVS.size
+        uniformBufferVS.descriptor.buffer(uniformBufferVS.buffer)
+        uniformBufferVS.descriptor.offset(0)
+        uniformBufferVS.descriptor.range(uboVS.size)
 
         updateUniformBuffers()
     }
 
-    fun updateUniformBuffers() = withStack {
+    fun updateUniformBuffers() {
         // Update matrices
         uboVS.projectionMatrix = glm.perspective(60f.rad, this@VulkanExample.size.aspect, 0.1f, 256f)
 
@@ -1103,7 +1109,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
                 .rotate(rotation.z.rad, 0f, 0f, 1f)
 
         // Map uniform buffer and update it
-        val pData = mallocPointer()
+        val pData = memAllocPointer(1)
         vkMapMemory(device, uniformBufferVS.memory, 0, uboVS.size, 0, pData)
         val buffer = MemoryUtil.memByteBuffer(pData[0], Mat4.size * 3)
         with(uboVS) {
@@ -1126,6 +1132,16 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         setupDescriptorPool()
         setupDescriptorSet()
         buildCommandBuffers()
+
+        // Handle canvas resize
+        glfwSetWindowSizeCallback(window, { windowHandle, width, height ->
+            if (width > 0 && height > 0) {
+                size.put(width, height)
+                TODO()//swapchainRecreator.mustRecreate = true
+            }
+        })
+        glfwShowWindow(window)
+
         prepared = true
     }
 

@@ -1,6 +1,8 @@
 package vulkan.base
 
+import glm_.vec2.Vec2i
 import org.lwjgl.vulkan.VkQueue
+import vkn.VkFramebuffer
 
 class UIOverlayCreateInfo {
 
@@ -80,9 +82,18 @@ class UIOverlay {
 //        vkDestroyCommandPool(createInfo.device->logicalDevice, commandPool, nullptr);
 //        vkDestroyFence(createInfo.device->logicalDevice, fence, nullptr);
     }
-//
+
+    //
 //    void update();
-//    void resize(uint32_t width, uint32_t height, std::vector<VkFramebuffer> framebuffers);
+    fun resize(size: Vec2i, framebuffers: ArrayList<VkFramebuffer>) {
+
+//        ImGuiIO& io = ImGui::GetIO();
+//        io.DisplaySize = ImVec2((float)(width), (float)(height));
+//        createInfo.width = width;
+//        createInfo.height = height;
+//        createInfo.framebuffers = framebuffers;
+//        updateCommandBuffers()
+    }
 //
 //    void submit(VkQueue queue, uint32_t bufferindex, VkSubmitInfo submitInfo);
 //

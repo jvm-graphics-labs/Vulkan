@@ -1,6 +1,8 @@
 package vulkan.base
 
-import vkn.*
+import org.lwjgl.vulkan.*
+import vkn.VkCommandBufferLevel
+import vkn.VkCommandPool
 
 object initializers {
 
@@ -18,14 +20,14 @@ object initializers {
 //        return mappedMemoryRange;
 //    }
 //
-    fun VkMemoryStack.commandBufferAllocateInfo(
+    fun commandBufferAllocateInfo(
             commandPool: VkCommandPool,
             level: VkCommandBufferLevel,
-            bufferCount: Int) = cVkCommandBufferAllocateInfo {
-        type = VkStructureType_COMMAND_BUFFER_ALLOCATE_INFO
-        this.commandPool = commandPool
-        this.level = level
-        commandBufferCount = bufferCount
+            bufferCount: Int): VkCommandBufferAllocateInfo = VkCommandBufferAllocateInfo.calloc().apply {
+        sType(VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
+        commandPool(commandPool)
+        level(level)
+        commandBufferCount(bufferCount)
     }
 
     //
@@ -36,7 +38,9 @@ object initializers {
 //        return cmdPoolCreateInfo;
 //    }
 //
-    fun VkMemoryStack.commandBufferBeginInfo() = cVkCommandBufferBeginInfo { type = VkStructureType_COMMAND_BUFFER_BEGIN_INFO }
+    fun commandBufferBeginInfo() = VkCommandBufferBeginInfo.calloc().apply {
+        sType(VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
+    }
 
     //    inline VkCommandBufferInheritanceInfo commandBufferInheritanceInfo()
 //    {
@@ -115,7 +119,9 @@ object initializers {
 //        return framebufferCreateInfo;
 //    }
 //
-    fun VkMemoryStack.semaphoreCreateInfo() = cVkSemaphoreCreateInfo { type = VkStructureType_SEMAPHORE_CREATE_INFO }
+    fun semaphoreCreateInfo(): VkSemaphoreCreateInfo = VkSemaphoreCreateInfo.calloc().apply {
+        sType(VK10.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO)
+    }
 
     //
 //    inline VkFenceCreateInfo fenceCreateInfo(VkFenceCreateFlags flags = 0)
@@ -133,7 +139,7 @@ object initializers {
 //        return eventCreateInfo;
 //    }
 //
-    fun VkMemoryStack.submitInfo() = cVkSubmitInfo { type = VkStructureType_SUBMIT_INFO }
+    fun submitInfo(): VkSubmitInfo = VkSubmitInfo.calloc().apply { sType(VK10.VK_STRUCTURE_TYPE_SUBMIT_INFO) }
 //
 //    inline VkViewport viewport(
 //            float width,
