@@ -8,7 +8,6 @@ import glm_.set
 import glm_.size
 import glm_.vec3.Vec3
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
@@ -25,6 +24,7 @@ import vulkan.base.VulkanExampleBase
 import vulkan.base.initializers.commandBufferBeginInfo
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import java.io.File
+import glfw_.glfw
 
 
 fun main(args: Array<String>) {
@@ -143,8 +143,8 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
     override fun destroy() {
 
-        glfwDestroyWindow(window)
-        glfwTerminate()
+        window.destroy()
+        glfw.terminate()
 
         /*  Clean up used Vulkan resources
             Note: Inherited destructor cleans up resources stored in base class         */
@@ -1132,14 +1132,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         setupDescriptorSet()
         buildCommandBuffers()
 
-        // Handle canvas resize
-        glfwSetWindowSizeCallback(window, { windowHandle, width, height ->
-            if (width > 0 && height > 0) {
-                size.put(width, height)
-//                TODO()//swapchainRecreator.mustRecreate = true
-            }
-        })
-        glfwShowWindow(window)
+        window.show()
 
         prepared = true
     }

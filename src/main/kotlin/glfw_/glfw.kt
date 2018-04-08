@@ -1,4 +1,4 @@
-package glfw
+package glfw_
 
 import glm_.vec2.Vec2i
 import org.lwjgl.glfw.GLFW.*
@@ -8,7 +8,6 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.VkAllocationCallbacks
 import org.lwjgl.vulkan.VkInstance
-import uno.glfw.windowHint
 import vkn.VkSurfaceKHR
 import vkn.address
 import vkn.check
@@ -31,19 +30,21 @@ object glfw {
             windowHint.forwardComp = true
     }
 
-    fun <T> windowHint(block: windowHint.() -> T) = windowHint.block()
+    val vulkanSupported get() = GLFWVulkan.glfwVulkanSupported()
+
+    fun <R> windowHint(block: windowHint.() -> R) = windowHint.block()
 
     val primaryMonitor get() = glfwGetPrimaryMonitor()
 
-    val videoMode get() = glfwGetVideoMode(glfw.primaryMonitor)!!
+    val videoMode get() = glfwGetVideoMode(primaryMonitor)!!
 
     var start = System.nanoTime()
-    val time get() = (System.nanoTime() - glfw.start) / 1e9f
+    val time get() = (System.nanoTime() - start) / 1e9f
 
     fun videoMode(monitor: Long) = glfwGetVideoMode(monitor)
 
     val resolution
-        get() = Vec2i(glfw.videoMode.width(), glfw.videoMode.height())
+        get() = Vec2i(videoMode.width(), videoMode.height())
 
     var swapInterval = 0
         set(value) = glfwSwapInterval(value)

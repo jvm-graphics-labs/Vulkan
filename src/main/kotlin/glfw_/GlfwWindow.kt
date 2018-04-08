@@ -1,4 +1,4 @@
-package glfw
+package glfw_
 
 import glm_.bool
 import glm_.vec2.Vec2
@@ -11,7 +11,6 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkAllocationCallbacks
 import org.lwjgl.vulkan.VkInstance
-import vkn.*
 
 /**
  * Created by GBarbieri on 24.04.2017.
@@ -22,18 +21,21 @@ open class GlfwWindow(var handle: Long) {
 
     constructor(windowSize: Vec2i,
                 title: String,
+                monitor: Long = NULL,
                 position: Vec2i = Vec2i(Int.MIN_VALUE),
-                installCallbacks: Boolean = true) : this(windowSize.x, windowSize.y, title, position, installCallbacks)
+                installCallbacks: Boolean = true) : this(windowSize.x, windowSize.y, title, monitor, position, installCallbacks)
 
     constructor(x: Int,
                 title: String,
+                monitor: Long = NULL,
                 position: Vec2i = Vec2i(Int.MIN_VALUE),
-                installCallbacks: Boolean = true) : this(x, x, title, position, installCallbacks)
+                installCallbacks: Boolean = true) : this(x, x, title, monitor, position, installCallbacks)
 
     constructor(width: Int, height: Int,
                 title: String,
+                monitor: Long = NULL,
                 position: Vec2i = Vec2i(Int.MIN_VALUE),
-                installCallbacks: Boolean = true) : this(glfwCreateWindow(width, height, title, NULL, NULL)) {
+                installCallbacks: Boolean = true) : this(glfwCreateWindow(width, height, title, monitor, NULL)) {
 
         this._title = title
 
@@ -128,7 +130,7 @@ open class GlfwWindow(var handle: Long) {
     fun iconify() = glfwIconifyWindow(handle)
     fun restore() = glfwRestoreWindow(handle)
     fun maximize() = glfwMaximizeWindow(handle)
-    fun show(show: Boolean) = if (show) glfwShowWindow(handle) else glfwHideWindow(handle)
+    fun show(show: Boolean = true) = if (show) glfwShowWindow(handle) else glfwHideWindow(handle)
     fun hide() = glfwHideWindow(handle)
     fun focus() = glfwFocusWindow(handle)
 

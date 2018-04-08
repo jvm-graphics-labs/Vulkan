@@ -1,5 +1,6 @@
 package vulkan.base
 
+import glfw_.*
 import glm_.f
 import glm_.i
 import glm_.vec2.Vec2
@@ -7,7 +8,6 @@ import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import org.lwjgl.glfw.*
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.*
@@ -17,7 +17,6 @@ import org.lwjgl.vulkan.KHRWin32Surface.VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.doubleBufferBig
 import uno.buffer.intBufferOf
-import glfw.glfw
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.initializers.commandBufferAllocateInfo
@@ -177,7 +176,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //        bool middle = false;
 //    } mouseButtons;
 
-    var window = NULL
+    lateinit var window: GlfwWindow
 
     init {
 
@@ -455,26 +454,28 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
     /** Create GLFW window  */
     fun setupWindow() {
-        val fullscreen = false
-        glfwInit()
-        if (!glfwVulkanSupported()) throw AssertionError("GLFW failed to find the Vulkan loader")
-        glfwDefaultWindowHints()
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-        window = when {
-            fullscreen -> {
-                val monitor = glfwGetPrimaryMonitor()
-                val mode = glfwGetVideoMode(monitor)!!
-                glfwCreateWindow(mode.width(), mode.height(), windowTitle, monitor, NULL)
+        with(glfw) {
+            val fullscreen = false
+            init()
+            if (!vulkanSupported) throw AssertionError("GLFW failed to find the Vulkan loader")
+            windowHint {
+                default()
+                api = "none"
+                visible = false
             }
-            else -> glfwCreateWindow(size.x, size.y, windowTitle, NULL, NULL)
+            window = when {
+                fullscreen -> GlfwWindow(videoMode.width(), videoMode.height(), windowTitle, primaryMonitor)
+                else -> GlfwWindow(size, windowTitle)
+            }
         }
-        glfwSetKeyCallback(window, keyboardHandler)
-        glfwSetMouseButtonCallback(window, mouseHandler)
-        glfwSetCursorPosCallback(window, mouseMoveHandler)
-        glfwSetWindowCloseCallback(window, closeHandler)
-        glfwSetFramebufferSizeCallback(window, framebufferSizeHandler)
-        glfwSetScrollCallback(window, mouseScrollHandler)
+        with(window) {
+            keyCallback = keyboardHandler
+            mouseButtonCallback = mouseHandler
+            cursorPosCallback = mouseMoveHandler
+            windowCloseCallback = closeHandler
+            framebufferSizeCallback = framebufferSizeHandler
+            scrollCallback = mouseScrollHandler
+        }
     }
 
     /**
@@ -486,7 +487,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         settings.validation = enableValidation
 
-        val appInfo = VkApplicationInfo.calloc().apply {
+        val appInfo = cVkApplicationInfo {
             sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
             pApplicationName(name.utf8)
             pEngineName(name.utf8)
@@ -809,10 +810,9 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         destSize(size)
 
-        while (!glfwWindowShouldClose(window)) {
-            /*  Handle window messages. Resize events happen exactly here.
+        window.loop {
+            /*  Handle window messages. Resize events happen exactly here (before lambda).
                 So it is safe to use the new swapchain images and framebuffers afterwards.             */
-            glfwPollEvents()
             renderFrame()
         }
 
@@ -847,7 +847,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         if (fpsTimer > 1000f) {
             lastFPS = (frameCounter.f * (1000f / fpsTimer)).i
             if (!settings.overlay)
-                glfwSetWindowTitle(window, windowTitle)
+                window.title = windowTitle
             fpsTimer = 0f
             frameCounter = 0
         }
@@ -910,7 +910,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay);
 
     /** Called if the window is resized and some resources have to be recreated    */
-    fun windowResize(newSize: Vec2) {
+    fun windowResize(newSize: Vec2i) {
         if (!prepared) return
         prepared = false
 
@@ -950,38 +950,34 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     }
 //    void handleMouseMove(int32_t x, int32_t y)
 
-    var keyboardHandler = GLFWKeyCallbackI { _, key, _, action, _ ->
+    var keyboardHandler: KeyCallbackT = { key, _, action, _ ->
         when (action) {
             GLFW_PRESS -> keyPressBase(key)
             GLFW_RELEASE -> keyReleaseBase(key)
         }
     }
 
-    var mouseHandler = GLFWMouseButtonCallbackI { window, _, action, _ ->
-        if (action == GLFW_PRESS) {
-            val x = doubleBufferBig(1)
-            val y = doubleBufferBig(1)
-            glfwGetCursorPos(window, x, y)
-            mousePos.put(x[0], y[0])
-        }
+    var mouseHandler: MouseButtonCallbackT = { _, action, _ ->
+        if (action == GLFW_PRESS)
+            mousePos.put(window.cursorPos)
     }
 
-    var mouseMoveHandler = GLFWCursorPosCallbackI { _, xPos, yPos -> mouseMoved(Vec2(xPos, yPos)) }
+    var mouseMoveHandler: CursorPosCallbackT = { pos -> mouseMoved(pos) }
 
-    var closeHandler = GLFWWindowCloseCallbackI {
+    var closeHandler: WindowCloseCallbackT = {
         prepared = false
-        glfwSetWindowShouldClose(it, true)
+        window.shouldClose = true
     }
 
-    var framebufferSizeHandler = GLFWFramebufferSizeCallbackI { _, width, height -> windowResize(Vec2(width, height)) }
+    var framebufferSizeHandler: FramebufferSizeCallbackT = { size -> windowResize(size) }
 
-    var mouseScrollHandler = GLFWScrollCallbackI { _, _, yOffset -> mouseScrolled(yOffset.f) }
+    var mouseScrollHandler: ScrollCallbackT = { scroll -> mouseScrolled(scroll.y) }
 
     fun keyPressBase(key: Int) {
         when (key) {
             GLFW_KEY_P -> paused = !paused
             GLFW_KEY_F1 -> if (settings.overlay) TODO() //textOverlay->visible = !textOverlay->visible;
-            GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true)
+            GLFW_KEY_ESCAPE -> window.shouldClose = true
         }
         if (camera.type == Camera.CameraType.firstPerson)
             when (key) {
@@ -1009,20 +1005,20 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     fun mouseMoved(newPos: Vec2) {
         val deltaPos = mousePos - newPos
         if (deltaPos.x == 0 && deltaPos.y == 0) return
-        if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)) {
+        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT)) {
             zoom += deltaPos.y * .005f * zoomSpeed
             camera translate Vec3(0f, 0f, deltaPos.y * .005f * zoomSpeed)
             mousePos put newPos
             viewChanged()
         }
-        if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)) {
+        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
             val deltaPos3 = Vec3(deltaPos.y, -deltaPos.x, 0f) * 1.25f * rotationSpeed
             rotation += deltaPos3
             camera rotate deltaPos3
             mousePos put newPos
             viewChanged()
         }
-        if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE)) {
+        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_MIDDLE)) {
             val deltaPos3 = Vec3(deltaPos, 0f) * 0.01f
             cameraPos -= deltaPos3
             camera translate -deltaPos3

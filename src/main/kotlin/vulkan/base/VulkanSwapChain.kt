@@ -1,10 +1,9 @@
 package vulkan.base
 
+import glfw_.GlfwWindow
 import gli_.has
 import glm_.vec2.Vec2i
-import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSurface.*
 import org.lwjgl.vulkan.KHRSwapchain.*
@@ -41,14 +40,11 @@ class VulkanSwapChain {
     var queueNodeIndex = UINT32_MAX
 
     /** @brief Creates the platform specific surface abstraction of the native platform window used for presentation */
-    fun initSurface(instance: VkInstance, window: Long) {
+    fun initSurface(instance: VkInstance, window: GlfwWindow) {
 
         // Create the os-specific surface
-        surface = withLong {
-            val err = GLFWVulkan.glfwCreateWindowSurface(instance, window, null, it)
-            if (err != VK_SUCCESS)
-                throw AssertionError("Failed to create surface: ${err.string}")
-        }
+        surface = window.createSurface(instance)
+
         // Get available queue family properties
         val queueProps = vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice)
 

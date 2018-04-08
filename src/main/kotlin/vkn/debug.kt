@@ -7,7 +7,7 @@ import glm_.set
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
-import glfw.glfw
+import glfw_.glfw
 import org.lwjgl.glfw.GLFWVulkan
 import uno.kotlin.buffers.toCollection
 import unsigned.Uint
@@ -16,7 +16,7 @@ import vkn.ArrayListLong.set
 import java.nio.ByteBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
-import glfw.appBuffer
+import glfw_.appBuffer
 
 val String.utf8: ByteBuffer get() = MemoryUtil.memUTF8(this)
 val Long.utf8: String get() = MemoryUtil.memUTF8(this)

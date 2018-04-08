@@ -1,10 +1,9 @@
-package glfw
+package glfw_
 
 import glm_.BYTES
 import glm_.L
 import glm_.i
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.jni.JNINativeInterface
 import uno.buffer.bufferBig
 import java.nio.DoubleBuffer
 import java.nio.IntBuffer
@@ -41,3 +40,5 @@ object appBuffer {
 
     fun reset() = pointer.set(address)
 }
+
+fun AtomicLong.getAndAdd(int: Int) = getAndAdd(int.L)

@@ -1,7 +1,5 @@
-package uno.glfw
+package glfw_
 
-import glm_.i
-import glm_.s
 import glm_.i
 import org.lwjgl.glfw.GLFW.*
 
