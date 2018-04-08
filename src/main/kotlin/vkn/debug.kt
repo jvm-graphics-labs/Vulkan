@@ -5,10 +5,10 @@ import glm_.bool
 import glm_.i
 import glm_.set
 import org.lwjgl.PointerBuffer
-import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
-import uno.glfw.glfw
+import glfw.glfw
+import org.lwjgl.glfw.GLFWVulkan
 import uno.kotlin.buffers.toCollection
 import unsigned.Uint
 import unsigned.Ulong
@@ -16,6 +16,7 @@ import vkn.ArrayListLong.set
 import java.nio.ByteBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
+import glfw.appBuffer
 
 val String.utf8: ByteBuffer get() = MemoryUtil.memUTF8(this)
 val Long.utf8: String get() = MemoryUtil.memUTF8(this)
@@ -75,7 +76,7 @@ fun vkCreateDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateI
 }
 
 inline fun <R> withLong(block: (LongBuffer) -> R): Long {
-    val pLong = MemoryUtil.memAllocLong(1)
+    val pLong = appBuffer.long
     block(pLong)
     return pLong[0]
 }

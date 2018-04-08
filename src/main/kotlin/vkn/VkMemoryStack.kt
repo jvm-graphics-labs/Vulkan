@@ -6,13 +6,11 @@ import glm_.i
 import glm_.set
 import glm_.vec4.Vec4
 import org.lwjgl.PointerBuffer
-import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.Configuration
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_FALSE
-import uno.glfw.glfw
 import uno.kotlin.buffers.toCollection
 import vkn.ArrayListLong.set
 import vkn.VkMemoryStack.Companion.withStack

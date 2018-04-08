@@ -7,12 +7,9 @@ import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import org.lwjgl.glfw.*
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.Platform
-import org.lwjgl.system.windows.User32.VK_ESCAPE
-import org.lwjgl.system.windows.User32.VK_F1
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSurface.VK_KHR_SURFACE_EXTENSION_NAME
@@ -20,7 +17,7 @@ import org.lwjgl.vulkan.KHRWin32Surface.VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.doubleBufferBig
 import uno.buffer.intBufferOf
-import uno.glfw.glfw
+import glfw.glfw
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.initializers.commandBufferAllocateInfo
@@ -463,7 +460,6 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         if (!glfwVulkanSupported()) throw AssertionError("GLFW failed to find the Vulkan loader")
 //        glfwDefaultWindowHints()
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
-//        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
         window = when {
             fullscreen -> {
                 val monitor = glfwGetPrimaryMonitor()
@@ -597,7 +593,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         vkCreateImage(device, image, null, depthStencil::image)
         vkGetImageMemoryRequirements(device, depthStencil.image, memReqs)
         memAlloc.allocationSize = memReqs.size
-        memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty_DEVICE_LOCAL_BIT)
+        memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
         vkAllocateMemory(device, memAlloc, null, depthStencil::mem).check()
         vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0).check()
 
@@ -818,6 +814,9 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
             glfwPollEvents()
             renderFrame()
         }
+
+        // Flush device to make sure all resources can be freed
+        vkDeviceWaitIdle(device)
     }
 
     /** Render one frame of a render loop on platforms that sync rendering  */

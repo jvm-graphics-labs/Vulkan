@@ -39,10 +39,10 @@ fun main(args: Array<String>) {
 }
 
 /** Set to "true" to enable Vulkan's validation layers (see vulkandebug.cpp for details)    */
-val ENABLE_VALIDATION = true
+const val ENABLE_VALIDATION = true
 /** Set to "true" to use staging buffers for uploading vertex and index data to device local memory
  *  See "prepareVertices" for details on what's staging and on why to use it    */
-var USE_STAGING = true
+const val USE_STAGING = true
 
 class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
@@ -52,7 +52,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         // Values not set here are initialized in the base class constructor
     }
 
-    val memoryPropertiesFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    val memoryPropertiesFlags = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
 
     /** Vertex layout used in this example  */
     object Vertex {
@@ -82,7 +82,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     private val uniformBufferVS = object {
         var memory = NULL
         var buffer = NULL
-        var descriptor = VkDescriptorBufferInfo.malloc(1)
+        var descriptor = cVkDescriptorBufferInfo(1)
     }
 
     /*
@@ -146,7 +146,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         glfwDestroyWindow(window)
         glfwTerminate()
 
-        vkQueueWaitIdle(queue)
         /*  Clean up used Vulkan resources
             Note: Inherited destructor cleans up resources stored in base class         */
         vkDestroyPipeline(device, pipeline)

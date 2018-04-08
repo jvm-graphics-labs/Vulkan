@@ -1083,13 +1083,15 @@ val VkQueue_SPARSE_BINDING_BIT: VkQueueFlagBits = 0x00000008
 
 typealias VkQueueFlags = VkFlags
 
-typealias VkMemoryPropertyFlagBits = Int
+enum class VkMemoryProperty(val i: Int) {
+    DEVICE_LOCAL_BIT(0x00000001),
+    HOST_VISIBLE_BIT(0x00000002),
+    HOST_COHERENT_BIT(0x00000004),
+    HOST_CACHED_BIT(0x00000008),
+    LAZILY_ALLOCATED_BIT(0x00000010);
 
-val VkMemoryProperty_DEVICE_LOCAL_BIT: VkMemoryPropertyFlagBits = 0x00000001
-val VkMemoryProperty_HOST_VISIBLE_BIT: VkMemoryPropertyFlagBits = 0x00000002
-val VkMemoryProperty_HOST_COHERENT_BIT: VkMemoryPropertyFlagBits = 0x00000004
-val VkMemoryProperty_HOST_CACHED_BIT: VkMemoryPropertyFlagBits = 0x00000008
-val VkMemoryProperty_LAZILY_ALLOCATED_BIT: VkMemoryPropertyFlagBits = 0x00000010
+    infix fun or(b: VkMemoryProperty): VkMemoryPropertyFlags = i or b.i
+}
 
 typealias VkMemoryPropertyFlags = VkFlags
 
