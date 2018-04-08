@@ -1136,7 +1136,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         glfwSetWindowSizeCallback(window, { windowHandle, width, height ->
             if (width > 0 && height > 0) {
                 size.put(width, height)
-                TODO()//swapchainRecreator.mustRecreate = true
+//                TODO()//swapchainRecreator.mustRecreate = true
             }
         })
         glfwShowWindow(window)

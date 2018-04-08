@@ -458,8 +458,9 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         val fullscreen = false
         glfwInit()
         if (!glfwVulkanSupported()) throw AssertionError("GLFW failed to find the Vulkan loader")
-//        glfwDefaultWindowHints()
+        glfwDefaultWindowHints()
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
         window = when {
             fullscreen -> {
                 val monitor = glfwGetPrimaryMonitor()
