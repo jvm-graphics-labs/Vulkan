@@ -330,9 +330,9 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 
     val VkExtensionProperties.extensionName get() = extensionName()
     var VkApplicationInfo.type: VkStructureType
-        get() = sType()
+        get() = VkStructureType of sType()
         set(value) {
-            sType(value)
+            sType(value.i)
         }
     var VkApplicationInfo.applicationName
         get() = pApplicationNameString()// TODO
@@ -352,9 +352,9 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 
 
     var VkInstanceCreateInfo.type: VkStructureType
-        get() = sType()
+        get() = VkStructureType of sType()
         set(value) {
-            sType(value)
+            sType(value.i)
         }
     var VkInstanceCreateInfo.next
         get() = pNext()
@@ -384,9 +384,9 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 
 
     var VkDebugReportCallbackCreateInfoEXT.type: VkStructureType
-        get() = sType()
+        get() = VkStructureType of sType()
         set(value) {
-            sType(value)
+            sType(value.i)
         }
     var VkDebugReportCallbackCreateInfoEXT.callback: VkDebugReportCallbackI?
 //        get() = pfnCallback()
@@ -406,9 +406,9 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
 
 
     var VkDeviceQueueCreateInfo.type: VkStructureType
-        get() = sType()
+        get() = VkStructureType of sType()
         set(value) {
-            sType(value)
+            sType(value.i)
         }
     var VkDeviceQueueCreateInfo.queueFamilyIndex
         get() = queueFamilyIndex()
@@ -422,9 +422,9 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         }
 
     var VkDeviceCreateInfo.type: VkStructureType
-        get() = sType()
+        get() = VkStructureType of sType()
         set(value) {
-            sType(value)
+            sType(value.i)
         }
     var VkDeviceCreateInfo.queueCreateInfos: VkDeviceQueueCreateInfo.Buffer
         get() = pQueueCreateInfos()
@@ -444,9 +444,9 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         }
 
     var VkCommandPoolCreateInfo.type: VkStructureType
-        get() = sType()
+        get() = VkStructureType of sType()
         set(value) {
-            sType(value)
+            sType(value.i)
         }
     var VkCommandPoolCreateInfo.queueFamilyIndex
         get() = queueFamilyIndex()

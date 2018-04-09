@@ -45,9 +45,9 @@ fun vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice, q
 
 
 var VkSemaphoreCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkSemaphoreCreateInfo.next
     get() = pNext()
@@ -76,9 +76,9 @@ val VkSurfaceCapabilitiesKHR.supportedUsageFlags: VkImageUsageFlags get() = supp
 
 
 var VkSwapchainCreateInfoKHR.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkSwapchainCreateInfoKHR.next: Long
     get() = pNext()
@@ -164,9 +164,9 @@ var VkSwapchainCreateInfoKHR.oldSwapchain: VkSwapchainKHR
 
 
 var VkImageViewCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkImageViewCreateInfo.next
     get() = pNext()
@@ -232,9 +232,9 @@ var VkImageSubresourceRange.layerCount
 
 
 var VkCommandBufferAllocateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkCommandBufferAllocateInfo.next
     get() = pNext()
@@ -259,9 +259,9 @@ var VkCommandBufferAllocateInfo.commandBufferCount
 
 
 var VkImageCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkImageCreateInfo.next
     get() = pNext()
@@ -329,9 +329,9 @@ var VkImageCreateInfo.initialLayout: VkImageLayout
 
 
 var VkMemoryAllocateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkMemoryAllocateInfo.next
     get() = pNext()
@@ -501,9 +501,9 @@ var VkSubpassDependency.dependencyFlags: VkDependencyFlags
 
 
 var VkRenderPassCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkRenderPassCreateInfo.next
     get() = pNext()
@@ -536,9 +536,9 @@ var VkRenderPassCreateInfo.dependencies
 
 
 var VkPipelineCacheCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkPipelineCacheCreateInfo.next
     get() = pNext()
@@ -609,9 +609,9 @@ var VkPipelineCacheCreateInfo.pInitialData
 
 
 var VkPresentInfoKHR.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 var VkPresentInfoKHR.next
     get() = pNext()

@@ -1,13 +1,32 @@
 package vkn
 
+import glfw_.appBuffer
+import glfw_.appBuffer.pointer
+import glfw_.getAndAdd
 import glm_.f
-import glm_.i
-import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec2.Vec2t
-import glm_.vec3.Vec3i
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import java.nio.IntBuffer
+
+class ApplicationInfo {
+
+    val struct = pointer.getAndAdd(VkApplicationInfo.SIZEOF)
+
+    inline var type
+        get() = VkStructureType of VkApplicationInfo.nsType(struct)
+        set(value) = VkApplicationInfo.nsType(struct, value.i)
+    inline var next
+        get() = VkApplicationInfo.npNext(struct)
+        set(value) = VkApplicationInfo.npNext(struct, value)
+    inline var applicationName
+        get() = VkApplicationInfo.npApplicationNameString(struct)
+        set(value) = VkApplicationInfo.npApplicationName(struct, value?.utf8)
+    inline var applicationVersion
+        get() = VkApplicationInfo.napplicationVersion(struct)
+        set(value) = VkApplicationInfo.napiVersion(struct, value)
+}
 
 //typedef struct VkApplicationInfo {
 //    VkStructureType    sType;
@@ -335,9 +354,9 @@ import java.nio.IntBuffer
 //} VkLayerProperties;
 
 inline var VkSubmitInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkSubmitInfo.next
     get() = pNext()
@@ -482,9 +501,9 @@ inline var VkSubmitInfo.signalSemaphores
 //} VkBindSparseInfo;
 
 inline var VkFenceCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkFenceCreateInfo.next
     get() = pNext()
@@ -519,9 +538,9 @@ inline var VkFenceCreateInfo.flags: VkFenceCreateFlags
 //} VkQueryPoolCreateInfo;
 
 inline var VkBufferCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkBufferCreateInfo.next
     get() = pNext()
@@ -619,9 +638,9 @@ inline var VkBufferCreateInfo.queueFamilyIndices
 //} VkImageViewCreateInfo;
 
 inline var VkShaderModuleCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkShaderModuleCreateInfo.next
     get() = pNext()
@@ -664,9 +683,9 @@ inline var VkShaderModuleCreateInfo.code
 
 
 inline var VkPipelineShaderStageCreateInfo.type
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineShaderStageCreateInfo.next
     get() = pNext()
@@ -740,9 +759,9 @@ inline var VkVertexInputAttributeDescription.offset
 
 
 inline var VkPipelineVertexInputStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineVertexInputStateCreateInfo.next
     get() = pNext()
@@ -779,14 +798,14 @@ inline var VkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptions
 //} VkPipelineVertexInputStateCreateInfo;
 
 inline var VkPipelineInputAssemblyStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineInputAssemblyStateCreateInfo.next: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineInputAssemblyStateCreateInfo.flags: VkPipelineInputAssemblyStateCreateFlags
     get() = flags()
@@ -845,6 +864,7 @@ inline var VkViewport.maxDepth
     set(value) {
         maxDepth(value)
     }
+
 //inline var VkViewport.pos
 //    get() = Vec2(x, y)
 //    set(value) {
@@ -852,9 +872,10 @@ inline var VkViewport.maxDepth
 //        y = value.y
 //    }
 inline fun VkViewport.size(size: Vec2t<out Number>) {
-        width = size.x.f
-        height = size.y.f
-    }
+    width = size.x.f
+    height = size.y.f
+}
+
 //inline var VkViewport.size
 //    get() = Vec2(width, height)
 //    set(value) {
@@ -862,9 +883,9 @@ inline fun VkViewport.size(size: Vec2t<out Number>) {
 //        height = value.y
 //    }
 inline fun VkViewport.depth(min: Float, max: Float) {
-        minDepth = min
-        maxDepth = max
-    }
+    minDepth = min
+    maxDepth = max
+}
 //inline var VkViewport.depth
 //    get() = Vec2(minDepth, maxDepth)
 //    set(value) {
@@ -899,6 +920,7 @@ inline fun VkExtent2D.size(x: Int, y: Int) {
     width = x
     height = y
 }
+
 //var VkExtent2D.size
 //    get() = Vec2i(width, height)
 //    set(value) {
@@ -909,6 +931,7 @@ inline fun VkOffset2D.pos(x: Int, y: Int) {
     this.x = x
     this.y = y
 }
+
 //inline var VkOffset2D.pos BUG
 //    get() = Vec2i(x, y)
 //    set(value) {
@@ -930,6 +953,7 @@ inline var VkExtent3D.depth
     set(value) {
         depth(value)
     }
+
 inline fun VkExtent3D.size(x: Int, y: Int, z: Int) {
     width = x
     height = y
@@ -956,9 +980,9 @@ inline var VkRect2D.extent: VkExtent2D
     }
 
 inline var VkPipelineViewportStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineViewportStateCreateInfo.next
     get() = pNext()
@@ -992,9 +1016,9 @@ inline var VkPipelineViewportStateCreateInfo.scissors
     }
 
 inline var VkPipelineRasterizationStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineRasterizationStateCreateInfo.next
     get() = pNext()
@@ -1059,9 +1083,9 @@ inline var VkPipelineRasterizationStateCreateInfo.lineWidth
 
 
 inline var VkPipelineMultisampleStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineMultisampleStateCreateInfo.next
     get() = pNext()
@@ -1143,9 +1167,9 @@ inline var VkStencilOpState.reference
 
 
 inline var VkPipelineDepthStencilStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineDepthStencilStateCreateInfo.next
     get() = pNext()
@@ -1247,9 +1271,9 @@ inline var VkPipelineColorBlendAttachmentState.colorWriteMask: VkColorComponentF
 
 
 inline var VkPipelineColorBlendStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineColorBlendStateCreateInfo.next
     get() = pNext()
@@ -1285,9 +1309,9 @@ inline var VkPipelineColorBlendStateCreateInfo.blendConstants
 
 
 inline var VkPipelineDynamicStateCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineDynamicStateCreateInfo.next
     get() = pNext()
@@ -1316,9 +1340,9 @@ inline var VkPipelineDynamicStateCreateInfo.dynamicStates
 //
 
 inline var VkGraphicsPipelineCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkGraphicsPipelineCreateInfo.next
     get() = pNext()
@@ -1426,9 +1450,9 @@ inline var VkGraphicsPipelineCreateInfo.basePipelineIndex
 //
 
 inline var VkPipelineLayoutCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkPipelineLayoutCreateInfo.next
     get() = pNext()
@@ -1513,9 +1537,9 @@ inline var VkDescriptorSetLayoutBinding.immutableSamplers: VkSamplerPtr?
 
 
 inline var VkDescriptorSetLayoutCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkDescriptorSetLayoutCreateInfo.next
     get() = pNext()
@@ -1559,9 +1583,9 @@ inline var VkDescriptorPoolSize.descriptorCount
 //} VkDescriptorPoolSize;
 
 inline var VkDescriptorPoolCreateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkDescriptorPoolCreateInfo.next
     get() = pNext()
@@ -1595,9 +1619,9 @@ inline var VkDescriptorPoolCreateInfo.poolSizes
 //} VkDescriptorPoolCreateInfo;
 
 inline var VkDescriptorSetAllocateInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkDescriptorSetAllocateInfo.next
     get() = pNext()
@@ -1664,9 +1688,9 @@ inline var VkDescriptorBufferInfo.Buffer.range: VkDeviceSize
 
 
 inline var VkWriteDescriptorSet.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkWriteDescriptorSet.next
     get() = pNext()
@@ -1826,9 +1850,9 @@ inline var VkWriteDescriptorSet.texelBufferView
 //
 
 inline var VkCommandBufferBeginInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkCommandBufferBeginInfo.next
     get() = pNext()
@@ -1952,9 +1976,9 @@ inline var VkBufferCopy.Buffer.size: VkDeviceSize
 //} VkImageMemoryBarrier;
 
 inline var VkRenderPassBeginInfo.type: VkStructureType
-    get() = sType()
+    get() = VkStructureType of sType()
     set(value) {
-        sType(value)
+        sType(value.i)
     }
 inline var VkRenderPassBeginInfo.next
     get() = pNext()

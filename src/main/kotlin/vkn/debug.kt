@@ -17,20 +17,18 @@ import java.nio.ByteBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
 import glfw_.appBuffer
+import glfw_.appBuffer.pointer
+import glfw_.getAndAdd
+import org.lwjgl.system.MemoryUtil.*
 
-val String.utf8: ByteBuffer get() = MemoryUtil.memUTF8(this)
+val String.utf8: ByteBuffer get() {
+    val size = memLengthUTF8(this, true)
+    val target = memByteBuffer(pointer.getAndAdd(size), size)
+    memUTF8(this, true, target)
+    return target
+}
 val Long.utf8: String get() = MemoryUtil.memUTF8(this)
 
-val glfw.requiredInstanceExtensions: ArrayList<String>
-    get() {
-        // extensionsBuffer is cleaned by GLFW
-        val extensionsBuffer = GLFWVulkan.glfwGetRequiredInstanceExtensions() ?: return arrayListOf()
-        val count = extensionsBuffer.remaining()
-        val res = ArrayList<String>(count)
-        for (i in 0 until count)
-            res += extensionsBuffer[i].utf8
-        return res
-    }
 
 fun Collection<String>.toPointerBuffer(): PointerBuffer {
     val buf = MemoryUtil.memAllocPointer(size)

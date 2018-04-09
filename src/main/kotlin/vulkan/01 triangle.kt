@@ -269,7 +269,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     override fun buildCommandBuffers() = withStack {
 
         val cmdBufInfo = cVkCommandBufferBeginInfo {
-            type = VkStructureType_COMMAND_BUFFER_BEGIN_INFO
+            type = VkStructureType.COMMAND_BUFFER_BEGIN_INFO
             next = NULL
         }
 
@@ -595,7 +595,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         // Create the global descriptor pool
         // All descriptors used in this example are allocated from this pool
         val descriptorPoolInfo = cVkDescriptorPoolCreateInfo {
-            type = VkStructureType_DESCRIPTOR_POOL_CREATE_INFO
+            type = VkStructureType.DESCRIPTOR_POOL_CREATE_INFO
             next = NULL
             poolSizes = typeCounts
             // Set the max. number of descriptor sets that can be requested from this pool (requesting beyond this limit will result in an error)
@@ -639,7 +639,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     fun setupDescriptorSet() = withStack {
         // Allocate a new descriptor set from the global descriptor pool
         val allocInfo = cVkDescriptorSetAllocateInfo {
-            type = VkStructureType_DESCRIPTOR_SET_ALLOCATE_INFO
+            type = VkStructureType.DESCRIPTOR_SET_ALLOCATE_INFO
             descriptorPool = this@VulkanExample.descriptorPool
             setLayouts = descriptorSetLayout.toLongBuffer()
         }
@@ -650,7 +650,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         val writeDescriptorSet = cVkWriteDescriptorSet(1) {
             // Binding 0 : Uniform buffer
-            type = VkStructureType_WRITE_DESCRIPTOR_SET
+            type = VkStructureType.WRITE_DESCRIPTOR_SET
             dstSet = descriptorSet
             descriptorType = VkDescriptorType_UNIFORM_BUFFER
             bufferInfo = uniformBufferVS.descriptor
@@ -854,7 +854,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             file.readBytes().toBuffer().use { shaderCode ->
                 // Create a new shader module that will be used for pipeline creation
                 val moduleCreateInfo = cVkShaderModuleCreateInfo {
-                    type = VkStructureType_SHADER_MODULE_CREATE_INFO
+                    type = VkStructureType.SHADER_MODULE_CREATE_INFO
                     code = shaderCode
                 }
 
@@ -875,7 +875,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             Note: There are still a few dynamic states that are not directly part of the pipeline (but the info that they are used is)  */
 
         val pipelineCreateInfo = cVkGraphicsPipelineCreateInfo(1) {
-            type = VkStructureType_GRAPHICS_PIPELINE_CREATE_INFO
+            type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO
             // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
             layout = pipelineLayout
             // Renderpass this pipeline is attached to
@@ -887,13 +887,13 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             Input assembly state describes how primitives are assembled
             This pipeline will assemble vertex data as a triangle lists (though we only use one triangle)   */
         val inputAssemblyState = cVkPipelineInputAssemblyStateCreateInfo {
-            type = VkStructureType_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
             topology = VkPrimitiveTopology_TRIANGLE_LIST
         }
 
         // Rasterization state
         val rasterizationState = cVkPipelineRasterizationStateCreateInfo {
-            type = VkStructureType_PIPELINE_RASTERIZATION_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_RASTERIZATION_STATE_CREATE_INFO
             polygonMode = VkPoligonMode_FILL
             cullMode = VkCullMode_NONE
             frontFace = VkFrontFace_COUNTER_CLOCKWISE
@@ -910,14 +910,14 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             blendEnable = false
         }
         val colorBlendState = cVkPipelineColorBlendStateCreateInfo {
-            type = VkStructureType_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
             attachments = blendAttachmentState
         }
 
         /*  Viewport state sets the number of viewports and scissor used in this pipeline
             Note: This is actually overriden by the dynamic states (see below)         */
         val viewportState = cVkPipelineViewportStateCreateInfo {
-            type = VkStructureType_PIPELINE_VIEWPORT_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_VIEWPORT_STATE_CREATE_INFO
             viewportCount = 1
             scissorCount = 1
         }
@@ -929,14 +929,14 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
          *  For this example we will set the viewport and scissor using dynamic states  */
         val dynamicStateEnables = arrayListOf(VkDynamicState_VIEWPORT, VkDynamicState_SCISSOR)
         val dynamicState = cVkPipelineDynamicStateCreateInfo {
-            type = VkStructureType_PIPELINE_DYNAMIC_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_DYNAMIC_STATE_CREATE_INFO
             dynamicStates = dynamicStateEnables.toIntBuffer()
         }
 
         /*  Depth and stencil state containing depth and stencil compare and test operations
             We only use depth tests and want depth tests and writes to be enabled and compare with less or equal         */
         val depthStencilState = cVkPipelineDepthStencilStateCreateInfo {
-            type = VkStructureType_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
             depthTestEnable = true
             depthWriteEnable = true
             depthCompareOp = VkCompareOp_LESS_OR_EQUAL
@@ -953,7 +953,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         /*  Multi sampling state
             This example does not make use fo multi sampling (for anti-aliasing), the state must still be set and passed to the pipeline         */
         val multisampleState = cVkPipelineMultisampleStateCreateInfo {
-            type = VkStructureType_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
             rasterizationSamples = VkSampleCount_1_BIT
             sampleMask = null
         }
@@ -994,7 +994,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Vertex input state used for pipeline creation
         val vertexInputState = cVkPipelineVertexInputStateCreateInfo {
-            type = VkStructureType_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+            type = VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
             vertexBindingDescriptions = vertexInputBinding
             vertexAttributeDescriptions = vertexInputAttributs
         }
@@ -1004,7 +1004,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Vertex shader
         with(shaderStages[0]) {
-            type = VkStructureType_PIPELINE_SHADER_STAGE_CREATE_INFO
+            type = VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO
             // Set pipeline stage for this shader
             stage = VkShaderStage_VERTEX_BIT
             // Load binary SPIR-V shader
@@ -1016,7 +1016,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Fragment shader
         with(shaderStages[1]) {
-            type = VkStructureType_PIPELINE_SHADER_STAGE_CREATE_INFO
+            type = VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO
             // Set pipeline stage for this shader
             stage = VkShaderStage_FRAGMENT_BIT
             // Load binary SPIR-V shader

@@ -6,7 +6,6 @@ import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
-import org.lwjgl.glfw.*
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.Platform
@@ -15,7 +14,6 @@ import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSurface.VK_KHR_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRWin32Surface.VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
-import uno.buffer.doubleBufferBig
 import uno.buffer.intBufferOf
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
@@ -487,7 +485,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         settings.validation = enableValidation
 
-        val appInfo = cVkApplicationInfo {
+        val appInfo = VbApplicationInfo {
             sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
             pApplicationName(name.utf8)
             pEngineName(name.utf8)
@@ -555,7 +553,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     open fun setupDepthStencil() = withStack {
 
         val image = cVkImageCreateInfo {
-            type = VkStructureType_IMAGE_CREATE_INFO
+            type = VkStructureType.IMAGE_CREATE_INFO
             next = NULL
             imageType = VkImageType_2D
             format = depthFormat
@@ -569,14 +567,14 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         }
 
         val memAlloc = cVkMemoryAllocateInfo {
-            type = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO
+            type = VkStructureType.MEMORY_ALLOCATE_INFO
             next = NULL
             allocationSize = 0
             memoryTypeIndex = 0
         }
 
         val depthStencilView = cVkImageViewCreateInfo {
-            type = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO
+            type = VkStructureType.IMAGE_VIEW_CREATE_INFO
             next = NULL
             viewType = VkImageViewType_2D
             format = depthFormat
@@ -701,7 +699,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         }
 
         val renderPassInfo = cVkRenderPassCreateInfo {
-            type = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO
+            type = VkStructureType.RENDER_PASS_CREATE_INFO
             this.attachments = attachments
             subpasses = subpassDescription
             this.dependencies = dependencies
@@ -948,7 +946,6 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         prepared = true
     }
-//    void handleMouseMove(int32_t x, int32_t y)
 
     var keyboardHandler: KeyCallbackT = { key, _, action, _ ->
         when (action) {
