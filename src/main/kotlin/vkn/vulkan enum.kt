@@ -1,7 +1,5 @@
 package vkn
 
-import org.lwjgl.vulkan.VK10
-import org.lwjgl.vulkan.VK10.*
 import vulkan.base.tools
 
 
@@ -53,9 +51,9 @@ val VkResult.string get() = tools.errorString(this)
 operator fun VkResult.invoke() = this != Vk_SUCCESS
 
 
-fun VkResult.check() {
+fun VkResult.check(message: String? = null) {
     if (this != Vk_SUCCESS)
-        throw Error("Fatal : VkResult is $this")
+        throw Error(message ?: "Fatal : VkResult is $this")
 }
 
 enum class VkStructureType(val i: Int) {
@@ -998,9 +996,9 @@ val VkSubpassContents_RANGE_SIZE = VkSubpassContents_SECONDARY_COMMAND_BUFFERS -
 //    VK_OBJECT_TYPE_RANGE_SIZE = (VK_OBJECT_TYPE_COMMAND_POOL - VK_OBJECT_TYPE_UNKNOWN + 1),
 //    VK_OBJECT_TYPE_MAX_ENUM = 0x7FFFFFFF
 //} VkObjectType;
-//
-//typedef VkFlags VkInstanceCreateFlags;
-//
+
+typealias VkInstanceCreateFlags = VkFlags
+
 typealias VkFormatFeatureFlagBits = Int
 
 val VkFormatFeature_SAMPLED_IMAGE_BIT: VkFormatFeatureFlagBits = 0x00000001
@@ -1072,13 +1070,17 @@ val VkSampleCount_64_BIT: VkSampleCountFlagBits = 0x00000040
 
 typealias VkSampleCountFlags = VkFlags
 
+enum class VkQueueFlag(val i: Int) {
+    GRAPHICS_BIT(0x00000001),
+    COMPUTE_BIT(0x00000002),
+    TRANSFER_BIT(0x00000004),
+    SPARSE_BINDING_BIT(0x00000008);
 
-typealias VkQueueFlagBits = Int
+    infix fun or(b: VkQueueFlag): VkQueueFlags = i or b.i
+}
 
-val VkQueue_GRAPHICS_BIT: VkQueueFlagBits = 0x00000001
-val VkQueue_COMPUTE_BIT: VkQueueFlagBits = 0x00000002
-val VkQueue_TRANSFER_BIT: VkQueueFlagBits = 0x00000004
-val VkQueue_SPARSE_BINDING_BIT: VkQueueFlagBits = 0x00000008
+infix fun Int.has(b: VkQueueFlag) = and(b.i) != 0
+infix fun Int.hasnt(b: VkQueueFlag) = and(b.i) == 0
 
 typealias VkQueueFlags = VkFlags
 
@@ -1101,8 +1103,8 @@ typealias VkMemoryPropertyFlags = VkFlags
 //} VkMemoryHeapFlagBits;
 //typedef VkFlags VkMemoryHeapFlags;
 //typedef VkFlags VkDeviceCreateFlags;
-//typedef VkFlags VkDeviceQueueCreateFlags;
-//
+typealias VkDeviceQueueCreateFlags = VkFlags
+
 typealias VkPipelineStageFlagBits = Int
 
 val VkPipelineStage_TOP_OF_PIPE_BIT: VkPipelineStageFlagBits = 0x00000001
@@ -1383,3 +1385,63 @@ typealias VkCommandBufferUsageFlags = VkFlags
 //} VkStencilFaceFlagBits;
 //typedef VkFlags VkStencilFaceFlags;
 //
+
+typealias VkDebugReportObjectTypeEXT = Int
+
+val VkDebugReportObjectType_UNKNOWN_EXT: VkDebugReportObjectTypeEXT = 0
+val VkDebugReportObjectType_INSTANCE_EXT: VkDebugReportObjectTypeEXT = 1
+val VkDebugReportObjectType_PHYSICAL_DEVICE_EXT: VkDebugReportObjectTypeEXT = 2
+val VkDebugReportObjectType_DEVICE_EXT: VkDebugReportObjectTypeEXT = 3
+val VkDebugReportObjectType_QUEUE_EXT: VkDebugReportObjectTypeEXT = 4
+val VkDebugReportObjectType_SEMAPHORE_EXT: VkDebugReportObjectTypeEXT = 5
+val VkDebugReportObjectType_COMMAND_BUFFER_EXT: VkDebugReportObjectTypeEXT = 6
+val VkDebugReportObjectType_FENCE_EXT: VkDebugReportObjectTypeEXT = 7
+val VkDebugReportObjectType_DEVICE_MEMORY_EXT: VkDebugReportObjectTypeEXT = 8
+val VkDebugReportObjectType_BUFFER_EXT: VkDebugReportObjectTypeEXT = 9
+val VkDebugReportObjectType_IMAGE_EXT: VkDebugReportObjectTypeEXT = 10
+val VkDebugReportObjectType_EVENT_EXT: VkDebugReportObjectTypeEXT = 11
+val VkDebugReportObjectType_QUERY_POOL_EXT: VkDebugReportObjectTypeEXT = 12
+val VkDebugReportObjectType_BUFFER_VIEW_EXT: VkDebugReportObjectTypeEXT = 13
+val VkDebugReportObjectType_IMAGE_VIEW_EXT: VkDebugReportObjectTypeEXT = 14
+val VkDebugReportObjectType_SHADER_MODULE_EXT: VkDebugReportObjectTypeEXT = 15
+val VkDebugReportObjectType_PIPELINE_CACHE_EXT: VkDebugReportObjectTypeEXT = 16
+val VkDebugReportObjectType_PIPELINE_LAYOUT_EXT: VkDebugReportObjectTypeEXT = 17
+val VkDebugReportObjectType_RENDER_PASS_EXT: VkDebugReportObjectTypeEXT = 18
+val VkDebugReportObjectType_PIPELINE_EXT: VkDebugReportObjectTypeEXT = 19
+val VkDebugReportObjectType_DESCRIPTOR_SET_LAYOUT_EXT: VkDebugReportObjectTypeEXT = 20
+val VkDebugReportObjectType_SAMPLER_EXT: VkDebugReportObjectTypeEXT = 21
+val VkDebugReportObjectType_DESCRIPTOR_POOL_EXT: VkDebugReportObjectTypeEXT = 22
+val VkDebugReportObjectType_DESCRIPTOR_SET_EXT: VkDebugReportObjectTypeEXT = 23
+val VkDebugReportObjectType_FRAMEBUFFER_EXT: VkDebugReportObjectTypeEXT = 24
+val VkDebugReportObjectType_COMMAND_POOL_EXT: VkDebugReportObjectTypeEXT = 25
+val VkDebugReportObjectType_SURFACE_KHR_EXT: VkDebugReportObjectTypeEXT = 26
+val VkDebugReportObjectType_SWAPCHAIN_KHR_EXT: VkDebugReportObjectTypeEXT = 27
+val VkDebugReportObjectType_DEBUG_REPORT_CALLBACK_EXT_EXT: VkDebugReportObjectTypeEXT = 28
+val VkDebugReportObjectType_DISPLAY_KHR_EXT: VkDebugReportObjectTypeEXT = 29
+val VkDebugReportObjectType_DISPLAY_MODE_KHR_EXT: VkDebugReportObjectTypeEXT = 30
+val VkDebugReportObjectType_OBJECT_TABLE_NVX_EXT: VkDebugReportObjectTypeEXT = 31
+val VkDebugReportObjectType_INDIRECT_COMMANDS_LAYOUT_NVX_EXT: VkDebugReportObjectTypeEXT = 32
+val VkDebugReportObjectType_VALIDATION_CACHE_EXT: VkDebugReportObjectTypeEXT = 33
+val VkDebugReportObjectType_DESCRIPTOR_UPDATE_TEMPLATE_KHR_EXT: VkDebugReportObjectTypeEXT = 1000085000
+val VkDebugReportObjectType_SAMPLER_YCBCR_CONVERSION_KHR_EXT: VkDebugReportObjectTypeEXT = 1000156000
+
+val VkDebugReportObjectType_BEGIN_RANGE_EXT: Int = VkDebugReportObjectType_UNKNOWN_EXT
+val VkDebugReportObjectType_END_RANGE_EXT: Int = VkDebugReportObjectType_VALIDATION_CACHE_EXT
+val VkDebugReportObjectType_RANGE_SIZE_EXT = VkDebugReportObjectType_VALIDATION_CACHE_EXT - VkDebugReportObjectType_UNKNOWN_EXT + 1
+
+
+//typealias VkDebugReportFlagBitsEXT = Int
+
+enum class VkDebugReport(val i: Int) {
+    INFORMATION_BIT_EXT(0x00000001),
+    WARNING_BIT_EXT(0x00000002),
+    PERFORMANCE_WARNING_BIT_EXT(0x00000004),
+    ERROR_BIT_EXT(0x00000008),
+    DEBUG_BIT_EXT(0x00000010);
+
+    infix fun or(b: VkDebugReport): VkDebugReportFlagsEXT = i or b.i
+}
+
+infix fun Int.has(f: VkDebugReport) = and(f.i) != 0
+
+typealias VkDebugReportFlagsEXT = VkFlags

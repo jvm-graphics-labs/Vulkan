@@ -1,10 +1,7 @@
 package vkn
 
-import glfw_.appBuffer
-import glfw_.appBuffer.pointer
-import glfw_.getAndAdd
-import org.lwjgl.system.CallbackI
-import org.lwjgl.system.NativeType
+import glfw_.appBuffer.ptr
+import glfw_.advance
 import org.lwjgl.vulkan.VkApplicationInfo
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
 
@@ -15,4 +12,4 @@ fun cVkDescriptorBufferInfo(): VkDescriptorBufferInfo = VkDescriptorBufferInfo.c
 fun cVkDescriptorBufferInfo(capacity: Int): VkDescriptorBufferInfo.Buffer = VkDescriptorBufferInfo.calloc(capacity)
 
 
-fun VbApplicationInfo(block: VkApplicationInfo.() -> Unit): VkApplicationInfo = VkApplicationInfo.create(pointer.getAndAdd(VkApplicationInfo.SIZEOF)).also(block)
+fun VbApplicationInfo(block: VkApplicationInfo.() -> Unit): VkApplicationInfo = VkApplicationInfo.create(ptr.advance(VkApplicationInfo.SIZEOF)).also(block)

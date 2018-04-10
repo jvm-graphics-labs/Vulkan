@@ -1,25 +1,20 @@
 package vulkan.base
 
-import gli_.has
 import glm_.i
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.EXTDebugReport
+import org.lwjgl.vulkan.VkDebugReportCallbackEXTI
+import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkInstance
 import uno.kotlin.plusAssign
 import vkn.*
-import java.nio.LongBuffer
-
-typealias PFN_vkCreateDebugReportCallbackEXT = (VkInstance, VkDebugReportCallbackCreateInfoEXT, VkAllocationCallbacks?, LongBuffer) -> VkResult
-typealias PFN_vkDestroyDebugReportCallbackEXT = (VkInstance, VkDebugReportCallbackCreateInfoEXT, VkAllocationCallbacks?, LongBuffer) -> VkResult
 
 object debug {
 
     /** Default validation layers   */
     val validationLayerNames = arrayListOf("VK_LAYER_LUNARG_standard_validation")
 
-    lateinit var createDebugReportCallback: PFN_vkCreateDebugReportCallbackEXT
-
-    val msgCallback = MemoryUtil.memCallocLong(1)   // TODO long?
+    var msgCallback = NULL
 
     /** Default debug callback  */
     val messageCallback: VkDebugReportCallbackI = { flags, objType, srcObject, location, msgCode, layerPrefix, msg, userData ->
@@ -28,26 +23,26 @@ object debug {
         val prefix = StringBuilder()
 
         // Error that may result in undefined behaviour
-        if (flags has VkDebugReport_ERROR_BIT_EXT)
+        if (flags has VkDebugReport.ERROR_BIT_EXT)
             prefix += "ERROR:"
         // Warnings may hint at unexpected / non-spec API usage
-        if (flags has VkDebugReport_WARNING_BIT_EXT)
+        if (flags has VkDebugReport.WARNING_BIT_EXT)
             prefix += "WARNING:"
         // May indicate sub-optimal usage of the API
-        if (flags has VkDebugReport_PERFORMANCE_WARNING_BIT_EXT)
+        if (flags has VkDebugReport.PERFORMANCE_WARNING_BIT_EXT)
             prefix += "PERFORMANCE:"
         // Informal messages that may become handy during debugging
-        if (flags has VkDebugReport_INFORMATION_BIT_EXT)
+        if (flags has VkDebugReport.INFORMATION_BIT_EXT)
             prefix += "INFO:"
         /*  Diagnostic info from the Vulkan loader and layers
             Usually not helpful in terms of API usage, but may help to debug layer and loader problems         */
-        if (flags has VkDebugReport_DEBUG_BIT_EXT)
+        if (flags has VkDebugReport.DEBUG_BIT_EXT)
             prefix += "DEBUG:"
 
         // Display message to default output (console/logcat)
         val debugMessage = "$prefix [$layerPrefix] Code $msgCode : $msg"
 
-        if (flags has VkDebugReport_ERROR_BIT_EXT)
+        if (flags has VkDebugReport.ERROR_BIT_EXT)
             System.err.println(debugMessage)
         else
             println(debugMessage)
@@ -65,30 +60,23 @@ object debug {
      *  @param flags = VkDebugReportFlagBitsEXT */
     fun setupDebugging(instance: VkInstance, flags: Int, callBack: VkDebugReportCallbackI?) {
 
-        createDebugReportCallback = EXTDebugReport::vkCreateDebugReportCallbackEXT
-
-        val dbgCreateInfo = VkDebugReportCallbackCreateInfoEXT.calloc().apply {
-            sType(EXTDebugReport.VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT)
-            pfnCallback { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
-                val f = callBack ?: messageCallback
-                f(flags, objectType, `object`, location, messageCode, pLayerPrefix.utf8, pMessage.utf8, pUserData as Any).i
+        val dbgCreateInfo = vk.DebugReportCallbackCreateInfoEXT {
+            type = VkStructureType.DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
+            callback = VkDebugReportCallbackEXTI { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
+                (callBack ?: messageCallback).invoke(flags, objectType, `object`, location, messageCode, pLayerPrefix.utf8, pMessage.utf8, pUserData as Any).i
             }
-            flags(flags)
+            this.flags = flags
         }
 
-        val err = createDebugReportCallback(
-                instance,
-                dbgCreateInfo,
-                null,
-                msgCallback)
+        val err = vk.createDebugReportCallbackEXT(instance, dbgCreateInfo, ::msgCallback)
 
         assert(err())
     }
 
     /** Clear debug callback    */
     fun freeDebugCallback(instance: VkInstance) {
-        if(msgCallback[0] != NULL)
-            EXTDebugReport.vkDestroyDebugReportCallbackEXT(instance, msgCallback[0], null)
+        if (msgCallback != NULL)
+            EXTDebugReport.vkDestroyDebugReportCallbackEXT(instance, msgCallback, null)
     }
 }
 

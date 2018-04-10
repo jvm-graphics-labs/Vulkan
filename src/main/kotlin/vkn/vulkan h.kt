@@ -1,83 +1,123 @@
 package vkn
 
+import glfw_.advance
 import glfw_.appBuffer
-import glfw_.appBuffer.pointer
-import glfw_.getAndAdd
+import glfw_.appBuffer.ptr
 import glm_.f
 import glm_.vec2.Vec2i
 import glm_.vec2.Vec2t
+import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import java.nio.IntBuffer
+import kotlin.reflect.KMutableProperty0
 
-class ApplicationInfo {
+object vk {
 
-    val struct = pointer.getAndAdd(VkApplicationInfo.SIZEOF)
+    fun ApplicationInfo(block: VkApplicationInfo.() -> Unit): VkApplicationInfo = VkApplicationInfo.create(ptr.advance(VkApplicationInfo.SIZEOF)).also(block)
 
-    inline var type
-        get() = VkStructureType of VkApplicationInfo.nsType(struct)
-        set(value) = VkApplicationInfo.nsType(struct, value.i)
-    inline var next
-        get() = VkApplicationInfo.npNext(struct)
-        set(value) = VkApplicationInfo.npNext(struct, value)
-    inline var applicationName
-        get() = VkApplicationInfo.npApplicationNameString(struct)
-        set(value) = VkApplicationInfo.npApplicationName(struct, value?.utf8)
-    inline var applicationVersion
-        get() = VkApplicationInfo.napplicationVersion(struct)
-        set(value) = VkApplicationInfo.napiVersion(struct, value)
+    fun InstanceCreateInfo(block: VkInstanceCreateInfo.() -> Unit): VkInstanceCreateInfo = VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF)).also(block)
+
+    fun DebugReportCallbackCreateInfoEXT(block: VkDebugReportCallbackCreateInfoEXT.() -> Unit): VkDebugReportCallbackCreateInfoEXT = VkDebugReportCallbackCreateInfoEXT.create(ptr.advance(VkDebugReportCallbackCreateInfoEXT.SIZEOF)).also(block)
+
+    fun DeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF)).also(block)
+
+    inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
+
+
+    inline fun createInstance(createInfo: VkInstanceCreateInfo, instance: KMutableProperty0<VkInstance>): VkResult {
+        val pInstance = appBuffer.pointer
+        val res = VK10.nvkCreateInstance(createInfo.address, NULL, pInstance)
+        instance.set(VkInstance(MemoryUtil.memGetLong(pInstance), createInfo))
+        return res
+    }
+
+    inline fun createDebugReportCallbackEXT(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
+                                            callback: KMutableProperty0<Long>): VkResult {
+        val long = appBuffer.long
+        return EXTDebugReport.nvkCreateDebugReportCallbackEXT(instance, createInfo.address, NULL, long).also {
+            callback.set(MemoryUtil.memGetLong(long))
+        }
+    }
+
+    inline fun enumeratePhysicalDevices(instance: VkInstance): ArrayList<VkPhysicalDevice> {
+        // Physical device
+        val pCount = appBuffer.int
+        // Get number of available physical devices
+        VK10.nvkEnumeratePhysicalDevices(instance, pCount, NULL).check()
+        // Enumerate devices
+        val count = memGetInt(pCount)
+        val devices = appBuffer.pointerBuffer(count)
+        VK10.nvkEnumeratePhysicalDevices(instance, pCount, devices.address).check()
+        val res = arrayListOf<VkPhysicalDevice>()
+        for (i in 0 until count)
+            res += VkPhysicalDevice(devices[i], instance)
+        return res
+    }
+
+    inline fun getPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice): ArrayList<VkQueueFamilyProperties> {
+        val pCount = appBuffer.int
+        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, NULL)
+        val count = memGetInt(pCount)
+        val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count)
+        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, pQueueFamilyProperties.address)
+        return pQueueFamilyProperties.toCollection(arrayListOf())
+    }
+
+    inline fun enumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String? = null): ArrayList<String> {
+        val pCount = appBuffer.int
+        val pLayerName = layerName?.utf8?.let(::memAddress) ?: NULL
+        VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, NULL).check()
+        val count = memGetInt(pCount)
+        val res = ArrayList<String>(count)
+        if (count > 0) {
+            val properties = ExtensionProperties(count)
+            VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, properties.address).check()
+            properties.map { it.extensionNameString() }.toCollection(res)
+        }
+        return res
+    }
 }
 
-//typedef struct VkApplicationInfo {
-//    VkStructureType    sType;
-//    const void*        pNext;
-//    const char*        pApplicationName;
-//    uint32_t           applicationVersion;
-//    const char*        pEngineName;
-//    uint32_t           engineVersion;
-//    uint32_t           apiVersion;
-//} VkApplicationInfo;
-//
-//typedef struct VkInstanceCreateInfo {
-//    VkStructureType             sType;
-//    const void*                 pNext;
-//    VkInstanceCreateFlags       flags;
-//    const VkApplicationInfo*    pApplicationInfo;
-//    uint32_t                    enabledLayerCount;
-//    const char* const*          ppEnabledLayerNames;
-//    uint32_t                    enabledExtensionCount;
-//    const char* const*          ppEnabledExtensionNames;
-//} VkInstanceCreateInfo;
-//
-//typedef void* (VKAPI_PTR *PFN_vkAllocationFunction)(
-//void*                                       pUserData,
-//size_t                                      size,
-//size_t                                      alignment,
-//VkSystemAllocationScope                     allocationScope);
-//
-//typedef void* (VKAPI_PTR *PFN_vkReallocationFunction)(
-//void*                                       pUserData,
-//void*                                       pOriginal,
-//size_t                                      size,
-//size_t                                      alignment,
-//VkSystemAllocationScope                     allocationScope);
-//
-//typedef void (VKAPI_PTR *PFN_vkFreeFunction)(
-//void*                                       pUserData,
-//void*                                       pMemory);
-//
-//typedef void (VKAPI_PTR *PFN_vkInternalAllocationNotification)(
-//void*                                       pUserData,
-//size_t                                      size,
-//VkInternalAllocationType                    allocationType,
-//VkSystemAllocationScope                     allocationScope);
-//
-//typedef void (VKAPI_PTR *PFN_vkInternalFreeNotification)(
-//void*                                       pUserData,
-//size_t                                      size,
-//VkInternalAllocationType                    allocationType,
-//VkSystemAllocationScope                     allocationScope);
-//
+inline var VkApplicationInfo.type
+    get() = VkStructureType of VkApplicationInfo.nsType(address)
+    set(value) = VkApplicationInfo.nsType(address, value.i)
+inline var VkApplicationInfo.next
+    get() = VkApplicationInfo.npNext(address)
+    set(value) = VkApplicationInfo.npNext(address, value)
+inline var VkApplicationInfo.applicationName
+    get() = VkApplicationInfo.npApplicationNameString(address)
+    set(value) = VkApplicationInfo.npApplicationName(address, value?.utf8)
+inline var VkApplicationInfo.applicationVersion
+    get() = VkApplicationInfo.napplicationVersion(address)
+    set(value) = VkApplicationInfo.napiVersion(address, value)
+inline var VkApplicationInfo.engineName
+    get() = VkApplicationInfo.npEngineNameString(address)
+    set(value) = VkApplicationInfo.npEngineName(address, value?.utf8)
+inline var VkApplicationInfo.apiVersion
+    get() = VkApplicationInfo.napiVersion(address)
+    set(value) = VkApplicationInfo.napiVersion(address, value)
+
+
+inline var VkInstanceCreateInfo.type
+    get() = VkStructureType of VkInstanceCreateInfo.nsType(address)
+    set(value) = VkInstanceCreateInfo.nsType(address, value.i)
+inline var VkInstanceCreateInfo.next
+    get() = VkInstanceCreateInfo.npNext(address)
+    set(value) = VkInstanceCreateInfo.npNext(address, value)
+inline var VkInstanceCreateInfo.flags: VkInstanceCreateFlags
+    get() = VkInstanceCreateInfo.nflags(address)
+    set(value) = VkInstanceCreateInfo.nflags(address, value)
+inline var VkInstanceCreateInfo.applicationInfo
+    get() = VkInstanceCreateInfo.npApplicationInfo(address)
+    set(value) = VkInstanceCreateInfo.npApplicationInfo(address, value)
+inline var VkInstanceCreateInfo.enabledLayerNames
+    get() = VkInstanceCreateInfo.nppEnabledLayerNames(address).toArrayList()
+    set(value) = VkInstanceCreateInfo.nppEnabledLayerNames(address, value.toPointerBuffer())
+inline var VkInstanceCreateInfo.enabledExtensionNames
+    get() = VkInstanceCreateInfo.nppEnabledExtensionNames(address).toArrayList()
+    set(value) = VkInstanceCreateInfo.nppEnabledExtensionNames(address, value.toPointerBuffer())
+
 //typedef struct VkAllocationCallbacks {
 //    void*                                   pUserData;
 //    PFN_vkAllocationFunction                pfnAllocation;
@@ -319,6 +359,24 @@ class ApplicationInfo {
 //} VkPhysicalDeviceMemoryProperties;
 //
 //typedef void (VKAPI_PTR *PFN_vkVoidFunction)(void);
+
+inline var VkDeviceQueueCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkDeviceQueueCreateInfo.nsType(address)
+    set(value) = VkDeviceQueueCreateInfo.nsType(address, value.i)
+inline var VkDeviceQueueCreateInfo.next
+    get() = VkDeviceQueueCreateInfo.npNext(address)
+    set(value) = VkDeviceQueueCreateInfo.npNext(address, value)
+inline var VkDeviceQueueCreateInfo.flags: VkDeviceQueueCreateFlags
+    get() = VkDeviceQueueCreateInfo.nflags(address)
+    set(value) = VkDeviceQueueCreateInfo.nflags(address, value)
+inline var VkDeviceQueueCreateInfo.queueFamilyIndex
+    get() = VkDeviceQueueCreateInfo.nqueueFamilyIndex(address)
+    set(value) = VkDeviceQueueCreateInfo.nqueueFamilyIndex(address, value)
+inline val VkDeviceQueueCreateInfo.queueCount get() = VkDeviceQueueCreateInfo.nqueueCount(address)
+inline var VkDeviceQueueCreateInfo.queuePriorities
+    get() = VkDeviceQueueCreateInfo.npQueuePriorities(address)
+    set(value) = VkDeviceQueueCreateInfo.npQueuePriorities(address, value)
+
 //typedef struct VkDeviceQueueCreateInfo {
 //    VkStructureType             sType;
 //    const void*                 pNext;
@@ -4694,60 +4752,6 @@ typealias VkSwapchainCreateFlagsKHR = VkFlags
 //#define VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT_EXT
 //
 
-typealias VkDebugReportObjectTypeEXT = Int
-
-val VkDebugReportObjectType_UNKNOWN_EXT: VkDebugReportObjectTypeEXT = 0
-val VkDebugReportObjectType_INSTANCE_EXT: VkDebugReportObjectTypeEXT = 1
-val VkDebugReportObjectType_PHYSICAL_DEVICE_EXT: VkDebugReportObjectTypeEXT = 2
-val VkDebugReportObjectType_DEVICE_EXT: VkDebugReportObjectTypeEXT = 3
-val VkDebugReportObjectType_QUEUE_EXT: VkDebugReportObjectTypeEXT = 4
-val VkDebugReportObjectType_SEMAPHORE_EXT: VkDebugReportObjectTypeEXT = 5
-val VkDebugReportObjectType_COMMAND_BUFFER_EXT: VkDebugReportObjectTypeEXT = 6
-val VkDebugReportObjectType_FENCE_EXT: VkDebugReportObjectTypeEXT = 7
-val VkDebugReportObjectType_DEVICE_MEMORY_EXT: VkDebugReportObjectTypeEXT = 8
-val VkDebugReportObjectType_BUFFER_EXT: VkDebugReportObjectTypeEXT = 9
-val VkDebugReportObjectType_IMAGE_EXT: VkDebugReportObjectTypeEXT = 10
-val VkDebugReportObjectType_EVENT_EXT: VkDebugReportObjectTypeEXT = 11
-val VkDebugReportObjectType_QUERY_POOL_EXT: VkDebugReportObjectTypeEXT = 12
-val VkDebugReportObjectType_BUFFER_VIEW_EXT: VkDebugReportObjectTypeEXT = 13
-val VkDebugReportObjectType_IMAGE_VIEW_EXT: VkDebugReportObjectTypeEXT = 14
-val VkDebugReportObjectType_SHADER_MODULE_EXT: VkDebugReportObjectTypeEXT = 15
-val VkDebugReportObjectType_PIPELINE_CACHE_EXT: VkDebugReportObjectTypeEXT = 16
-val VkDebugReportObjectType_PIPELINE_LAYOUT_EXT: VkDebugReportObjectTypeEXT = 17
-val VkDebugReportObjectType_RENDER_PASS_EXT: VkDebugReportObjectTypeEXT = 18
-val VkDebugReportObjectType_PIPELINE_EXT: VkDebugReportObjectTypeEXT = 19
-val VkDebugReportObjectType_DESCRIPTOR_SET_LAYOUT_EXT: VkDebugReportObjectTypeEXT = 20
-val VkDebugReportObjectType_SAMPLER_EXT: VkDebugReportObjectTypeEXT = 21
-val VkDebugReportObjectType_DESCRIPTOR_POOL_EXT: VkDebugReportObjectTypeEXT = 22
-val VkDebugReportObjectType_DESCRIPTOR_SET_EXT: VkDebugReportObjectTypeEXT = 23
-val VkDebugReportObjectType_FRAMEBUFFER_EXT: VkDebugReportObjectTypeEXT = 24
-val VkDebugReportObjectType_COMMAND_POOL_EXT: VkDebugReportObjectTypeEXT = 25
-val VkDebugReportObjectType_SURFACE_KHR_EXT: VkDebugReportObjectTypeEXT = 26
-val VkDebugReportObjectType_SWAPCHAIN_KHR_EXT: VkDebugReportObjectTypeEXT = 27
-val VkDebugReportObjectType_DEBUG_REPORT_CALLBACK_EXT_EXT: VkDebugReportObjectTypeEXT = 28
-val VkDebugReportObjectType_DISPLAY_KHR_EXT: VkDebugReportObjectTypeEXT = 29
-val VkDebugReportObjectType_DISPLAY_MODE_KHR_EXT: VkDebugReportObjectTypeEXT = 30
-val VkDebugReportObjectType_OBJECT_TABLE_NVX_EXT: VkDebugReportObjectTypeEXT = 31
-val VkDebugReportObjectType_INDIRECT_COMMANDS_LAYOUT_NVX_EXT: VkDebugReportObjectTypeEXT = 32
-val VkDebugReportObjectType_VALIDATION_CACHE_EXT: VkDebugReportObjectTypeEXT = 33
-val VkDebugReportObjectType_DESCRIPTOR_UPDATE_TEMPLATE_KHR_EXT: VkDebugReportObjectTypeEXT = 1000085000
-val VkDebugReportObjectType_SAMPLER_YCBCR_CONVERSION_KHR_EXT: VkDebugReportObjectTypeEXT = 1000156000
-
-val VkDebugReportObjectType_BEGIN_RANGE_EXT: Int = VkDebugReportObjectType_UNKNOWN_EXT
-val VkDebugReportObjectType_END_RANGE_EXT: Int = VkDebugReportObjectType_VALIDATION_CACHE_EXT
-val VkDebugReportObjectType_RANGE_SIZE_EXT = VkDebugReportObjectType_VALIDATION_CACHE_EXT - VkDebugReportObjectType_UNKNOWN_EXT + 1
-
-
-typealias VkDebugReportFlagBitsEXT = Int
-
-val VkDebugReport_INFORMATION_BIT_EXT: VkDebugReportFlagBitsEXT = 0x00000001
-val VkDebugReport_WARNING_BIT_EXT: VkDebugReportFlagBitsEXT = 0x00000002
-val VkDebugReport_PERFORMANCE_WARNING_BIT_EXT: VkDebugReportFlagBitsEXT = 0x00000004
-val VkDebugReport_ERROR_BIT_EXT: VkDebugReportFlagBitsEXT = 0x00000008
-val VkDebugReport_DEBUG_BIT_EXT: VkDebugReportFlagBitsEXT = 0x00000010
-
-typealias VkDebugReportFlagsEXT = VkFlags
-
 //typedef VkBool32 (VKAPI_PTR *PFN_vkDebugReportCallbackEXT)(
 //VkDebugReportFlagsEXT                       flags,
 //VkDebugReportObjectTypeEXT                  objectType,
@@ -4757,15 +4761,23 @@ typealias VkDebugReportFlagsEXT = VkFlags
 //const char*                                 pLayerPrefix,
 //const char*                                 pMessage,
 //void*                                       pUserData);
-//
-//typedef struct VkDebugReportCallbackCreateInfoEXT {
-//    VkStructureType                 sType;
-//    const void*                     pNext;
-//    VkDebugReportFlagsEXT           flags;
-//    PFN_vkDebugReportCallbackEXT    pfnCallback;
-//    void*                           pUserData;
-//} VkDebugReportCallbackCreateInfoEXT;
-//
+
+inline var VkDebugReportCallbackCreateInfoEXT.type
+    get() = VkStructureType of VkDebugReportCallbackCreateInfoEXT.nsType(address)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.nsType(address, value.i)
+inline var VkDebugReportCallbackCreateInfoEXT.next
+    get() = VkDebugReportCallbackCreateInfoEXT.npNext(address)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.npNext(address, value)
+inline var VkDebugReportCallbackCreateInfoEXT.flags: VkDebugReportFlagsEXT
+    get() = VkDebugReportCallbackCreateInfoEXT.nflags(address)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.nflags(address, value)
+inline var VkDebugReportCallbackCreateInfoEXT.callback: VkDebugReportCallbackEXTI
+    get() = VkDebugReportCallbackCreateInfoEXT.npfnCallback(address)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.npfnCallback(address, value)
+inline var VkDebugReportCallbackCreateInfoEXT.userData
+    get() = VkDebugReportCallbackCreateInfoEXT.npUserData(address)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.npUserData(address, value)
+
 //
 //typedef VkResult (VKAPI_PTR *PFN_vkCreateDebugReportCallbackEXT)(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback);
 //typedef void (VKAPI_PTR *PFN_vkDestroyDebugReportCallbackEXT)(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator);

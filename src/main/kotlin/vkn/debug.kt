@@ -1,14 +1,17 @@
 package vkn
 
+import glfw_.appBuffer
+import glfw_.appBuffer.ptr
+import glfw_.advance
 import glm_.L
 import glm_.bool
 import glm_.i
 import glm_.set
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
-import glfw_.glfw
-import org.lwjgl.glfw.GLFWVulkan
 import uno.kotlin.buffers.toCollection
 import unsigned.Uint
 import unsigned.Ulong
@@ -16,35 +19,52 @@ import vkn.ArrayListLong.set
 import java.nio.ByteBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
-import glfw_.appBuffer
-import glfw_.appBuffer.pointer
-import glfw_.getAndAdd
-import org.lwjgl.system.MemoryUtil.*
 
-val String.utf8: ByteBuffer get() {
-    val size = memLengthUTF8(this, true)
-    val target = memByteBuffer(pointer.getAndAdd(size), size)
-    memUTF8(this, true, target)
-    return target
-}
+val String.utf8: ByteBuffer
+    get() {
+        val size = memLengthUTF8(this, true)
+        val target = memByteBuffer(ptr.advance(size), size)
+        memUTF8(this, true, target)
+        return target
+    }
 val Long.utf8: String get() = MemoryUtil.memUTF8(this)
 
-
-fun Collection<String>.toPointerBuffer(): PointerBuffer {
-    val buf = MemoryUtil.memAllocPointer(size)
-    for (i in indices) buf[i] = elementAt(i)
-    return buf
-}
 
 inline operator fun PointerBuffer.set(index: Int, string: String) {
     put(index, string.utf8)
 }
 
-inline fun withPointer(block: PointerBuffer.() -> Long): Long {
-    val pointer = MemoryUtil.memAllocPointer(1)
-    pointer.block()
+
+fun PointerBuffer?.toArrayList(): ArrayList<String> {
+    val count = this?.remaining() ?: 0
+    if (this == null || count == 0) return arrayListOf()
+    val res = ArrayList<String>(count)
+    for (i in 0 until count)
+        res += get(i).utf8
+    return res
+}
+
+fun Collection<String>.toPointerBuffer(): PointerBuffer {
+    val pointers = PointerBuffer.create(ptr.advance(Pointer.POINTER_SIZE * size), size)
+    for (i in indices)
+        pointers.put(i, elementAt(i).utf8)
+    return pointers
+}
+
+inline fun <R> getLong(block: (LongBuffer) -> R): Long {
+    val pLong = appBuffer.longBuffer
+    block(pLong)
+    return pLong[0]
+}
+
+inline fun <R> withLong(block: (LongBuffer) -> R): R = block(appBuffer.longBuffer)
+
+inline fun <R> getPointer(block: (PointerBuffer) -> R): Long {
+    val pointer = appBuffer.pointerBuffer
+    block(pointer)
     return pointer[0]
 }
+inline fun <R> withPointer(block: (PointerBuffer) -> R): R = block(appBuffer.pointerBuffer)
 
 fun vkCreateInstance(createInfo: VkInstanceCreateInfo, allocator: VkAllocationCallbacks?, instance: KMutableProperty0<VkInstance>)
         : VkResult {
@@ -71,12 +91,6 @@ fun vkCreateDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateI
     return VK10.vkCreateDevice(physicalDevice, createInfo, allocator, pDevice).also {
         device.set(VkDevice(pDevice[0], physicalDevice, createInfo))
     }
-}
-
-inline fun <R> withLong(block: (LongBuffer) -> R): Long {
-    val pLong = appBuffer.long
-    block(pLong)
-    return pLong[0]
 }
 
 fun vkCreateSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, allocator: VkAllocationCallbacks?,
@@ -234,20 +248,7 @@ fun vkCreatePipelineLayout(device: VkDevice, createInfo: VkPipelineLayoutCreateI
     }
 }
 
-fun vkEnumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String?,
-                                         extensions: ArrayList<String>): VkResult {
-    val count = MemoryUtil.memAllocInt(1)
-    VK10.vkEnumerateDeviceExtensionProperties(physicalDevice, layerName, count, null)
-    var res = Vk_SUCCESS
-    if (count[0] > 0) {
-        val properties = VkExtensionProperties.calloc(count[0])
-        val ret = VK10.vkEnumerateDeviceExtensionProperties(physicalDevice, layerName, count, properties)
-        if (ret == Vk_SUCCESS)
-            properties.map { it.extensionNameString() }.toCollection(extensions)
-        else res = ret
-    }
-    return res
-}
+
 
 fun VkCommandBuffer.toPointerBuffer(): PointerBuffer {
     val p = MemoryUtil.memAllocPointer(1)

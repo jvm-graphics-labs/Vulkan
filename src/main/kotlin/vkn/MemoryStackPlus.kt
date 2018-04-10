@@ -97,7 +97,7 @@ protected constructor(
 
     private fun checkPointer(pointer: Int) {
         if (pointer < 0 || size < pointer)
-            throw IndexOutOfBoundsException("Invalid stack pointer")
+            throw IndexOutOfBoundsException("Invalid stack ptr")
     }
 
     /**

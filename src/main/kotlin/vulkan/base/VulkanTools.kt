@@ -257,13 +257,6 @@ object tools {
 //    }
 
     fun exitFatal(message: String, exitCode: VkResult) {
-        if (Platform.get() == Platform.WINDOWS) {
-//            if (!errorModeSilent) {
-//                MessageBox(NULL, message.c_str(), NULL, MB_OK | MB_ICONERROR);
-//            }
-        } else TODO()//defined(__ANDROID__)
-//        LOGE("Fatal error: %s", message.c_str());
-//        #endif
         System.err.println(message)
         System.exit(exitCode)
     }

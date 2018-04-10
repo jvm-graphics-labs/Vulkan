@@ -8,11 +8,8 @@ import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-import org.lwjgl.vulkan.KHRSurface.VK_KHR_SURFACE_EXTENSION_NAME
-import org.lwjgl.vulkan.KHRWin32Surface.VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.intBufferOf
 import vkn.*
@@ -50,11 +47,11 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     /** Physical device (GPU) that Vulkan will use  */
     lateinit var physicalDevice: VkPhysicalDevice
     /** Stores physical device properties (for e.g. checking device limits) */
-    val deviceProperties = VkPhysicalDeviceProperties.calloc()
+    val deviceProperties: VkPhysicalDeviceProperties = VkPhysicalDeviceProperties.calloc()
     /** Stores the features available on the selected physical device (for e.g. checking if a feature is available) */
-    val deviceFeatures = VkPhysicalDeviceFeatures.calloc()
+    val deviceFeatures: VkPhysicalDeviceFeatures = VkPhysicalDeviceFeatures.calloc()
     /** Stores all available memory (type) properties for the physical device   */
-    val deviceMemoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
+    val deviceMemoryProperties: VkPhysicalDeviceMemoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
     /**
      * Set of physical device features to be enabled for this example (must be set in the derived constructor)
      *
@@ -339,16 +336,14 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         if (settings.validation) {
             /*  The report flags determine what type of messages for the layers will be displayed
                 For validating (debugging) an appplication the error and warning bits should suffice             */
-            val debugReportFlags = VkDebugReport_ERROR_BIT_EXT or VkDebugReport_WARNING_BIT_EXT
+            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT
             // Additional flags include performance info, loader and layer debug messages, etc.
             debug.setupDebugging(instance, debugReportFlags, null)
         }
 
         // Get number of available physical devices and Enumerate devices
-        val physicalDevices = ArrayList<VkPhysicalDevice>()
-        err = vkEnumeratePhysicalDevices(instance, physicalDevices)
-        if (err())
-            tools.exitFatal("Could not enumerate physical devices : \n${err.string}", err)
+        val physicalDevices = vk.enumeratePhysicalDevices(instance)
+
         // Physical device
         val gpuCount = physicalDevices.size
         assert(gpuCount > 0)
@@ -413,7 +408,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         vulkanDevice = VulkanDevice(physicalDevice)
         err = vulkanDevice.createLogicalDevice(enabledFeatures, enabledDeviceExtensions)
         if (err != Vk_SUCCESS)
-            tools.exitFatal("Could not create Vulkan device: \n$${err.string}", err)
+            tools.exitFatal("Could not create Vulkan device: \n${err.string}", err)
 
         device = vulkanDevice.logicalDevice!!
 
@@ -485,36 +480,30 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         settings.validation = enableValidation
 
-        val appInfo = VbApplicationInfo {
-            sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
-            pApplicationName(name.utf8)
-            pEngineName(name.utf8)
-            apiVersion(VK_API_VERSION_1_0)
+        val appInfo = vk.ApplicationInfo {
+            type = VkStructureType.APPLICATION_INFO
+            applicationName = name
+            engineName = name
+            apiVersion = VK_API_VERSION_1_0
         }
 
-        val instanceExtensions = arrayListOf(VK_KHR_SURFACE_EXTENSION_NAME)
-        instanceExtensions += glfw.requiredInstanceExtensions
-        // Enable surface extensions depending on os
-        instanceExtensions += when (Platform.get()) {
-            Platform.WINDOWS -> VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-            else -> TODO()
-        }
+        val instanceExtensions = glfw.requiredInstanceExtensions
         if (enabledInstanceExtensions.isNotEmpty())
             instanceExtensions += enabledInstanceExtensions
 
-        val instanceCreateInfo = VkInstanceCreateInfo.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO)
-            pNext(NULL)
-            pApplicationInfo(appInfo)
+        val instanceCreateInfo = vk.InstanceCreateInfo {
+            type = VkStructureType.INSTANCE_CREATE_INFO
+            next = NULL
+            applicationInfo = appInfo
             if (instanceExtensions.isNotEmpty()) {
                 if (settings.validation)
                     instanceExtensions += VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-                ppEnabledExtensionNames(instanceExtensions.toPointerBuffer())
+                enabledExtensionNames = instanceExtensions
             }
             if (settings.validation)
-                ppEnabledLayerNames(debug.validationLayerNames.toPointerBuffer())
+                enabledLayerNames = debug.validationLayerNames
         }
-        return vkCreateInstance(instanceCreateInfo, null, ::instance)
+        return vk.createInstance(instanceCreateInfo, ::instance)
     }
 
 

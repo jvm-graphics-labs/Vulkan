@@ -15,32 +15,11 @@ import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
 
 
-fun vkEnumeratePhysicalDevices(instance: VkInstance, physicalDevices: ArrayList<VkPhysicalDevice>): VkResult  {
-    // Physical device
-    val count = memAllocInt(1)
-    // Get number of available physical devices
-    VK10.vkEnumeratePhysicalDevices(instance, count, null).check()
-    // Enumerate devices
-    val devices = memAllocPointer(count[0])
-    return VK10.vkEnumeratePhysicalDevices(instance, count, devices).also {
-        for (i in 0 until count)
-            physicalDevices += VkPhysicalDevice(devices[i], instance)
-    }
-}
 
 fun vkGetDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: KMutableProperty0<VkQueue>)  {
     val pQueue = memAllocPointer(1)
     VK10.vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue)
     queue.set(VkQueue(pQueue[0], device))
-}
-
-fun vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice, queueFamilyProperties: ArrayList<VkQueueFamilyProperties>? = null)
-        : ArrayList<VkQueueFamilyProperties> {
-    val count = memAllocInt(1)
-    VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, null)
-    val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count[0])
-    VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, pQueueFamilyProperties)
-    return pQueueFamilyProperties.toCollection(queueFamilyProperties ?: arrayListOf()).also { memFree(count) }
 }
 
 
@@ -804,7 +783,7 @@ inline fun vkDestroyShaderModule(device: VkDevice, shaderModule: VkShaderModule)
 val FloatBuffer.address get() = MemoryUtil.memAddress(this)
 val IntBuffer.address get() = MemoryUtil.memAddress(this)
 
-val Pointer.address get() = address()
+inline val Pointer.address get() = address()
 
 // TODO glm
 operator fun Vec3i.invoke(v: Vec2i, i: Int) {

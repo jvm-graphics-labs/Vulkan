@@ -11,7 +11,7 @@ import org.lwjgl.vulkan.VkInstance
 import vkn.VkSurfaceKHR
 import vkn.address
 import vkn.check
-import vkn.withLong
+import vkn.getLong
 
 /**
  * Created by elect on 22/04/17.
@@ -58,8 +58,9 @@ object glfw {
 
     val requiredInstanceExtensions: ArrayList<String>
         get() {
-            val pCount = appBuffer.int
+            val pCount = appBuffer.intBuffer
             val ppNames = GLFWVulkan.nglfwGetRequiredInstanceExtensions(pCount.address)
+            val a = GLFWVulkan.glfwGetRequiredInstanceExtensions()
             val count = pCount[0]
             val pNames = MemoryUtil.memPointerBufferSafe(ppNames, count) ?: return arrayListOf()
             val res = ArrayList<String>(count)
@@ -69,6 +70,6 @@ object glfw {
         }
 
     fun createWindowSurface(window: GlfwWindow, instance: VkInstance, allocator: VkAllocationCallbacks? = null): VkSurfaceKHR =
-            withLong { GLFWVulkan.glfwCreateWindowSurface(instance, window.handle, allocator, it).check() }
+            getLong { GLFWVulkan.glfwCreateWindowSurface(instance, window.handle, allocator, it).check() }
 }
 

@@ -1,5 +1,6 @@
 package vulkan
 
+import glfw_.appBuffer
 import glm_.L
 import glm_.func.rad
 import glm_.glm
@@ -7,7 +8,6 @@ import glm_.mat4x4.Mat4
 import glm_.set
 import glm_.size
 import glm_.vec3.Vec3
-import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
@@ -28,10 +28,9 @@ import glfw_.glfw
 
 
 fun main(args: Array<String>) {
-
     VulkanExample().apply {
-        initVulkan()
         setupWindow()
+        initVulkan()
         prepare()
         renderLoop()
         destroy()
@@ -252,7 +251,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO)
             flags(0)
         }
-        val fence: VkFence = withLong { vkCreateFence(device, fenceCreateInfo, null, it).check() }
+        val fence: VkFence = getLong { vkCreateFence(device, fenceCreateInfo, null, it).check() }
 
         // Submit to the queue
         vkQueueSubmit(queue, submitInfo, fence).check()

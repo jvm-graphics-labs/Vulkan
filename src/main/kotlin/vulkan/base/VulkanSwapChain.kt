@@ -46,7 +46,7 @@ class VulkanSwapChain {
         surface = window.createSurface(instance)
 
         // Get available queue family properties
-        val queueProps = vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice)
+        val queueProps = vk.getPhysicalDeviceQueueFamilyProperties(physicalDevice)
 
         /*  Iterate over each queue to learn whether it supports presenting:
             Find a queue with present support
@@ -58,7 +58,7 @@ class VulkanSwapChain {
         var presentQueueNodeIndex = UINT32_MAX
         for (i in queueProps.indices) {
 
-            if (queueProps[i].queueFlags has VkQueue_GRAPHICS_BIT) {
+            if (queueProps[i].queueFlags has VkQueueFlag.GRAPHICS_BIT) {
 
                 if (graphicsQueueNodeIndex == UINT32_MAX)
                     graphicsQueueNodeIndex = i

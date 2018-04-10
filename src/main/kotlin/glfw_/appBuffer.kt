@@ -3,9 +3,13 @@ package glfw_
 import glm_.BYTES
 import glm_.L
 import glm_.i
+import glm_.set
+import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.Pointer
 import uno.buffer.bufferBig
 import java.nio.DoubleBuffer
+import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
 import java.util.concurrent.atomic.AtomicLong
@@ -17,28 +21,58 @@ object appBuffer {
     var buffer = bufferBig(SIZE)
     var address = MemoryUtil.memAddress(buffer)
 
-    val pointer = AtomicLong(address)
+    val ptr = AtomicLong(address)
 
-    inline val int: IntBuffer
+    inline val intBuffer: IntBuffer
         get() {
             val size = Int.BYTES.L
-//            return JNINativeInterface.nNewDirectByteBuffer(pointer.getAndAdd(size), size)!!.asIntBuffer()
-            return MemoryUtil.memIntBuffer(pointer.getAndAdd(size), 1)
+            return MemoryUtil.memIntBuffer(ptr.getAndAdd(size), 1)
         }
-    inline val long: LongBuffer
+
+    inline val longBuffer: LongBuffer
         get() {
             val size = Long.BYTES.L
-//            return JNINativeInterface.nNewDirectByteBuffer(pointer.getAndAdd(size), size)!!.asLongBuffer()
-            return MemoryUtil.memLongBuffer(pointer.getAndAdd(size), 1)
+            return MemoryUtil.memLongBuffer(ptr.getAndAdd(size), 1)
         }
-    inline val double: DoubleBuffer
+    inline val doubleBuffer: DoubleBuffer
         get() {
             val size = Double.BYTES.L
-//            return JNINativeInterface.nNewDirectByteBuffer(pointer.getAndAdd(size), size)!!.asDoubleBuffer()
-            return MemoryUtil.memDoubleBuffer(pointer.getAndAdd(size), 1)
+            return MemoryUtil.memDoubleBuffer(ptr.getAndAdd(size), 1)
+        }
+    inline val pointerBuffer: PointerBuffer
+        get() {
+            val size = Pointer.POINTER_SIZE
+            return MemoryUtil.memPointerBuffer(ptr.advance(size), 1)
         }
 
-    fun reset() = pointer.set(address)
+    inline fun pointerBuffer(capacity: Int): PointerBuffer {
+        val size = Pointer.POINTER_SIZE * capacity
+        return MemoryUtil.memPointerBuffer(ptr.advance(size), capacity)
+    }
+
+    inline val int get() = ptr.advance(Int.BYTES)
+    inline val long get() = ptr.advance(Long.BYTES)
+    inline val pointer get() = ptr.advance(Pointer.POINTER_SIZE)
+//    inline val int get() = pointer.getAndAdd(Int.BYTES)
+
+    inline fun floats(float: Float): Long {
+        val res = ptr.advance(Float.BYTES)
+        MemoryUtil.memPutFloat(res, float)
+        return res
+    }
+    inline fun floatBufferOf(float: Float): FloatBuffer {
+        val res = MemoryUtil.memFloatBuffer(ptr.advance(Float.BYTES), 1)
+        res[0] = float
+        return res
+    }
+
+    fun reset() {
+        ptr.set(address)
+        MemoryUtil.memSet(address, 0, SIZE.L)
+    }
+
+    fun next() = MemoryUtil.memGetByte(ptr.get())
+    fun printNext() = println("@${ptr.get() - address}: ${next()}")
 }
 
-fun AtomicLong.getAndAdd(int: Int) = getAndAdd(int.L)
+inline fun AtomicLong.advance(int: Int) = getAndAdd(int.L)

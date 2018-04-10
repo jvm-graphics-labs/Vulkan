@@ -1,16 +1,14 @@
 package vulkan.base
 
+import glfw_.appBuffer
 import gli_.has
-import gli_.hasnt
 import glm_.i
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import vkn.*
-import vkn.VkMemoryStack.Companion.withStack
 import kotlin.reflect.KMutableProperty0
 
 class VulkanDevice
@@ -26,17 +24,17 @@ constructor(
     /** @brief Logical device representation (application's view of the device) */
     var logicalDevice: VkDevice? = null
     /** @brief Properties of the physical device including limits that the application can check against */
-    var properties = VkPhysicalDeviceProperties.calloc()
+    var properties: VkPhysicalDeviceProperties = VkPhysicalDeviceProperties.calloc()
     /** @brief Features of the physical device that an application can use to check if a feature is supported */
-    var features = VkPhysicalDeviceFeatures.calloc()
+    var features: VkPhysicalDeviceFeatures = VkPhysicalDeviceFeatures.calloc()
     /** @brief Features that have been enabled for use on the physical device */
     var enabledFeatures: VkPhysicalDeviceFeatures? = null
     /** @brief Memory types and heaps of the physical device */
-    val memoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
+    val memoryProperties: VkPhysicalDeviceMemoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
     /** @brief Queue family properties of the physical device */
-    val queueFamilyProperties = ArrayList<VkQueueFamilyProperties>()
+    val queueFamilyProperties: ArrayList<VkQueueFamilyProperties>
     /** @brief List of extensions supported by the device */
-    val supportedExtensions = ArrayList<String>()
+    val supportedExtensions: ArrayList<String>
 
     /** @brief Default command pool for the graphics queue family index */
     var commandPool: VkCommandPool = NULL
@@ -53,9 +51,9 @@ constructor(
         // Memory properties are used regularly for creating all kinds of buffers
         vkGetPhysicalDeviceMemoryProperties(physicalDevice, memoryProperties)
         // Queue family properties, used for setting up requested queues upon device creation
-        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, queueFamilyProperties)
+        queueFamilyProperties = vk.getPhysicalDeviceQueueFamilyProperties(physicalDevice)
         // Get list of supported extensions
-        vkEnumerateDeviceExtensionProperties(physicalDevice, null, supportedExtensions)
+        supportedExtensions = vk.enumerateDeviceExtensionProperties(physicalDevice)
     }
 
     /** @brief Contains queue family indices */
@@ -119,20 +117,20 @@ constructor(
      *
      * @throw Throws an exception if no queue family index could be found that supports the requested flags
      */
-    fun getQueueFamilyIndex(queueFlags: VkQueueFlagBits): Int {
+    fun getQueueFamilyIndex(queueFlags: VkQueueFlag): Int {
 
         /*  Dedicated queue for compute
             Try to find a queue family index that supports compute but not graphics         */
-        if (queueFlags has VkQueue_COMPUTE_BIT)
+        if (queueFlags == VkQueueFlag.COMPUTE_BIT)
             for (i in queueFamilyProperties.indices)
-                if (queueFamilyProperties[i].queueFlags has queueFlags && queueFamilyProperties[i].queueFlags hasnt VkQueue_GRAPHICS_BIT)
+                if (queueFamilyProperties[i].queueFlags has queueFlags && queueFamilyProperties[i].queueFlags hasnt VkQueueFlag.GRAPHICS_BIT)
                     return i
         /*  Dedicated queue for transfer
             Try to find a queue family index that supports transfer but not graphics and compute         */
-        if (queueFlags has VkQueue_TRANSFER_BIT)
+        if (queueFlags == VkQueueFlag.TRANSFER_BIT)
             for (i in queueFamilyProperties.indices)
-                if (queueFamilyProperties[i].queueFlags has queueFlags && queueFamilyProperties[i].queueFlags hasnt VkQueue_GRAPHICS_BIT
-                        && queueFamilyProperties[i].queueFlags has VkQueue_COMPUTE_BIT)
+                if (queueFamilyProperties[i].queueFlags has queueFlags && queueFamilyProperties[i].queueFlags hasnt VkQueueFlag.GRAPHICS_BIT
+                        && queueFamilyProperties[i].queueFlags has VkQueueFlag.COMPUTE_BIT)
                     return i
         // For other queue types or if no separate compute queue is present, return the first one to support the requested flags
         for (i in queueFamilyProperties.indices)
@@ -153,7 +151,7 @@ constructor(
      */
     fun createLogicalDevice(enabledFeatures: VkPhysicalDeviceFeatures, enabledExtensions: ArrayList<String>,
                             useSwapChain: Boolean = true,
-                            requestedQueueTypes: Int = VkQueue_GRAPHICS_BIT or VkQueue_COMPUTE_BIT): VkResult {
+                            requestedQueueTypes: VkQueueFlags = VkQueueFlag.GRAPHICS_BIT or VkQueueFlag.COMPUTE_BIT): VkResult {
         /*  Desired queues need to be requested upon logical device creation
             Due to differing queue family configurations of Vulkan implementations this can be a bit tricky,
             especially if the application requests different queue types    */
@@ -163,44 +161,44 @@ constructor(
         /*  Get queue family indices for the requested queue family types
             Note that the indices may overlap depending on the implementation         */
 
-        val defaultQueuePriority = MemoryUtil.memCallocFloat(1)
+        val defaultQueuePriority = appBuffer.floatBufferOf(0f)
 
         queueFamilyIndices.graphics =
-                if (requestedQueueTypes has VkQueue_GRAPHICS_BIT) { // Graphics queue
-                    queueCreateInfos += VkDeviceQueueCreateInfo.calloc().apply {
-                        sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
-                        queueFamilyIndex(queueFamilyIndices.graphics)
-                        pQueuePriorities(defaultQueuePriority)
+                if (requestedQueueTypes has VkQueueFlag.GRAPHICS_BIT) { // Graphics queue
+                    queueCreateInfos += vk.DeviceQueueCreateInfo {
+                        type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
+                        queueFamilyIndex = queueFamilyIndices.graphics
+                        queuePriorities = defaultQueuePriority
                     }
-                    getQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT)
+                    getQueueFamilyIndex(VkQueueFlag.GRAPHICS_BIT)
                 } else NULL.i
 
 
         queueFamilyIndices.compute =
-                if (requestedQueueTypes has VkQueue_COMPUTE_BIT) {   // Dedicated compute queue
+                if (requestedQueueTypes has VkQueueFlag.COMPUTE_BIT) {   // Dedicated compute queue
                     if (queueFamilyIndices.compute != queueFamilyIndices.graphics) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
-                        queueCreateInfos += VkDeviceQueueCreateInfo.calloc().apply {
-                            sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
-                            queueFamilyIndex(queueFamilyIndices.compute)
-                            pQueuePriorities(defaultQueuePriority)
+                        queueCreateInfos += vk.DeviceQueueCreateInfo {
+                            type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
+                            queueFamilyIndex = queueFamilyIndices.compute
+                            queuePriorities = defaultQueuePriority
                         }
                     }
-                    getQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT)
+                    getQueueFamilyIndex(VkQueueFlag.COMPUTE_BIT)
                 } else queueFamilyIndices.graphics  // Else we use the same queue
 
 
         queueFamilyIndices.transfer =
-                if (requestedQueueTypes has VkQueue_TRANSFER_BIT) { // Dedicated transfer queue
+                if (requestedQueueTypes has VkQueueFlag.TRANSFER_BIT) { // Dedicated transfer queue
                     if (queueFamilyIndices.transfer != queueFamilyIndices.graphics && queueFamilyIndices.transfer != queueFamilyIndices.compute) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
-                        queueCreateInfos += VkDeviceQueueCreateInfo.calloc().apply {
+                        queueCreateInfos += vk.DeviceQueueCreateInfo {
                             sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
                             queueFamilyIndex(queueFamilyIndices.transfer)
                             pQueuePriorities(defaultQueuePriority)
                         }
                     }
-                    getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT)
+                    getQueueFamilyIndex(VkQueueFlag.TRANSFER_BIT)
                 } else queueFamilyIndices.graphics  // Else we use the same queue
 
         // Create the logical device representation
@@ -378,7 +376,7 @@ constructor(
             queueFamilyIndex(queueFamilyIndex)
             flags(createFlags)
         }
-        return withLong { vkCreateCommandPool(logicalDevice!!, cmdPoolInfo, null, it).check() }
+        return getLong { vkCreateCommandPool(logicalDevice!!, cmdPoolInfo, null, it).check() }
     }
 
 //
