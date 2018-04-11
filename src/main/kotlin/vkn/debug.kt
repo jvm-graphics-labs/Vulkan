@@ -48,6 +48,7 @@ inline fun <R> getPointer(block: (PointerBuffer) -> R): Long {
     block(pointer)
     return pointer[0]
 }
+
 inline fun <R> withPointer(block: (PointerBuffer) -> R): R = block(appBuffer.pointerBuffer)
 
 
@@ -61,7 +62,6 @@ fun ArrayList<VkDeviceQueueCreateInfo>.toBuffer(): VkDeviceQueueCreateInfo.Buffe
 operator fun VkDeviceQueueCreateInfo.Buffer.plusAssign(info: VkDeviceQueueCreateInfo) {
     put(info)
 }
-
 
 
 fun vkCreateSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, allocator: VkAllocationCallbacks?,
@@ -86,50 +86,6 @@ fun vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice, count
 
 
 
-
-
-
-
-fun vkCreateRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo, allocator: VkAllocationCallbacks?,
-                       renderPass: KMutableProperty0<VkRenderPass>): VkResult {
-    val pRenderPass = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreateRenderPass(device, createInfo, allocator, pRenderPass).also {
-        renderPass.set(pRenderPass[0])
-    }
-}
-
-fun vkCreatePipelineCache(device: VkDevice, createInfo: VkPipelineCacheCreateInfo, allocator: VkAllocationCallbacks?,
-                          pipelineCache: KMutableProperty0<VkPipelineCache>): VkResult {
-    val pPipelineCache = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreatePipelineCache(device, createInfo, allocator, pPipelineCache).also {
-        pipelineCache.set(pPipelineCache[0])
-    }
-}
-
-fun vkCreateFramebuffer(device: VkDevice, createInfo: VkFramebufferCreateInfo, allocator: VkAllocationCallbacks?,
-                        framebuffer: ArrayList<VkFramebuffer>, index: Int): VkResult {
-    val pFramebuffer = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreateFramebuffer(device, createInfo, allocator, pFramebuffer).also {
-        framebuffer[index] = pFramebuffer
-    }
-}
-
-fun vkCreateFences(device: VkDevice, createInfo: VkFenceCreateInfo, allocator: VkAllocationCallbacks?, fences: ArrayList<VkFence>) {
-    val pFence = MemoryUtil.memAllocLong(1)
-    for (i in fences.indices) {
-        VK10.vkCreateFence(device, createInfo, allocator, pFence)
-        fences[i] = pFence
-    }
-}
-
-fun vkCreateBuffer(device: VkDevice, createInfo: VkBufferCreateInfo, allocator: VkAllocationCallbacks?,
-                   buffer: KMutableProperty0<VkBuffer>): VkResult {
-    val pBuffer = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreateBuffer(device, createInfo, allocator, pBuffer).also {
-        buffer.set(pBuffer[0])
-    }
-}
-
 fun vkCreateDescriptorSetLayout(device: VkDevice, createInfo: VkDescriptorSetLayoutCreateInfo, allocator: VkAllocationCallbacks?,
                                 setLayout: KMutableProperty0<VkDescriptorSetLayout>): VkResult {
     val pSetLayout = MemoryUtil.memAllocLong(1)
@@ -145,7 +101,6 @@ fun vkCreatePipelineLayout(device: VkDevice, createInfo: VkPipelineLayoutCreateI
         pipelineLayout.set(pPipelineLayout[0])
     }
 }
-
 
 
 fun VkCommandBuffer.toPointerBuffer(): PointerBuffer {

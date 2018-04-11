@@ -37,9 +37,7 @@ object initializers {
 //        return cmdPoolCreateInfo;
 //    }
 //
-    fun commandBufferBeginInfo() = VkCommandBufferBeginInfo.calloc().apply {
-        sType(VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
-    }
+    fun commandBufferBeginInfo(): VkCommandBufferBeginInfo = vk.CommandBufferBeginInfo { type = VkStructureType.COMMAND_BUFFER_BEGIN_INFO }
 
     //    inline VkCommandBufferInheritanceInfo commandBufferInheritanceInfo()
 //    {

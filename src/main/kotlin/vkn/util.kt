@@ -13,100 +13,10 @@ import java.nio.IntBuffer
 import java.nio.LongBuffer
 
 
-
-
-
-
-
-
-
-
-
-
-
 val VkPhysicalDeviceMemoryProperties.memoryTypeCount get() = memoryTypeCount()
 val VkPhysicalDeviceMemoryProperties.memoryTypes get() = memoryTypes()
 
 val VkMemoryType.propertyFlags get() = propertyFlags()
-
-
-
-
-
-
-
-
-var VkPipelineCacheCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
-var VkPipelineCacheCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
-var VkPipelineCacheCreateInfo.flags: VkPipelineCacheCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-val VkPipelineCacheCreateInfo.initialDataSize get() = initialDataSize()
-var VkPipelineCacheCreateInfo.pInitialData
-    get() = pInitialData()
-    set(value) {
-        pInitialData(value)
-    }
-
-
-//var VkFramebufferCreateInfo.type: VkStructureType
-//    get() = sType()
-//    set(value) {
-//        sType(value)
-//    }
-//var VkFramebufferCreateInfo.next
-//    get() = pNext()
-//    set(value) {
-//        pNext(value)
-//    }
-//var VkFramebufferCreateInfo.flags: VkFramebufferCreateFlags
-//    get() = flags()
-//    set(value) {
-//        flags(value)
-//    }
-//var VkFramebufferCreateInfo.renderPass: VkRenderPass
-//    get() = renderPass()
-//    set(value) {
-//        renderPass(value)
-//    }
-//val VkFramebufferCreateInfo.attachmentCount get() = attachmentCount()
-//var VkFramebufferCreateInfo.attachments: VkImageViewPtr?
-//    get() = pAttachments()
-//    set(value) {
-//        pAttachments(value)
-//    }
-//var VkFramebufferCreateInfo.width
-//    get() = width()
-//    set(value) {
-//        width(value)
-//    }
-//var VkFramebufferCreateInfo.height
-//    get() = height()
-//    set(value) {
-//        height(value)
-//    }
-//var VkFramebufferCreateInfo.layers
-//    get() = layers()
-//    set(value) {
-//        layers(value)
-//    }
-//var VkFramebufferCreateInfo.size
-//    get() = Vec3i(width, height, layers)
-//    set(value) {
-//        width = value.x
-//        height = value.y
-//        layers = value.z
-//    }
 
 
 var VkPresentInfoKHR.type: VkStructureType
@@ -292,9 +202,10 @@ inline fun vkFreeMemory(device: VkDevice, memory: VkDeviceMemory) = VK10.nvkFree
 inline fun vkDestroyPipelineCache(device: VkDevice, pipelineCache: VkPipelineCache) = VK10.nvkDestroyPipelineCache(device, pipelineCache, NULL)
 inline fun vkDestroyCommandPool(device: VkDevice, commandPool: VkCommandPool) = VK10.nvkDestroyCommandPool(device, commandPool, NULL)
 inline fun vkDestroySemaphores(device: VkDevice, semaphores: VkSemaphorePtr) {
-    for(i in 0 until semaphores.remaining())
+    for (i in 0 until semaphores.remaining())
         VK10.nvkDestroySemaphore(device, semaphores[i], NULL)
 }
+
 inline fun vkDestroySemaphore(device: VkDevice, semaphore: VkSemaphore) = VK10.nvkDestroySemaphore(device, semaphore, NULL)
 
 inline fun vkDestroyDebugReportCallback(instance: VkInstance, callbackAddress: Long) = EXTDebugReport.nvkDestroyDebugReportCallbackEXT(instance, callbackAddress, NULL)

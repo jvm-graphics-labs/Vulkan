@@ -8,6 +8,7 @@ import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.Pointer
 import uno.buffer.bufferBig
+import vkn.adr
 import java.nio.DoubleBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
@@ -45,6 +46,7 @@ object appBuffer {
             return MemoryUtil.memPointerBuffer(ptr.advance(size), 1)
         }
 
+    inline fun pointerBufferOf(pointer: Pointer) = pointerBuffer(1).apply { put(0, pointer.adr) }
     inline fun pointerBuffer(capacity: Int): PointerBuffer {
         val size = Pointer.POINTER_SIZE * capacity
         return MemoryUtil.memPointerBuffer(ptr.advance(size), capacity)
@@ -64,11 +66,25 @@ object appBuffer {
         return res
     }
     inline fun floatBufferOf(float: Float): FloatBuffer {
-        val res = MemoryUtil.memFloatBuffer(ptr.advance(Float.BYTES), 1)
+        val res = floatBuffer(1)
         res[0] = float
         return res
     }
-    inline fun intBufferBig(size: Int): IntBuffer = MemoryUtil.memIntBuffer(ptr.advance(Int.BYTES * size), size)
+    inline fun floatBufferOf(vararg floats: Float): FloatBuffer {
+        val res = floatBuffer(floats.size)
+        for(i in floats.indices)
+            res[i] = floats[i]
+        return res
+    }
+    inline fun longBufferOf(long0: Long, long1: Long): LongBuffer {
+        val res = longBuffer(2)
+        res[0] = long0
+        res[1] = long1
+        return res
+    }
+    inline fun intBuffer(size: Int): IntBuffer = MemoryUtil.memIntBuffer(ptr.advance(Int.BYTES * size), size)
+    inline fun floatBuffer(size: Int): FloatBuffer = MemoryUtil.memFloatBuffer(ptr.advance(Float.BYTES * size), size)
+    inline fun longBuffer(size: Int): LongBuffer = MemoryUtil.memLongBuffer(ptr.advance(Long.BYTES * size), size)
 
     fun reset() {
         ptr.set(address)

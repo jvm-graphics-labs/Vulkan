@@ -1235,9 +1235,13 @@ typealias VkImageAspectFlags = VkFlags
 //} VkSparseMemoryBindFlagBits;
 //typedef VkFlags VkSparseMemoryBindFlags;
 //
-typealias VkFenceCreateFlagBits = Int
+enum class VkFenceCreate(val i: Int) {
+    SIGNALED_BIT(0x00000001);
 
-val VkFenceCreateFlag_SIGNALED_BIT: VkFenceCreateFlagBits = 0x00000001
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkFenceCreateFlags = VkFlags
 typealias VkSemaphoreCreateFlags = VkFlags
@@ -1277,17 +1281,23 @@ val VkBufferCreate_SPARSE_ALIASED_BIT: VkBufferCreateFlagBits = 0x00000004
 
 typealias VkBufferCreateFlags = VkFlags
 
-typealias VkBufferUsageFlagBits = Int
+enum class VkBufferUsage(val i: Int) {
+    TRANSFER_SRC_BIT(0x00000001),
+    TRANSFER_DST_BIT(0x00000002),
+    UNIFORM_TEXEL_BUFFER_BIT(0x00000004),
+    STORAGE_TEXEL_BUFFER_BIT(0x00000008),
+    UNIFORM_BUFFER_BIT(0x00000010),
+    STORAGE_BUFFER_BIT(0x00000020),
+    INDEX_BUFFER_BIT(0x00000040),
+    VERTEX_BUFFER_BIT(0x00000080),
+    INDIRECT_BUFFER_BIT(0x00000100);
 
-val VkBufferUsage_TRANSFER_SRC_BIT: VkBufferUsageFlagBits = 0x00000001
-val VkBufferUsage_TRANSFER_DST_BIT: VkBufferUsageFlagBits = 0x00000002
-val VkBufferUsage_UNIFORM_TEXEL_BUFFER_BIT: VkBufferUsageFlagBits = 0x00000004
-val VkBufferUsage_STORAGE_TEXEL_BUFFER_BIT: VkBufferUsageFlagBits = 0x00000008
-val VkBufferUsage_UNIFORM_BUFFER_BIT: VkBufferUsageFlagBits = 0x00000010
-val VkBufferUsage_STORAGE_BUFFER_BIT: VkBufferUsageFlagBits = 0x00000020
-val VkBufferUsage_INDEX_BUFFER_BIT: VkBufferUsageFlagBits = 0x00000040
-val VkBufferUsage_VERTEX_BUFFER_BIT: VkBufferUsageFlagBits = 0x00000080
-val VkBufferUsage_INDIRECT_BUFFER_BIT: VkBufferUsageFlagBits = 0x00000100
+    infix fun or(f: VkBufferUsage): VkBufferCreateFlags = i or f.i
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkBufferUsageFlags = VkFlags
 typealias VkBufferViewCreateFlags = VkFlags
