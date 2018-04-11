@@ -22,11 +22,11 @@ object initializers {
     fun commandBufferAllocateInfo(
             commandPool: VkCommandPool,
             level: VkCommandBufferLevel,
-            bufferCount: Int): VkCommandBufferAllocateInfo = VkCommandBufferAllocateInfo.calloc().apply {
-        sType(VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
-        commandPool(commandPool)
-        level(level)
-        commandBufferCount(bufferCount)
+            bufferCount: Int): VkCommandBufferAllocateInfo = vk.CommandBufferAllocateInfo {
+        type = VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO
+        this.commandPool = commandPool
+        this.level = level
+        commandBufferCount = bufferCount
     }
 
     //

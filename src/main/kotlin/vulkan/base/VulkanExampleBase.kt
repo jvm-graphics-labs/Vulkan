@@ -541,14 +541,14 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         val image = cVkImageCreateInfo {
             type = VkStructureType.IMAGE_CREATE_INFO
             next = NULL
-            imageType = VkImageType_2D
+            imageType = VkImageType.`2D`
             format = depthFormat
-            extent.wtf(this@VulkanExampleBase.size.x, this@VulkanExampleBase.size.y, 1)
+            extent.set(size.x, size.y, 1)
             mipLevels = 1
             arrayLayers = 1
-            samples = VkSampleCount_1_BIT
-            tiling = VkImageTiling_OPTIMAL
-            usage = VkImageUsage_DEPTH_STENCIL_ATTACHMENT_BIT or VkImageUsage_TRANSFER_SRC_BIT
+            samples = VkSampleCount.`1_BIT`
+            tiling = VkImageTiling.OPTIMAL
+            usage = VkImageUsage.DEPTH_STENCIL_ATTACHMENT_BIT or VkImageUsage.TRANSFER_SRC_BIT
             flags = 0
         }
 
@@ -562,11 +562,11 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         val depthStencilView = cVkImageViewCreateInfo {
             type = VkStructureType.IMAGE_VIEW_CREATE_INFO
             next = NULL
-            viewType = VkImageViewType_2D
+            viewType = VkImageViewType.`2D`
             format = depthFormat
             flags = 0
             subresourceRange.apply {
-                aspectMask = VkImageAspect_DEPTH_BIT or VkImageAspect_STENCIL_BIT
+                aspectMask = VkImageAspect.DEPTH_BIT or VkImageAspect.STENCIL_BIT
                 baseMipLevel = 0
                 levelCount = 1
                 baseArrayLayer = 0
@@ -615,44 +615,44 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     }
 //    // Setup a default render pass
     /** Can be overriden in derived class to setup a custom render pass (e.g. for MSAA) */
-    open fun setupRenderPass() = withStack {
+    open fun setupRenderPass() {
 
-        val attachments = cVkAttachmentDescription(2)
+        val attachments = vk.AttachmentDescription(2)
         // Color attachment
         with(attachments[0]) {
             format = swapChain.colorFormat
-            samples = VkSampleCount_1_BIT
-            loadOp = VkAttachmentLoadOp_CLEAR
-            storeOp = VkAttachmentStoreOp_STORE
-            stencilLoadOp = VkAttachmentLoadOp_DONT_CARE
-            stencilStoreOp = VkAttachmentStoreOp_DONT_CARE
-            initialLayout = VkImageLayout_UNDEFINED
-            finalLayout = VkImageLayout_PRESENT_SRC_KHR
+            samples = VkSampleCount.`1_BIT`
+            loadOp = VkAttachmentLoadOp.CLEAR
+            storeOp = VkAttachmentStoreOp.STORE
+            stencilLoadOp = VkAttachmentLoadOp.DONT_CARE
+            stencilStoreOp = VkAttachmentStoreOp.DONT_CARE
+            initialLayout = VkImageLayout.UNDEFINED
+            finalLayout = VkImageLayout.PRESENT_SRC_KHR
         }
         // Depth attachment
         with(attachments[1]) {
             format = depthFormat
-            samples = VkSampleCount_1_BIT
-            loadOp = VkAttachmentLoadOp_CLEAR
-            storeOp = VkAttachmentStoreOp_STORE
-            stencilLoadOp = VkAttachmentLoadOp_CLEAR
-            stencilStoreOp = VkAttachmentStoreOp_DONT_CARE
-            initialLayout = VkImageLayout_UNDEFINED
-            finalLayout = VkImageLayout_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+            samples = VkSampleCount.`1_BIT`
+            loadOp = VkAttachmentLoadOp.CLEAR
+            storeOp = VkAttachmentStoreOp.STORE
+            stencilLoadOp = VkAttachmentLoadOp.CLEAR
+            stencilStoreOp = VkAttachmentStoreOp.DONT_CARE
+            initialLayout = VkImageLayout.UNDEFINED
+            finalLayout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         }
 
-        val colorReference = cVkAttachmentReference(1) {
+        val colorReference = vk.AttachmentReference(1) {
             attachment = 0
-            layout = VkImageLayout_COLOR_ATTACHMENT_OPTIMAL
+            layout = VkImageLayout.COLOR_ATTACHMENT_OPTIMAL
         }
 
-        val depthReference = cVkAttachmentReference {
+        val depthReference = vk.AttachmentReference {
             attachment = 1
-            layout = VkImageLayout_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+            layout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         }
 
-        val subpassDescription = cVkSubpassDescription(1) {
-            pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS
+        val subpassDescription = vk.SubpassDescription(1) {
+            pipelineBindPoint = VkPipelineBindPoint.GRAPHICS
             colorAttachmentCount = 1
             colorAttachments = colorReference
             depthStencilAttachment = depthReference
@@ -662,16 +662,16 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         }
 
         // Subpass dependencies for layout transitions
-        val dependencies = cVkSubpassDependency(2)
+        val dependencies = vk.SubpassDependency(2)
 
         with(dependencies[0]) {
             srcSubpass = VK_SUBPASS_EXTERNAL
             dstSubpass = 0
             srcStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
             dstStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
-            srcAccessMask = VkAccess_MEMORY_READ_BIT
-            dstAccessMask = VkAccess_COLOR_ATTACHMENT_READ_BIT or VkAccess_COLOR_ATTACHMENT_WRITE_BIT
-            dependencyFlags = VkDependency_BY_REGION_BIT
+            srcAccessMask = VkAccess.MEMORY_READ_BIT.i
+            dstAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
+            dependencyFlags = VkDependency.BY_REGION_BIT.i
         }
 
         with(dependencies[1]) {
@@ -679,12 +679,12 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
             dstSubpass = VK_SUBPASS_EXTERNAL
             srcStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
             dstStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
-            srcAccessMask = VkAccess_COLOR_ATTACHMENT_READ_BIT or VkAccess_COLOR_ATTACHMENT_WRITE_BIT
-            dstAccessMask = VkAccess_MEMORY_READ_BIT
-            dependencyFlags = VkDependency_BY_REGION_BIT
+            srcAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
+            dstAccessMask = VkAccess.MEMORY_READ_BIT.i
+            dependencyFlags = VkDependency.BY_REGION_BIT.i
         }
 
-        val renderPassInfo = cVkRenderPassCreateInfo {
+        val renderPassInfo = vk.RenderPassCreateInfo {
             type = VkStructureType.RENDER_PASS_CREATE_INFO
             this.attachments = attachments
             subpasses = subpassDescription
@@ -712,10 +712,10 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         val cmdBufAllocateInfo = commandBufferAllocateInfo(
                 cmdPool,
-                VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+                VkCommandBufferLevel.PRIMARY,
                 swapChain.imageCount)
 
-        vkAllocateCommandBuffers(device, cmdBufAllocateInfo, swapChain.imageCount, drawCmdBuffers).check()
+        vk.allocateCommandBuffers(device, cmdBufAllocateInfo, swapChain.imageCount, drawCmdBuffers).check()
     }
 
     /** Destroy all command buffers and set their handles to VK_NULL_HANDLE

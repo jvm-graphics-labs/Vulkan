@@ -4,10 +4,15 @@ import glfw_.GlfwWindow
 import gli_.has
 import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.KHRSurface.*
+import org.lwjgl.vulkan.KHRSurface.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+import org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR
 import org.lwjgl.vulkan.KHRSwapchain.*
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VK10.VK_IMAGE_VIEW_TYPE_2D
+import org.lwjgl.vulkan.VK10.vkDestroyImageView
+import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkInstance
+import org.lwjgl.vulkan.VkPhysicalDevice
+import org.lwjgl.vulkan.VkQueue
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
 import kotlin.reflect.KMutableProperty0
@@ -34,7 +39,7 @@ class VulkanSwapChain {
     /** @brief Handle to the current swap chain, required for recreation */
     var swapChain: VkSwapchainKHR = NULL
     var imageCount = 0
-    var images = ArrayList<VkImage>()
+    lateinit var images: ArrayList<VkImage>
     val buffers = ArrayList<SwapChainBuffer>()
     /** @brief Queue family index of the detected graphics and presenting device queue */
     var queueNodeIndex = UINT32_MAX
@@ -139,12 +144,11 @@ class VulkanSwapChain {
         // If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
         if (surfCaps.currentExtent.width == -1)
         // If the surface size is undefined, the size is set to the size of the images requested.
-            swapchainExtent.size(size)
+            swapchainExtent.set(size.x, size.y) // TODO BUG
         else {
             // If the surface size is defined, the swap chain size must match
-            swapchainExtent = surfCaps.currentExtent()
-//            size(surfCaps.currentExtent.size)   TODO BUG
-            size.put(surfCaps.currentExtent.width(), surfCaps.currentExtent.height())
+            swapchainExtent = surfCaps.currentExtent
+            size.put(surfCaps.currentExtent.width, surfCaps.currentExtent.height) // TODO BUG
         }
 
 
@@ -179,83 +183,82 @@ class VulkanSwapChain {
                 else surfCaps.currentTransform
 
         // Find a supported composite alpha format (not all devices support alpha opaque), Simply select the first composite alpha format available
-        val compositeAlpha = arrayOf(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-                VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
-                VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
-                VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR).find { surfCaps.supportedCompositeAlpha has it }
-                ?: VkCompositeAlpha_OPAQUE_BIT_KHR
+        val compositeAlpha = arrayOf(VkCompositeAlpha.OPAQUE_BIT_KHR,
+                VkCompositeAlpha.PRE_MULTIPLIED_BIT_KHR,
+                VkCompositeAlpha.POST_MULTIPLIED_BIT_KHR,
+                VkCompositeAlpha.INHERIT_BIT_KHR).find { surfCaps.supportedCompositeAlpha has it }
+                ?: VkCompositeAlpha.OPAQUE_BIT_KHR
 
 
-        val swapchainCI = VkSwapchainCreateInfoKHR.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR)
-            pNext(NULL)
-            surface(surface)
-            minImageCount(desiredNumberOfSwapchainImages)
-            imageFormat(colorFormat.i)
-            imageColorSpace(colorSpace.i)
-            imageExtent().set(swapchainExtent.width(), swapchainExtent.height())
-            imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-            preTransform(preTransform.i)
-            imageArrayLayers(1)
-            imageSharingMode(VK_SHARING_MODE_EXCLUSIVE)
-            pQueueFamilyIndices(null)
-            presentMode(swapchainPresentMode.i)
-            oldSwapchain(oldSwapchain)
+        val swapchainCI = vk.SwapchainCreateInfoKHR {
+            type = VkStructureType.SWAPCHAIN_CREATE_INFO_KHR
+            next = NULL
+            this.surface = this@VulkanSwapChain.surface
+            minImageCount = desiredNumberOfSwapchainImages
+            imageFormat = colorFormat
+            imageColorSpace = colorSpace
+            imageExtent.set(swapchainExtent.width, swapchainExtent.height) // TODO BUG
+            imageUsage = VkImageUsage.COLOR_ATTACHMENT_BIT.i
+            this.preTransform = preTransform
+            imageArrayLayers = 1
+            imageSharingMode = VkSharingMode.EXCLUSIVE
+            queueFamilyIndices = null
+            presentMode = swapchainPresentMode
+            this.oldSwapchain = oldSwapchain
             // Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area
-            clipped(true)
-            compositeAlpha(compositeAlpha)
+            clipped = true
+            this.compositeAlpha = compositeAlpha
         }
 
         // Set additional usage flag for blitting from the swapchain images if supported
-        val formatProps = VkFormatProperties.calloc()
-        vkGetPhysicalDeviceFormatProperties(physicalDevice, colorFormat.i, formatProps)
-        if (formatProps.optimalTilingFeatures() has VkFormatFeature.TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures() has VkFormatFeature.BLIT_SRC_BIT)
-            swapchainCI.imageUsage = swapchainCI.imageUsage or VkImageUsage_TRANSFER_SRC_BIT
+        val formatProps = vk.getPhysicalDeviceFormatProperties(physicalDevice, colorFormat)
+        if (formatProps.optimalTilingFeatures has VkFormatFeature.TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures has VkFormatFeature.BLIT_SRC_BIT)
+            swapchainCI.imageUsage = swapchainCI.imageUsage or VkImageUsage.TRANSFER_SRC_BIT
 
-        vkCreateSwapchainKHR(device, swapchainCI, null, ::swapChain)
+        vk.createSwapchainKHR(device, swapchainCI, ::swapChain).check()
 
         /*  If an existing swap chain is re-created, destroy the old swap chain
             This also cleans up all the presentable images         */
         if (oldSwapchain != NULL) {
             for (i in 0 until imageCount)
-                vkDestroyImageView(device, buffers[i].view, null)
-            vkDestroySwapchainKHR(device, oldSwapchain, null)
+                vk.destroyImageView(device, buffers[i].view)
+            vk.destroySwapchainKHR(device, oldSwapchain)
         }
 
         // Get the swap chain images
-        vkGetSwapchainImagesKHR(device, swapChain, images).check()
+        images = vk.getSwapchainImagesKHR(device, swapChain)
         imageCount = images.size
 
         // Get the swap chain buffers containing the image and imageview
         buffers resize images.size
         for (i in images.indices) {
 
-            val colorAttachmentView = VkImageViewCreateInfo.calloc().apply {
-                sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
-                pNext(NULL)
-                format(colorFormat.i)
-                components().set(
-                        VK_COMPONENT_SWIZZLE_R,
-                        VK_COMPONENT_SWIZZLE_G,
-                        VK_COMPONENT_SWIZZLE_B,
-                        VK_COMPONENT_SWIZZLE_A)
-                subresourceRange().apply {
-                    aspectMask(VK_IMAGE_ASPECT_COLOR_BIT)
-                    baseMipLevel(0)
-                    levelCount(1)
-                    baseArrayLayer(0)
-                    layerCount(1)
+            val colorAttachmentView = vk.ImageViewCreateInfo {
+                type = VkStructureType.IMAGE_VIEW_CREATE_INFO
+                next = NULL
+                format = colorFormat
+                components.set(
+                        VkComponentSwizzle.R,
+                        VkComponentSwizzle.G,
+                        VkComponentSwizzle.B,
+                        VkComponentSwizzle.A)
+                subresourceRange.apply {
+                    aspectMask = VkImageAspect.COLOR_BIT.i
+                    baseMipLevel = 0
+                    levelCount = 1
+                    baseArrayLayer = 0
+                    layerCount = 1
                 }
-                viewType(VK_IMAGE_VIEW_TYPE_2D)
-                flags(0)
+                viewType = VkImageViewType.`2D`
+                flags =0
 
-                images[i].let {
+                images[i].also {
                     buffers[i].image = it
                     image(it)
                 }
             }
 
-            vkCreateImageView(device, colorAttachmentView, null, buffers[i]::view).check()
+            vk.createImageView(device, colorAttachmentView, buffers[i]::view).check()
         }
     }
 

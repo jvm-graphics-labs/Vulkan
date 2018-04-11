@@ -1,5 +1,6 @@
 package vulkan
 
+import glfw_.glfw
 import glm_.L
 import glm_.func.rad
 import glm_.glm
@@ -23,7 +24,6 @@ import vulkan.base.VulkanExampleBase
 import vulkan.base.initializers.commandBufferBeginInfo
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import java.io.File
-import glfw_.glfw
 
 
 fun main(args: Array<String>) {
@@ -211,7 +211,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
     /** Get a new command buffer from the command pool
      *  If begin is true, the command buffer is also started so we can start adding commands    */
-    fun getCommandBuffer(begin: Boolean): VkCommandBuffer  {
+    fun getCommandBuffer(begin: Boolean): VkCommandBuffer {
 
         val cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc().apply {
             sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
@@ -234,7 +234,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
     /** End the command buffer and submit it to the queue
      *  Uses a fence to ensure command buffer has finished executing before deleting it */
-    fun flushCommandBuffer(commandBuffer: VkCommandBuffer)  {
+    fun flushCommandBuffer(commandBuffer: VkCommandBuffer) {
 
         assert(commandBuffer.adr != NULL)
 
@@ -333,17 +333,17 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             // Update dynamic scissor state
             val scissor = cVkRect2D(1) {
-                extent.size(size)
+                extent.set(size.x, size.y)
                 offset.pos(0, 0)
             }
             vkCmdSetScissor(drawCmdBuffers[i], 0, scissor)
 
             // Bind descriptor sets describing shader binding points
-            vkCmdBindDescriptorSets(drawCmdBuffers[i], VkPipelineBindPoint_GRAPHICS, pipelineLayout, 0, ::descriptorSet, null)
+            vkCmdBindDescriptorSets(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS, pipelineLayout, 0, ::descriptorSet, null)
 
             // Bind the rendering pipeline
             // The pipeline (state object) contains all states of the rendering pipeline, binding it will set all the states specified at pipeline creation time
-            vkCmdBindPipeline(drawCmdBuffers[i], VkPipelineBindPoint_GRAPHICS, pipeline)
+            vkCmdBindPipeline(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS.i, pipeline)
 
             // Bind triangle vertex buffer (contains position and colors)
             val offsets = longs(0)
@@ -463,7 +463,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             // Request a host visible memory type that can be used to copy our data do
             // Also request it to be coherent, so that writes are visible to the GPU right after unmapping the buffer
             memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
-            vkAllocateMemory(device, memAlloc, null, stagingBuffers.vertices::memory).check()
+            vk.allocateMemory(device, memAlloc, stagingBuffers.vertices::memory).check()
             // Map and copy
             VK_CHECK_RESULT(vkMapMemory(device, stagingBuffers.vertices.memory, 0, memAlloc.allocationSize(), 0, data))
             memCopy(vertexBuffer.address, data[0], vertexBufferSize)
@@ -476,7 +476,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             vkGetBufferMemoryRequirements(device, vertices.buffer, memReqs)
             memAlloc.allocationSize(memReqs.size())
             memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-            vkAllocateMemory(device, memAlloc, null, vertices::memory).check()
+            vk.allocateMemory(device, memAlloc, vertices::memory).check()
             VK_CHECK_RESULT(vkBindBufferMemory(device, vertices.buffer, vertices.memory, 0))
 
             // Index buffer
@@ -490,7 +490,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             vkGetBufferMemoryRequirements(device, stagingBuffers.indices.buffer, memReqs)
             memAlloc.allocationSize(memReqs.size())
             memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
-            vkAllocateMemory(device, memAlloc, null, stagingBuffers.indices::memory).check()
+            vk.allocateMemory(device, memAlloc, stagingBuffers.indices::memory).check()
             VK_CHECK_RESULT(vkMapMemory(device, stagingBuffers.indices.memory, 0, indexBufferSize, 0, data))
             memCopy(indexBuffer.address, data[0], indexBufferSize)
             vkUnmapMemory(device, stagingBuffers.indices.memory)
@@ -502,7 +502,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             vkGetBufferMemoryRequirements(device, indices.buffer, memReqs)
             memAlloc.allocationSize(memReqs.size())
             memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-            vkAllocateMemory(device, memAlloc, null, indices::memory).check()
+            vk.allocateMemory(device, memAlloc, indices::memory).check()
             VK_CHECK_RESULT(vkBindBufferMemory(device, indices.buffer, indices.memory, 0))
 
             val cmdBufferBeginInfo = VkCommandBufferBeginInfo.calloc().apply {
@@ -552,7 +552,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             memAlloc.allocationSize(memReqs.size())
             // VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT is host visible memory, and VK_MEMORY_PROPERTY_HOST_COHERENT_BIT makes sure writes are directly visible
             memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
-            vkAllocateMemory(device, memAlloc, null, vertices::memory).check()
+            vk.allocateMemory(device, memAlloc, vertices::memory).check()
             VK_CHECK_RESULT(vkMapMemory(device, vertices.memory, 0, memAlloc.allocationSize(), 0, data))
             memCopy(vertexBuffer.address, data[0], vertexBufferSize)
             vkUnmapMemory(device, vertices.memory)
@@ -570,7 +570,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             vkGetBufferMemoryRequirements(device, indices.buffer, memReqs)
             memAlloc.allocationSize(memReqs.size())
             memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags))
-            vkAllocateMemory(device, memAlloc, null, indices::memory).check()
+            vk.allocateMemory(device, memAlloc, indices::memory).check()
             VK_CHECK_RESULT(vkMapMemory(device, indices.memory, 0, indexBufferSize, 0, data))
             memCopy(indexBuffer.address, data[0], indexBufferSize)
             vkUnmapMemory(device, indices.memory)
@@ -663,49 +663,48 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
      *  Note: Override of virtual function in the base class and called from within VulkanExampleBase::prepare  */
     override fun setupDepthStencil() {
         // Create an optimal image used as the depth stencil attachment
-        val image = VkImageCreateInfo.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO)
-            imageType(VK_IMAGE_TYPE_2D)
-            format(depthFormat.i)
+        val image = vk.ImageCreateInfo {
+            type = VkStructureType.IMAGE_CREATE_INFO
+            imageType = VkImageType.`2D`
+            format = depthFormat
             // Use example's height and width
-            extent().set(size.x, size.y, 1)
-            mipLevels(1)
-            arrayLayers(1)
-            samples(VK_SAMPLE_COUNT_1_BIT)
-            tiling(VK_IMAGE_TILING_OPTIMAL)
-            usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT or VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
-            initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
+            extent.set(size.x, size.y, 1)
+            mipLevels = 1
+            arrayLayers = 1
+            samples = VkSampleCount.`1_BIT`
+            tiling = VkImageTiling.OPTIMAL
+            usage = VkImageUsage.DEPTH_STENCIL_ATTACHMENT_BIT or VkImageUsage.TRANSFER_SRC_BIT
+            initialLayout = VkImageLayout.UNDEFINED
         }
-        vkCreateImage(device, image, null, depthStencil::image)
+        vk.createImage(device, image, depthStencil::image)
 
         // Allocate memory for the image (device local) and bind it to our image
-        val memAlloc = VkMemoryAllocateInfo.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
-            val memReqs = VkMemoryRequirements.calloc()
-            vkGetImageMemoryRequirements(device, depthStencil.image, memReqs)
-            allocationSize(memReqs.size())
-            memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        val memAlloc = vk.MemoryAllocateInfo {
+            type = VkStructureType.MEMORY_ALLOCATE_INFO
+            val memReqs = vk.MemoryRequirements { vkGetImageMemoryRequirements(device, depthStencil.image, this) }
+            allocationSize = memReqs.size
+            memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
         }
-        vkAllocateMemory(device, memAlloc, null, depthStencil::mem).check()
+        vk.allocateMemory(device, memAlloc, depthStencil::mem).check()
         VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0))
 
         /*  Create a view for the depth stencil image
             Images aren't directly accessed in Vulkan, but rather through views described by a subresource range
             This allows for multiple views of one image with differing ranges (e.g. for different layers)   */
-        val depthStencilView = VkImageViewCreateInfo.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
-            viewType(VK_IMAGE_VIEW_TYPE_2D)
-            format(depthFormat.i)
-            subresourceRange().apply {
-                aspectMask(VK_IMAGE_ASPECT_DEPTH_BIT or VK_IMAGE_ASPECT_STENCIL_BIT)
-                baseMipLevel(0)
-                levelCount(1)
-                baseArrayLayer(0)
-                layerCount(1)
+        val depthStencilView = vk.ImageViewCreateInfo {
+            type = VkStructureType.IMAGE_VIEW_CREATE_INFO
+            viewType = VkImageViewType.`2D`
+            format = depthFormat
+            subresourceRange.apply {
+                aspectMask = VkImageAspect.DEPTH_BIT or VkImageAspect.STENCIL_BIT
+                baseMipLevel = 0
+                levelCount = 1
+                baseArrayLayer = 0
+                layerCount = 1
             }
-            image(depthStencil.image)
+            this.image = depthStencil.image
         }
-        vkCreateImageView(device, depthStencilView, null, depthStencil::view).check()
+        vk.createImageView(device, depthStencilView, depthStencil::view).check()
     }
 
     /** Create a frame buffer for each swap chain image
@@ -746,52 +745,52 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         // This example will use a single render pass with one subpass
 
         // Descriptors for the attachments used by this renderpass
-        val attachments = VkAttachmentDescription.calloc(2)
+        val attachments = vk.AttachmentDescription(2)
 
         // Color attachment
         attachments[0].apply {
-            format(swapChain.colorFormat.i)                  // Use the color format selected by the swapchain
-            samples(VK_SAMPLE_COUNT_1_BIT)                   // We don't use multi sampling in this example
-            loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)               // Clear this attachment at the start of the render pass
-            storeOp(VK_ATTACHMENT_STORE_OP_STORE)             // Keep it's contents after the render pass is finished (for displaying it)
-            stencilLoadOp(VK_ATTACHMENT_LOAD_OP_DONT_CARE)    // We don't use stencil, so don't care for load
-            stencilStoreOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)  // Same for store
-            initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)         // Layout at render pass start. Initial doesn't matter, so we use undefined
-            finalLayout(KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)     // Layout to which the attachment is transitioned when the render pass is finished
+            format = swapChain.colorFormat                  // Use the color format selected by the swapchain
+            samples = VkSampleCount.`1_BIT`                 // We don't use multi sampling in this example
+            loadOp = VkAttachmentLoadOp.CLEAR               // Clear this attachment at the start of the render pass
+            storeOp = VkAttachmentStoreOp.STORE             // Keep it's contents after the render pass is finished (for displaying it)
+            stencilLoadOp = VkAttachmentLoadOp.DONT_CARE    // We don't use stencil, so don't care for load
+            stencilStoreOp = VkAttachmentStoreOp.DONT_CARE  // Same for store
+            initialLayout = VkImageLayout.UNDEFINED         // Layout at render pass start. Initial doesn't matter, so we use undefined
+            finalLayout = VkImageLayout.PRESENT_SRC_KHR     // Layout to which the attachment is transitioned when the render pass is finished
         }
         // As we want to present the color buffer to the swapchain, we transition to PRESENT_KHR
         // Depth attachment
         attachments[1].apply {
-            format(depthFormat.i)                                            // A proper depth format is selected in the example base
-            samples(VK_SAMPLE_COUNT_1_BIT)
-            loadOp(VK_SAMPLE_COUNT_1_BIT)                               // Clear depth at start of first subpass
-            storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)                         // We don't need depth after render pass has finished (DONT_CARE may result in better performance)
-            stencilLoadOp(VK_ATTACHMENT_LOAD_OP_DONT_CARE)                    // No stencil
-            stencilStoreOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)                  // No Stencil
-            initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)                         // Layout at render pass start. Initial doesn't matter, so we use undefined
-            finalLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)    // Transition to depth/stencil attachment
+            format = depthFormat                                            // A proper depth format is selected in the example base
+            samples = VkSampleCount.`1_BIT`
+            loadOp = VkAttachmentLoadOp.CLEAR                               // Clear depth at start of first subpass
+            storeOp = VkAttachmentStoreOp.DONT_CARE                         // We don't need depth after render pass has finished (DONT_CARE may result in better performance)
+            stencilLoadOp = VkAttachmentLoadOp.DONT_CARE                    // No stencil
+            stencilStoreOp = VkAttachmentStoreOp.DONT_CARE                  // No Stencil
+            initialLayout = VkImageLayout.UNDEFINED                         // Layout at render pass start. Initial doesn't matter, so we use undefined
+            finalLayout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL    // Transition to depth/stencil attachment
         }
 
         // Setup attachment references
-        val colorReference = VkAttachmentReference.calloc(1).apply {
-            attachment(0)                                      // Attachment 0 is color
-            layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)     // Attachment layout used as color during the subpass
+        val colorReference = vk.AttachmentReference(1) {
+            attachment = 0                                      // Attachment 0 is color
+            layout = VkImageLayout.COLOR_ATTACHMENT_OPTIMAL     // Attachment layout used as color during the subpass
         }
 
-        val depthReference = VkAttachmentReference.calloc().apply {
-            attachment(1)                                              // Attachment 1 is color
-            layout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)     // Attachment used as depth/stemcil used during the subpass
+        val depthReference = vk.AttachmentReference {
+            attachment = 1                                              // Attachment 1 is color
+            layout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL     // Attachment used as depth/stemcil used during the subpass
         }
 
         // Setup a single subpass reference
-        val subpassDescription = VkSubpassDescription.calloc(1).apply {
-            pipelineBindPoint(VK_PIPELINE_BIND_POINT_GRAPHICS)
-            colorAttachmentCount(1)
-            pColorAttachments(colorReference)                   // Reference to the color attachment in slot 0
-            pDepthStencilAttachment(depthReference)             // Reference to the depth attachment in slot 1
-            pInputAttachments(null)                             // (Input attachments not used by this example)
-            pPreserveAttachments(null)                          // (Preserve attachments not used by this example)
-            pResolveAttachments(null)                           // Resolve attachments are resolved at the end of a sub pass and can be used for e.g. multi sampling
+        val subpassDescription = vk.SubpassDescription(1) {
+            pipelineBindPoint = VkPipelineBindPoint.GRAPHICS
+            colorAttachmentCount =1
+            colorAttachments = colorReference                   // Reference to the color attachment in slot 0
+            depthStencilAttachment = depthReference             // Reference to the depth attachment in slot 1
+            inputAttachments = null                             // (Input attachments not used by this example)
+            preserveAttachments = null                          // (Preserve attachments not used by this example)
+            resolveAttachments = null                           // Resolve attachments are resolved at the end of a sub pass and can be used for e.g. multi sampling
         }
 
         /*  Setup subpass dependencies
@@ -800,30 +799,30 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             Each subpass dependency will introduce a memory and execution dependency between the source and dest subpass described by
             srcStageMask, dstStageMask, srcAccessMask, dstAccessMask (and dependencyFlags is set)
             Note: VK_SUBPASS_EXTERNAL is a special constant that refers to all commands executed outside of the actual renderpass)  */
-        val dependencies = VkSubpassDependency.calloc(2)
+        val dependencies = vk.SubpassDependency(2)
 
         /*  First dependency at the start of the renderpass
             Does the transition from final to initial layout         */
         dependencies[0].apply {
-            srcSubpass(VK_SUBPASS_EXTERNAL)     // Producer of the dependency
-            dstSubpass(0)                      // Consumer is our single subpass that will wait for the execution depdendency
-            srcStageMask(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT)
-            dstStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
-            srcAccessMask(VK_ACCESS_MEMORY_READ_BIT)
-            dstAccessMask(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
-            dependencyFlags(VK_DEPENDENCY_BY_REGION_BIT)
+            srcSubpass = VK_SUBPASS_EXTERNAL     // Producer of the dependency
+            dstSubpass =0                      // Consumer is our single subpass that will wait for the execution depdendency
+            srcStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
+            dstStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
+            srcAccessMask = VkAccess.MEMORY_READ_BIT.i
+            dstAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
+            dependencyFlags = VkDependency.BY_REGION_BIT.i
         }
 
         /*  Second dependency at the end the renderpass
             Does the transition from the initial to the final layout         */
         dependencies[1].apply {
-            srcSubpass(0)                      // Producer of the dependency is our single subpass
-            dstSubpass(VK_SUBPASS_EXTERNAL)    // Consumer are all commands outside of the renderpass
-            srcStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
-            dstStageMask(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT)
-            srcAccessMask(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
-            dstAccessMask(VK_ACCESS_MEMORY_READ_BIT)
-            dependencyFlags(VK_DEPENDENCY_BY_REGION_BIT)
+            srcSubpass =0                      // Producer of the dependency is our single subpass
+            dstSubpass = VK_SUBPASS_EXTERNAL    // Consumer are all commands outside of the renderpass
+            srcStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
+            dstStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
+            srcAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
+            dstAccessMask = VkAccess.MEMORY_READ_BIT.i
+            dependencyFlags = VkDependency.BY_REGION_BIT.i
         }
 
         // Create the actual renderpass
@@ -952,7 +951,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             This example does not make use fo multi sampling (for anti-aliasing), the state must still be set and passed to the pipeline         */
         val multisampleState = cVkPipelineMultisampleStateCreateInfo {
             type = VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
-            rasterizationSamples = VkSampleCount_1_BIT
+            rasterizationSamples = VkSampleCount.`1_BIT`
             sampleMask = null
         }
 
@@ -1082,7 +1081,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             buffers on a regular base   */
         allocInfo.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), memoryPropertiesFlags))
         // Allocate memory for the uniform buffer
-        vkAllocateMemory(device, allocInfo, null, uniformBufferVS::memory).check()
+        vk.allocateMemory(device, allocInfo, uniformBufferVS::memory).check()
         // Bind memory to buffer
         VK_CHECK_RESULT(vkBindBufferMemory(device, uniformBufferVS.buffer, uniformBufferVS.memory, 0))
 

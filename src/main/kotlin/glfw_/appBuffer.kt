@@ -56,6 +56,8 @@ object appBuffer {
 //    inline val int get() = pointer.getAndAdd(Int.BYTES)
 
     inline fun intArray(size: Int) = ptr.advance(Int.BYTES * size)
+    inline fun longArray(size: Int) = ptr.advance(Long.BYTES * size)
+    inline fun pointerArray(size: Int) = ptr.advance(Pointer.POINTER_SIZE * size)
     inline fun floats(float: Float): Long {
         val res = ptr.advance(Float.BYTES)
         MemoryUtil.memPutFloat(res, float)

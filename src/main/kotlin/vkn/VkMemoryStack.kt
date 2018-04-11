@@ -191,7 +191,7 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     fun vkCmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
                                 firstSet: Int, descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: IntBuffer?) {
         val pDescriptorSets = callocLong().apply { set(0, descriptorSets()) }
-        VK10.vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, pDescriptorSets, dynamicOffsets).also {
+        VK10.vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, firstSet, pDescriptorSets, dynamicOffsets).also {
             descriptorSets.set(pDescriptorSets)
         }
     }

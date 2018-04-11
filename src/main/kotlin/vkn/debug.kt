@@ -50,13 +50,6 @@ inline fun <R> getPointer(block: (PointerBuffer) -> R): Long {
 }
 inline fun <R> withPointer(block: (PointerBuffer) -> R): R = block(appBuffer.pointerBuffer)
 
-fun vkCreateInstance(createInfo: VkInstanceCreateInfo, allocator: VkAllocationCallbacks?, instance: KMutableProperty0<VkInstance>)
-        : VkResult {
-    val pInstance = MemoryUtil.memAllocPointer(1)
-    return VkResult of VK10.vkCreateInstance(createInfo, allocator, pInstance).also {
-        instance.set(VkInstance(pInstance[0], createInfo))
-    }
-}
 
 fun ArrayList<VkDeviceQueueCreateInfo>.toBuffer(): VkDeviceQueueCreateInfo.Buffer {
     val buffer = VkDeviceQueueCreateInfo.calloc(size)
@@ -89,77 +82,13 @@ fun vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice, count
     }
 }
 
-fun vrGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR,
-                                         surfaceFormats: ArrayList<VkSurfaceFormatKHR>): VkResult {
-    val formatCount = MemoryUtil.memAllocInt(1)
-    VK_CHECK_RESULT(KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, null))
-    assert(formatCount[0] > 0)
-    val pSurfaceFormats = VkSurfaceFormatKHR.calloc(formatCount[0])
-    return VkResult of KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, pSurfaceFormats).also {
-        pSurfaceFormats.toCollection(surfaceFormats)
-    }
-}
-
-fun vkCreateCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, allocator: VkAllocationCallbacks?,
-                        commandPool: KMutableProperty0<VkCommandPool>): VkResult {
-    val pCommandPool = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreateCommandPool(device, createInfo, allocator, pCommandPool).also {
-        commandPool.set(pCommandPool[0])
-    }
-}
 
 
 
-fun vkCreateSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, allocator: VkAllocationCallbacks?,
-                         swapchain: KMutableProperty0<VkSwapchainKHR>): VkResult {
-    val pSwapchain = MemoryUtil.memAllocLong(1)
-    return VkResult of KHRSwapchain.vkCreateSwapchainKHR(device, createInfo, allocator, pSwapchain).also {
-        swapchain.set(pSwapchain[0])
-    }
-}
 
-fun vkGetSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR, images: ArrayList<VkImageView>): VkResult {
-    val count = MemoryUtil.memAllocInt(1)
-    val ret = KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, null)
-    if (ret != 0) return VkResult of ret
-    val pImages = MemoryUtil.memAllocLong(count[0])
-    return VkResult of KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, pImages).also {
-        pImages.toCollection(images)
-    }
-}
 
-fun vkCreateImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, allocator: VkAllocationCallbacks?,
-                      view: KMutableProperty0<VkImageView>): VkResult {
-    val pView = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreateImageView(device, createInfo, allocator, pView).also {
-        view.set(pView[0])
-    }
-}
 
-fun vkAllocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, count: Int,
-                             commandBuffers: ArrayList<VkCommandBuffer>): VkResult {
-    val pCommandBuffer = MemoryUtil.memAllocPointer(count)
-    return VkResult of VK10.vkAllocateCommandBuffers(device, allocateInfo, pCommandBuffer).also {
-        for (i in 0 until count)
-            commandBuffers += VkCommandBuffer(pCommandBuffer[i], device)
-    }
-}
 
-fun vkCreateImage(device: VkDevice, createInfo: VkImageCreateInfo, allocator: VkAllocationCallbacks?,
-                  image: KMutableProperty0<VkImage>): VkResult {
-    val pImage = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreateImage(device, createInfo, allocator, pImage).also {
-        image.set(pImage[0])
-    }
-}
-
-fun vkAllocateMemory(device: VkDevice, allocateInfo: VkMemoryAllocateInfo, allocator: VkAllocationCallbacks?,
-                     memory: KMutableProperty0<VkDeviceMemory>): VkResult {
-    val pMemory = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkAllocateMemory(device, allocateInfo, allocator, pMemory).also {
-        memory.set(pMemory[0])
-    }
-}
 
 fun vkCreateRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo, allocator: VkAllocationCallbacks?,
                        renderPass: KMutableProperty0<VkRenderPass>): VkResult {

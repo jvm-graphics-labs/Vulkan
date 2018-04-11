@@ -4,8 +4,9 @@ import glfw_.advance
 import glfw_.appBuffer
 import glfw_.appBuffer.ptr
 import glm_.BYTES
+import glm_.bool
 import glm_.f
-import glm_.vec2.Vec2i
+import glm_.i
 import glm_.vec2.Vec2t
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
@@ -44,8 +45,33 @@ object vk {
 
     inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
 
+    inline fun SwapchainCreateInfoKHR(block: VkSwapchainCreateInfoKHR.() -> Unit): VkSwapchainCreateInfoKHR = VkSwapchainCreateInfoKHR.create(ptr.advance(VkSwapchainCreateInfoKHR.SIZEOF)).also(block)
+
+    inline fun ImageViewCreateInfo(block: VkImageViewCreateInfo.() -> Unit): VkImageViewCreateInfo = VkImageViewCreateInfo.create(ptr.advance(VkImageViewCreateInfo.SIZEOF)).also(block)
+
+    inline fun CommandBufferAllocateInfo(block: VkCommandBufferAllocateInfo.() -> Unit): VkCommandBufferAllocateInfo = VkCommandBufferAllocateInfo.create(ptr.advance(VkCommandBufferAllocateInfo.SIZEOF)).also(block)
+
+    inline fun ImageCreateInfo(block: VkImageCreateInfo.() -> Unit): VkImageCreateInfo = VkImageCreateInfo.create(ptr.advance(VkImageCreateInfo.SIZEOF)).also(block)
+    
+    inline fun MemoryAllocateInfo(block: VkMemoryAllocateInfo.() -> Unit): VkMemoryAllocateInfo = VkMemoryAllocateInfo.create(ptr.advance(VkMemoryAllocateInfo.SIZEOF)).also(block)
+
+    inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
+    
+    inline fun RenderPassCreateInfo(block: VkRenderPassCreateInfo.() -> Unit): VkRenderPassCreateInfo = VkRenderPassCreateInfo.create(ptr.advance(VkRenderPassCreateInfo.SIZEOF)).also(block)
+    
 
     inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
+    
+    inline fun AttachmentDescription(capacity: Int): VkAttachmentDescription.Buffer = VkAttachmentDescription.create(ptr.advance(VkAttachmentDescription.SIZEOF * capacity), capacity)
+    
+    inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
+
+    inline fun AttachmentReference(block: VkAttachmentReference.() -> Unit): VkAttachmentReference = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF)).also(block)
+    inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity).also { it[0].block() }
+    
+    inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
+    inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
+
     inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: LongBuffer) = VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, memAddress(commandPool))
 
 
@@ -163,6 +189,58 @@ object vk {
         val res = ArrayList<VkPresentMode>()
         for (i in 0 until count) res += VkPresentMode of memGetInt(presentModes + Int.BYTES * i)
         return res
+    }
+
+    inline fun createSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, swapchain: KMutableProperty0<VkSwapchainKHR>)
+            : VkResult {
+        val pSwapchain = appBuffer.long
+        return VkResult of KHRSwapchain.nvkCreateSwapchainKHR(device, createInfo.adr, NULL, pSwapchain).also {
+            swapchain.set(memGetLong(pSwapchain))
+        }
+    }
+
+    inline fun destroyImageView(device: VkDevice, imageView: VkImageView) = VK10.nvkDestroyImageView(device, imageView, NULL)
+    inline fun destroySwapchainKHR(device: VkDevice, swapchain: VkSwapchainKHR) = KHRSwapchain.nvkDestroySwapchainKHR(device, swapchain, NULL)
+
+    inline fun getSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR): ArrayList<VkImageView> {
+        val pCount = appBuffer.int
+        VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, NULL))
+        val count = memGetInt(pCount)
+        val images = appBuffer.longArray(count)
+        VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, images))
+        val res = ArrayList<VkImageView>()
+        for (i in 0 until count) res += memGetLong(images + Long.BYTES * i)
+        return res
+    }
+
+    inline fun createImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, view: KMutableProperty0<VkImageView>): VkResult {
+        val pView = appBuffer.long
+        return VkResult of VK10.nvkCreateImageView(device, createInfo.adr, NULL, pView).also {
+            view.set(memGetLong(pView))
+        }
+    }
+
+    inline fun allocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, count: Int, commandBuffers: ArrayList<VkCommandBuffer>)
+            : VkResult {
+        val pCommandBuffer = appBuffer.pointerArray(count)
+        return VkResult of VK10.nvkAllocateCommandBuffers(device, allocateInfo.adr, pCommandBuffer).also {
+            for (i in 0 until count)
+                commandBuffers += VkCommandBuffer(memGetAddress(pCommandBuffer + Pointer.POINTER_SIZE * i), device)
+        }
+    }
+
+    fun createImage(device: VkDevice, createInfo: VkImageCreateInfo, image: KMutableProperty0<VkImage>): VkResult {
+        val pImage = appBuffer.long
+        return VkResult of VK10.nvkCreateImage(device, createInfo.adr, NULL, pImage).also {
+            image.set(memGetLong(pImage))
+        }
+    }
+
+    fun allocateMemory(device: VkDevice, allocateInfo: VkMemoryAllocateInfo, memory: KMutableProperty0<VkDeviceMemory>): VkResult {
+        val pMemory = appBuffer.long
+        return VkResult of VK10.nvkAllocateMemory(device, allocateInfo.adr, NULL, pMemory).also {
+            memory.set(memGetLong(pMemory))
+        }
     }
 }
 
@@ -554,14 +632,21 @@ inline var VkSubmitInfo.signalSemaphores
 //    uint32_t                       signalSemaphoreCount;
 //    const VkSemaphore*             pSignalSemaphores;
 //} VkSubmitInfo;
-//
-//typedef struct VkMemoryAllocateInfo {
-//    VkStructureType    sType;
-//    const void*        pNext;
-//    VkDeviceSize       allocationSize;
-//    uint32_t           memoryTypeIndex;
-//} VkMemoryAllocateInfo;
-//
+
+
+inline var VkMemoryAllocateInfo.type: VkStructureType
+    get() = VkStructureType of VkMemoryAllocateInfo.nsType(adr)
+    set(value) = VkMemoryAllocateInfo.nsType(adr, value.i)
+inline var VkMemoryAllocateInfo.next
+    get() = VkMemoryAllocateInfo.npNext(adr)
+    set(value) = VkMemoryAllocateInfo.npNext(adr, value)
+inline var VkMemoryAllocateInfo.allocationSize: VkDeviceSize
+    get() = VkMemoryAllocateInfo.nallocationSize(adr)
+    set(value) = VkMemoryAllocateInfo.nallocationSize(adr, value)
+inline var VkMemoryAllocateInfo.memoryTypeIndex
+    get() = VkMemoryAllocateInfo.nmemoryTypeIndex(adr)
+    set(value) = VkMemoryAllocateInfo.nmemoryTypeIndex(adr, value)
+
 //typedef struct VkMappedMemoryRange {
 //    VkStructureType    sType;
 //    const void*        pNext;
@@ -569,13 +654,16 @@ inline var VkSubmitInfo.signalSemaphores
 //    VkDeviceSize       offset;
 //    VkDeviceSize       size;
 //} VkMappedMemoryRange;
-//
-//typedef struct VkMemoryRequirements {
-//    VkDeviceSize    size;
-//    VkDeviceSize    alignment;
-//    uint32_t        memoryTypeBits;
-//} VkMemoryRequirements;
-//
+
+
+
+
+inline val VkMemoryRequirements.size: VkDeviceSize get() = VkMemoryRequirements.nsize(adr)
+inline val VkMemoryRequirements.alignment: VkDeviceSize get() = VkMemoryRequirements.nalignment(adr)
+inline val VkMemoryRequirements.memoryTypeBits get() = VkMemoryRequirements.nmemoryTypeBits(adr)
+
+
+
 //typedef struct VkSparseImageFormatProperties {
 //    VkImageAspectFlags          aspectMask;
 //    VkExtent3D                  imageGranularity;
@@ -721,9 +809,9 @@ inline var VkBufferCreateInfo.usage: VkBufferUsageFlags
         usage(value)
     }
 inline var VkBufferCreateInfo.sharingMode: VkSharingMode
-    get() = sharingMode()
+    get() = VkSharingMode of sharingMode()
     set(value) {
-        sharingMode(value)
+        sharingMode(value.i)
     }
 inline val VkBufferCreateInfo.queueFamilyIndexCount get() = queueFamilyIndexCount()
 inline var VkBufferCreateInfo.queueFamilyIndices
@@ -742,25 +830,78 @@ inline var VkBufferCreateInfo.queueFamilyIndices
 //    VkDeviceSize               offset;
 //    VkDeviceSize               range;
 //} VkBufferViewCreateInfo;
-//
-//typedef struct VkImageCreateInfo {
-//    VkStructureType          sType;
-//    const void*              pNext;
-//    VkImageCreateFlags       flags;
-//    VkImageType              imageType;
-//    VkFormat                 format;
-//    VkExtent3D               extent;
-//    uint32_t                 mipLevels;
-//    uint32_t                 arrayLayers;
-//    VkSampleCountFlagBits    samples;
-//    VkImageTiling            tiling;
-//    VkImageUsageFlags        usage;
-//    VkSharingMode            sharingMode;
-//    uint32_t                 queueFamilyIndexCount;
-//    const uint32_t*          pQueueFamilyIndices;
-//    VkImageLayout            initialLayout;
-//} VkImageCreateInfo;
-//
+
+
+inline var VkImageViewCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkImageViewCreateInfo.nsType(adr)
+    set(value) = VkImageViewCreateInfo.nsType(adr, value.i)
+inline var VkImageViewCreateInfo.next
+    get() = VkImageViewCreateInfo.npNext(adr)
+    set(value) = VkImageViewCreateInfo.npNext(adr, value)
+inline var VkImageViewCreateInfo.flags: VkImageViewCreateFlags
+    get() = VkImageViewCreateInfo.nflags(adr)
+    set(value) = VkImageViewCreateInfo.nflags(adr, value)
+inline var VkImageViewCreateInfo.image: VkImage
+    get() = VkImageViewCreateInfo.nimage(adr)
+    set(value) = VkImageViewCreateInfo.nimage(adr, value)
+inline var VkImageViewCreateInfo.viewType: VkImageViewType
+    get() = VkImageViewType of VkImageViewCreateInfo.nviewType(adr)
+    set(value) = VkImageViewCreateInfo.nviewType(adr, value.i)
+inline var VkImageViewCreateInfo.format: VkFormat
+    get() = VkFormat of VkImageViewCreateInfo.nformat(adr)
+    set(value) = VkImageViewCreateInfo.nformat(adr, value.i)
+inline var VkImageViewCreateInfo.components: VkComponentMapping
+    get() = VkImageViewCreateInfo.ncomponents(adr)
+    set(value) = VkImageViewCreateInfo.ncomponents(adr, value)
+inline var VkImageViewCreateInfo.subresourceRange: VkImageSubresourceRange
+    get() = VkImageViewCreateInfo.nsubresourceRange(adr)
+    set(value) = VkImageViewCreateInfo.nsubresourceRange(adr, value)
+
+
+inline var VkImageCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkImageCreateInfo.nsType(adr)
+    set(value) = VkImageCreateInfo.nsType(adr, value.i)
+inline var VkImageCreateInfo.next
+    get() = VkImageCreateInfo.npNext(adr)
+    set(value) = VkImageCreateInfo.npNext(adr, value)
+inline var VkImageCreateInfo.flags: VkImageCreateFlags
+    get() = VkImageCreateInfo.nflags(adr)
+    set(value) = VkImageCreateInfo.nflags(adr, value)
+inline var VkImageCreateInfo.imageType: VkImageType
+    get() = VkImageType of VkImageCreateInfo.nimageType(adr)
+    set(value) = VkImageCreateInfo.nimageType(adr, value.i)
+inline var VkImageCreateInfo.format: VkFormat
+    get() = VkFormat of VkImageCreateInfo.nformat(adr)
+    set(value) = VkImageCreateInfo.nformat(adr, value.i)
+inline var VkImageCreateInfo.extent: VkExtent3D
+    get() = VkImageCreateInfo.nextent(adr)
+    set(value) = VkImageCreateInfo.nextent(adr, value)
+inline var VkImageCreateInfo.mipLevels
+    get() = VkImageCreateInfo.nmipLevels(adr)
+    set(value) = VkImageCreateInfo.nmipLevels(adr, value)
+inline var VkImageCreateInfo.arrayLayers
+    get() = VkImageCreateInfo.narrayLayers(adr)
+    set(value) = VkImageCreateInfo.narrayLayers(adr, value)
+inline var VkImageCreateInfo.samples: VkSampleCount
+    get() = VkSampleCount of VkImageCreateInfo.nsamples(adr)
+    set(value) = VkImageCreateInfo.nsamples(adr, value.i)
+inline var VkImageCreateInfo.tiling: VkImageTiling
+    get() = VkImageTiling of VkImageCreateInfo.ntiling(adr)
+    set(value) = VkImageCreateInfo.ntiling(adr, value.i)
+inline var VkImageCreateInfo.usage: VkImageUsageFlags
+    get() = VkImageCreateInfo.nusage(adr)
+    set(value) = VkImageCreateInfo.nusage(adr, value)
+inline var VkImageCreateInfo.sharingMode: VkSharingMode
+    get() = VkSharingMode of VkImageCreateInfo.nsharingMode(adr)
+    set(value) = VkImageCreateInfo.nsharingMode(adr, value.i)
+//inline val VkImageCreateInfo.queueFamilyIndexCount get() = queueFamilyIndexCount()
+inline var VkImageCreateInfo.queueFamilyIndices
+    get() = VkImageCreateInfo.npQueueFamilyIndices(adr)
+    set(value) = VkImageCreateInfo.npQueueFamilyIndices(adr, value)
+inline var VkImageCreateInfo.initialLayout: VkImageLayout
+    get() = VkImageLayout of VkImageCreateInfo.ninitialLayout(adr)
+    set(value) = VkImageCreateInfo.ninitialLayout(adr, value.i)
+
 //typedef struct VkSubresourceLayout {
 //    VkDeviceSize    offset;
 //    VkDeviceSize    size;
@@ -768,22 +909,44 @@ inline var VkBufferCreateInfo.queueFamilyIndices
 //    VkDeviceSize    arrayPitch;
 //    VkDeviceSize    depthPitch;
 //} VkSubresourceLayout;
-//
-//typedef struct VkComponentMapping {
-//    VkComponentSwizzle    r;
-//    VkComponentSwizzle    g;
-//    VkComponentSwizzle    b;
-//    VkComponentSwizzle    a;
-//} VkComponentMapping;
-//
-//typedef struct VkImageSubresourceRange {
-//    VkImageAspectFlags    aspectMask;
-//    uint32_t              baseMipLevel;
-//    uint32_t              levelCount;
-//    uint32_t              baseArrayLayer;
-//    uint32_t              layerCount;
-//} VkImageSubresourceRange;
-//
+
+inline fun VkComponentMapping.set(r: VkComponentSwizzle, g: VkComponentSwizzle, b: VkComponentSwizzle, a: VkComponentSwizzle) {
+    this.r = r
+    this.g = g
+    this.b = b
+    this.a = a
+}
+
+inline var VkComponentMapping.r: VkComponentSwizzle
+    get() = VkComponentSwizzle of VkComponentMapping.nr(adr)
+    set(value) = VkComponentMapping.nr(adr, value.i)
+inline var VkComponentMapping.g: VkComponentSwizzle
+    get() = VkComponentSwizzle of VkComponentMapping.ng(adr)
+    set(value) = VkComponentMapping.ng(adr, value.i)
+inline var VkComponentMapping.b: VkComponentSwizzle
+    get() = VkComponentSwizzle of VkComponentMapping.nb(adr)
+    set(value) = VkComponentMapping.nb(adr, value.i)
+inline var VkComponentMapping.a: VkComponentSwizzle
+    get() = VkComponentSwizzle of VkComponentMapping.na(adr)
+    set(value) = VkComponentMapping.na(adr, value.i)
+
+
+var VkImageSubresourceRange.aspectMask: VkImageAspectFlags
+    get() = VkImageSubresourceRange.naspectMask(adr)
+    set(value) = VkImageSubresourceRange.naspectMask(adr, value)
+var VkImageSubresourceRange.baseMipLevel
+    get() = VkImageSubresourceRange.nbaseMipLevel(adr)
+    set(value) = VkImageSubresourceRange.nbaseMipLevel(adr, value)
+var VkImageSubresourceRange.levelCount
+    get() = VkImageSubresourceRange.nlevelCount(adr)
+    set(value) = VkImageSubresourceRange.nlevelCount(adr, value)
+var VkImageSubresourceRange.baseArrayLayer
+    get() = VkImageSubresourceRange.nbaseArrayLayer(adr)
+    set(value) = VkImageSubresourceRange.nbaseArrayLayer(adr, value)
+var VkImageSubresourceRange.layerCount
+    get() = VkImageSubresourceRange.nlayerCount(adr)
+    set(value) = VkImageSubresourceRange.nlayerCount(adr, value)
+
 //typedef struct VkImageViewCreateInfo {
 //    VkStructureType            sType;
 //    const void*                pNext;
@@ -1069,12 +1232,6 @@ inline var VkExtent2D.height
     get() = VkExtent2D.nheight(adr)
     set(value) = VkExtent2D.nheight(adr, value)
 
-inline fun VkExtent2D.size(v: Vec2i) = size(v.x, v.y)
-inline fun VkExtent2D.size(x: Int, y: Int) {
-    width = x
-    height = y
-}
-
 //var VkExtent2D.size BUG
 //    get() = Vec2i(width, height)
 //    set(value) {
@@ -1251,10 +1408,10 @@ inline var VkPipelineMultisampleStateCreateInfo.flags: VkPipelineMultisampleStat
     set(value) {
         flags(value)
     }
-inline var VkPipelineMultisampleStateCreateInfo.rasterizationSamples: VkSampleCountFlagBits
-    get() = rasterizationSamples()
+inline var VkPipelineMultisampleStateCreateInfo.rasterizationSamples: VkSampleCount
+    get() = VkSampleCount of rasterizationSamples()
     set(value) {
-        rasterizationSamples(value)
+        rasterizationSamples(value.i)
     }
 inline var VkPipelineMultisampleStateCreateInfo.sampleShadingEnable
     get() = sampleShadingEnable()
@@ -1763,6 +1920,7 @@ inline var VkDescriptorPoolCreateInfo.poolSizes
         pPoolSizes(value)
     }
 
+
 //typedef struct VkDescriptorPoolCreateInfo {
 //    VkStructureType                sType;
 //    const void*                    pNext;
@@ -1923,58 +2081,124 @@ inline var VkWriteDescriptorSet.texelBufferView
 //    uint32_t                    height;
 //    uint32_t                    layers;
 //} VkFramebufferCreateInfo;
-//
-//typedef struct VkAttachmentDescription {
-//    VkAttachmentDescriptionFlags    flags;
-//    VkFormat                        format;
-//    VkSampleCountFlagBits           samples;
-//    VkAttachmentLoadOp              loadOp;
-//    VkAttachmentStoreOp             storeOp;
-//    VkAttachmentLoadOp              stencilLoadOp;
-//    VkAttachmentStoreOp             stencilStoreOp;
-//    VkImageLayout                   initialLayout;
-//    VkImageLayout                   finalLayout;
-//} VkAttachmentDescription;
-//
-//typedef struct VkAttachmentReference {
-//    uint32_t         attachment;
-//    VkImageLayout    layout;
-//} VkAttachmentReference;
-//
-//typedef struct VkSubpassDescription {
-//    VkSubpassDescriptionFlags       flags;
-//    VkPipelineBindPoint             pipelineBindPoint;
-//    uint32_t                        inputAttachmentCount;
-//    const VkAttachmentReference*    pInputAttachments;
-//    uint32_t                        colorAttachmentCount;
-//    const VkAttachmentReference*    pColorAttachments;
-//    const VkAttachmentReference*    pResolveAttachments;
-//    const VkAttachmentReference*    pDepthStencilAttachment;
-//    uint32_t                        preserveAttachmentCount;
-//    const uint32_t*                 pPreserveAttachments;
-//} VkSubpassDescription;
-//
-//typedef struct VkSubpassDependency {
-//    uint32_t                srcSubpass;
-//    uint32_t                dstSubpass;
-//    VkPipelineStageFlags    srcStageMask;
-//    VkPipelineStageFlags    dstStageMask;
-//    VkAccessFlags           srcAccessMask;
-//    VkAccessFlags           dstAccessMask;
-//    VkDependencyFlags       dependencyFlags;
-//} VkSubpassDependency;
-//
-//typedef struct VkRenderPassCreateInfo {
-//    VkStructureType                   sType;
-//    const void*                       pNext;
-//    VkRenderPassCreateFlags           flags;
-//    uint32_t                          attachmentCount;
-//    const VkAttachmentDescription*    pAttachments;
-//    uint32_t                          subpassCount;
-//    const VkSubpassDescription*       pSubpasses;
-//    uint32_t                          dependencyCount;
-//    const VkSubpassDependency*        pDependencies;
-//} VkRenderPassCreateInfo;
+
+
+inline var VkAttachmentDescription.flags: VkAttachmentDescriptionFlags
+    get() = VkAttachmentDescription.nflags(adr)
+    set(value) = VkAttachmentDescription.nflags(adr, value)
+inline var VkAttachmentDescription.format: VkFormat
+    get() = VkFormat of VkAttachmentDescription.nformat(adr)
+    set(value) = VkAttachmentDescription.nformat(adr, value.i)
+inline var VkAttachmentDescription.samples: VkSampleCount
+    get() = VkSampleCount of VkAttachmentDescription.nsamples(adr)
+    set(value) = VkAttachmentDescription.nsamples(adr, value.i)
+inline var VkAttachmentDescription.loadOp: VkAttachmentLoadOp
+    get() = VkAttachmentLoadOp of VkAttachmentDescription.nloadOp(adr)
+    set(value) = VkAttachmentDescription.nloadOp(adr, value.i)
+inline var VkAttachmentDescription.storeOp: VkAttachmentStoreOp
+    get() = VkAttachmentStoreOp of VkAttachmentDescription.nstoreOp(adr)
+    set(value) = VkAttachmentDescription.nstoreOp(adr, value.i)
+inline var VkAttachmentDescription.stencilLoadOp: VkAttachmentLoadOp
+    get() = VkAttachmentLoadOp of VkAttachmentDescription.nstencilLoadOp(adr)
+    set(value) = VkAttachmentDescription.nstencilLoadOp(adr, value.i)
+inline var VkAttachmentDescription.stencilStoreOp: VkAttachmentStoreOp
+    get() = VkAttachmentStoreOp of VkAttachmentDescription.nstencilStoreOp(adr)
+    set(value) = VkAttachmentDescription.nstencilStoreOp(adr, value.i)
+inline var VkAttachmentDescription.initialLayout: VkImageLayout
+    get() = VkImageLayout of VkAttachmentDescription.ninitialLayout(adr)
+    set(value) = VkAttachmentDescription.ninitialLayout(adr, value.i)
+inline var VkAttachmentDescription.finalLayout: VkImageLayout
+    get() = VkImageLayout of VkAttachmentDescription.nfinalLayout(adr)
+    set(value) = VkAttachmentDescription.nfinalLayout(adr, value.i)
+
+
+
+inline var VkAttachmentReference.attachment
+    get() = VkAttachmentReference.nattachment(adr)
+    set(value) = VkAttachmentReference.nattachment(adr, value)
+inline var VkAttachmentReference.layout: VkImageLayout
+    get() = VkImageLayout of VkAttachmentReference.nlayout(adr)
+    set(value) = VkAttachmentReference.nlayout(adr, value.i)
+
+
+
+
+inline var VkSubpassDescription.flags: VkSubpassDescriptionFlags
+    get() = VkSubpassDescription.nflags(adr)
+    set(value) = VkSubpassDescription.nflags(adr, value)
+inline var VkSubpassDescription.pipelineBindPoint: VkPipelineBindPoint
+    get() = VkPipelineBindPoint of VkSubpassDescription.npipelineBindPoint(adr)
+    set(value) = VkSubpassDescription.npipelineBindPoint(adr, value.i)
+//inline val VkSubpassDescription.inputAttachmentCount get() = VkSubpassDescription.ninputAttachmentCount(adr)
+inline var VkSubpassDescription.inputAttachments
+    get() = VkSubpassDescription.npInputAttachments(adr)
+    set(value) = VkSubpassDescription.npInputAttachments(adr, value)
+inline var VkSubpassDescription.colorAttachmentCount
+    get() = VkSubpassDescription.ncolorAttachmentCount(adr)
+    set(value) = VkSubpassDescription.ncolorAttachmentCount(adr, value)
+inline var VkSubpassDescription.colorAttachments
+    get() = VkSubpassDescription.npColorAttachments(adr)
+    set(value) = VkSubpassDescription.npColorAttachments(adr, value)
+inline var VkSubpassDescription.resolveAttachments
+    get() = VkSubpassDescription.npResolveAttachments(adr)
+    set(value) = VkSubpassDescription.npResolveAttachments(adr, value)
+inline var VkSubpassDescription.depthStencilAttachment
+    get() = VkSubpassDescription.npDepthStencilAttachment(adr)
+    set(value) = VkSubpassDescription.npDepthStencilAttachment(adr, value)
+//inline val VkSubpassDescription.preserveAttachmentCount get() = VkSubpassDescription.npreserveAttachmentCount(adr)
+inline var VkSubpassDescription.preserveAttachments
+    get() = VkSubpassDescription.npPreserveAttachments(adr)
+    set(value) = VkSubpassDescription.npPreserveAttachments(adr, value)
+
+
+
+inline var VkSubpassDependency.srcSubpass
+    get() = VkSubpassDependency.nsrcSubpass(adr)
+    set(value) = VkSubpassDependency.nsrcSubpass(adr, value)
+inline var VkSubpassDependency.dstSubpass
+    get() = VkSubpassDependency.ndstSubpass(adr)
+    set(value) = VkSubpassDependency.ndstSubpass(adr, value)
+inline var VkSubpassDependency.srcStageMask: VkPipelineStageFlags
+    get() = VkSubpassDependency.nsrcStageMask(adr)
+    set(value) = VkSubpassDependency.nsrcStageMask(adr, value)
+inline var VkSubpassDependency.dstStageMask: VkPipelineStageFlags
+    get() = VkSubpassDependency.ndstStageMask(adr)
+    set(value) = VkSubpassDependency.ndstStageMask(adr, value)
+inline var VkSubpassDependency.srcAccessMask: VkAccessFlags
+    get() = VkSubpassDependency.nsrcAccessMask(adr)
+    set(value) = VkSubpassDependency.nsrcAccessMask(adr, value)
+inline var VkSubpassDependency.dstAccessMask: VkAccessFlags
+    get() = VkSubpassDependency.ndstAccessMask(adr)
+    set(value) = VkSubpassDependency.ndstAccessMask(adr, value)
+inline var VkSubpassDependency.dependencyFlags: VkDependencyFlags
+    get() = VkSubpassDependency.ndependencyFlags(adr)
+    set(value) = VkSubpassDependency.ndependencyFlags(adr, value)
+
+
+
+
+inline var VkRenderPassCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkRenderPassCreateInfo.nsType(adr)
+    set(value) = VkRenderPassCreateInfo.nsType(adr, value.i)
+inline var VkRenderPassCreateInfo.next
+    get() = VkRenderPassCreateInfo.npNext(adr)
+    set(value) = VkRenderPassCreateInfo.npNext(adr, value)
+inline var VkRenderPassCreateInfo.flags: VkRenderPassCreateFlags
+    get() = VkRenderPassCreateInfo.nflags(adr)
+    set(value) = VkRenderPassCreateInfo.nflags(adr, value)
+inline val VkRenderPassCreateInfo.attachmentCount get() = VkRenderPassCreateInfo.nattachmentCount(adr)
+inline var VkRenderPassCreateInfo.attachments
+    get() = VkRenderPassCreateInfo.npAttachments(adr)
+    set(value) = VkRenderPassCreateInfo.npAttachments(adr, value)
+inline val VkRenderPassCreateInfo.subpassCount get() = VkRenderPassCreateInfo.nsubpassCount(adr)
+inline var VkRenderPassCreateInfo.subpasses
+    get() = VkRenderPassCreateInfo.npSubpasses(adr)
+    set(value) = VkRenderPassCreateInfo.npSubpasses(adr, value)
+inline val VkRenderPassCreateInfo.dependencyCount get() = VkRenderPassCreateInfo.ndependencyCount(adr)
+inline var VkRenderPassCreateInfo.dependencies
+    get() = VkRenderPassCreateInfo.npDependencies(adr)
+    set(value) = VkRenderPassCreateInfo.npDependencies(adr, value)
+
 
 inline var VkCommandPoolCreateInfo.type: VkStructureType
     get() = VkStructureType of VkCommandPoolCreateInfo.nsType(adr)
@@ -1995,7 +2219,24 @@ inline var VkCommandPoolCreateInfo.queueFamilyIndex
 //    VkCommandPoolCreateFlags    flags;
 //    uint32_t                    queueFamilyIndex;
 //} VkCommandPoolCreateInfo;
-//
+
+inline var VkCommandBufferAllocateInfo.type: VkStructureType
+    get() = VkStructureType of VkCommandBufferAllocateInfo.nsType(adr)
+    set(value) = VkCommandBufferAllocateInfo.nsType(adr, value.i)
+var VkCommandBufferAllocateInfo.next
+    get() = VkCommandBufferAllocateInfo.npNext(adr)
+    set(value) = VkCommandBufferAllocateInfo.npNext(adr, value)
+var VkCommandBufferAllocateInfo.commandPool: VkCommandPool
+    get() = VkCommandBufferAllocateInfo.ncommandPool(adr)
+    set(value) = VkCommandBufferAllocateInfo.ncommandPool(adr, value)
+var VkCommandBufferAllocateInfo.level: VkCommandBufferLevel
+    get() = VkCommandBufferLevel of VkCommandBufferAllocateInfo.nlevel(adr)
+    set(value) = VkCommandBufferAllocateInfo.nlevel(adr, value.i)
+var VkCommandBufferAllocateInfo.commandBufferCount
+    get() = VkCommandBufferAllocateInfo.ncommandBufferCount(adr)
+    set(value) = VkCommandBufferAllocateInfo.ncommandBufferCount(adr, value)
+
+
 //typedef struct VkCommandBufferAllocateInfo {
 //    VkStructureType         sType;
 //    const void*             pNext;
@@ -3151,69 +3392,6 @@ inline var VkRenderPassBeginInfo.clearValues
 //#define VK_COLORSPACE_SRGB_NONLINEAR_KHR  VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 //
 //
-enum class VkColorSpace(val i: Int) {
-    SRGB_NONLINEAR_KHR(0),
-    DISPLAY_P3_NONLINEAR_EXT(1000104001),
-    EXTENDED_SRGB_LINEAR_EXT(1000104002),
-    DCI_P3_LINEAR_EXT(1000104003),
-    DCI_P3_NONLINEAR_EXT(1000104004),
-    BT709_LINEAR_EXT(1000104005),
-    BT709_NONLINEAR_EXT(1000104006),
-    BT2020_LINEAR_EXT(1000104007),
-    HDR10_ST2084_EXT(1000104008),
-    DOLBYVISION_EXT(1000104009),
-    HDR10_HLG_EXT(1000104010),
-    ADOBERGB_LINEAR_EXT(1000104011),
-    ADOBERGB_NONLINEAR_EXT(1000104012),
-    PASS_THROUGH_EXT(1000104013),
-    EXTENDED_SRGB_NONLINEAR_EXT(1000104014);
-
-    companion object {
-        infix fun of(i: Int) = values().first { it.i == i }
-    }
-}
-
-
-enum class VkPresentMode(val i: Int) {
-    IMMEDIATE_KHR(0),
-    MAILBOX_KHR(1),
-    FIFO_KHR(2),
-    FIFO_RELAXED_KHR(3),
-    SHARED_DEMAND_REFRESH_KHR(1000111000),
-    SHARED_CONTINUOUS_REFRESH_KHR(1000111001);
-
-    companion object {
-        infix fun of(i: Int) = values().first { it.i == i }
-    }
-}
-
-
-enum class VkSurfaceTransform(val i: Int) {
-    IDENTITY_BIT_KHR(0x00000001),
-    ROTATE_90_BIT_KHR(0x00000002),
-    ROTATE_180_BIT_KHR(0x00000004),
-    ROTATE_270_BIT_KHR(0x00000008),
-    HORIZONTAL_MIRROR_BIT_KHR(0x00000010),
-    HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR(0x00000020),
-    HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR(0x00000040),
-    HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR(0x00000080),
-    INHERIT_BIT_KHR(0x00000100);
-
-    companion object {
-        infix fun of(i: Int) = values().first { it.i == i }
-    }
-}
-
-typealias VkSurfaceTransformFlagsKHR = VkFlags
-
-typealias VkCompositeAlphaFlagBitsKHR = Int
-
-val VkCompositeAlpha_OPAQUE_BIT_KHR: VkCompositeAlphaFlagBitsKHR = 0x00000001
-val VkCompositeAlpha_PRE_MULTIPLIED_BIT_KHR: VkCompositeAlphaFlagBitsKHR = 0x00000002
-val VkCompositeAlpha_POST_MULTIPLIED_BIT_KHR: VkCompositeAlphaFlagBitsKHR = 0x00000004
-val VkCompositeAlpha_INHERIT_BIT_KHR: VkCompositeAlphaFlagBitsKHR = 0x00000008
-
-typealias VkCompositeAlphaFlagsKHR = VkFlags
 
 
 inline val VkSurfaceCapabilitiesKHR.minImageCount get() = VkSurfaceCapabilitiesKHR.nminImageCount(adr)
@@ -3284,8 +3462,62 @@ inline val VkSurfaceFormatKHR.colorSpace: VkColorSpace get() = VkColorSpace of V
 //
 //#define VK_KHR_SWAPCHAIN_SPEC_VERSION     68
 //#define VK_KHR_SWAPCHAIN_EXTENSION_NAME   "VK_KHR_swapchain"
-//
-//
+
+
+inline var VkSwapchainCreateInfoKHR.type: VkStructureType
+    get() = VkStructureType of VkSwapchainCreateInfoKHR.nsType(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nsType(adr, value.i)
+inline var VkSwapchainCreateInfoKHR.next: Long
+    get() = VkSwapchainCreateInfoKHR.npNext(adr)
+    set(value) = VkSwapchainCreateInfoKHR.npNext(adr, value)
+inline var VkSwapchainCreateInfoKHR.flags: VkSwapchainCreateFlagsKHR
+    get() = VkSwapchainCreateInfoKHR.nflags(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nflags(adr, value)
+inline var VkSwapchainCreateInfoKHR.surface: VkSurfaceKHR
+    get() = VkSwapchainCreateInfoKHR.nsurface(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nsurface(adr, value)
+inline var VkSwapchainCreateInfoKHR.minImageCount
+    get() = VkSwapchainCreateInfoKHR.nminImageCount(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nminImageCount(adr, value)
+inline var VkSwapchainCreateInfoKHR.imageFormat: VkFormat
+    get() = VkFormat of VkSwapchainCreateInfoKHR.nimageFormat(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nimageFormat(adr, value.i)
+inline var VkSwapchainCreateInfoKHR.imageColorSpace: VkColorSpace
+    get() = VkColorSpace of VkSwapchainCreateInfoKHR.nimageColorSpace(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nimageColorSpace(adr, value.i)
+inline var VkSwapchainCreateInfoKHR.imageExtent: VkExtent2D
+    get() = VkSwapchainCreateInfoKHR.nimageExtent(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nimageExtent(adr, value)
+inline var VkSwapchainCreateInfoKHR.imageArrayLayers
+    get() = VkSwapchainCreateInfoKHR.nimageArrayLayers(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nimageArrayLayers(adr, value)
+inline var VkSwapchainCreateInfoKHR.imageUsage: VkImageUsageFlags
+    get() = VkSwapchainCreateInfoKHR.nimageUsage(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nimageUsage(adr, value)
+inline var VkSwapchainCreateInfoKHR.imageSharingMode: VkSharingMode
+    get() = VkSharingMode of VkSwapchainCreateInfoKHR.nimageSharingMode(adr)
+    set(value) = VkSwapchainCreateInfoKHR.nimageSharingMode(adr, value.i)
+inline val VkSwapchainCreateInfoKHR.queueFamilyIndexCount get() = VkSwapchainCreateInfoKHR.nqueueFamilyIndexCount(adr)
+inline var VkSwapchainCreateInfoKHR.queueFamilyIndices
+    get() = VkSwapchainCreateInfoKHR.npQueueFamilyIndices(adr)
+    set(value) = VkSwapchainCreateInfoKHR.npQueueFamilyIndices(adr, value)
+inline var VkSwapchainCreateInfoKHR.preTransform: VkSurfaceTransform
+    get() = VkSurfaceTransform of VkSwapchainCreateInfoKHR.npreTransform(adr)
+    set(value) = VkSwapchainCreateInfoKHR.npreTransform(adr, value.i)
+inline var VkSwapchainCreateInfoKHR.compositeAlpha: VkCompositeAlpha
+    get() = VkCompositeAlpha of VkSwapchainCreateInfoKHR.ncompositeAlpha(adr)
+    set(value) = VkSwapchainCreateInfoKHR.ncompositeAlpha(adr, value.i)
+inline var VkSwapchainCreateInfoKHR.presentMode: VkPresentMode
+    get() = VkPresentMode of VkSwapchainCreateInfoKHR.npresentMode(adr)
+    set(value) = VkSwapchainCreateInfoKHR.npresentMode(adr, value.i)
+inline var VkSwapchainCreateInfoKHR.clipped
+    get() = VkSwapchainCreateInfoKHR.nclipped(adr).bool
+    set(value) = VkSwapchainCreateInfoKHR.nclipped(adr, value.i)
+inline var VkSwapchainCreateInfoKHR.oldSwapchain: VkSwapchainKHR
+    get() = VkSwapchainCreateInfoKHR.noldSwapchain(adr)
+    set(value) = VkSwapchainCreateInfoKHR.noldSwapchain(adr, value)
+
+
 typealias VkSwapchainCreateFlagBitsKHR = Int
 
 val VkSwapchainCreate_BIND_SFR_BIT_KHX: VkSwapchainCreateFlagBitsKHR = 0x00000001
