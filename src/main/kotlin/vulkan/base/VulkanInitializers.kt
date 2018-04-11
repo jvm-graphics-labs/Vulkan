@@ -1,8 +1,7 @@
 package vulkan.base
 
 import org.lwjgl.vulkan.*
-import vkn.VkCommandBufferLevel
-import vkn.VkCommandPool
+import vkn.*
 
 object initializers {
 
@@ -119,9 +118,7 @@ object initializers {
 //        return framebufferCreateInfo;
 //    }
 //
-    fun semaphoreCreateInfo(): VkSemaphoreCreateInfo = VkSemaphoreCreateInfo.calloc().apply {
-        sType(VK10.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO)
-    }
+    fun semaphoreCreateInfo(): VkSemaphoreCreateInfo = vk.SemaphoreCreateInfo { type = VkStructureType.SEMAPHORE_CREATE_INFO }
 
     //
 //    inline VkFenceCreateInfo fenceCreateInfo(VkFenceCreateFlags flags = 0)
@@ -139,7 +136,7 @@ object initializers {
 //        return eventCreateInfo;
 //    }
 //
-    fun submitInfo(): VkSubmitInfo = VkSubmitInfo.calloc().apply { sType(VK10.VK_STRUCTURE_TYPE_SUBMIT_INFO) }
+    fun submitInfo(): VkSubmitInfo = vk.SubmitInfo { type = VkStructureType.SUBMIT_INFO }
 //
 //    inline VkViewport viewport(
 //            float width,

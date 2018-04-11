@@ -1,7 +1,5 @@
 package vkn
 
-import vulkan.base.tools
-
 
 typealias VkFlags = Int
 
@@ -13,47 +11,102 @@ val VkPipelineCacheHeaderVersion_BEGIN_RANGE = VkPipelineCacheHeaderVersion_ONE
 val VkPipelineCacheHeaderVersion_END_RANGE = VkPipelineCacheHeaderVersion_ONE
 val VkPipelineCacheHeaderVersion_RANGE_SIZE = VkPipelineCacheHeaderVersion_ONE - VkPipelineCacheHeaderVersion_ONE + 1
 
-typealias VkResult = Int
-
 typealias VkBool32 = Int
 
-val Vk_SUCCESS: VkResult = 0
-val Vk_NOT_READY: VkResult = 1
-val Vk_TIMEOUT: VkResult = 2
-val Vk_EVENT_SET: VkResult = 3
-val Vk_EVENT_RESET: VkResult = 4
-val Vk_INCOMPLETE: VkResult = 5
-val Vk_ERROR_OUT_OF_HOST_MEMORY: VkResult = -1
-val Vk_ERROR_OUT_OF_DEVICE_MEMORY: VkResult = -2
-val Vk_ERROR_INITIALIZATION_FAILED: VkResult = -3
-val Vk_ERROR_DEVICE_LOST: VkResult = -4
-val Vk_ERROR_MEMORY_MAP_FAILED: VkResult = -5
-val Vk_ERROR_LAYER_NOT_PRESENT: VkResult = -6
-val Vk_ERROR_EXTENSION_NOT_PRESENT: VkResult = -7
-val Vk_ERROR_FEATURE_NOT_PRESENT: VkResult = -8
-val Vk_ERROR_INCOMPATIBLE_DRIVER: VkResult = -9
-val Vk_ERROR_TOO_MANY_OBJECTS: VkResult = -10
-val Vk_ERROR_FORMAT_NOT_SUPPORTED: VkResult = -11
-val Vk_ERROR_FRAGMENTED_POOL: VkResult = -12
-val Vk_ERROR_SURFACE_LOST_KHR: VkResult = -1000000000
-val Vk_ERROR_NATIVE_WINDOW_IN_USE_KHR: VkResult = -1000000001
-val Vk_SUBOPTIMAL_KHR: VkResult = 1000001003
-val Vk_ERROR_OUT_OF_DATE_KHR: VkResult = -1000001004
-val Vk_ERROR_INCOMPATIBLE_DISPLAY_KHR: VkResult = -1000003001
-val Vk_ERROR_VALIDATION_FAILED_EXT: VkResult = -1000011001
-val Vk_ERROR_INVALID_SHADER_NV: VkResult = -1000012000
-val Vk_ERROR_OUT_OF_POOL_MEMORY_KHR: VkResult = -1000069000
-val Vk_ERROR_INVALID_EXTERNAL_HANDLE_KHR: VkResult = -1000072003
-val Vk_ERROR_NOT_PERMITTED_EXT: VkResult = -1000174001
+var VULKAN_NO_EXCEPTIONS = false
 
+class OutOfHostMemoryError(message: String) : Error(message)
+class OutOfDeviceMemoryError(message: String) : Error(message)
+class InitializationFailedError(message: String) : Error(message)
+class DeviceLostError(message: String) : Error(message)
+class MemoryMapFailedError(message: String) : Error(message)
+class LayerNotPresentError(message: String) : Error(message)
+class ExtensionNotPresentError(message: String) : Error(message)
+class FeatureNotPresentError(message: String) : Error(message)
+class IncompatibleDriverError(message: String) : Error(message)
+class TooManyObjectsError(message: String) : Error(message)
+class FormatNotSupportedError(message: String) : Error(message)
+class FragmentedPoolError(message: String) : Error(message)
+class SurfaceLostKhrError(message: String) : Error(message)
+class NativeWindowInUseKhrError(message: String) : Error(message)
+class OutOfDateKhrError(message: String) : Error(message)
+class IncompatibleDisplayKhrError(message: String) : Error(message)
+class ValidationFailedExtError(message: String) : Error(message)
+class InvalidShaderNvError(message: String) : Error(message)
+class OutOfPoolMemoryError(message: String) : Error(message)
+class InvalidExternalHandleError(message: String) : Error(message)
+class NotPermittedError(message: String) : Error(message)
 
-val VkResult.string get() = tools.errorString(this)
-operator fun VkResult.invoke() = this != Vk_SUCCESS
+enum class VkResult(val i: Int) {
+    SUCCESS(0),
+    NOT_READY(1),
+    TIMEOUT(2),
+    EVENT_SET(3),
+    EVENT_RESET(4),
+    INCOMPLETE(5),
+    ERROR_OUT_OF_HOST_MEMORY(-1),
+    ERROR_OUT_OF_DEVICE_MEMORY(-2),
+    ERROR_INITIALIZATION_FAILED(-3),
+    ERROR_DEVICE_LOST(-4),
+    ERROR_MEMORY_MAP_FAILED(-5),
+    ERROR_LAYER_NOT_PRESENT(-6),
+    ERROR_EXTENSION_NOT_PRESENT(-7),
+    ERROR_FEATURE_NOT_PRESENT(-8),
+    ERROR_INCOMPATIBLE_DRIVER(-9),
+    ERROR_TOO_MANY_OBJECTS(-10),
+    ERROR_FORMAT_NOT_SUPPORTED(-11),
+    ERROR_FRAGMENTED_POOL(-12),
+    ERROR_SURFACE_LOST_KHR(-1000000000),
+    ERROR_NATIVE_WINDOW_IN_USE_KHR(-1000000001),
+    SUBOPTIMAL_KHR(1000001003),
+    ERROR_OUT_OF_DATE_KHR(-1000001004),
+    ERROR_INCOMPATIBLE_DISPLAY_KHR(-1000003001),
+    ERROR_VALIDATION_FAILED_EXT(-1000011001),
+    ERROR_INVALID_SHADER_NV(-1000012000),
+    ERROR_OUT_OF_POOL_MEMORY(-1000069000),
+    ERROR_INVALID_EXTERNAL_HANDLE(-1000072003),
+    //    VK_ERROR_FRAGMENTATION_EXT TODO
+    ERROR_NOT_PERMITTED_EXT(-1000174001);
 
+    inline operator fun invoke() = this != SUCCESS
+
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+inline fun VK_CHECK_RESULT(i: Int) = VkResult.of(i).check()
 
 fun VkResult.check(message: String? = null) {
-    if (this != Vk_SUCCESS)
-        throw Error(message ?: "Fatal : VkResult is $this")
+    val msg = message ?: "Fatal : VkResult is $this"
+    if (this())
+        if (VULKAN_NO_EXCEPTIONS)
+            System.err.println(msg)
+        else
+            when (this) {
+                VkResult.ERROR_OUT_OF_HOST_MEMORY -> throw OutOfHostMemoryError(msg)
+                VkResult.ERROR_OUT_OF_DEVICE_MEMORY -> throw OutOfDeviceMemoryError(msg)
+                VkResult.ERROR_INITIALIZATION_FAILED -> throw InitializationFailedError(msg)
+                VkResult.ERROR_DEVICE_LOST -> throw DeviceLostError(msg)
+                VkResult.ERROR_MEMORY_MAP_FAILED -> throw MemoryMapFailedError(msg)
+                VkResult.ERROR_LAYER_NOT_PRESENT -> throw LayerNotPresentError(msg)
+                VkResult.ERROR_EXTENSION_NOT_PRESENT -> throw ExtensionNotPresentError(msg)
+                VkResult.ERROR_FEATURE_NOT_PRESENT -> throw FeatureNotPresentError(msg)
+                VkResult.ERROR_INCOMPATIBLE_DRIVER -> throw IncompatibleDriverError(msg)
+                VkResult.ERROR_TOO_MANY_OBJECTS -> throw TooManyObjectsError(msg)
+                VkResult.ERROR_FORMAT_NOT_SUPPORTED -> throw FormatNotSupportedError(msg)
+                VkResult.ERROR_FRAGMENTED_POOL -> throw FragmentedPoolError(msg)
+                VkResult.ERROR_SURFACE_LOST_KHR -> throw SurfaceLostKhrError(msg)
+                VkResult.ERROR_NATIVE_WINDOW_IN_USE_KHR -> throw NativeWindowInUseKhrError(msg)
+                VkResult.ERROR_OUT_OF_DATE_KHR -> throw OutOfDateKhrError(msg)
+                VkResult.ERROR_INCOMPATIBLE_DISPLAY_KHR -> throw IncompatibleDisplayKhrError(msg)
+                VkResult.ERROR_VALIDATION_FAILED_EXT -> throw ValidationFailedExtError(msg)
+                VkResult.ERROR_INVALID_SHADER_NV -> throw InvalidShaderNvError(msg)
+                VkResult.ERROR_OUT_OF_POOL_MEMORY -> throw OutOfPoolMemoryError(msg)
+                VkResult.ERROR_INVALID_EXTERNAL_HANDLE -> throw InvalidExternalHandleError(msg)
+                VkResult.ERROR_NOT_PERMITTED_EXT -> throw NotPermittedError(msg)
+                else -> throw Error(msg)
+            }
 }
 
 enum class VkStructureType(val i: Int) {
@@ -289,239 +342,240 @@ enum class VkStructureType(val i: Int) {
 //    VK_INTERNAL_ALLOCATION_TYPE_MAX_ENUM = 0x7FFFFFFF
 //} VkInternalAllocationType;
 //
-typealias VkFormat = Int
 
-val VkFormat_UNDEFINED: VkFormat = 0
-val VkFormat_R4G4_UNORM_PACK8: VkFormat = 1
-val VkFormat_R4G4B4A4_UNORM_PACK16: VkFormat = 2
-val VkFormat_B4G4R4A4_UNORM_PACK16: VkFormat = 3
-val VkFormat_R5G6B5_UNORM_PACK16: VkFormat = 4
-val VkFormat_B5G6R5_UNORM_PACK16: VkFormat = 5
-val VkFormat_R5G5B5A1_UNORM_PACK16: VkFormat = 6
-val VkFormat_B5G5R5A1_UNORM_PACK16: VkFormat = 7
-val VkFormat_A1R5G5B5_UNORM_PACK16: VkFormat = 8
-val VkFormat_R8_UNORM: VkFormat = 9
-val VkFormat_R8_SNORM: VkFormat = 10
-val VkFormat_R8_USCALED: VkFormat = 11
-val VkFormat_R8_SSCALED: VkFormat = 12
-val VkFormat_R8_UINT: VkFormat = 13
-val VkFormat_R8_SINT: VkFormat = 14
-val VkFormat_R8_SRGB: VkFormat = 15
-val VkFormat_R8G8_UNORM: VkFormat = 16
-val VkFormat_R8G8_SNORM: VkFormat = 17
-val VkFormat_R8G8_USCALED: VkFormat = 18
-val VkFormat_R8G8_SSCALED: VkFormat = 19
-val VkFormat_R8G8_UINT: VkFormat = 20
-val VkFormat_R8G8_SINT: VkFormat = 21
-val VkFormat_R8G8_SRGB: VkFormat = 22
-val VkFormat_R8G8B8_UNORM: VkFormat = 23
-val VkFormat_R8G8B8_SNORM: VkFormat = 24
-val VkFormat_R8G8B8_USCALED: VkFormat = 25
-val VkFormat_R8G8B8_SSCALED: VkFormat = 26
-val VkFormat_R8G8B8_UINT: VkFormat = 27
-val VkFormat_R8G8B8_SINT: VkFormat = 28
-val VkFormat_R8G8B8_SRGB: VkFormat = 29
-val VkFormat_B8G8R8_UNORM: VkFormat = 30
-val VkFormat_B8G8R8_SNORM: VkFormat = 31
-val VkFormat_B8G8R8_USCALED: VkFormat = 32
-val VkFormat_B8G8R8_SSCALED: VkFormat = 33
-val VkFormat_B8G8R8_UINT: VkFormat = 34
-val VkFormat_B8G8R8_SINT: VkFormat = 35
-val VkFormat_B8G8R8_SRGB: VkFormat = 36
-val VkFormat_R8G8B8A8_UNORM: VkFormat = 37
-val VkFormat_R8G8B8A8_SNORM: VkFormat = 38
-val VkFormat_R8G8B8A8_USCALED: VkFormat = 39
-val VkFormat_R8G8B8A8_SSCALED: VkFormat = 40
-val VkFormat_R8G8B8A8_UINT: VkFormat = 41
-val VkFormat_R8G8B8A8_SINT: VkFormat = 42
-val VkFormat_R8G8B8A8_SRGB: VkFormat = 43
-val VkFormat_B8G8R8A8_UNORM: VkFormat = 44
-val VkFormat_B8G8R8A8_SNORM: VkFormat = 45
-val VkFormat_B8G8R8A8_USCALED: VkFormat = 46
-val VkFormat_B8G8R8A8_SSCALED: VkFormat = 47
-val VkFormat_B8G8R8A8_UINT: VkFormat = 48
-val VkFormat_B8G8R8A8_SINT: VkFormat = 49
-val VkFormat_B8G8R8A8_SRGB: VkFormat = 50
-val VkFormat_A8B8G8R8_UNORM_PACK32: VkFormat = 51
-val VkFormat_A8B8G8R8_SNORM_PACK32: VkFormat = 52
-val VkFormat_A8B8G8R8_USCALED_PACK32: VkFormat = 53
-val VkFormat_A8B8G8R8_SSCALED_PACK32: VkFormat = 54
-val VkFormat_A8B8G8R8_UINT_PACK32: VkFormat = 55
-val VkFormat_A8B8G8R8_SINT_PACK32: VkFormat = 56
-val VkFormat_A8B8G8R8_SRGB_PACK32: VkFormat = 57
-val VkFormat_A2R10G10B10_UNORM_PACK32: VkFormat = 58
-val VkFormat_A2R10G10B10_SNORM_PACK32: VkFormat = 59
-val VkFormat_A2R10G10B10_USCALED_PACK32: VkFormat = 60
-val VkFormat_A2R10G10B10_SSCALED_PACK32: VkFormat = 61
-val VkFormat_A2R10G10B10_UINT_PACK32: VkFormat = 62
-val VkFormat_A2R10G10B10_SINT_PACK32: VkFormat = 63
-val VkFormat_A2B10G10R10_UNORM_PACK32: VkFormat = 64
-val VkFormat_A2B10G10R10_SNORM_PACK32: VkFormat = 65
-val VkFormat_A2B10G10R10_USCALED_PACK32: VkFormat = 66
-val VkFormat_A2B10G10R10_SSCALED_PACK32: VkFormat = 67
-val VkFormat_A2B10G10R10_UINT_PACK32: VkFormat = 68
-val VkFormat_A2B10G10R10_SINT_PACK32: VkFormat = 69
-val VkFormat_R16_UNORM: VkFormat = 70
-val VkFormat_R16_SNORM: VkFormat = 71
-val VkFormat_R16_USCALED: VkFormat = 72
-val VkFormat_R16_SSCALED: VkFormat = 73
-val VkFormat_R16_UINT: VkFormat = 74
-val VkFormat_R16_SINT: VkFormat = 75
-val VkFormat_R16_SFLOAT: VkFormat = 76
-val VkFormat_R16G16_UNORM: VkFormat = 77
-val VkFormat_R16G16_SNORM: VkFormat = 78
-val VkFormat_R16G16_USCALED: VkFormat = 79
-val VkFormat_R16G16_SSCALED: VkFormat = 80
-val VkFormat_R16G16_UINT: VkFormat = 81
-val VkFormat_R16G16_SINT: VkFormat = 82
-val VkFormat_R16G16_SFLOAT: VkFormat = 83
-val VkFormat_R16G16B16_UNORM: VkFormat = 84
-val VkFormat_R16G16B16_SNORM: VkFormat = 85
-val VkFormat_R16G16B16_USCALED: VkFormat = 86
-val VkFormat_R16G16B16_SSCALED: VkFormat = 87
-val VkFormat_R16G16B16_UINT: VkFormat = 88
-val VkFormat_R16G16B16_SINT: VkFormat = 89
-val VkFormat_R16G16B16_SFLOAT: VkFormat = 90
-val VkFormat_R16G16B16A16_UNORM: VkFormat = 91
-val VkFormat_R16G16B16A16_SNORM: VkFormat = 92
-val VkFormat_R16G16B16A16_USCALED: VkFormat = 93
-val VkFormat_R16G16B16A16_SSCALED: VkFormat = 94
-val VkFormat_R16G16B16A16_UINT: VkFormat = 95
-val VkFormat_R16G16B16A16_SINT: VkFormat = 96
-val VkFormat_R16G16B16A16_SFLOAT: VkFormat = 97
-val VkFormat_R32_UINT: VkFormat = 98
-val VkFormat_R32_SINT: VkFormat = 99
-val VkFormat_R32_SFLOAT: VkFormat = 100
-val VkFormat_R32G32_UINT: VkFormat = 101
-val VkFormat_R32G32_SINT: VkFormat = 102
-val VkFormat_R32G32_SFLOAT: VkFormat = 103
-val VkFormat_R32G32B32_UINT: VkFormat = 104
-val VkFormat_R32G32B32_SINT: VkFormat = 105
-val VkFormat_R32G32B32_SFLOAT: VkFormat = 106
-val VkFormat_R32G32B32A32_UINT: VkFormat = 107
-val VkFormat_R32G32B32A32_SINT: VkFormat = 108
-val VkFormat_R32G32B32A32_SFLOAT: VkFormat = 109
-val VkFormat_R64_UINT: VkFormat = 110
-val VkFormat_R64_SINT: VkFormat = 111
-val VkFormat_R64_SFLOAT: VkFormat = 112
-val VkFormat_R64G64_UINT: VkFormat = 113
-val VkFormat_R64G64_SINT: VkFormat = 114
-val VkFormat_R64G64_SFLOAT: VkFormat = 115
-val VkFormat_R64G64B64_UINT: VkFormat = 116
-val VkFormat_R64G64B64_SINT: VkFormat = 117
-val VkFormat_R64G64B64_SFLOAT: VkFormat = 118
-val VkFormat_R64G64B64A64_UINT: VkFormat = 119
-val VkFormat_R64G64B64A64_SINT: VkFormat = 120
-val VkFormat_R64G64B64A64_SFLOAT: VkFormat = 121
-val VkFormat_B10G11R11_UFLOAT_PACK32: VkFormat = 122
-val VkFormat_E5B9G9R9_UFLOAT_PACK32: VkFormat = 123
-val VkFormat_D16_UNORM: VkFormat = 124
-val VkFormat_X8_D24_UNORM_PACK32: VkFormat = 125
-val VkFormat_D32_SFLOAT: VkFormat = 126
-val VkFormat_S8_UINT: VkFormat = 127
-val VkFormat_D16_UNORM_S8_UINT: VkFormat = 128
-val VkFormat_D24_UNORM_S8_UINT: VkFormat = 129
-val VkFormat_D32_SFLOAT_S8_UINT: VkFormat = 130
-val VkFormat_BC1_RGB_UNORM_BLOCK: VkFormat = 131
-val VkFormat_BC1_RGB_SRGB_BLOCK: VkFormat = 132
-val VkFormat_BC1_RGBA_UNORM_BLOCK: VkFormat = 133
-val VkFormat_BC1_RGBA_SRGB_BLOCK: VkFormat = 134
-val VkFormat_BC2_UNORM_BLOCK: VkFormat = 135
-val VkFormat_BC2_SRGB_BLOCK: VkFormat = 136
-val VkFormat_BC3_UNORM_BLOCK: VkFormat = 137
-val VkFormat_BC3_SRGB_BLOCK: VkFormat = 138
-val VkFormat_BC4_UNORM_BLOCK: VkFormat = 139
-val VkFormat_BC4_SNORM_BLOCK: VkFormat = 140
-val VkFormat_BC5_UNORM_BLOCK: VkFormat = 141
-val VkFormat_BC5_SNORM_BLOCK: VkFormat = 142
-val VkFormat_BC6H_UFLOAT_BLOCK: VkFormat = 143
-val VkFormat_BC6H_SFLOAT_BLOCK: VkFormat = 144
-val VkFormat_BC7_UNORM_BLOCK: VkFormat = 145
-val VkFormat_BC7_SRGB_BLOCK: VkFormat = 146
-val VkFormat_ETC2_R8G8B8_UNORM_BLOCK: VkFormat = 147
-val VkFormat_ETC2_R8G8B8_SRGB_BLOCK: VkFormat = 148
-val VkFormat_ETC2_R8G8B8A1_UNORM_BLOCK: VkFormat = 149
-val VkFormat_ETC2_R8G8B8A1_SRGB_BLOCK: VkFormat = 150
-val VkFormat_ETC2_R8G8B8A8_UNORM_BLOCK: VkFormat = 151
-val VkFormat_ETC2_R8G8B8A8_SRGB_BLOCK: VkFormat = 152
-val VkFormat_EAC_R11_UNORM_BLOCK: VkFormat = 153
-val VkFormat_EAC_R11_SNORM_BLOCK: VkFormat = 154
-val VkFormat_EAC_R11G11_UNORM_BLOCK: VkFormat = 155
-val VkFormat_EAC_R11G11_SNORM_BLOCK: VkFormat = 156
-val VkFormat_ASTC_4x4_UNORM_BLOCK: VkFormat = 157
-val VkFormat_ASTC_4x4_SRGB_BLOCK: VkFormat = 158
-val VkFormat_ASTC_5x4_UNORM_BLOCK: VkFormat = 159
-val VkFormat_ASTC_5x4_SRGB_BLOCK: VkFormat = 160
-val VkFormat_ASTC_5x5_UNORM_BLOCK: VkFormat = 161
-val VkFormat_ASTC_5x5_SRGB_BLOCK: VkFormat = 162
-val VkFormat_ASTC_6x5_UNORM_BLOCK: VkFormat = 163
-val VkFormat_ASTC_6x5_SRGB_BLOCK: VkFormat = 164
-val VkFormat_ASTC_6x6_UNORM_BLOCK: VkFormat = 165
-val VkFormat_ASTC_6x6_SRGB_BLOCK: VkFormat = 166
-val VkFormat_ASTC_8x5_UNORM_BLOCK: VkFormat = 167
-val VkFormat_ASTC_8x5_SRGB_BLOCK: VkFormat = 168
-val VkFormat_ASTC_8x6_UNORM_BLOCK: VkFormat = 169
-val VkFormat_ASTC_8x6_SRGB_BLOCK: VkFormat = 170
-val VkFormat_ASTC_8x8_UNORM_BLOCK: VkFormat = 171
-val VkFormat_ASTC_8x8_SRGB_BLOCK: VkFormat = 172
-val VkFormat_ASTC_10x5_UNORM_BLOCK: VkFormat = 173
-val VkFormat_ASTC_10x5_SRGB_BLOCK: VkFormat = 174
-val VkFormat_ASTC_10x6_UNORM_BLOCK: VkFormat = 175
-val VkFormat_ASTC_10x6_SRGB_BLOCK: VkFormat = 176
-val VkFormat_ASTC_10x8_UNORM_BLOCK: VkFormat = 177
-val VkFormat_ASTC_10x8_SRGB_BLOCK: VkFormat = 178
-val VkFormat_ASTC_10x10_UNORM_BLOCK: VkFormat = 179
-val VkFormat_ASTC_10x10_SRGB_BLOCK: VkFormat = 180
-val VkFormat_ASTC_12x10_UNORM_BLOCK: VkFormat = 181
-val VkFormat_ASTC_12x10_SRGB_BLOCK: VkFormat = 182
-val VkFormat_ASTC_12x12_UNORM_BLOCK: VkFormat = 183
-val VkFormat_ASTC_12x12_SRGB_BLOCK: VkFormat = 184
-val VkFormat_PVRTC1_2BPP_UNORM_BLOCK_IMG: VkFormat = 1000054000
-val VkFormat_PVRTC1_4BPP_UNORM_BLOCK_IMG: VkFormat = 1000054001
-val VkFormat_PVRTC2_2BPP_UNORM_BLOCK_IMG: VkFormat = 1000054002
-val VkFormat_PVRTC2_4BPP_UNORM_BLOCK_IMG: VkFormat = 1000054003
-val VkFormat_PVRTC1_2BPP_SRGB_BLOCK_IMG: VkFormat = 1000054004
-val VkFormat_PVRTC1_4BPP_SRGB_BLOCK_IMG: VkFormat = 1000054005
-val VkFormat_PVRTC2_2BPP_SRGB_BLOCK_IMG: VkFormat = 1000054006
-val VkFormat_PVRTC2_4BPP_SRGB_BLOCK_IMG: VkFormat = 1000054007
-val VkFormat_G8B8G8R8_422_UNORM_KHR: VkFormat = 1000156000
-val VkFormat_B8G8R8G8_422_UNORM_KHR: VkFormat = 1000156001
-val VkFormat_G8_B8_R8_3PLANE_420_UNORM_KHR: VkFormat = 1000156002
-val VkFormat_G8_B8R8_2PLANE_420_UNORM_KHR: VkFormat = 1000156003
-val VkFormat_G8_B8_R8_3PLANE_422_UNORM_KHR: VkFormat = 1000156004
-val VkFormat_G8_B8R8_2PLANE_422_UNORM_KHR: VkFormat = 1000156005
-val VkFormat_G8_B8_R8_3PLANE_444_UNORM_KHR: VkFormat = 1000156006
-val VkFormat_R10X6_UNORM_PACK16_KHR: VkFormat = 1000156007
-val VkFormat_R10X6G10X6_UNORM_2PACK16_KHR: VkFormat = 1000156008
-val VkFormat_R10X6G10X6B10X6A10X6_UNORM_4PACK16_KHR: VkFormat = 1000156009
-val VkFormat_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16_KHR: VkFormat = 1000156010
-val VkFormat_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16_KHR: VkFormat = 1000156011
-val VkFormat_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16_KHR: VkFormat = 1000156012
-val VkFormat_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16_KHR: VkFormat = 1000156013
-val VkFormat_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16_KHR: VkFormat = 1000156014
-val VkFormat_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16_KHR: VkFormat = 1000156015
-val VkFormat_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16_KHR: VkFormat = 1000156016
-val VkFormat_R12X4_UNORM_PACK16_KHR: VkFormat = 1000156017
-val VkFormat_R12X4G12X4_UNORM_2PACK16_KHR: VkFormat = 1000156018
-val VkFormat_R12X4G12X4B12X4A12X4_UNORM_4PACK16_KHR: VkFormat = 1000156019
-val VkFormat_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16_KHR: VkFormat = 1000156020
-val VkFormat_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16_KHR: VkFormat = 1000156021
-val VkFormat_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16_KHR: VkFormat = 1000156022
-val VkFormat_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16_KHR: VkFormat = 1000156023
-val VkFormat_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16_KHR: VkFormat = 1000156024
-val VkFormat_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16_KHR: VkFormat = 1000156025
-val VkFormat_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16_KHR: VkFormat = 1000156026
-val VkFormat_G16B16G16R16_422_UNORM_KHR: VkFormat = 1000156027
-val VkFormat_B16G16R16G16_422_UNORM_KHR: VkFormat = 1000156028
-val VkFormat_G16_B16_R16_3PLANE_420_UNORM_KHR: VkFormat = 1000156029
-val VkFormat_G16_B16R16_2PLANE_420_UNORM_KHR: VkFormat = 1000156030
-val VkFormat_G16_B16_R16_3PLANE_422_UNORM_KHR: VkFormat = 1000156031
-val VkFormat_G16_B16R16_2PLANE_422_UNORM_KHR: VkFormat = 1000156032
-val VkFormat_G16_B16_R16_3PLANE_444_UNORM_KHR: VkFormat = 1000156033
+enum class VkFormat(val i: Int) {
+    UNDEFINED(0),
+    R4G4_UNORM_PACK8(1),
+    R4G4B4A4_UNORM_PACK16(2),
+    B4G4R4A4_UNORM_PACK16(3),
+    R5G6B5_UNORM_PACK16(4),
+    B5G6R5_UNORM_PACK16(5),
+    R5G5B5A1_UNORM_PACK16(6),
+    B5G5R5A1_UNORM_PACK16(7),
+    A1R5G5B5_UNORM_PACK16(8),
+    R8_UNORM(9),
+    R8_SNORM(10),
+    R8_USCALED(11),
+    R8_SSCALED(12),
+    R8_UINT(13),
+    R8_SINT(14),
+    R8_SRGB(15),
+    R8G8_UNORM(16),
+    R8G8_SNORM(17),
+    R8G8_USCALED(18),
+    R8G8_SSCALED(19),
+    R8G8_UINT(20),
+    R8G8_SINT(21),
+    R8G8_SRGB(22),
+    R8G8B8_UNORM(23),
+    R8G8B8_SNORM(24),
+    R8G8B8_USCALED(25),
+    R8G8B8_SSCALED(26),
+    R8G8B8_UINT(27),
+    R8G8B8_SINT(28),
+    R8G8B8_SRGB(29),
+    B8G8R8_UNORM(30),
+    B8G8R8_SNORM(31),
+    B8G8R8_USCALED(32),
+    B8G8R8_SSCALED(33),
+    B8G8R8_UINT(34),
+    B8G8R8_SINT(35),
+    B8G8R8_SRGB(36),
+    R8G8B8A8_UNORM(37),
+    R8G8B8A8_SNORM(38),
+    R8G8B8A8_USCALED(39),
+    R8G8B8A8_SSCALED(40),
+    R8G8B8A8_UINT(41),
+    R8G8B8A8_SINT(42),
+    R8G8B8A8_SRGB(43),
+    B8G8R8A8_UNORM(44),
+    B8G8R8A8_SNORM(45),
+    B8G8R8A8_USCALED(46),
+    B8G8R8A8_SSCALED(47),
+    B8G8R8A8_UINT(48),
+    B8G8R8A8_SINT(49),
+    B8G8R8A8_SRGB(50),
+    A8B8G8R8_UNORM_PACK32(51),
+    A8B8G8R8_SNORM_PACK32(52),
+    A8B8G8R8_USCALED_PACK32(53),
+    A8B8G8R8_SSCALED_PACK32(54),
+    A8B8G8R8_UINT_PACK32(55),
+    A8B8G8R8_SINT_PACK32(56),
+    A8B8G8R8_SRGB_PACK32(57),
+    A2R10G10B10_UNORM_PACK32(58),
+    A2R10G10B10_SNORM_PACK32(59),
+    A2R10G10B10_USCALED_PACK32(60),
+    A2R10G10B10_SSCALED_PACK32(61),
+    A2R10G10B10_UINT_PACK32(62),
+    A2R10G10B10_SINT_PACK32(63),
+    A2B10G10R10_UNORM_PACK32(64),
+    A2B10G10R10_SNORM_PACK32(65),
+    A2B10G10R10_USCALED_PACK32(66),
+    A2B10G10R10_SSCALED_PACK32(67),
+    A2B10G10R10_UINT_PACK32(68),
+    A2B10G10R10_SINT_PACK32(69),
+    R16_UNORM(70),
+    R16_SNORM(71),
+    R16_USCALED(72),
+    R16_SSCALED(73),
+    R16_UINT(74),
+    R16_SINT(75),
+    R16_SFLOAT(76),
+    R16G16_UNORM(77),
+    R16G16_SNORM(78),
+    R16G16_USCALED(79),
+    R16G16_SSCALED(80),
+    R16G16_UINT(81),
+    R16G16_SINT(82),
+    R16G16_SFLOAT(83),
+    R16G16B16_UNORM(84),
+    R16G16B16_SNORM(85),
+    R16G16B16_USCALED(86),
+    R16G16B16_SSCALED(87),
+    R16G16B16_UINT(88),
+    R16G16B16_SINT(89),
+    R16G16B16_SFLOAT(90),
+    R16G16B16A16_UNORM(91),
+    R16G16B16A16_SNORM(92),
+    R16G16B16A16_USCALED(93),
+    R16G16B16A16_SSCALED(94),
+    R16G16B16A16_UINT(95),
+    R16G16B16A16_SINT(96),
+    R16G16B16A16_SFLOAT(97),
+    R32_UINT(98),
+    R32_SINT(99),
+    R32_SFLOAT(100),
+    R32G32_UINT(101),
+    R32G32_SINT(102),
+    R32G32_SFLOAT(103),
+    R32G32B32_UINT(104),
+    R32G32B32_SINT(105),
+    R32G32B32_SFLOAT(106),
+    R32G32B32A32_UINT(107),
+    R32G32B32A32_SINT(108),
+    R32G32B32A32_SFLOAT(109),
+    R64_UINT(110),
+    R64_SINT(111),
+    R64_SFLOAT(112),
+    R64G64_UINT(113),
+    R64G64_SINT(114),
+    R64G64_SFLOAT(115),
+    R64G64B64_UINT(116),
+    R64G64B64_SINT(117),
+    R64G64B64_SFLOAT(118),
+    R64G64B64A64_UINT(119),
+    R64G64B64A64_SINT(120),
+    R64G64B64A64_SFLOAT(121),
+    B10G11R11_UFLOAT_PACK32(122),
+    E5B9G9R9_UFLOAT_PACK32(123),
+    D16_UNORM(124),
+    X8_D24_UNORM_PACK32(125),
+    D32_SFLOAT(126),
+    S8_UINT(127),
+    D16_UNORM_S8_UINT(128),
+    D24_UNORM_S8_UINT(129),
+    D32_SFLOAT_S8_UINT(130),
+    BC1_RGB_UNORM_BLOCK(131),
+    BC1_RGB_SRGB_BLOCK(132),
+    BC1_RGBA_UNORM_BLOCK(133),
+    BC1_RGBA_SRGB_BLOCK(134),
+    BC2_UNORM_BLOCK(135),
+    BC2_SRGB_BLOCK(136),
+    BC3_UNORM_BLOCK(137),
+    BC3_SRGB_BLOCK(138),
+    BC4_UNORM_BLOCK(139),
+    BC4_SNORM_BLOCK(140),
+    BC5_UNORM_BLOCK(141),
+    BC5_SNORM_BLOCK(142),
+    BC6H_UFLOAT_BLOCK(143),
+    BC6H_SFLOAT_BLOCK(144),
+    BC7_UNORM_BLOCK(145),
+    BC7_SRGB_BLOCK(146),
+    ETC2_R8G8B8_UNORM_BLOCK(147),
+    ETC2_R8G8B8_SRGB_BLOCK(148),
+    ETC2_R8G8B8A1_UNORM_BLOCK(149),
+    ETC2_R8G8B8A1_SRGB_BLOCK(150),
+    ETC2_R8G8B8A8_UNORM_BLOCK(151),
+    ETC2_R8G8B8A8_SRGB_BLOCK(152),
+    EAC_R11_UNORM_BLOCK(153),
+    EAC_R11_SNORM_BLOCK(154),
+    EAC_R11G11_UNORM_BLOCK(155),
+    EAC_R11G11_SNORM_BLOCK(156),
+    ASTC_4x4_UNORM_BLOCK(157),
+    ASTC_4x4_SRGB_BLOCK(158),
+    ASTC_5x4_UNORM_BLOCK(159),
+    ASTC_5x4_SRGB_BLOCK(160),
+    ASTC_5x5_UNORM_BLOCK(161),
+    ASTC_5x5_SRGB_BLOCK(162),
+    ASTC_6x5_UNORM_BLOCK(163),
+    ASTC_6x5_SRGB_BLOCK(164),
+    ASTC_6x6_UNORM_BLOCK(165),
+    ASTC_6x6_SRGB_BLOCK(166),
+    ASTC_8x5_UNORM_BLOCK(167),
+    ASTC_8x5_SRGB_BLOCK(168),
+    ASTC_8x6_UNORM_BLOCK(169),
+    ASTC_8x6_SRGB_BLOCK(170),
+    ASTC_8x8_UNORM_BLOCK(171),
+    ASTC_8x8_SRGB_BLOCK(172),
+    ASTC_10x5_UNORM_BLOCK(173),
+    ASTC_10x5_SRGB_BLOCK(174),
+    ASTC_10x6_UNORM_BLOCK(175),
+    ASTC_10x6_SRGB_BLOCK(176),
+    ASTC_10x8_UNORM_BLOCK(177),
+    ASTC_10x8_SRGB_BLOCK(178),
+    ASTC_10x10_UNORM_BLOCK(179),
+    ASTC_10x10_SRGB_BLOCK(180),
+    ASTC_12x10_UNORM_BLOCK(181),
+    ASTC_12x10_SRGB_BLOCK(182),
+    ASTC_12x12_UNORM_BLOCK(183),
+    ASTC_12x12_SRGB_BLOCK(184),
+    PVRTC1_2BPP_UNORM_BLOCK_IMG(1000054000),
+    PVRTC1_4BPP_UNORM_BLOCK_IMG(1000054001),
+    PVRTC2_2BPP_UNORM_BLOCK_IMG(1000054002),
+    PVRTC2_4BPP_UNORM_BLOCK_IMG(1000054003),
+    PVRTC1_2BPP_SRGB_BLOCK_IMG(1000054004),
+    PVRTC1_4BPP_SRGB_BLOCK_IMG(1000054005),
+    PVRTC2_2BPP_SRGB_BLOCK_IMG(1000054006),
+    PVRTC2_4BPP_SRGB_BLOCK_IMG(1000054007),
+    G8B8G8R8_422_UNORM_KHR(1000156000),
+    B8G8R8G8_422_UNORM_KHR(1000156001),
+    G8_B8_R8_3PLANE_420_UNORM_KHR(1000156002),
+    G8_B8R8_2PLANE_420_UNORM_KHR(1000156003),
+    G8_B8_R8_3PLANE_422_UNORM_KHR(1000156004),
+    G8_B8R8_2PLANE_422_UNORM_KHR(1000156005),
+    G8_B8_R8_3PLANE_444_UNORM_KHR(1000156006),
+    R10X6_UNORM_PACK16_KHR(1000156007),
+    R10X6G10X6_UNORM_2PACK16_KHR(1000156008),
+    R10X6G10X6B10X6A10X6_UNORM_4PACK16_KHR(1000156009),
+    G10X6B10X6G10X6R10X6_422_UNORM_4PACK16_KHR(1000156010),
+    B10X6G10X6R10X6G10X6_422_UNORM_4PACK16_KHR(1000156011),
+    G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16_KHR(1000156012),
+    G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16_KHR(1000156013),
+    G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16_KHR(1000156014),
+    G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16_KHR(1000156015),
+    G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16_KHR(1000156016),
+    R12X4_UNORM_PACK16_KHR(1000156017),
+    R12X4G12X4_UNORM_2PACK16_KHR(1000156018),
+    R12X4G12X4B12X4A12X4_UNORM_4PACK16_KHR(1000156019),
+    G12X4B12X4G12X4R12X4_422_UNORM_4PACK16_KHR(1000156020),
+    B12X4G12X4R12X4G12X4_422_UNORM_4PACK16_KHR(1000156021),
+    G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16_KHR(1000156022),
+    G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16_KHR(1000156023),
+    G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16_KHR(1000156024),
+    G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16_KHR(1000156025),
+    G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16_KHR(1000156026),
+    G16B16G16R16_422_UNORM_KHR(1000156027),
+    B16G16R16G16_422_UNORM_KHR(1000156028),
+    G16_B16_R16_3PLANE_420_UNORM_KHR(1000156029),
+    G16_B16R16_2PLANE_420_UNORM_KHR(1000156030),
+    G16_B16_R16_3PLANE_422_UNORM_KHR(1000156031),
+    G16_B16R16_2PLANE_422_UNORM_KHR(1000156032),
+    G16_B16_R16_3PLANE_444_UNORM_KHR(1000156033);
 
-val VkFormat_BEGIN_RANGE = VkFormat_UNDEFINED
-val VkFormat_END_RANGE = VkFormat_ASTC_12x12_SRGB_BLOCK
-val VkFormat_RANGE_SIZE = VkFormat_ASTC_12x12_SRGB_BLOCK - VkFormat_UNDEFINED + 1
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
 typealias VkImageType = Int
@@ -999,32 +1053,34 @@ val VkSubpassContents_RANGE_SIZE = VkSubpassContents_SECONDARY_COMMAND_BUFFERS -
 
 typealias VkInstanceCreateFlags = VkFlags
 
-typealias VkFormatFeatureFlagBits = Int
+enum class VkFormatFeature(val i: Int) {
+    SAMPLED_IMAGE_BIT(0x00000001),
+    STORAGE_IMAGE_BIT(0x00000002),
+    STORAGE_IMAGE_ATOMIC_BIT(0x00000004),
+    UNIFORM_TEXEL_BUFFER_BIT(0x00000008),
+    STORAGE_TEXEL_BUFFER_BIT(0x00000010),
+    STORAGE_TEXEL_BUFFER_ATOMIC_BIT(0x00000020),
+    VERTEX_BUFFER_BIT(0x00000040),
+    COLOR_ATTACHMENT_BIT(0x00000080),
+    COLOR_ATTACHMENT_BLEND_BIT(0x00000100),
+    DEPTH_STENCIL_ATTACHMENT_BIT(0x00000200),
+    BLIT_SRC_BIT(0x00000400),
+    BLIT_DST_BIT(0x00000800),
+    SAMPLED_IMAGE_FILTER_LINEAR_BIT(0x00001000),
+    SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG(0x00002000),
+    TRANSFER_SRC_BIT_KHR(0x00004000),
+    TRANSFER_DST_BIT_KHR(0x00008000),
+    SAMPLED_IMAGE_FILTER_MINMAX_BIT_EXT(0x00010000),
+    MIDPOINT_CHROMA_SAMPLES_BIT_KHR(0x00020000),
+    SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT_KHR(0x00040000),
+    SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT_KHR(0x00080000),
+    SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT_KHR(0x00100000),
+    SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT_KHR(0x00200000),
+    DISJOINT_BIT_KHR(0x00400000),
+    COSITED_CHROMA_SAMPLES_BIT_KHR(0x00800000)
+}
 
-val VkFormatFeature_SAMPLED_IMAGE_BIT: VkFormatFeatureFlagBits = 0x00000001
-val VkFormatFeature_STORAGE_IMAGE_BIT: VkFormatFeatureFlagBits = 0x00000002
-val VkFormatFeature_STORAGE_IMAGE_ATOMIC_BIT: VkFormatFeatureFlagBits = 0x00000004
-val VkFormatFeature_UNIFORM_TEXEL_BUFFER_BIT: VkFormatFeatureFlagBits = 0x00000008
-val VkFormatFeature_STORAGE_TEXEL_BUFFER_BIT: VkFormatFeatureFlagBits = 0x00000010
-val VkFormatFeature_STORAGE_TEXEL_BUFFER_ATOMIC_BIT: VkFormatFeatureFlagBits = 0x00000020
-val VkFormatFeature_VERTEX_BUFFER_BIT: VkFormatFeatureFlagBits = 0x00000040
-val VkFormatFeature_COLOR_ATTACHMENT_BIT: VkFormatFeatureFlagBits = 0x00000080
-val VkFormatFeature_COLOR_ATTACHMENT_BLEND_BIT: VkFormatFeatureFlagBits = 0x00000100
-val VkFormatFeature_DEPTH_STENCIL_ATTACHMENT_BIT: VkFormatFeatureFlagBits = 0x00000200
-val VkFormatFeature_BLIT_SRC_BIT: VkFormatFeatureFlagBits = 0x00000400
-val VkFormatFeature_BLIT_DST_BIT: VkFormatFeatureFlagBits = 0x00000800
-val VkFormatFeature_SAMPLED_IMAGE_FILTER_LINEAR_BIT: VkFormatFeatureFlagBits = 0x00001000
-val VkFormatFeature_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG: VkFormatFeatureFlagBits = 0x00002000
-val VkFormatFeature_TRANSFER_SRC_BIT_KHR: VkFormatFeatureFlagBits = 0x00004000
-val VkFormatFeature_TRANSFER_DST_BIT_KHR: VkFormatFeatureFlagBits = 0x00008000
-val VkFormatFeature_SAMPLED_IMAGE_FILTER_MINMAX_BIT_EXT: VkFormatFeatureFlagBits = 0x00010000
-val VkFormatFeature_MIDPOINT_CHROMA_SAMPLES_BIT_KHR: VkFormatFeatureFlagBits = 0x00020000
-val VkFormatFeature_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT_KHR: VkFormatFeatureFlagBits = 0x00040000
-val VkFormatFeature_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT_KHR: VkFormatFeatureFlagBits = 0x00080000
-val VkFormatFeature_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT_KHR: VkFormatFeatureFlagBits = 0x00100000
-val VkFormatFeature_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT_KHR: VkFormatFeatureFlagBits = 0x00200000
-val VkFormatFeature_DISJOINT_BIT_KHR: VkFormatFeatureFlagBits = 0x00400000
-val VkFormatFeature_COSITED_CHROMA_SAMPLES_BIT_KHR: VkFormatFeatureFlagBits = 0x00800000
+infix fun Int.has(f: VkFormatFeature) = and(f.i) != 0
 
 typealias VkFormatFeatureFlags = VkFlags
 
@@ -1105,26 +1161,30 @@ typealias VkMemoryPropertyFlags = VkFlags
 //typedef VkFlags VkDeviceCreateFlags;
 typealias VkDeviceQueueCreateFlags = VkFlags
 
-typealias VkPipelineStageFlagBits = Int
+enum class VkPipelineStage(val i: Int) {
+    TOP_OF_PIPE_BIT(0x00000001),
+    DRAW_INDIRECT_BIT(0x00000002),
+    VERTEX_INPUT_BIT(0x00000004),
+    VERTEX_SHADER_BIT(0x00000008),
+    TESSELLATION_CONTROL_SHADER_BIT(0x00000010),
+    TESSELLATION_EVALUATION_SHADER_BIT(0x00000020),
+    GEOMETRY_SHADER_BIT(0x00000040),
+    FRAGMENT_SHADER_BIT(0x00000080),
+    EARLY_FRAGMENT_TESTS_BIT(0x00000100),
+    LATE_FRAGMENT_TESTS_BIT(0x00000200),
+    COLOR_ATTACHMENT_OUTPUT_BIT(0x00000400),
+    COMPUTE_SHADER_BIT(0x00000800),
+    TRANSFER_BIT(0x00001000),
+    BOTTOM_OF_PIPE_BIT(0x00002000),
+    HOST_BIT(0x00004000),
+    ALL_GRAPHICS_BIT(0x00008000),
+    ALL_COMMANDS_BIT(0x00010000),
+    COMMAND_PROCESS_BIT_NVX(0x00020000);
 
-val VkPipelineStage_TOP_OF_PIPE_BIT: VkPipelineStageFlagBits = 0x00000001
-val VkPipelineStage_DRAW_INDIRECT_BIT: VkPipelineStageFlagBits = 0x00000002
-val VkPipelineStage_VERTEX_INPUT_BIT: VkPipelineStageFlagBits = 0x00000004
-val VkPipelineStage_VERTEX_SHADER_BIT: VkPipelineStageFlagBits = 0x00000008
-val VkPipelineStage_TESSELLATION_CONTROL_SHADER_BIT: VkPipelineStageFlagBits = 0x00000010
-val VkPipelineStage_TESSELLATION_EVALUATION_SHADER_BIT: VkPipelineStageFlagBits = 0x00000020
-val VkPipelineStage_GEOMETRY_SHADER_BIT: VkPipelineStageFlagBits = 0x00000040
-val VkPipelineStage_FRAGMENT_SHADER_BIT: VkPipelineStageFlagBits = 0x00000080
-val VkPipelineStage_EARLY_FRAGMENT_TESTS_BIT: VkPipelineStageFlagBits = 0x00000100
-val VkPipelineStage_LATE_FRAGMENT_TESTS_BIT: VkPipelineStageFlagBits = 0x00000200
-val VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT: VkPipelineStageFlagBits = 0x00000400
-val VkPipelineStage_COMPUTE_SHADER_BIT: VkPipelineStageFlagBits = 0x00000800
-val VkPipelineStage_TRANSFER_BIT: VkPipelineStageFlagBits = 0x00001000
-val VkPipelineStage_BOTTOM_OF_PIPE_BIT: VkPipelineStageFlagBits = 0x00002000
-val VkPipelineStage_HOST_BIT: VkPipelineStageFlagBits = 0x00004000
-val VkPipelineStage_ALL_GRAPHICS_BIT: VkPipelineStageFlagBits = 0x00008000
-val VkPipelineStage_ALL_COMMANDS_BIT: VkPipelineStageFlagBits = 0x00010000
-val VkPipelineStage_COMMAND_PROCESS_BIT_NVX: VkPipelineStageFlagBits = 0x00020000
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
 typealias VkPipelineStageFlags = VkFlags
@@ -1344,10 +1404,10 @@ val VkDependency_DEVICE_GROUP_BIT_KHX: VkDependencyFlagBits = 0x00000004
 
 typealias VkDependencyFlags = VkFlags
 
-typealias VkCommandPoolCreateFlag = Int
-
-val VkCommandPoolCreate_TRANSIENT_BIT: VkCommandPoolCreateFlag = 0x00000001
-val VkCommandPoolCreate_RESET_COMMAND_BUFFER_BIT: VkCommandPoolCreateFlag = 0x00000002
+enum class VkCommandPoolCreate(val i: Int) {
+    TRANSIENT_BIT(0x00000001),
+    RESET_COMMAND_BUFFER_BIT(0x00000002)
+}
 
 typealias VkCommandPoolCreateFlags = VkFlags
 

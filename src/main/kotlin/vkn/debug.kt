@@ -35,22 +35,6 @@ inline operator fun PointerBuffer.set(index: Int, string: String) {
 }
 
 
-fun PointerBuffer?.toArrayList(): ArrayList<String> {
-    val count = this?.remaining() ?: 0
-    if (this == null || count == 0) return arrayListOf()
-    val res = ArrayList<String>(count)
-    for (i in 0 until count)
-        res += get(i).utf8
-    return res
-}
-
-fun Collection<String>.toPointerBuffer(): PointerBuffer {
-    val pointers = PointerBuffer.create(ptr.advance(Pointer.POINTER_SIZE * size), size)
-    for (i in indices)
-        pointers.put(i, elementAt(i).utf8)
-    return pointers
-}
-
 inline fun <R> getLong(block: (LongBuffer) -> R): Long {
     val pLong = appBuffer.longBuffer
     block(pLong)
@@ -69,7 +53,7 @@ inline fun <R> withPointer(block: (PointerBuffer) -> R): R = block(appBuffer.poi
 fun vkCreateInstance(createInfo: VkInstanceCreateInfo, allocator: VkAllocationCallbacks?, instance: KMutableProperty0<VkInstance>)
         : VkResult {
     val pInstance = MemoryUtil.memAllocPointer(1)
-    return VK10.vkCreateInstance(createInfo, allocator, pInstance).also {
+    return VkResult of VK10.vkCreateInstance(createInfo, allocator, pInstance).also {
         instance.set(VkInstance(pInstance[0], createInfo))
     }
 }
@@ -85,18 +69,12 @@ operator fun VkDeviceQueueCreateInfo.Buffer.plusAssign(info: VkDeviceQueueCreate
     put(info)
 }
 
-fun vkCreateDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateInfo, allocator: VkAllocationCallbacks?,
-                   device: KMutableProperty0<VkDevice?>): VkResult {
-    val pDevice = MemoryUtil.memAllocPointer(1)
-    return VK10.vkCreateDevice(physicalDevice, createInfo, allocator, pDevice).also {
-        device.set(VkDevice(pDevice[0], physicalDevice, createInfo))
-    }
-}
+
 
 fun vkCreateSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, allocator: VkAllocationCallbacks?,
                       semaphore: KMutableProperty0<Long>): VkResult {
-    val pSemaphore = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateSemaphore(device, createInfo, allocator, pSemaphore).also {
+    val pSemaphore = memAllocLong(1)
+    return VkResult of VK10.vkCreateSemaphore(device, createInfo, allocator, pSemaphore).also {
         semaphore.set(pSemaphore[0])
     }
 }
@@ -114,10 +92,10 @@ fun vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice, count
 fun vrGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR,
                                          surfaceFormats: ArrayList<VkSurfaceFormatKHR>): VkResult {
     val formatCount = MemoryUtil.memAllocInt(1)
-    KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, null).check()
+    VK_CHECK_RESULT(KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, null))
     assert(formatCount[0] > 0)
     val pSurfaceFormats = VkSurfaceFormatKHR.calloc(formatCount[0])
-    return KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, pSurfaceFormats).also {
+    return VkResult of KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, formatCount, pSurfaceFormats).also {
         pSurfaceFormats.toCollection(surfaceFormats)
     }
 }
@@ -125,26 +103,17 @@ fun vrGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surfa
 fun vkCreateCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, allocator: VkAllocationCallbacks?,
                         commandPool: KMutableProperty0<VkCommandPool>): VkResult {
     val pCommandPool = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateCommandPool(device, createInfo, allocator, pCommandPool).also {
+    return VkResult of VK10.vkCreateCommandPool(device, createInfo, allocator, pCommandPool).also {
         commandPool.set(pCommandPool[0])
     }
 }
 
-fun vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR,
-                                              presentModes: ArrayList<VkPresentModeKHR>): VkResult {
-    val presentModeCount = MemoryUtil.memAllocInt(1)
-    KHRSurface.vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, presentModeCount, null)
-    assert(presentModeCount[0] > 0)
-    val pPresentModes = MemoryUtil.memAllocInt(presentModeCount[0])
-    return KHRSurface.vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, presentModeCount, pPresentModes).also {
-        pPresentModes.toCollection(presentModes)
-    }
-}
+
 
 fun vkCreateSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, allocator: VkAllocationCallbacks?,
                          swapchain: KMutableProperty0<VkSwapchainKHR>): VkResult {
     val pSwapchain = MemoryUtil.memAllocLong(1)
-    return KHRSwapchain.vkCreateSwapchainKHR(device, createInfo, allocator, pSwapchain).also {
+    return VkResult of KHRSwapchain.vkCreateSwapchainKHR(device, createInfo, allocator, pSwapchain).also {
         swapchain.set(pSwapchain[0])
     }
 }
@@ -152,9 +121,9 @@ fun vkCreateSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR,
 fun vkGetSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR, images: ArrayList<VkImageView>): VkResult {
     val count = MemoryUtil.memAllocInt(1)
     val ret = KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, null)
-    if (ret()) return ret
+    if (ret != 0) return VkResult of ret
     val pImages = MemoryUtil.memAllocLong(count[0])
-    return KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, pImages).also {
+    return VkResult of KHRSwapchain.vkGetSwapchainImagesKHR(device, swapchain, count, pImages).also {
         pImages.toCollection(images)
     }
 }
@@ -162,7 +131,7 @@ fun vkGetSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR, images:
 fun vkCreateImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, allocator: VkAllocationCallbacks?,
                       view: KMutableProperty0<VkImageView>): VkResult {
     val pView = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateImageView(device, createInfo, allocator, pView).also {
+    return VkResult of VK10.vkCreateImageView(device, createInfo, allocator, pView).also {
         view.set(pView[0])
     }
 }
@@ -170,7 +139,7 @@ fun vkCreateImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, alloc
 fun vkAllocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, count: Int,
                              commandBuffers: ArrayList<VkCommandBuffer>): VkResult {
     val pCommandBuffer = MemoryUtil.memAllocPointer(count)
-    return VK10.vkAllocateCommandBuffers(device, allocateInfo, pCommandBuffer).also {
+    return VkResult of VK10.vkAllocateCommandBuffers(device, allocateInfo, pCommandBuffer).also {
         for (i in 0 until count)
             commandBuffers += VkCommandBuffer(pCommandBuffer[i], device)
     }
@@ -179,7 +148,7 @@ fun vkAllocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllo
 fun vkCreateImage(device: VkDevice, createInfo: VkImageCreateInfo, allocator: VkAllocationCallbacks?,
                   image: KMutableProperty0<VkImage>): VkResult {
     val pImage = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateImage(device, createInfo, allocator, pImage).also {
+    return VkResult of VK10.vkCreateImage(device, createInfo, allocator, pImage).also {
         image.set(pImage[0])
     }
 }
@@ -187,7 +156,7 @@ fun vkCreateImage(device: VkDevice, createInfo: VkImageCreateInfo, allocator: Vk
 fun vkAllocateMemory(device: VkDevice, allocateInfo: VkMemoryAllocateInfo, allocator: VkAllocationCallbacks?,
                      memory: KMutableProperty0<VkDeviceMemory>): VkResult {
     val pMemory = MemoryUtil.memAllocLong(1)
-    return VK10.vkAllocateMemory(device, allocateInfo, allocator, pMemory).also {
+    return VkResult of VK10.vkAllocateMemory(device, allocateInfo, allocator, pMemory).also {
         memory.set(pMemory[0])
     }
 }
@@ -195,7 +164,7 @@ fun vkAllocateMemory(device: VkDevice, allocateInfo: VkMemoryAllocateInfo, alloc
 fun vkCreateRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo, allocator: VkAllocationCallbacks?,
                        renderPass: KMutableProperty0<VkRenderPass>): VkResult {
     val pRenderPass = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateRenderPass(device, createInfo, allocator, pRenderPass).also {
+    return VkResult of VK10.vkCreateRenderPass(device, createInfo, allocator, pRenderPass).also {
         renderPass.set(pRenderPass[0])
     }
 }
@@ -203,7 +172,7 @@ fun vkCreateRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo, all
 fun vkCreatePipelineCache(device: VkDevice, createInfo: VkPipelineCacheCreateInfo, allocator: VkAllocationCallbacks?,
                           pipelineCache: KMutableProperty0<VkPipelineCache>): VkResult {
     val pPipelineCache = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreatePipelineCache(device, createInfo, allocator, pPipelineCache).also {
+    return VkResult of VK10.vkCreatePipelineCache(device, createInfo, allocator, pPipelineCache).also {
         pipelineCache.set(pPipelineCache[0])
     }
 }
@@ -211,7 +180,7 @@ fun vkCreatePipelineCache(device: VkDevice, createInfo: VkPipelineCacheCreateInf
 fun vkCreateFramebuffer(device: VkDevice, createInfo: VkFramebufferCreateInfo, allocator: VkAllocationCallbacks?,
                         framebuffer: ArrayList<VkFramebuffer>, index: Int): VkResult {
     val pFramebuffer = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateFramebuffer(device, createInfo, allocator, pFramebuffer).also {
+    return VkResult of VK10.vkCreateFramebuffer(device, createInfo, allocator, pFramebuffer).also {
         framebuffer[index] = pFramebuffer
     }
 }
@@ -227,7 +196,7 @@ fun vkCreateFences(device: VkDevice, createInfo: VkFenceCreateInfo, allocator: V
 fun vkCreateBuffer(device: VkDevice, createInfo: VkBufferCreateInfo, allocator: VkAllocationCallbacks?,
                    buffer: KMutableProperty0<VkBuffer>): VkResult {
     val pBuffer = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateBuffer(device, createInfo, allocator, pBuffer).also {
+    return VkResult of VK10.vkCreateBuffer(device, createInfo, allocator, pBuffer).also {
         buffer.set(pBuffer[0])
     }
 }
@@ -235,7 +204,7 @@ fun vkCreateBuffer(device: VkDevice, createInfo: VkBufferCreateInfo, allocator: 
 fun vkCreateDescriptorSetLayout(device: VkDevice, createInfo: VkDescriptorSetLayoutCreateInfo, allocator: VkAllocationCallbacks?,
                                 setLayout: KMutableProperty0<VkDescriptorSetLayout>): VkResult {
     val pSetLayout = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreateDescriptorSetLayout(device, createInfo, allocator, pSetLayout).also {
+    return VkResult of VK10.vkCreateDescriptorSetLayout(device, createInfo, allocator, pSetLayout).also {
         setLayout.set(pSetLayout[0])
     }
 }
@@ -243,7 +212,7 @@ fun vkCreateDescriptorSetLayout(device: VkDevice, createInfo: VkDescriptorSetLay
 fun vkCreatePipelineLayout(device: VkDevice, createInfo: VkPipelineLayoutCreateInfo, allocator: VkAllocationCallbacks?,
                            pipelineLayout: KMutableProperty0<VkPipelineLayout>): VkResult {
     val pPipelineLayout = MemoryUtil.memAllocLong(1)
-    return VK10.vkCreatePipelineLayout(device, createInfo, allocator, pPipelineLayout).also {
+    return VkResult of VK10.vkCreatePipelineLayout(device, createInfo, allocator, pPipelineLayout).also {
         pipelineLayout.set(pPipelineLayout[0])
     }
 }

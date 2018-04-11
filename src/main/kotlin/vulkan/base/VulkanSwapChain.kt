@@ -29,8 +29,8 @@ class VulkanSwapChain {
 //    PFN_vkAcquireNextImageKHR fpAcquireNextImageKHR;
 //    PFN_vkQueuePresentKHR fpQueuePresentKHR;
 
-    var colorFormat = VkFormat_UNDEFINED
-    var colorSpace = VkColorSpace_SRGB_NONLINEAR_KHR
+    var colorFormat = VkFormat.UNDEFINED
+    var colorSpace = VkColorSpace.SRGB_NONLINEAR_KHR
     /** @brief Handle to the current swap chain, required for recreation */
     var swapChain: VkSwapchainKHR = NULL
     var imageCount = 0
@@ -88,18 +88,17 @@ class VulkanSwapChain {
         queueNodeIndex = graphicsQueueNodeIndex
 
         // Get list of supported surface formats
-        val surfaceFormats = ArrayList<VkSurfaceFormatKHR>()
-        vrGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, surfaceFormats).check()
+        val surfaceFormats = vk.getPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface)
 
         /*  If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
             there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM             */
-        if (surfaceFormats.size == 1 && surfaceFormats[0].format == VkFormat_UNDEFINED) {
-            colorFormat = VK10.VK_FORMAT_B8G8R8A8_UNORM
+        if (surfaceFormats.size == 1 && surfaceFormats[0].format == VkFormat.UNDEFINED) {
+            colorFormat = VkFormat.B8G8R8A8_UNORM
             colorSpace = surfaceFormats[0].colorSpace
         } else {
             /*  iterate over the list of available surface format and check for the presence of
                 VK_FORMAT_B8G8R8A8_UNORM, in case it's not available select the first available color format                 */
-            val bgra8unorm = surfaceFormats.find { it.format == VkFormat_B8G8R8A8_UNORM }
+            val bgra8unorm = surfaceFormats.find { it.format == VkFormat.B8G8R8A8_UNORM }
             colorFormat = bgra8unorm?.format ?: surfaceFormats[0].format
             colorSpace = bgra8unorm?.colorSpace ?: surfaceFormats[0].colorSpace
         }
@@ -131,16 +130,14 @@ class VulkanSwapChain {
         val oldSwapchain = swapChain
 
         // Get physical device surface properties and formats
-        val surfCaps = VkSurfaceCapabilitiesKHR.calloc()
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, surfCaps).check()
+        val surfCaps = vk.getPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface)
 
         // Get available present modes
-        val presentModes = ArrayList<VkPresentModeKHR>()
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, presentModes).check()
+        val presentModes = vk.getPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface)
 
-        var swapchainExtent = VkExtent2D.calloc()
+        var swapchainExtent = vk.Extent2D {}
         // If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
-        if (surfCaps.currentExtent().width() == -1)
+        if (surfCaps.currentExtent.width == -1)
         // If the surface size is undefined, the size is set to the size of the images requested.
             swapchainExtent.size(size)
         else {
@@ -155,18 +152,18 @@ class VulkanSwapChain {
 
             The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
             This mode waits for the vertical blank ("v-sync")   */
-        var swapchainPresentMode: VkPresentModeKHR = VK_PRESENT_MODE_FIFO_KHR
+        var swapchainPresentMode = VkPresentMode.FIFO_KHR
 
         /*  If v-sync is not requested, try to find a mailbox mode
             It's the lowest latency non-tearing present mode available         */
         if (!vsync)
             for (i in presentModes.indices) {
-                if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-                    swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR
+                if (presentModes[i] == VkPresentMode.MAILBOX_KHR) {
+                    swapchainPresentMode = VkPresentMode.MAILBOX_KHR
                     break
                 }
-                if (swapchainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR && presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
-                    swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR
+                if (swapchainPresentMode != VkPresentMode.MAILBOX_KHR && presentModes[i] == VkPresentMode.IMMEDIATE_KHR)
+                    swapchainPresentMode = VkPresentMode.IMMEDIATE_KHR
             }
 
         // Determine the number of images
@@ -178,7 +175,7 @@ class VulkanSwapChain {
         val preTransform =
                 if (surfCaps.supportedTransforms has VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
                 // We prefer a non-rotated transform
-                    VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+                    VkSurfaceTransform.IDENTITY_BIT_KHR
                 else surfCaps.currentTransform
 
         // Find a supported composite alpha format (not all devices support alpha opaque), Simply select the first composite alpha format available
@@ -194,15 +191,15 @@ class VulkanSwapChain {
             pNext(NULL)
             surface(surface)
             minImageCount(desiredNumberOfSwapchainImages)
-            imageFormat(colorFormat)
-            imageColorSpace(colorSpace)
+            imageFormat(colorFormat.i)
+            imageColorSpace(colorSpace.i)
             imageExtent().set(swapchainExtent.width(), swapchainExtent.height())
             imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-            preTransform(preTransform)
+            preTransform(preTransform.i)
             imageArrayLayers(1)
             imageSharingMode(VK_SHARING_MODE_EXCLUSIVE)
             pQueueFamilyIndices(null)
-            presentMode(swapchainPresentMode)
+            presentMode(swapchainPresentMode.i)
             oldSwapchain(oldSwapchain)
             // Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area
             clipped(true)
@@ -211,8 +208,8 @@ class VulkanSwapChain {
 
         // Set additional usage flag for blitting from the swapchain images if supported
         val formatProps = VkFormatProperties.calloc()
-        vkGetPhysicalDeviceFormatProperties(physicalDevice, colorFormat, formatProps)
-        if (formatProps.optimalTilingFeatures() has VkFormatFeature_TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures() has VkFormatFeature_BLIT_SRC_BIT)
+        vkGetPhysicalDeviceFormatProperties(physicalDevice, colorFormat.i, formatProps)
+        if (formatProps.optimalTilingFeatures() has VkFormatFeature.TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures() has VkFormatFeature.BLIT_SRC_BIT)
             swapchainCI.imageUsage = swapchainCI.imageUsage or VkImageUsage_TRANSFER_SRC_BIT
 
         vkCreateSwapchainKHR(device, swapchainCI, null, ::swapChain)
@@ -236,7 +233,7 @@ class VulkanSwapChain {
             val colorAttachmentView = VkImageViewCreateInfo.calloc().apply {
                 sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
                 pNext(NULL)
-                format(colorFormat)
+                format(colorFormat.i)
                 components().set(
                         VK_COMPONENT_SWIZZLE_R,
                         VK_COMPONENT_SWIZZLE_G,
@@ -298,7 +295,7 @@ class VulkanSwapChain {
             if (waitSemaphore != NULL)
                 pWaitSemaphores(longs(waitSemaphore))
         }
-        return vkQueuePresentKHR(queue, presentInfo)
+        return VkResult of vkQueuePresentKHR(queue, presentInfo)
     }
 
 

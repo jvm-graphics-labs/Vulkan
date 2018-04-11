@@ -3,39 +3,63 @@ package vkn
 import glfw_.advance
 import glfw_.appBuffer
 import glfw_.appBuffer.ptr
+import glm_.BYTES
 import glm_.f
 import glm_.vec2.Vec2i
 import glm_.vec2.Vec2t
+import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
+import java.nio.FloatBuffer
 import java.nio.IntBuffer
+import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
 
 object vk {
 
-    fun ApplicationInfo(block: VkApplicationInfo.() -> Unit): VkApplicationInfo = VkApplicationInfo.create(ptr.advance(VkApplicationInfo.SIZEOF)).also(block)
+    inline fun ApplicationInfo(block: VkApplicationInfo.() -> Unit): VkApplicationInfo = VkApplicationInfo.create(ptr.advance(VkApplicationInfo.SIZEOF)).also(block)
 
-    fun InstanceCreateInfo(block: VkInstanceCreateInfo.() -> Unit): VkInstanceCreateInfo = VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF)).also(block)
+    inline fun InstanceCreateInfo(block: VkInstanceCreateInfo.() -> Unit): VkInstanceCreateInfo = VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF)).also(block)
 
-    fun DebugReportCallbackCreateInfoEXT(block: VkDebugReportCallbackCreateInfoEXT.() -> Unit): VkDebugReportCallbackCreateInfoEXT = VkDebugReportCallbackCreateInfoEXT.create(ptr.advance(VkDebugReportCallbackCreateInfoEXT.SIZEOF)).also(block)
+    inline fun DebugReportCallbackCreateInfoEXT(block: VkDebugReportCallbackCreateInfoEXT.() -> Unit): VkDebugReportCallbackCreateInfoEXT = VkDebugReportCallbackCreateInfoEXT.create(ptr.advance(VkDebugReportCallbackCreateInfoEXT.SIZEOF)).also(block)
 
-    fun DeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF)).also(block)
+    inline fun DeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF)).also(block)
+    inline fun DeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
+
+    inline fun SurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ptr.advance(VkSurfaceFormatKHR.SIZEOF * capacity), capacity)
+
+    inline fun DeviceCreateInfo(block: VkDeviceCreateInfo.() -> Unit): VkDeviceCreateInfo = VkDeviceCreateInfo.create(ptr.advance(VkDeviceCreateInfo.SIZEOF)).also(block)
+
+    inline fun CommandPoolCreateInfo(block: VkCommandPoolCreateInfo.() -> Unit): VkCommandPoolCreateInfo = VkCommandPoolCreateInfo.create(ptr.advance(VkCommandPoolCreateInfo.SIZEOF)).also(block)
+
+    inline fun FormatProperties(block: VkFormatProperties.() -> Unit): VkFormatProperties = VkFormatProperties.create(ptr.advance(VkFormatProperties.SIZEOF)).also(block)
+
+    inline fun SemaphoreCreateInfo(block: VkSemaphoreCreateInfo.() -> Unit): VkSemaphoreCreateInfo = VkSemaphoreCreateInfo.create(ptr.advance(VkSemaphoreCreateInfo.SIZEOF)).also(block)
+
+    inline fun SubmitInfo(block: VkSubmitInfo.() -> Unit): VkSubmitInfo = VkSubmitInfo.create(ptr.advance(VkSubmitInfo.SIZEOF)).also(block)
+
+    inline fun SurfaceCapabilitiesKHR(block: VkSurfaceCapabilitiesKHR.() -> Unit): VkSurfaceCapabilitiesKHR = VkSurfaceCapabilitiesKHR.create(ptr.advance(VkSurfaceCapabilitiesKHR.SIZEOF)).also(block)
+
+    inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
+
 
     inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
+    inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: LongBuffer) = VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, memAddress(commandPool))
 
 
     inline fun createInstance(createInfo: VkInstanceCreateInfo, instance: KMutableProperty0<VkInstance>): VkResult {
         val pInstance = appBuffer.pointer
-        val res = VK10.nvkCreateInstance(createInfo.address, NULL, pInstance)
+        val res = VK10.nvkCreateInstance(createInfo.adr, NULL, pInstance)
         instance.set(VkInstance(MemoryUtil.memGetLong(pInstance), createInfo))
-        return res
+        return VkResult of res
     }
 
     inline fun createDebugReportCallbackEXT(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
                                             callback: KMutableProperty0<Long>): VkResult {
         val long = appBuffer.long
-        return EXTDebugReport.nvkCreateDebugReportCallbackEXT(instance, createInfo.address, NULL, long).also {
+        return VkResult of EXTDebugReport.nvkCreateDebugReportCallbackEXT(instance, createInfo.adr, NULL, long).also {
             callback.set(MemoryUtil.memGetLong(long))
         }
     }
@@ -44,11 +68,11 @@ object vk {
         // Physical device
         val pCount = appBuffer.int
         // Get number of available physical devices
-        VK10.nvkEnumeratePhysicalDevices(instance, pCount, NULL).check()
+        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, NULL))
         // Enumerate devices
         val count = memGetInt(pCount)
         val devices = appBuffer.pointerBuffer(count)
-        VK10.nvkEnumeratePhysicalDevices(instance, pCount, devices.address).check()
+        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, devices.adr))
         val res = arrayListOf<VkPhysicalDevice>()
         for (i in 0 until count)
             res += VkPhysicalDevice(devices[i], instance)
@@ -60,63 +84,126 @@ object vk {
         VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, NULL)
         val count = memGetInt(pCount)
         val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count)
-        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, pQueueFamilyProperties.address)
+        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, pQueueFamilyProperties.adr)
         return pQueueFamilyProperties.toCollection(arrayListOf())
     }
 
     inline fun enumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String? = null): ArrayList<String> {
         val pCount = appBuffer.int
         val pLayerName = layerName?.utf8?.let(::memAddress) ?: NULL
-        VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, NULL).check()
+        VK_CHECK_RESULT(VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, NULL))
         val count = memGetInt(pCount)
         val res = ArrayList<String>(count)
         if (count > 0) {
             val properties = ExtensionProperties(count)
-            VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, properties.address).check()
+            VK_CHECK_RESULT(VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, properties.adr))
             properties.map { it.extensionNameString() }.toCollection(res)
         }
+        return res
+    }
+
+    inline fun createDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateInfo, device: KMutableProperty0<VkDevice?>)
+            : VkResult {
+        val pDevice = appBuffer.pointer
+        return VkResult of VK10.nvkCreateDevice(physicalDevice, createInfo.adr, NULL, pDevice).also {
+            device.set(VkDevice(memGetLong(pDevice), physicalDevice, createInfo))
+        }
+    }
+
+    inline fun getDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: KMutableProperty0<VkQueue>) {
+        val pQueue = appBuffer.pointer
+        VK10.nvkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue)
+        queue.set(VkQueue(memGetLong(pQueue), device))
+    }
+
+    inline fun getPhysicalDeviceFormatProperties(physicalDevice: VkPhysicalDevice, format: VkFormat): VkFormatProperties =
+            FormatProperties {
+                VK10.nvkGetPhysicalDeviceFormatProperties(physicalDevice, format.i, adr)
+            }
+
+    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: KMutableProperty0<VkSemaphore>): VkResult {
+        val pSemaphore = appBuffer.long
+        return VkResult of VK10.nvkCreateSemaphore(device, createInfo.adr, NULL, pSemaphore).also {
+            semaphore.set(pSemaphore)
+        }
+    }
+
+    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: VkSemaphorePtr) =
+            VkResult of VK10.nvkCreateSemaphore(device, createInfo.adr, NULL, memAddress(semaphore))
+
+    inline fun getPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): ArrayList<VkSurfaceFormatKHR> {
+        val pCount = appBuffer.int
+        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pCount, NULL))
+        val count = memGetInt(pCount)
+        assert(count > 0)
+        val surfaceFormats = SurfaceFormatKHR(count)
+        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pCount, surfaceFormats.adr))
+        return surfaceFormats.toCollection(arrayListOf())
+    }
+
+    inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: KMutableProperty0<VkCommandPool>): VkResult {
+        val pCommandPool = appBuffer.long
+        return VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, pCommandPool).also {
+            commandPool.set(memGetLong(pCommandPool))
+        }
+    }
+
+    inline fun getPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): VkSurfaceCapabilitiesKHR =
+            SurfaceCapabilitiesKHR {
+                VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, adr))
+            }
+
+    inline fun getPhysicalDeviceSurfacePresentModesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): ArrayList<VkPresentMode> {
+        val pCount = appBuffer.int
+        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pCount, NULL))
+        val count = memGetInt(pCount)
+        assert(count > 0)
+        val presentModes = appBuffer.intArray(count)
+        KHRSurface.nvkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pCount, presentModes)
+        val res = ArrayList<VkPresentMode>()
+        for (i in 0 until count) res += VkPresentMode of memGetInt(presentModes + Int.BYTES * i)
         return res
     }
 }
 
 inline var VkApplicationInfo.type
-    get() = VkStructureType of VkApplicationInfo.nsType(address)
-    set(value) = VkApplicationInfo.nsType(address, value.i)
+    get() = VkStructureType of VkApplicationInfo.nsType(adr)
+    set(value) = VkApplicationInfo.nsType(adr, value.i)
 inline var VkApplicationInfo.next
-    get() = VkApplicationInfo.npNext(address)
-    set(value) = VkApplicationInfo.npNext(address, value)
+    get() = VkApplicationInfo.npNext(adr)
+    set(value) = VkApplicationInfo.npNext(adr, value)
 inline var VkApplicationInfo.applicationName
-    get() = VkApplicationInfo.npApplicationNameString(address)
-    set(value) = VkApplicationInfo.npApplicationName(address, value?.utf8)
+    get() = VkApplicationInfo.npApplicationNameString(adr)
+    set(value) = VkApplicationInfo.npApplicationName(adr, value?.utf8)
 inline var VkApplicationInfo.applicationVersion
-    get() = VkApplicationInfo.napplicationVersion(address)
-    set(value) = VkApplicationInfo.napiVersion(address, value)
+    get() = VkApplicationInfo.napplicationVersion(adr)
+    set(value) = VkApplicationInfo.napiVersion(adr, value)
 inline var VkApplicationInfo.engineName
-    get() = VkApplicationInfo.npEngineNameString(address)
-    set(value) = VkApplicationInfo.npEngineName(address, value?.utf8)
+    get() = VkApplicationInfo.npEngineNameString(adr)
+    set(value) = VkApplicationInfo.npEngineName(adr, value?.utf8)
 inline var VkApplicationInfo.apiVersion
-    get() = VkApplicationInfo.napiVersion(address)
-    set(value) = VkApplicationInfo.napiVersion(address, value)
+    get() = VkApplicationInfo.napiVersion(adr)
+    set(value) = VkApplicationInfo.napiVersion(adr, value)
 
 
 inline var VkInstanceCreateInfo.type
-    get() = VkStructureType of VkInstanceCreateInfo.nsType(address)
-    set(value) = VkInstanceCreateInfo.nsType(address, value.i)
+    get() = VkStructureType of VkInstanceCreateInfo.nsType(adr)
+    set(value) = VkInstanceCreateInfo.nsType(adr, value.i)
 inline var VkInstanceCreateInfo.next
-    get() = VkInstanceCreateInfo.npNext(address)
-    set(value) = VkInstanceCreateInfo.npNext(address, value)
+    get() = VkInstanceCreateInfo.npNext(adr)
+    set(value) = VkInstanceCreateInfo.npNext(adr, value)
 inline var VkInstanceCreateInfo.flags: VkInstanceCreateFlags
-    get() = VkInstanceCreateInfo.nflags(address)
-    set(value) = VkInstanceCreateInfo.nflags(address, value)
+    get() = VkInstanceCreateInfo.nflags(adr)
+    set(value) = VkInstanceCreateInfo.nflags(adr, value)
 inline var VkInstanceCreateInfo.applicationInfo
-    get() = VkInstanceCreateInfo.npApplicationInfo(address)
-    set(value) = VkInstanceCreateInfo.npApplicationInfo(address, value)
+    get() = VkInstanceCreateInfo.npApplicationInfo(adr)
+    set(value) = VkInstanceCreateInfo.npApplicationInfo(adr, value)
 inline var VkInstanceCreateInfo.enabledLayerNames
-    get() = VkInstanceCreateInfo.nppEnabledLayerNames(address).toArrayList()
-    set(value) = VkInstanceCreateInfo.nppEnabledLayerNames(address, value.toPointerBuffer())
+    get() = VkInstanceCreateInfo.nppEnabledLayerNames(adr).toArrayList()
+    set(value) = VkInstanceCreateInfo.nppEnabledLayerNames(adr, value.toPointerBuffer())
 inline var VkInstanceCreateInfo.enabledExtensionNames
-    get() = VkInstanceCreateInfo.nppEnabledExtensionNames(address).toArrayList()
-    set(value) = VkInstanceCreateInfo.nppEnabledExtensionNames(address, value.toPointerBuffer())
+    get() = VkInstanceCreateInfo.nppEnabledExtensionNames(adr).toArrayList()
+    set(value) = VkInstanceCreateInfo.nppEnabledExtensionNames(adr, value.toPointerBuffer())
 
 //typedef struct VkAllocationCallbacks {
 //    void*                                   pUserData;
@@ -184,13 +271,11 @@ inline var VkInstanceCreateInfo.enabledExtensionNames
 //    VkBool32    variableMultisampleRate;
 //    VkBool32    inheritedQueries;
 //} VkPhysicalDeviceFeatures;
-//
-//typedef struct VkFormatProperties {
-//    VkFormatFeatureFlags    linearTilingFeatures;
-//    VkFormatFeatureFlags    optimalTilingFeatures;
-//    VkFormatFeatureFlags    bufferFeatures;
-//} VkFormatProperties;
-//
+
+inline val VkFormatProperties.linearTilingFeatures: VkFormatFeatureFlags get() = VkFormatProperties.nlinearTilingFeatures(adr)
+inline val VkFormatProperties.optimalTilingFeatures: VkFormatFeatureFlags get() = VkFormatProperties.noptimalTilingFeatures(adr)
+inline val VkFormatProperties.bufferFeatures: VkFormatFeatureFlags get() = VkFormatProperties.nbufferFeatures(adr)
+
 //typedef struct VkExtent3D {
 //    uint32_t    width;
 //    uint32_t    height;
@@ -361,21 +446,21 @@ inline var VkInstanceCreateInfo.enabledExtensionNames
 //typedef void (VKAPI_PTR *PFN_vkVoidFunction)(void);
 
 inline var VkDeviceQueueCreateInfo.type: VkStructureType
-    get() = VkStructureType of VkDeviceQueueCreateInfo.nsType(address)
-    set(value) = VkDeviceQueueCreateInfo.nsType(address, value.i)
+    get() = VkStructureType of VkDeviceQueueCreateInfo.nsType(adr)
+    set(value) = VkDeviceQueueCreateInfo.nsType(adr, value.i)
 inline var VkDeviceQueueCreateInfo.next
-    get() = VkDeviceQueueCreateInfo.npNext(address)
-    set(value) = VkDeviceQueueCreateInfo.npNext(address, value)
+    get() = VkDeviceQueueCreateInfo.npNext(adr)
+    set(value) = VkDeviceQueueCreateInfo.npNext(adr, value)
 inline var VkDeviceQueueCreateInfo.flags: VkDeviceQueueCreateFlags
-    get() = VkDeviceQueueCreateInfo.nflags(address)
-    set(value) = VkDeviceQueueCreateInfo.nflags(address, value)
+    get() = VkDeviceQueueCreateInfo.nflags(adr)
+    set(value) = VkDeviceQueueCreateInfo.nflags(adr, value)
 inline var VkDeviceQueueCreateInfo.queueFamilyIndex
-    get() = VkDeviceQueueCreateInfo.nqueueFamilyIndex(address)
-    set(value) = VkDeviceQueueCreateInfo.nqueueFamilyIndex(address, value)
-inline val VkDeviceQueueCreateInfo.queueCount get() = VkDeviceQueueCreateInfo.nqueueCount(address)
-inline var VkDeviceQueueCreateInfo.queuePriorities
-    get() = VkDeviceQueueCreateInfo.npQueuePriorities(address)
-    set(value) = VkDeviceQueueCreateInfo.npQueuePriorities(address, value)
+    get() = VkDeviceQueueCreateInfo.nqueueFamilyIndex(adr)
+    set(value) = VkDeviceQueueCreateInfo.nqueueFamilyIndex(adr, value)
+//inline val VkDeviceQueueCreateInfo.queueCount get() = VkDeviceQueueCreateInfo.nqueueCount(address)
+inline var VkDeviceQueueCreateInfo.queuePriorities: FloatBuffer
+    get() = VkDeviceQueueCreateInfo.npQueuePriorities(adr)
+    set(value) = VkDeviceQueueCreateInfo.npQueuePriorities(adr, value)
 
 //typedef struct VkDeviceQueueCreateInfo {
 //    VkStructureType             sType;
@@ -385,19 +470,40 @@ inline var VkDeviceQueueCreateInfo.queuePriorities
 //    uint32_t                    queueCount;
 //    const float*                pQueuePriorities;
 //} VkDeviceQueueCreateInfo;
-//
-//typedef struct VkDeviceCreateInfo {
-//    VkStructureType                    sType;
-//    const void*                        pNext;
-//    VkDeviceCreateFlags                flags;
-//    uint32_t                           queueCreateInfoCount;
-//    const VkDeviceQueueCreateInfo*     pQueueCreateInfos;
-//    uint32_t                           enabledLayerCount;
-//    const char* const*                 ppEnabledLayerNames;
-//    uint32_t                           enabledExtensionCount;
-//    const char* const*                 ppEnabledExtensionNames;
-//    const VkPhysicalDeviceFeatures*    pEnabledFeatures;
-//} VkDeviceCreateInfo;
+
+inline var VkDeviceCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkDeviceCreateInfo.nsType(adr)
+    set(value) = VkDeviceCreateInfo.nsType(adr, value.i)
+inline var VkDeviceCreateInfo.next
+    get() = VkDeviceCreateInfo.npNext(adr)
+    set(value) = VkDeviceCreateInfo.npNext(adr, value)
+inline var VkDeviceCreateInfo.flags: VkDeviceQueueCreateFlags
+    get() = VkDeviceCreateInfo.nflags(adr)
+    set(value) = VkDeviceCreateInfo.nflags(adr, value)
+//inline val VkDeviceCreateInfo.queueCreateInfoCount get() = queueCreateInfoCount()
+inline var VkDeviceCreateInfo.queueCreateInfos: ArrayList<VkDeviceQueueCreateInfo>
+    get() {
+        val count = VkDeviceCreateInfo.nqueueCreateInfoCount(adr)
+        val infos = vk.DeviceQueueCreateInfo(count)
+        val res = ArrayList<VkDeviceQueueCreateInfo>()
+        for (i in 0 until count) res += infos[i]
+        return res
+    }
+    set(value) {
+        val infos = vk.DeviceQueueCreateInfo(value.size)
+        for (i in value.indices) infos.put(i, value[i])
+        VkDeviceCreateInfo.npQueueCreateInfos(adr, infos)
+    }
+inline var VkDeviceCreateInfo.enabledLayerNames: ArrayList<String>
+    get() = VkDeviceCreateInfo.nppEnabledLayerNames(adr).toArrayList()
+    set(value) = VkDeviceCreateInfo.nppEnabledLayerNames(adr, value.toPointerBuffer())
+inline var VkDeviceCreateInfo.enabledExtensionNames: ArrayList<String>
+    get() = VkDeviceCreateInfo.nppEnabledExtensionNames(adr).toArrayList()
+    set(value) = VkDeviceCreateInfo.nppEnabledExtensionNames(adr, value.toPointerBuffer())
+inline var VkDeviceCreateInfo.enabledFeatures: VkPhysicalDeviceFeatures?
+    get() = VkDeviceCreateInfo.npEnabledFeatures(adr)
+    set(value) = VkDeviceCreateInfo.npEnabledFeatures(adr, value)
+
 //
 //typedef struct VkExtensionProperties {
 //    char        extensionName[VK_MAX_EXTENSION_NAME_SIZE];
@@ -412,42 +518,30 @@ inline var VkDeviceQueueCreateInfo.queuePriorities
 //} VkLayerProperties;
 
 inline var VkSubmitInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkSubmitInfo.nsType(adr)
+    set(value) = VkSubmitInfo.nsType(adr, value.i)
 inline var VkSubmitInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkSubmitInfo.npNext(adr)
+    set(value) = VkSubmitInfo.npNext(adr, value)
 inline var VkSubmitInfo.waitSemaphoreCount
-    get() = waitSemaphoreCount()
-    set(value) {
-        waitSemaphoreCount(value)
-    }
+    get() = VkSubmitInfo.nwaitSemaphoreCount(adr)
+    set(value) = VkSubmitInfo.nwaitSemaphoreCount(adr, value)
 inline var VkSubmitInfo.waitSemaphores
-    get() = pWaitSemaphores()
-    set(value) {
-        pWaitSemaphores(value)
-    }
-inline var VkSubmitInfo.waitDstStageMask
-    get() = pWaitDstStageMask()
-    set(value) {
-        pWaitDstStageMask(value)
-    }
-inline val VkSubmitInfo.commandBufferCount get() = commandBufferCount()
+    get() = VkSubmitInfo.npWaitSemaphores(adr)
+    set(value) = VkSubmitInfo.npWaitSemaphores(adr, value)
+inline var VkSubmitInfo.waitDstStageMask: IntBuffer?
+    get() = VkSubmitInfo.npWaitDstStageMask(adr)
+    set(value) = VkSubmitInfo.npWaitDstStageMask(adr, value)
+//inline val VkSubmitInfo.commandBufferCount get() = VkSubmitInfo.ncommandBufferCount(address)
 inline var VkSubmitInfo.commandBuffers
     get() = pCommandBuffers()
     set(value) {
         pCommandBuffers(value)
     }
-inline val VkSubmitInfo.signalSemaphoreCount get() = signalSemaphoreCount()
+//inline val VkSubmitInfo.signalSemaphoreCount get() = VkSubmitInfo.nsignalSemaphoreCount(address)
 inline var VkSubmitInfo.signalSemaphores
-    get() = pSignalSemaphores()
-    set(value) {
-        pSignalSemaphores(value)
-    }
+    get() = VkSubmitInfo.npSignalSemaphores(adr)
+    set(value) = VkSubmitInfo.npSignalSemaphores(adr, value)
 
 //typedef struct VkSubmitInfo {
 //    VkStructureType                sType;
@@ -559,20 +653,26 @@ inline var VkSubmitInfo.signalSemaphores
 //} VkBindSparseInfo;
 
 inline var VkFenceCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkFenceCreateInfo.nsType(adr)
+    set(value) = VkFenceCreateInfo.nsType(adr, value.i)
 inline var VkFenceCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
-inline var VkFenceCreateInfo.flags: VkFenceCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
+    get() = VkFenceCreateInfo.npNext(adr)
+    set(value) = VkFenceCreateInfo.npNext(adr, value)
+inline var VkFenceCreateInfo.flags: VkSemaphoreCreateFlags
+    get() = VkFenceCreateInfo.nflags(adr)
+    set(value) = VkFenceCreateInfo.nflags(adr, value)
+
+
+inline var VkSemaphoreCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkSemaphoreCreateInfo.nsType(adr)
+    set(value) = VkSemaphoreCreateInfo.nsType(adr, value.i)
+inline var VkSemaphoreCreateInfo.next
+    get() = VkSemaphoreCreateInfo.npNext(adr)
+    set(value) = VkSemaphoreCreateInfo.npNext(adr, value)
+inline var VkSemaphoreCreateInfo.flags: VkSemaphoreCreateFlags
+    get() = VkSemaphoreCreateInfo.nflags(adr)
+    set(value) = VkSemaphoreCreateInfo.nflags(adr, value)
+
 
 //typedef struct VkSemaphoreCreateInfo {
 //    VkStructureType           sType;
@@ -805,9 +905,9 @@ inline var VkVertexInputAttributeDescription.binding
         binding(value)
     }
 inline var VkVertexInputAttributeDescription.format: VkFormat
-    get() = format()
+    get() = VkFormat of format()
     set(value) {
-        format(value)
+        format(value.i)
     }
 inline var VkVertexInputAttributeDescription.offset
     get() = offset()
@@ -963,15 +1063,11 @@ inline var VkOffset2D.y
         y(value)
     }
 inline var VkExtent2D.width
-    get() = width()
-    set(value) {
-        width(value)
-    }
+    get() = VkExtent2D.nwidth(adr)
+    set(value) = VkExtent2D.nwidth(adr, value)
 inline var VkExtent2D.height
-    get() = height()
-    set(value) {
-        height(value)
-    }
+    get() = VkExtent2D.nheight(adr)
+    set(value) = VkExtent2D.nheight(adr, value)
 
 inline fun VkExtent2D.size(v: Vec2i) = size(v.x, v.y)
 inline fun VkExtent2D.size(x: Int, y: Int) {
@@ -979,7 +1075,7 @@ inline fun VkExtent2D.size(x: Int, y: Int) {
     height = y
 }
 
-//var VkExtent2D.size
+//var VkExtent2D.size BUG
 //    get() = Vec2i(width, height)
 //    set(value) {
 //        width = value.x
@@ -1879,7 +1975,20 @@ inline var VkWriteDescriptorSet.texelBufferView
 //    uint32_t                          dependencyCount;
 //    const VkSubpassDependency*        pDependencies;
 //} VkRenderPassCreateInfo;
-//
+
+inline var VkCommandPoolCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkCommandPoolCreateInfo.nsType(adr)
+    set(value) = VkCommandPoolCreateInfo.nsType(adr, value.i)
+inline var VkCommandPoolCreateInfo.next
+    get() = VkCommandPoolCreateInfo.npNext(adr)
+    set(value) = VkCommandPoolCreateInfo.npNext(adr, value)
+inline var VkCommandPoolCreateInfo.flags: VkCommandPoolCreateFlags
+    get() = VkCommandPoolCreateInfo.nflags(adr)
+    set(value) = VkCommandPoolCreateInfo.nflags(adr, value)
+inline var VkCommandPoolCreateInfo.queueFamilyIndex
+    get() = VkCommandPoolCreateInfo.nqueueFamilyIndex(adr)
+    set(value) = VkCommandPoolCreateInfo.nqueueFamilyIndex(adr, value)
+
 //typedef struct VkCommandPoolCreateInfo {
 //    VkStructureType             sType;
 //    const void*                 pNext;
@@ -2064,6 +2173,7 @@ inline var VkRenderPassBeginInfo.clearValues
     set(value) {
         pClearValues(value)
     }
+
 //typedef struct VkRenderPassBeginInfo {
 //    VkStructureType        sType;
 //    const void*            pNext;
@@ -3041,54 +3151,58 @@ inline var VkRenderPassBeginInfo.clearValues
 //#define VK_COLORSPACE_SRGB_NONLINEAR_KHR  VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 //
 //
-typealias VkColorSpaceKHR = Int
+enum class VkColorSpace(val i: Int) {
+    SRGB_NONLINEAR_KHR(0),
+    DISPLAY_P3_NONLINEAR_EXT(1000104001),
+    EXTENDED_SRGB_LINEAR_EXT(1000104002),
+    DCI_P3_LINEAR_EXT(1000104003),
+    DCI_P3_NONLINEAR_EXT(1000104004),
+    BT709_LINEAR_EXT(1000104005),
+    BT709_NONLINEAR_EXT(1000104006),
+    BT2020_LINEAR_EXT(1000104007),
+    HDR10_ST2084_EXT(1000104008),
+    DOLBYVISION_EXT(1000104009),
+    HDR10_HLG_EXT(1000104010),
+    ADOBERGB_LINEAR_EXT(1000104011),
+    ADOBERGB_NONLINEAR_EXT(1000104012),
+    PASS_THROUGH_EXT(1000104013),
+    EXTENDED_SRGB_NONLINEAR_EXT(1000104014);
 
-val VkColorSpace_SRGB_NONLINEAR_KHR: VkColorSpaceKHR = 0
-val VkColorSpace_DISPLAY_P3_NONLINEAR_EXT: VkColorSpaceKHR = 1000104001
-val VkColorSpace_EXTENDED_SRGB_LINEAR_EXT: VkColorSpaceKHR = 1000104002
-val VkColorSpace_DCI_P3_LINEAR_EXT: VkColorSpaceKHR = 1000104003
-val VkColorSpace_DCI_P3_NONLINEAR_EXT: VkColorSpaceKHR = 1000104004
-val VkColorSpace_BT709_LINEAR_EXT: VkColorSpaceKHR = 1000104005
-val VkColorSpace_BT709_NONLINEAR_EXT: VkColorSpaceKHR = 1000104006
-val VkColorSpace_BT2020_LINEAR_EXT: VkColorSpaceKHR = 1000104007
-val VkColorSpace_HDR10_ST2084_EXT: VkColorSpaceKHR = 1000104008
-val VkColorSpace_DOLBYVISION_EXT: VkColorSpaceKHR = 1000104009
-val VkColorSpace_HDR10_HLG_EXT: VkColorSpaceKHR = 1000104010
-val VkColorSpace_ADOBERGB_LINEAR_EXT: VkColorSpaceKHR = 1000104011
-val VkColorSpace_ADOBERGB_NONLINEAR_EXT: VkColorSpaceKHR = 1000104012
-val VkColorSpace_PASS_THROUGH_EXT: VkColorSpaceKHR = 1000104013
-val VkColorSpace_EXTENDED_SRGB_NONLINEAR_EXT: VkColorSpaceKHR = 1000104014
-
-val VkColorSpace_BEGIN_RANGE_KHR = VkColorSpace_SRGB_NONLINEAR_KHR
-val VkColorSpace_END_RANGE_KHR = VkColorSpace_SRGB_NONLINEAR_KHR
-val VkColorSpace_RANGE_SIZE_KHR = VkColorSpace_SRGB_NONLINEAR_KHR - VkColorSpace_SRGB_NONLINEAR_KHR + 1
-
-
-typealias VkPresentModeKHR = Int
-
-val VkPresentMode_IMMEDIATE_KHR: VkPresentModeKHR = 0
-val VkPresentMode_MAILBOX_KHR: VkPresentModeKHR = 1
-val VkPresentMode_FIFO_KHR: VkPresentModeKHR = 2
-val VkPresentMode_FIFO_RELAXED_KHR: VkPresentModeKHR = 3
-val VkPresentMode_SHARED_DEMAND_REFRESH_KHR: VkPresentModeKHR = 1000111000
-val VkPresentMode_SHARED_CONTINUOUS_REFRESH_KHR: VkPresentModeKHR = 1000111001
-
-val VkPresentMode_BEGIN_RANGE_KHR = VkPresentMode_IMMEDIATE_KHR
-val VkPresentMode_END_RANGE_KHR = VkPresentMode_FIFO_RELAXED_KHR
-val VkPresentMode_RANGE_SIZE_KHR = VkPresentMode_FIFO_RELAXED_KHR - VkPresentMode_IMMEDIATE_KHR + 1
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
-typealias VkSurfaceTransformFlagBitsKHR = Int
+enum class VkPresentMode(val i: Int) {
+    IMMEDIATE_KHR(0),
+    MAILBOX_KHR(1),
+    FIFO_KHR(2),
+    FIFO_RELAXED_KHR(3),
+    SHARED_DEMAND_REFRESH_KHR(1000111000),
+    SHARED_CONTINUOUS_REFRESH_KHR(1000111001);
 
-val VkSurfaceTransform_IDENTITY_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000001
-val VkSurfaceTransform_ROTATE_90_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000002
-val VkSurfaceTransform_ROTATE_180_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000004
-val VkSurfaceTransform_ROTATE_270_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000008
-val VkSurfaceTransform_HORIZONTAL_MIRROR_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000010
-val VkSurfaceTransform_HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000020
-val VkSurfaceTransform_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000040
-val VkSurfaceTransform_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000080
-val VkSurfaceTransform_INHERIT_BIT_KHR: VkSurfaceTransformFlagBitsKHR = 0x00000100
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+
+enum class VkSurfaceTransform(val i: Int) {
+    IDENTITY_BIT_KHR(0x00000001),
+    ROTATE_90_BIT_KHR(0x00000002),
+    ROTATE_180_BIT_KHR(0x00000004),
+    ROTATE_270_BIT_KHR(0x00000008),
+    HORIZONTAL_MIRROR_BIT_KHR(0x00000010),
+    HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR(0x00000020),
+    HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR(0x00000040),
+    HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR(0x00000080),
+    INHERIT_BIT_KHR(0x00000100);
+
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkSurfaceTransformFlagsKHR = VkFlags
 
@@ -3100,7 +3214,19 @@ val VkCompositeAlpha_POST_MULTIPLIED_BIT_KHR: VkCompositeAlphaFlagBitsKHR = 0x00
 val VkCompositeAlpha_INHERIT_BIT_KHR: VkCompositeAlphaFlagBitsKHR = 0x00000008
 
 typealias VkCompositeAlphaFlagsKHR = VkFlags
-//
+
+
+inline val VkSurfaceCapabilitiesKHR.minImageCount get() = VkSurfaceCapabilitiesKHR.nminImageCount(adr)
+inline val VkSurfaceCapabilitiesKHR.maxImageCount get() = VkSurfaceCapabilitiesKHR.nmaxImageCount(adr)
+inline val VkSurfaceCapabilitiesKHR.currentExtent: VkExtent2D get() = VkSurfaceCapabilitiesKHR.ncurrentExtent(adr)
+inline val VkSurfaceCapabilitiesKHR.minImageExtent: VkExtent2D get() = VkSurfaceCapabilitiesKHR.nminImageExtent(adr)
+inline val VkSurfaceCapabilitiesKHR.maxImageExtent: VkExtent2D get() = VkSurfaceCapabilitiesKHR.nmaxImageExtent(adr)
+inline val VkSurfaceCapabilitiesKHR.maxImageArrayLayers get() = VkSurfaceCapabilitiesKHR.nmaxImageArrayLayers(adr)
+inline val VkSurfaceCapabilitiesKHR.supportedTransforms: VkSurfaceTransformFlagsKHR get() = VkSurfaceCapabilitiesKHR.nsupportedTransforms(adr)
+inline val VkSurfaceCapabilitiesKHR.currentTransform: VkSurfaceTransform get() = VkSurfaceTransform of VkSurfaceCapabilitiesKHR.ncurrentTransform(adr)
+inline val VkSurfaceCapabilitiesKHR.supportedCompositeAlpha: VkCompositeAlphaFlagsKHR get() = VkSurfaceCapabilitiesKHR.nsupportedCompositeAlpha(adr)
+inline val VkSurfaceCapabilitiesKHR.supportedUsageFlags: VkImageUsageFlags get() = VkSurfaceCapabilitiesKHR.nsupportedUsageFlags(adr)
+
 //typedef struct VkSurfaceCapabilitiesKHR {
 //    uint32_t                         minImageCount;
 //    uint32_t                         maxImageCount;
@@ -3113,12 +3239,9 @@ typealias VkCompositeAlphaFlagsKHR = VkFlags
 //    VkCompositeAlphaFlagsKHR         supportedCompositeAlpha;
 //    VkImageUsageFlags                supportedUsageFlags;
 //} VkSurfaceCapabilitiesKHR;
-//
-//typedef struct VkSurfaceFormatKHR {
-//    VkFormat           format;
-//    VkColorSpaceKHR    colorSpace;
-//} VkSurfaceFormatKHR;
-//
+
+inline val VkSurfaceFormatKHR.format: VkFormat get() = VkFormat of VkSurfaceFormatKHR.nformat(adr)
+inline val VkSurfaceFormatKHR.colorSpace: VkColorSpace get() = VkColorSpace of VkSurfaceFormatKHR.ncolorSpace(adr)
 //
 //typedef void (VKAPI_PTR *PFN_vkDestroySurfaceKHR)(VkInstance instance, VkSurfaceKHR surface, const VkAllocationCallbacks* pAllocator);
 //typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceSurfaceSupportKHR)(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkSurfaceKHR surface, VkBool32* pSupported);
@@ -4763,20 +4886,20 @@ typealias VkSwapchainCreateFlagsKHR = VkFlags
 //void*                                       pUserData);
 
 inline var VkDebugReportCallbackCreateInfoEXT.type
-    get() = VkStructureType of VkDebugReportCallbackCreateInfoEXT.nsType(address)
-    set(value) = VkDebugReportCallbackCreateInfoEXT.nsType(address, value.i)
+    get() = VkStructureType of VkDebugReportCallbackCreateInfoEXT.nsType(adr)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.nsType(adr, value.i)
 inline var VkDebugReportCallbackCreateInfoEXT.next
-    get() = VkDebugReportCallbackCreateInfoEXT.npNext(address)
-    set(value) = VkDebugReportCallbackCreateInfoEXT.npNext(address, value)
+    get() = VkDebugReportCallbackCreateInfoEXT.npNext(adr)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.npNext(adr, value)
 inline var VkDebugReportCallbackCreateInfoEXT.flags: VkDebugReportFlagsEXT
-    get() = VkDebugReportCallbackCreateInfoEXT.nflags(address)
-    set(value) = VkDebugReportCallbackCreateInfoEXT.nflags(address, value)
+    get() = VkDebugReportCallbackCreateInfoEXT.nflags(adr)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.nflags(adr, value)
 inline var VkDebugReportCallbackCreateInfoEXT.callback: VkDebugReportCallbackEXTI
-    get() = VkDebugReportCallbackCreateInfoEXT.npfnCallback(address)
-    set(value) = VkDebugReportCallbackCreateInfoEXT.npfnCallback(address, value)
+    get() = VkDebugReportCallbackCreateInfoEXT.npfnCallback(adr)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.npfnCallback(adr, value)
 inline var VkDebugReportCallbackCreateInfoEXT.userData
-    get() = VkDebugReportCallbackCreateInfoEXT.npUserData(address)
-    set(value) = VkDebugReportCallbackCreateInfoEXT.npUserData(address, value)
+    get() = VkDebugReportCallbackCreateInfoEXT.npUserData(adr)
+    set(value) = VkDebugReportCallbackCreateInfoEXT.npUserData(adr, value)
 
 //
 //typedef VkResult (VKAPI_PTR *PFN_vkCreateDebugReportCallbackEXT)(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback);
@@ -6524,3 +6647,19 @@ inline var VkDebugReportCallbackCreateInfoEXT.userData
 //
 //#ifdef __cplusplus
 //}
+
+fun PointerBuffer?.toArrayList(): ArrayList<String> {
+    val count = this?.remaining() ?: 0
+    if (this == null || count == 0) return arrayListOf()
+    val res = ArrayList<String>(count)
+    for (i in 0 until count)
+        res += get(i).utf8
+    return res
+}
+
+fun Collection<String>.toPointerBuffer(): PointerBuffer {
+    val pointers = PointerBuffer.create(ptr.advance(Pointer.POINTER_SIZE * size), size)
+    for (i in indices)
+        pointers.put(i, elementAt(i).utf8)
+    return pointers
+}

@@ -12,6 +12,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.intBufferOf
+import uno.buffer.longBufferOf
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.initializers.commandBufferAllocateInfo
@@ -67,11 +68,11 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     /** Handle to the device graphics queue that command buffers are submitted to   */
     lateinit var queue: VkQueue
     /** Depth buffer format (selected during Vulkan initialization) */
-    var depthFormat: VkFormat = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    var depthFormat = VkFormat.UNDEFINED
     /** Command buffer pool */
     var cmdPool: VkCommandPool = NULL
     /** @brief Pipeline stages used to wait at for graphics queue submissions */
-    val submitPipelineStages = intBufferOf(VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT)
+    val submitPipelineStages = intBufferOf(VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i)
     /** Contains command buffers and semaphores to be presented to the queue    */
     lateinit var submitInfo: VkSubmitInfo
     /** Command buffers used for rendering  */
@@ -93,11 +94,11 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     // Synchronization semaphores
     private val semaphores = object {
         // Swap chain image presentation
-        var presentComplete: VkSemaphore = NULL
+        var presentComplete: VkSemaphorePtr = longBufferOf(NULL)
         // Command buffer submission and execution
-        var renderComplete: VkSemaphore = NULL
+        var renderComplete: VkSemaphorePtr = longBufferOf(NULL)
         // UI overlay submission and execution
-        var overlayComplete: VkSemaphore = NULL
+        var overlayComplete: VkSemaphorePtr = longBufferOf(NULL)
     }
 
     var prepared = false
@@ -310,9 +311,9 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
         vkDestroyCommandPool(device, cmdPool)
 
-        vkDestroySemaphore(device, semaphores.presentComplete)
-        vkDestroySemaphore(device, semaphores.renderComplete)
-        vkDestroySemaphore(device, semaphores.overlayComplete)
+        vkDestroySemaphores(device, semaphores.presentComplete)
+        vkDestroySemaphores(device, semaphores.renderComplete)
+        vkDestroySemaphores(device, semaphores.overlayComplete)
 
         uiOverlay?.destroy()
 
@@ -328,9 +329,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     fun initVulkan() {
 
         // Vulkan instance
-        var err = createInstance(settings.validation)
-        if (err())
-            tools.exitFatal("Could not create Vulkan instance : \n${err.string}", err)
+        createInstance(settings.validation).check("Could not create Vulkan instance")
 
         // If requested, we enable the default validation layers for debugging
         if (settings.validation) {
@@ -406,14 +405,12 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         /*  Vulkan device creation
             This is handled by a separate class that gets a logical device representation and encapsulates functions related to a device    */
         vulkanDevice = VulkanDevice(physicalDevice)
-        err = vulkanDevice.createLogicalDevice(enabledFeatures, enabledDeviceExtensions)
-        if (err != Vk_SUCCESS)
-            tools.exitFatal("Could not create Vulkan device: \n${err.string}", err)
+        vulkanDevice.createLogicalDevice(enabledFeatures, enabledDeviceExtensions).check("Could not create Vulkan device")
 
         device = vulkanDevice.logicalDevice!!
 
         // Get a graphics queue from the device
-        vkGetDeviceQueue(device, vulkanDevice.queueFamilyIndices.graphics, 0, ::queue)
+        vk.getDeviceQueue(device, vulkanDevice.queueFamilyIndices.graphics, 0, ::queue)
 
         // Find a suitable depth format
         val validDepthFormat = tools.getSupportedDepthFormat(physicalDevice, ::depthFormat)
@@ -425,23 +422,23 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         val semaphoreCreateInfo = semaphoreCreateInfo()
         /*  Create a semaphore used to synchronize image presentation
             Ensures that the image is displayed before we start submitting new commands to the queu             */
-        vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::presentComplete).check()
+        vk.createSemaphore(device, semaphoreCreateInfo, semaphores.presentComplete).check()
         /*  Create a semaphore used to synchronize command submission
             Ensures that the image is not presented until all commands have been sumbitted and executed             */
-        vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::renderComplete).check()
+        vk.createSemaphore(device, semaphoreCreateInfo, semaphores.renderComplete).check()
         // Create a semaphore used to synchronize command submission
         // Ensures that the image is not presented until all commands for the UI overlay have been sumbitted and executed
         // Will be inserted after the render complete semaphore if the UI overlay is enabled
-        vkCreateSemaphore(device, semaphoreCreateInfo, null, semaphores::overlayComplete).check()
+        vk.createSemaphore(device, semaphoreCreateInfo, semaphores.overlayComplete).check()
 
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
             Command buffer submission info is set by each example   */
         submitInfo = submitInfo().apply {
-            pWaitDstStageMask(submitPipelineStages)
-            waitSemaphoreCount(1)
-            pWaitSemaphores(semaphores.presentComplete.toLongBuffer())
-            pSignalSemaphores(semaphores.renderComplete.toLongBuffer())
+            waitDstStageMask = submitPipelineStages
+            waitSemaphoreCount = 1
+            waitSemaphores = semaphores.presentComplete
+            signalSemaphores = semaphores.renderComplete
         }
     }
 
@@ -530,12 +527,12 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     /** Creates a new (graphics) command pool object storing command buffers    */
     fun createCommandPool() {
 
-        val cmdPoolInfo = VkCommandPoolCreateInfo.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
-            queueFamilyIndex(swapChain.queueNodeIndex)
-            flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+        val cmdPoolInfo = vk.CommandPoolCreateInfo {
+            type = VkStructureType.COMMAND_POOL_CREATE_INFO
+            queueFamilyIndex = swapChain.queueNodeIndex
+            flags = VkCommandPoolCreate.RESET_COMMAND_BUFFER_BIT.i
         }
-        vkCreateCommandPool(device, cmdPoolInfo, null, ::cmdPool).check()
+        vk.createCommandPool(device, cmdPoolInfo, ::cmdPool).check()
     }
 
     /** Setup default depth and stencil views   */
@@ -584,7 +581,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         memAlloc.allocationSize = memReqs.size
         memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
         vkAllocateMemory(device, memAlloc, null, depthStencil::mem).check()
-        vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0).check()
+        VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0))
 
         depthStencilView.image = depthStencil.image
         vkCreateImageView(device, depthStencilView, null, depthStencil::view).check()
@@ -670,8 +667,8 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         with(dependencies[0]) {
             srcSubpass = VK_SUBPASS_EXTERNAL
             dstSubpass = 0
-            srcStageMask = VkPipelineStage_BOTTOM_OF_PIPE_BIT
-            dstStageMask = VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT
+            srcStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
+            dstStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
             srcAccessMask = VkAccess_MEMORY_READ_BIT
             dstAccessMask = VkAccess_COLOR_ATTACHMENT_READ_BIT or VkAccess_COLOR_ATTACHMENT_WRITE_BIT
             dependencyFlags = VkDependency_BY_REGION_BIT
@@ -680,8 +677,8 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         with(dependencies[1]) {
             srcSubpass = 0
             dstSubpass = VK_SUBPASS_EXTERNAL
-            srcStageMask = VkPipelineStage_COLOR_ATTACHMENT_OUTPUT_BIT
-            dstStageMask = VkPipelineStage_BOTTOM_OF_PIPE_BIT
+            srcStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
+            dstStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
             srcAccessMask = VkAccess_COLOR_ATTACHMENT_READ_BIT or VkAccess_COLOR_ATTACHMENT_WRITE_BIT
             dstAccessMask = VkAccess_MEMORY_READ_BIT
             dependencyFlags = VkDependency_BY_REGION_BIT

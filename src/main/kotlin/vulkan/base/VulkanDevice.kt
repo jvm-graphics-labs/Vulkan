@@ -207,10 +207,10 @@ constructor(
         // If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
-        val deviceCreateInfo = VkDeviceCreateInfo.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
-            pQueueCreateInfos(queueCreateInfos.toBuffer())
-            pEnabledFeatures(enabledFeatures)
+        val deviceCreateInfo = vk.DeviceCreateInfo {
+            type = VkStructureType.DEVICE_CREATE_INFO
+            this.queueCreateInfos = queueCreateInfos
+            this.enabledFeatures = enabledFeatures
         }
 
         // Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
@@ -220,11 +220,11 @@ constructor(
         }
 
         if (deviceExtensions.isNotEmpty())
-            deviceCreateInfo.ppEnabledExtensionNames(deviceExtensions.toPointerBuffer())
+            deviceCreateInfo.enabledExtensionNames = deviceExtensions
 
-        val result = vkCreateDevice(physicalDevice, deviceCreateInfo, null, ::logicalDevice)
+        val result = vk.createDevice(physicalDevice, deviceCreateInfo, ::logicalDevice)
 
-        if (result == VK_SUCCESS)
+        if (result == VkResult.SUCCESS)
         // Create a default command pool for graphics command buffers
             commandPool = createCommandPool(queueFamilyIndices.graphics)
 
@@ -368,15 +368,15 @@ constructor(
      *
      * @return A handle to the created command buffer
      */
-    fun createCommandPool(queueFamilyIndex: Int, createFlags: VkCommandPoolCreateFlags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+    fun createCommandPool(queueFamilyIndex: Int, createFlags: VkCommandPoolCreateFlags = VkCommandPoolCreate.RESET_COMMAND_BUFFER_BIT.i)
             : VkCommandPool {
 
-        val cmdPoolInfo = VkCommandPoolCreateInfo.calloc().apply {
-            sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
-            queueFamilyIndex(queueFamilyIndex)
-            flags(createFlags)
+        val cmdPoolInfo = vk.CommandPoolCreateInfo {
+            type = VkStructureType.COMMAND_POOL_CREATE_INFO
+            this.queueFamilyIndex = queueFamilyIndex
+            flags = createFlags
         }
-        return getLong { vkCreateCommandPool(logicalDevice!!, cmdPoolInfo, null, it).check() }
+        return getLong { vk.createCommandPool(logicalDevice!!, cmdPoolInfo, it).check() }
     }
 
 //

@@ -7,51 +7,11 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
-import vkn.VkMemoryStack.Companion.withStack
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
-import kotlin.reflect.KMutableProperty0
 
-
-
-fun vkGetDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: KMutableProperty0<VkQueue>)  {
-    val pQueue = memAllocPointer(1)
-    VK10.vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue)
-    queue.set(VkQueue(pQueue[0], device))
-}
-
-
-var VkSemaphoreCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
-var VkSemaphoreCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
-var VkSemaphoreCreateInfo.flags: VkSemaphoreCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-
-
-val VkSurfaceFormatKHR.format: VkFormat get() = format()
-val VkSurfaceFormatKHR.colorSpace: VkColorSpaceKHR get() = colorSpace()
-
-val VkSurfaceCapabilitiesKHR.minImageCount get() = minImageCount()
-val VkSurfaceCapabilitiesKHR.maxImageCount get() = maxImageCount()
-val VkSurfaceCapabilitiesKHR.currentExtent: VkExtent2D get() = currentExtent()
-val VkSurfaceCapabilitiesKHR.minImageExtent: VkExtent2D get() = minImageExtent()
-val VkSurfaceCapabilitiesKHR.maxImageExtent: VkExtent2D get() = maxImageExtent()
-val VkSurfaceCapabilitiesKHR.supportedTransforms: VkSurfaceTransformFlagsKHR get() = supportedTransforms()
-val VkSurfaceCapabilitiesKHR.currentTransform: VkSurfaceTransformFlagBitsKHR get() = currentTransform()
-val VkSurfaceCapabilitiesKHR.supportedCompositeAlpha: VkCompositeAlphaFlagsKHR get() = supportedCompositeAlpha()
-val VkSurfaceCapabilitiesKHR.supportedUsageFlags: VkImageUsageFlags get() = supportedUsageFlags()
 
 
 var VkSwapchainCreateInfoKHR.type: VkStructureType
@@ -80,14 +40,14 @@ var VkSwapchainCreateInfoKHR.minImageCount
         minImageCount(value)
     }
 var VkSwapchainCreateInfoKHR.imageFormat: VkFormat
-    get() = imageFormat()
+    get() = VkFormat of imageFormat()
     set(value) {
-        imageFormat(value)
+        imageFormat(value.i)
     }
 var VkSwapchainCreateInfoKHR.imageColorSpace: VkFormat
-    get() = imageColorSpace()
+    get() = VkFormat of imageColorSpace()
     set(value) {
-        imageColorSpace(value)
+        imageColorSpace(value.i)
     }
 //var VkSwapchainCreateInfoKHR.imageExtent: VkExtent2D
 //    get() = imageExtent()
@@ -115,20 +75,20 @@ var VkSwapchainCreateInfoKHR.queueFamilyIndices
     set(value) {
         pQueueFamilyIndices(value)
     }
-var VkSwapchainCreateInfoKHR.preTransform: VkSurfaceTransformFlagBitsKHR
-    get() = preTransform()
+var VkSwapchainCreateInfoKHR.preTransform: VkSurfaceTransform
+    get() = VkSurfaceTransform of preTransform()
     set(value) {
-        preTransform(value)
+        preTransform(value.i)
     }
 var VkSwapchainCreateInfoKHR.compositeAlpha: VkCompositeAlphaFlagBitsKHR
     get() = compositeAlpha()
     set(value) {
         compositeAlpha(value)
     }
-var VkSwapchainCreateInfoKHR.presentMode: VkPresentModeKHR
-    get() = presentMode()
+var VkSwapchainCreateInfoKHR.presentMode: VkPresentMode
+    get() = VkPresentMode of presentMode()
     set(value) {
-        presentMode(value)
+        presentMode(value.i)
     }
 var VkSwapchainCreateInfoKHR.clipped
     get() = clipped()
@@ -168,9 +128,9 @@ var VkImageViewCreateInfo.viewType: VkImageViewType
         viewType(value)
     }
 var VkImageViewCreateInfo.format: VkFormat
-    get() = format()
+    get() = VkFormat of format()
     set(value) {
-        format(value)
+        format(value.i)
     }
 var VkImageViewCreateInfo.components: VkComponentMapping
     get() = components()
@@ -258,9 +218,9 @@ var VkImageCreateInfo.imageType: VkImageType
         imageType(value)
     }
 var VkImageCreateInfo.format: VkFormat
-    get() = format()
+    get() = VkFormat of format()
     set(value) {
-        format(value)
+        format(value.i)
     }
 var VkImageCreateInfo.extent: VkExtent3D
     get() = extent()
@@ -345,9 +305,9 @@ var VkAttachmentDescription.flags: VkAttachmentDescriptionFlags
         flags(value)
     }
 var VkAttachmentDescription.format: VkFormat
-    get() = format()
+    get() = VkFormat of format()
     set(value) {
-        format(value)
+        format(value.i)
     }
 var VkAttachmentDescription.samples: VkSampleCountFlagBits
     get() = samples()
@@ -769,6 +729,10 @@ inline fun vkDestroyImage(device: VkDevice, image: VkImage) = VK10.nvkDestroyIma
 inline fun vkFreeMemory(device: VkDevice, memory: VkDeviceMemory) = VK10.nvkFreeMemory(device, memory, NULL)
 inline fun vkDestroyPipelineCache(device: VkDevice, pipelineCache: VkPipelineCache) = VK10.nvkDestroyPipelineCache(device, pipelineCache, NULL)
 inline fun vkDestroyCommandPool(device: VkDevice, commandPool: VkCommandPool) = VK10.nvkDestroyCommandPool(device, commandPool, NULL)
+inline fun vkDestroySemaphores(device: VkDevice, semaphores: VkSemaphorePtr) {
+    for(i in 0 until semaphores.remaining())
+        VK10.nvkDestroySemaphore(device, semaphores[i], NULL)
+}
 inline fun vkDestroySemaphore(device: VkDevice, semaphore: VkSemaphore) = VK10.nvkDestroySemaphore(device, semaphore, NULL)
 
 inline fun vkDestroyDebugReportCallback(instance: VkInstance, callbackAddress: Long) = EXTDebugReport.nvkDestroyDebugReportCallbackEXT(instance, callbackAddress, NULL)
@@ -783,7 +747,7 @@ inline fun vkDestroyShaderModule(device: VkDevice, shaderModule: VkShaderModule)
 val FloatBuffer.address get() = MemoryUtil.memAddress(this)
 val IntBuffer.address get() = MemoryUtil.memAddress(this)
 
-inline val Pointer.address get() = address()
+inline val Pointer.adr get() = address()
 
 // TODO glm
 operator fun Vec3i.invoke(v: Vec2i, i: Int) {

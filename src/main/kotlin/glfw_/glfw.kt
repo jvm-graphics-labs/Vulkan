@@ -8,10 +8,7 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.VkAllocationCallbacks
 import org.lwjgl.vulkan.VkInstance
-import vkn.VkSurfaceKHR
-import vkn.address
-import vkn.check
-import vkn.getLong
+import vkn.*
 
 /**
  * Created by elect on 22/04/17.
@@ -70,6 +67,6 @@ object glfw {
         }
 
     fun createWindowSurface(window: GlfwWindow, instance: VkInstance, allocator: VkAllocationCallbacks? = null): VkSurfaceKHR =
-            getLong { GLFWVulkan.glfwCreateWindowSurface(instance, window.handle, allocator, it).check() }
+            getLong { VK_CHECK_RESULT(GLFWVulkan.glfwCreateWindowSurface(instance, window.handle, allocator, it)) }
 }
 

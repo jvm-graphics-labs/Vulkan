@@ -14,40 +14,9 @@ object tools {
     /** Custom define for better code readability   */
     val VK_FLAGS_NONE = 0
     /** Default fence timeout in nanoseconds    */
-    var DEFAULT_FENCE_TIMEOUT = 100000000000
+    var DEFAULT_FENCE_TIMEOUT = 100_000_000_000
 
     //    bool errorModeSilent = false;
-
-    fun errorString(errorCode: VkResult) = when (errorCode) {
-    // Success codes
-        Vk_SUCCESS -> "Command successfully completed."
-        Vk_NOT_READY -> "A fence or query has not yet completed."
-        Vk_TIMEOUT -> "A wait operation has not completed in the specified time."
-        Vk_EVENT_SET -> "An event is signaled."
-        Vk_EVENT_RESET -> "An event is unsignaled."
-        Vk_INCOMPLETE -> "A return array was too small for the result."
-        Vk_SUBOPTIMAL_KHR -> "A swapchain no longer matches the surface properties exactly, but can still be used to present to the surface successfully."
-
-    // Error codes
-        Vk_ERROR_OUT_OF_HOST_MEMORY -> "A host memory allocation has failed."
-        Vk_ERROR_OUT_OF_DEVICE_MEMORY -> "A device memory allocation has failed."
-        Vk_ERROR_INITIALIZATION_FAILED -> "Initialization of an object could not be completed for implementation-specific reasons."
-        Vk_ERROR_DEVICE_LOST -> "The logical or physical device has been lost."
-        Vk_ERROR_MEMORY_MAP_FAILED -> "Mapping of a memory object has failed."
-        Vk_ERROR_LAYER_NOT_PRESENT -> "A requested layer is not present or could not be loaded."
-        Vk_ERROR_EXTENSION_NOT_PRESENT -> "A requested extension is not supported."
-        Vk_ERROR_FEATURE_NOT_PRESENT -> "A requested feature is not supported."
-        Vk_ERROR_INCOMPATIBLE_DRIVER -> "The requested version of Vulkan is not supported by the driver or is otherwise incompatible for implementation-specific reasons."
-        Vk_ERROR_TOO_MANY_OBJECTS -> "Too many objects of the type have already been created."
-        Vk_ERROR_FORMAT_NOT_SUPPORTED -> "A requested format is not supported on this device."
-        Vk_ERROR_SURFACE_LOST_KHR -> "A surface is no longer available."
-        Vk_ERROR_NATIVE_WINDOW_IN_USE_KHR -> "The requested window is already connected to a VkSurfaceKHR, or to some other non-Vulkan API."
-        Vk_ERROR_OUT_OF_DATE_KHR -> "A surface has changed in such a way that it is no longer compatible with the swapchain, and further presentation requests using the swapchain will fail. Applications must query the new surface properties and recreate their swapchain if they wish to continue presenting to the surface."
-        Vk_ERROR_INCOMPATIBLE_DISPLAY_KHR -> "The display used by a swapchain does not use the same presentable image layout, or is incompatible in a way that prevents sharing an" + " image."
-        Vk_ERROR_VALIDATION_FAILED_EXT -> "A validation layer found an error."
-        Vk_ERROR_INVALID_SHADER_NV -> "One or more shaders failed to compile or link."
-        else -> "UNKNOWN_ERROR [$errorCode]"
-    }
 
     //    std::string physicalDeviceTypeString(VkPhysicalDeviceType type)
 //    {
@@ -66,16 +35,15 @@ object tools {
     fun getSupportedDepthFormat(physicalDevice: VkPhysicalDevice, depthFormat: KMutableProperty0<VkFormat>): Boolean {
         /*  Since all depth formats may be optional, we need to find a suitable depth format to use
             Start with the highest precision packed format         */
-        arrayOf(VkFormat_D32_SFLOAT_S8_UINT,
-                VkFormat_D32_SFLOAT,
-                VkFormat_D24_UNORM_S8_UINT,
-                VkFormat_D16_UNORM_S8_UINT,
-                VkFormat_D16_UNORM).forEach {
+        arrayOf(VkFormat.D32_SFLOAT_S8_UINT,
+                VkFormat.D32_SFLOAT,
+                VkFormat.D24_UNORM_S8_UINT,
+                VkFormat.D16_UNORM_S8_UINT,
+                VkFormat.D16_UNORM).forEach {
 
-            val formatProps = VkFormatProperties.calloc()
-            VK10.vkGetPhysicalDeviceFormatProperties(physicalDevice, it, formatProps)
+            val formatProps = vk.getPhysicalDeviceFormatProperties(physicalDevice, it)
             // Format must support depth stencil attachment for optimal tiling
-            if (formatProps.optimalTilingFeatures() has VkFormatFeature_DEPTH_STENCIL_ATTACHMENT_BIT) {
+            if (formatProps.optimalTilingFeatures has VkFormatFeature.DEPTH_STENCIL_ATTACHMENT_BIT) {
                 depthFormat.set(it)
                 return true
             }
@@ -256,7 +224,7 @@ object tools {
 //                1, &imageMemoryBarrier);
 //    }
 
-    fun exitFatal(message: String, exitCode: VkResult) {
+    fun exitFatal(message: String, exitCode: Int) {
         System.err.println(message)
         System.exit(exitCode)
     }
