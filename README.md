@@ -1,6 +1,6 @@
 # Vulkan Kotlin examples and demos
 
-A comprehensive collection of open source Kotlin examples for [Vulkan®](https://www.khronos.org/vulkan/), the new graphics and compute API from Khronos, based on the excellent examples of [SaschaWillems](https://github.com/SaschaWillems/Vulkan)
+A comprehensive collection of open source Kotlin examples for [Vulkan®](https://www.khronos.org/vulkan/), the new graphics and compute API from Khronos, based on the excellent examples of [Sascha Willems](https://github.com/SaschaWillems/Vulkan)
 
 Enhancements:
 
@@ -26,6 +26,6 @@ Using pipeline state objects (pso) that bake state information (rasterization st
 
 ##### Credits:
 
-- Sasha, awesome repo (except for avoiding using glfw)
-- Spasi, for assisting (and tolerating) my continuous boring questions :) 
-- Kai for its first Hello Triangle in java
+- [Sasha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
+- [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :) 
+- [Kai](https://github.com/httpdigest) for its first Hello Triangle in java
