@@ -26,4 +26,6 @@ Using pipeline state objects (pso) that bake state information (rasterization st
 
 ##### Credits:
 
-- Spasi, for assisting (and tolerating) my continuous boring questions :)
+- Sasha, awesome repo (except for avoiding using glfw)
+- Spasi, for assisting (and tolerating) my continuous boring questions :) 
+- Kai for its first Hello Triangle in java
