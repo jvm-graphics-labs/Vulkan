@@ -178,16 +178,7 @@ inline fun vkDestroyDescriptorPool(device: VkDevice, descriptorPool: VkDescripto
 inline fun vkDestroyRenderPass(device: VkDevice, renderPass: VkRenderPass, allocator: VkAllocationCallbacks? = null) = VK10.nvkDestroyRenderPass(device, renderPass, allocator?.address() ?: NULL)
 inline fun vkDestroyFramebuffer(device: VkDevice, framebuffers: Iterable<VkFramebuffer>, allocator: VkAllocationCallbacks? = null) {
     for (i in framebuffers)
-        VK10.nvkDestroyFramebuffer(device, i, allocator?.address() ?: NULL)
-}
-
-inline fun vkDestroyShaderModule(device: VkDevice, shaderModules: Iterable<VkShaderModule>, allocator: VkAllocationCallbacks? = null) {
-    for (i in shaderModules)
-        VK10.nvkDestroyShaderModule(device, i, allocator?.address() ?: NULL)
-}
-inline fun vkDestroyShaderModule(device: VkDevice, shaderModules: VkPipelineShaderStageCreateInfo.Buffer, allocator: VkAllocationCallbacks? = null) {
-    for (i in shaderModules)
-        VK10.vkDestroyShaderModule(device, i.module, allocator)
+        VK10.nvkDestroyFramebuffer(device, i, allocator?.adr ?: NULL)
 }
 
 inline fun vkDestroyFence(device: VkDevice, fences: Iterable<VkFence>, allocator: VkAllocationCallbacks? = null) {

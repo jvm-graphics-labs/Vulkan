@@ -86,21 +86,9 @@ fun vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice, count
 
 
 
-fun vkCreateDescriptorSetLayout(device: VkDevice, createInfo: VkDescriptorSetLayoutCreateInfo, allocator: VkAllocationCallbacks?,
-                                setLayout: KMutableProperty0<VkDescriptorSetLayout>): VkResult {
-    val pSetLayout = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreateDescriptorSetLayout(device, createInfo, allocator, pSetLayout).also {
-        setLayout.set(pSetLayout[0])
-    }
-}
 
-fun vkCreatePipelineLayout(device: VkDevice, createInfo: VkPipelineLayoutCreateInfo, allocator: VkAllocationCallbacks?,
-                           pipelineLayout: KMutableProperty0<VkPipelineLayout>): VkResult {
-    val pPipelineLayout = MemoryUtil.memAllocLong(1)
-    return VkResult of VK10.vkCreatePipelineLayout(device, createInfo, allocator, pPipelineLayout).also {
-        pipelineLayout.set(pPipelineLayout[0])
-    }
-}
+
+
 
 
 fun VkCommandBuffer.toPointerBuffer(): PointerBuffer {

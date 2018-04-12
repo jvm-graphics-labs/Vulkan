@@ -65,23 +65,46 @@ object appBuffer {
         MemoryUtil.memPutFloat(res, float)
         return res
     }
+
     inline fun floatBufferOf(float: Float): FloatBuffer {
         val res = floatBuffer(1)
         res[0] = float
         return res
     }
+
     inline fun floatBufferOf(vararg floats: Float): FloatBuffer {
         val res = floatBuffer(floats.size)
-        for(i in floats.indices)
+        for (i in floats.indices)
             res[i] = floats[i]
         return res
     }
+
+    inline fun longBufferOf(long: Long): LongBuffer {
+        val res = longBuffer(1)
+        res[0] = long
+        return res
+    }
+
     inline fun longBufferOf(long0: Long, long1: Long): LongBuffer {
         val res = longBuffer(2)
         res[0] = long0
         res[1] = long1
         return res
     }
+
+    inline fun intBufferOf(int: Int): IntBuffer {
+        val res = intBuffer(1)
+        res[0] = int
+        return res
+    }
+
+    inline fun intBufferOf(int0: Int, int1: Int): IntBuffer {
+        val res = intBuffer(2)
+        res[0] = int0
+        res[1] = int1
+        return res
+    }
+
     inline fun intBuffer(size: Int): IntBuffer = MemoryUtil.memIntBuffer(ptr.advance(Int.BYTES * size), size)
     inline fun floatBuffer(size: Int): FloatBuffer = MemoryUtil.memFloatBuffer(ptr.advance(Float.BYTES * size), size)
     inline fun longBuffer(size: Int): LongBuffer = MemoryUtil.memLongBuffer(ptr.advance(Long.BYTES * size), size)

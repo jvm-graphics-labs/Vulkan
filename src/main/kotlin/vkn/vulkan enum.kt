@@ -679,213 +679,214 @@ enum class VkComponentSwizzle(val i: Int) {
 }
 
 
-typealias VkVertexInputRate = Int
+enum class VkVertexInputRate(val i: Int) {
+    VERTEX(0),
+    INSTANCE(1);
 
-val VkVertexInputRate_VERTEX: VkVertexInputRate = 0
-val VkVertexInputRate_INSTANCE: VkVertexInputRate = 1
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
-val VkVertexInputRate_BEGIN_RANGE: Int = VkVertexInputRate_VERTEX
-val VkVertexInputRate_END_RANGE: Int = VkVertexInputRate_INSTANCE
-val VkVertexInputRate_RANGE_SIZE = VkVertexInputRate_INSTANCE - VkVertexInputRate_VERTEX + 1
+enum class VkPrimitiveTopology(val i: Int) {
+    POINT_LIST(0),
+    LINE_LIST(1),
+    LINE_STRIP(2),
+    TRIANGLE_LIST(3),
+    TRIANGLE_STRIP(4),
+    TRIANGLE_FAN(5),
+    LINE_LIST_WITH_ADJACENCY(6),
+    LINE_STRIP_WITH_ADJACENCY(7),
+    TRIANGLE_LIST_WITH_ADJACENCY(8),
+    TRIANGLE_STRIP_WITH_ADJACENCY(9),
+    PATCH_LIST(10);
 
-typealias VkPrimitiveTopology = Int
-
-val VkPrimitiveTopology_POINT_LIST: VkPrimitiveTopology = 0
-val VkPrimitiveTopology_LINE_LIST: VkPrimitiveTopology = 1
-val VkPrimitiveTopology_LINE_STRIP: VkPrimitiveTopology = 2
-val VkPrimitiveTopology_TRIANGLE_LIST: VkPrimitiveTopology = 3
-val VkPrimitiveTopology_TRIANGLE_STRIP: VkPrimitiveTopology = 4
-val VkPrimitiveTopology_TRIANGLE_FAN: VkPrimitiveTopology = 5
-val VkPrimitiveTopology_LINE_LIST_WITH_ADJACENCY: VkPrimitiveTopology = 6
-val VkPrimitiveTopology_LINE_STRIP_WITH_ADJACENCY: VkPrimitiveTopology = 7
-val VkPrimitiveTopology_TRIANGLE_LIST_WITH_ADJACENCY: VkPrimitiveTopology = 8
-val VkPrimitiveTopology_TRIANGLE_STRIP_WITH_ADJACENCY: VkPrimitiveTopology = 9
-val VkPrimitiveTopology_PATCH_LIST: VkPrimitiveTopology = 10
-
-val VkPrimitiveTopology_BEGIN_RANGE: Int = VkPrimitiveTopology_POINT_LIST
-val VkPrimitiveTopology_END_RANGE: Int = VkPrimitiveTopology_PATCH_LIST
-val VkPrimitiveTopology_RANGE_SIZE = VkPrimitiveTopology_PATCH_LIST - VkPrimitiveTopology_POINT_LIST + 1
-
-
-typealias VkPolygonMode = Int
-
-val VkPoligonMode_FILL: VkPolygonMode = 0
-val VkPoligonMode_LINE: VkPolygonMode = 1
-val VkPoligonMode_POINT: VkPolygonMode = 2
-val VkPoligonMode_FILL_RECTANGLE_NV: VkPolygonMode = 1000153000
-
-val VkPoligonMode_BEGIN_RANGE: Int = VkPoligonMode_FILL
-val VkPoligonMode_END_RANGE: Int = VkPoligonMode_POINT
-val VkPoligonMode_RANGE_SIZE = VkPoligonMode_POINT - VkPoligonMode_FILL + 1
-
-typealias VkFrontFace = Int
-
-val VkFrontFace_COUNTER_CLOCKWISE: VkFrontFace = 0
-val VkFrontFace_CLOCKWISE: VkFrontFace = 1
-
-val VkFrontFace_BEGIN_RANGE: Int = VkFrontFace_COUNTER_CLOCKWISE
-val VkFrontFace_END_RANGE: Int = VkFrontFace_CLOCKWISE
-val VkFrontFace_RANGE_SIZE = VkFrontFace_CLOCKWISE - VkFrontFace_COUNTER_CLOCKWISE + 1
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
-typealias VkCompareOp = Int
+enum class VkPolygonMode(val i: Int) {
+    FILL(0),
+    LINE(1),
+    POINT(2),
+    FILL_RECTANGLE_NV(1000153000);
 
-val VkCompareOp_NEVER: VkCompareOp = 0
-val VkCompareOp_LESS: VkCompareOp = 1
-val VkCompareOp_EQUAL: VkCompareOp = 2
-val VkCompareOp_LESS_OR_EQUAL: VkCompareOp = 3
-val VkCompareOp_GREATER: VkCompareOp = 4
-val VkCompareOp_NOT_EQUAL: VkCompareOp = 5
-val VkCompareOp_GREATER_OR_EQUAL: VkCompareOp = 6
-val VkCompareOp_ALWAYS: VkCompareOp = 7
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
-val VkCompareOp_BEGIN_RANGE: Int = VkCompareOp_NEVER
-val VkCompareOp_END_RANGE: Int = VkCompareOp_ALWAYS
-val VkCompareOp_RANGE_SIZE = VkCompareOp_ALWAYS - VkCompareOp_NEVER + 1
+enum class VkFrontFace(val i: Int) {
+    COUNTER_CLOCKWISE(0),
+    CLOCKWISE(1);
 
-typealias VkStencilOp = Int
-
-val VkStencilOp_KEEP: VkStencilOp = 0
-val VkStencilOp_ZERO: VkStencilOp = 1
-val VkStencilOp_REPLACE: VkStencilOp = 2
-val VkStencilOp_INCREMENT_AND_CLAMP: VkStencilOp = 3
-val VkStencilOp_DECREMENT_AND_CLAMP: VkStencilOp = 4
-val VkStencilOp_INVERT: VkStencilOp = 5
-val VkStencilOp_INCREMENT_AND_WRAP: VkStencilOp = 6
-val VkStencilOp_DECREMENT_AND_WRAP: VkStencilOp = 7
-
-val VkStencilOp_BEGIN_RANGE: Int = VkStencilOp_KEEP
-val VkStencilOp_END_RANGE: Int = VkStencilOp_DECREMENT_AND_WRAP
-val VkStencilOp_RANGE_SIZE = VkStencilOp_DECREMENT_AND_WRAP - VkStencilOp_KEEP + 1
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
-typealias VkLogicOp = Int
+enum class VkCompareOp(val i: Int) {
+    NEVER(0),
+    LESS(1),
+    EQUAL(2),
+    LESS_OR_EQUAL(3),
+    GREATER(4),
+    NOT_EQUAL(5),
+    GREATER_OR_EQUAL(6),
+    ALWAYS(7);
 
-val VkLogicOp_CLEAR: VkLogicOp = 0
-val VkLogicOp_AND: VkLogicOp = 1
-val VkLogicOp_AND_REVERSE: VkLogicOp = 2
-val VkLogicOp_COPY: VkLogicOp = 3
-val VkLogicOp_AND_INVERTED: VkLogicOp = 4
-val VkLogicOp_NO_OP: VkLogicOp = 5
-val VkLogicOp_XOR: VkLogicOp = 6
-val VkLogicOp_OR: VkLogicOp = 7
-val VkLogicOp_NOR: VkLogicOp = 8
-val VkLogicOp_EQUIVALENT: VkLogicOp = 9
-val VkLogicOp_INVERT: VkLogicOp = 10
-val VkLogicOp_OR_REVERSE: VkLogicOp = 11
-val VkLogicOp_COPY_INVERTED: VkLogicOp = 12
-val VkLogicOp_OR_INVERTED: VkLogicOp = 13
-val VkLogicOp_NAND: VkLogicOp = 14
-val VkLogicOp_SET: VkLogicOp = 15
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
-val VkLogicOp_BEGIN_RANGE: Int = VkLogicOp_CLEAR
-val VkLogicOp_END_RANGE: Int = VkLogicOp_SET
-val VkLogicOp_RANGE_SIZE = VkLogicOp_SET - VkLogicOp_CLEAR + 1
+enum class VkStencilOp(val i: Int) {
+    KEEP(0),
+    ZERO(1),
+    REPLACE(2),
+    INCREMENT_AND_CLAMP(3),
+    DECREMENT_AND_CLAMP(4),
+    INVERT(5),
+    INCREMENT_AND_WRAP(6),
+    DECREMENT_AND_WRAP(7);
 
-typealias VkBlendFactor = Int
-
-val VkBlendFactor_ZERO: VkBlendFactor = 0
-val VkBlendFactor_ONE: VkBlendFactor = 1
-val VkBlendFactor_SRC_COLOR: VkBlendFactor = 2
-val VkBlendFactor_ONE_MINUS_SRC_COLOR: VkBlendFactor = 3
-val VkBlendFactor_DST_COLOR: VkBlendFactor = 4
-val VkBlendFactor_ONE_MINUS_DST_COLOR: VkBlendFactor = 5
-val VkBlendFactor_SRC_ALPHA: VkBlendFactor = 6
-val VkBlendFactor_ONE_MINUS_SRC_ALPHA: VkBlendFactor = 7
-val VkBlendFactor_DST_ALPHA: VkBlendFactor = 8
-val VkBlendFactor_ONE_MINUS_DST_ALPHA: VkBlendFactor = 9
-val VkBlendFactor_CONSTANT_COLOR: VkBlendFactor = 10
-val VkBlendFactor_ONE_MINUS_CONSTANT_COLOR: VkBlendFactor = 11
-val VkBlendFactor_CONSTANT_ALPHA: VkBlendFactor = 12
-val VkBlendFactor_ONE_MINUS_CONSTANT_ALPHA: VkBlendFactor = 13
-val VkBlendFactor_SRC_ALPHA_SATURATE: VkBlendFactor = 14
-val VkBlendFactor_SRC1_COLOR: VkBlendFactor = 15
-val VkBlendFactor_ONE_MINUS_SRC1_COLOR: VkBlendFactor = 16
-val VkBlendFactor_SRC1_ALPHA: VkBlendFactor = 17
-val VkBlendFactor_ONE_MINUS_SRC1_ALPHA: VkBlendFactor = 18
-
-val VkBlendFactor_BEGIN_RANGE: Int = VkBlendFactor_ZERO
-val VkBlendFactor_END_RANGE: Int = VkBlendFactor_ONE_MINUS_SRC1_ALPHA
-val VkBlendFactor_RANGE_SIZE = VkBlendFactor_ONE_MINUS_SRC1_ALPHA - VkBlendFactor_ZERO + 1
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
-typealias VkBlendOp = Int
+enum class VkLogicOp(val i: Int) {
+    CLEAR(0),
+    AND(1),
+    AND_REVERSE(2),
+    COPY(3),
+    AND_INVERTED(4),
+    NO_OP(5),
+    XOR(6),
+    OR(7),
+    NOR(8),
+    EQUIVALENT(9),
+    INVERT(10),
+    OR_REVERSE(11),
+    COPY_INVERTED(12),
+    OR_INVERTED(13),
+    NAND(14),
+    SET(15);
 
-val VkBlendOp_ADD: VkBlendOp = 0
-val VkBlendOp_SUBTRACT: VkBlendOp = 1
-val VkBlendOp_REVERSE_SUBTRACT: VkBlendOp = 2
-val VkBlendOp_MIN: VkBlendOp = 3
-val VkBlendOp_MAX: VkBlendOp = 4
-val VkBlendOp_ZERO_EXT: VkBlendOp = 1000148000
-val VkBlendOp_SRC_EXT: VkBlendOp = 1000148001
-val VkBlendOp_DST_EXT: VkBlendOp = 1000148002
-val VkBlendOp_SRC_OVER_EXT: VkBlendOp = 1000148003
-val VkBlendOp_DST_OVER_EXT: VkBlendOp = 1000148004
-val VkBlendOp_SRC_IN_EXT: VkBlendOp = 1000148005
-val VkBlendOp_DST_IN_EXT: VkBlendOp = 1000148006
-val VkBlendOp_SRC_OUT_EXT: VkBlendOp = 1000148007
-val VkBlendOp_DST_OUT_EXT: VkBlendOp = 1000148008
-val VkBlendOp_SRC_ATOP_EXT: VkBlendOp = 1000148009
-val VkBlendOp_DST_ATOP_EXT: VkBlendOp = 1000148010
-val VkBlendOp_XOR_EXT: VkBlendOp = 1000148011
-val VkBlendOp_MULTIPLY_EXT: VkBlendOp = 1000148012
-val VkBlendOp_SCREEN_EXT: VkBlendOp = 1000148013
-val VkBlendOp_OVERLAY_EXT: VkBlendOp = 1000148014
-val VkBlendOp_DARKEN_EXT: VkBlendOp = 1000148015
-val VkBlendOp_LIGHTEN_EXT: VkBlendOp = 1000148016
-val VkBlendOp_COLORDODGE_EXT: VkBlendOp = 1000148017
-val VkBlendOp_COLORBURN_EXT: VkBlendOp = 1000148018
-val VkBlendOp_HARDLIGHT_EXT: VkBlendOp = 1000148019
-val VkBlendOp_SOFTLIGHT_EXT: VkBlendOp = 1000148020
-val VkBlendOp_DIFFERENCE_EXT: VkBlendOp = 1000148021
-val VkBlendOp_EXCLUSION_EXT: VkBlendOp = 1000148022
-val VkBlendOp_INVERT_EXT: VkBlendOp = 1000148023
-val VkBlendOp_INVERT_RGB_EXT: VkBlendOp = 1000148024
-val VkBlendOp_LINEARDODGE_EXT: VkBlendOp = 1000148025
-val VkBlendOp_LINEARBURN_EXT: VkBlendOp = 1000148026
-val VkBlendOp_VIVIDLIGHT_EXT: VkBlendOp = 1000148027
-val VkBlendOp_LINEARLIGHT_EXT: VkBlendOp = 1000148028
-val VkBlendOp_PINLIGHT_EXT: VkBlendOp = 1000148029
-val VkBlendOp_HARDMIX_EXT: VkBlendOp = 1000148030
-val VkBlendOp_HSL_HUE_EXT: VkBlendOp = 1000148031
-val VkBlendOp_HSL_SATURATION_EXT: VkBlendOp = 1000148032
-val VkBlendOp_HSL_COLOR_EXT: VkBlendOp = 1000148033
-val VkBlendOp_HSL_LUMINOSITY_EXT: VkBlendOp = 1000148034
-val VkBlendOp_PLUS_EXT: VkBlendOp = 1000148035
-val VkBlendOp_PLUS_CLAMPED_EXT: VkBlendOp = 1000148036
-val VkBlendOp_PLUS_CLAMPED_ALPHA_EXT: VkBlendOp = 1000148037
-val VkBlendOp_PLUS_DARKER_EXT: VkBlendOp = 1000148038
-val VkBlendOp_MINUS_EXT: VkBlendOp = 1000148039
-val VkBlendOp_MINUS_CLAMPED_EXT: VkBlendOp = 1000148040
-val VkBlendOp_CONTRAST_EXT: VkBlendOp = 1000148041
-val VkBlendOp_INVERT_OVG_EXT: VkBlendOp = 1000148042
-val VkBlendOp_RED_EXT: VkBlendOp = 1000148043
-val VkBlendOp_GREEN_EXT: VkBlendOp = 1000148044
-val VkBlendOp_BLUE_EXT: VkBlendOp = 1000148045
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
-val VkBlendOp_BEGIN_RANGE: Int = VkBlendOp_ADD
-val VkBlendOp_END_RANGE: Int = VkBlendOp_MAX
-val VkBlendOp_RANGE_SIZE = VkBlendOp_MAX - VkBlendOp_ADD + 1
+enum class VkBlendFactor(val i: Int) {
+    ZERO(0),
+    ONE(1),
+    SRC_COLOR(2),
+    ONE_MINUS_SRC_COLOR(3),
+    DST_COLOR(4),
+    ONE_MINUS_DST_COLOR(5),
+    SRC_ALPHA(6),
+    ONE_MINUS_SRC_ALPHA(7),
+    DST_ALPHA(8),
+    ONE_MINUS_DST_ALPHA(9),
+    CONSTANT_COLOR(10),
+    ONE_MINUS_CONSTANT_COLOR(11),
+    CONSTANT_ALPHA(12),
+    ONE_MINUS_CONSTANT_ALPHA(13),
+    SRC_ALPHA_SATURATE(14),
+    SRC1_COLOR(15),
+    ONE_MINUS_SRC1_COLOR(16),
+    SRC1_ALPHA(17),
+    ONE_MINUS_SRC1_ALPHA(18);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
-typealias VkDynamicState = Int
+enum class VkBlendOp(val i: Int) {
+    ADD(0),
+    SUBTRACT(1),
+    REVERSE_SUBTRACT(2),
+    MIN(3),
+    MAX(4),
+    ZERO_EXT(1000148000),
+    SRC_EXT(1000148001),
+    DST_EXT(1000148002),
+    SRC_OVER_EXT(1000148003),
+    DST_OVER_EXT(1000148004),
+    SRC_IN_EXT(1000148005),
+    DST_IN_EXT(1000148006),
+    SRC_OUT_EXT(1000148007),
+    DST_OUT_EXT(1000148008),
+    SRC_ATOP_EXT(1000148009),
+    DST_ATOP_EXT(1000148010),
+    XOR_EXT(1000148011),
+    MULTIPLY_EXT(1000148012),
+    SCREEN_EXT(1000148013),
+    OVERLAY_EXT(1000148014),
+    DARKEN_EXT(1000148015),
+    LIGHTEN_EXT(1000148016),
+    COLORDODGE_EXT(1000148017),
+    COLORBURN_EXT(1000148018),
+    HARDLIGHT_EXT(1000148019),
+    SOFTLIGHT_EXT(1000148020),
+    DIFFERENCE_EXT(1000148021),
+    EXCLUSION_EXT(1000148022),
+    INVERT_EXT(1000148023),
+    INVERT_RGB_EXT(1000148024),
+    LINEARDODGE_EXT(1000148025),
+    LINEARBURN_EXT(1000148026),
+    VIVIDLIGHT_EXT(1000148027),
+    LINEARLIGHT_EXT(1000148028),
+    PINLIGHT_EXT(1000148029),
+    HARDMIX_EXT(1000148030),
+    HSL_HUE_EXT(1000148031),
+    HSL_SATURATION_EXT(1000148032),
+    HSL_COLOR_EXT(1000148033),
+    HSL_LUMINOSITY_EXT(1000148034),
+    PLUS_EXT(1000148035),
+    PLUS_CLAMPED_EXT(1000148036),
+    PLUS_CLAMPED_ALPHA_EXT(1000148037),
+    PLUS_DARKER_EXT(1000148038),
+    MINUS_EXT(1000148039),
+    MINUS_CLAMPED_EXT(1000148040),
+    CONTRAST_EXT(1000148041),
+    INVERT_OVG_EXT(1000148042),
+    RED_EXT(1000148043),
+    GREEN_EXT(1000148044),
+    BLUE_EXT(1000148045);
 
-val VkDynamicState_VIEWPORT: VkDynamicState = 0
-val VkDynamicState_SCISSOR: VkDynamicState = 1
-val VkDynamicState_LINE_WIDTH: VkDynamicState = 2
-val VkDynamicState_DEPTH_BIAS: VkDynamicState = 3
-val VkDynamicState_BLEND_CONSTANTS: VkDynamicState = 4
-val VkDynamicState_DEPTH_BOUNDS: VkDynamicState = 5
-val VkDynamicState_STENCIL_COMPARE_MASK: VkDynamicState = 6
-val VkDynamicState_STENCIL_WRITE_MASK: VkDynamicState = 7
-val VkDynamicState_STENCIL_REFERENCE: VkDynamicState = 8
-val VkDynamicState_VIEWPORT_W_SCALING_NV: VkDynamicState = 1000087000
-val VkDynamicState_DISCARD_RECTANGLE_EXT: VkDynamicState = 1000099000
-val VkDynamicState_SAMPLE_LOCATIONS_EXT: VkDynamicState = 1000143000
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
-val VkDynamicState_BEGIN_RANGE: Int = VkDynamicState_VIEWPORT
-val VkDynamicState_END_RANGE: Int = VkDynamicState_STENCIL_REFERENCE
-val VkDynamicState_RANGE_SIZE = VkDynamicState_STENCIL_REFERENCE - VkDynamicState_VIEWPORT + 1
+
+enum class VkDynamicState(val i: Int) {
+    VIEWPORT(0),
+    SCISSOR(1),
+    LINE_WIDTH(2),
+    DEPTH_BIAS(3),
+    BLEND_CONSTANTS(4),
+    DEPTH_BOUNDS(5),
+    STENCIL_COMPARE_MASK(6),
+    STENCIL_WRITE_MASK(7),
+    STENCIL_REFERENCE(8),
+    VIEWPORT_W_SCALING_NV(1000087000),
+    DISCARD_RECTANGLE_EXT(1000099000),
+    SAMPLE_LOCATIONS_EXT(1000143000);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
 //
 //typedef enum VkFilter {
 //    VK_FILTER_NEAREST = 0,
@@ -931,23 +932,23 @@ val VkDynamicState_RANGE_SIZE = VkDynamicState_STENCIL_REFERENCE - VkDynamicStat
 //    VK_BORDER_COLOR_MAX_ENUM = 0x7FFFFFFF
 //} VkBorderColor;
 //
-typealias VkDescriptorType = Int
+enum class VkDescriptorType(val i: Int) {
+    SAMPLER(0),
+    COMBINED_IMAGE_SAMPLER(1),
+    SAMPLED_IMAGE(2),
+    STORAGE_IMAGE(3),
+    UNIFORM_TEXEL_BUFFER(4),
+    STORAGE_TEXEL_BUFFER(5),
+    UNIFORM_BUFFER(6),
+    STORAGE_BUFFER(7),
+    UNIFORM_BUFFER_DYNAMIC(8),
+    STORAGE_BUFFER_DYNAMIC(9),
+    INPUT_ATTACHMENT(10);
 
-val VkDescriptorType_SAMPLER: VkDescriptorType = 0
-val VkDescriptorType_COMBINED_IMAGE_SAMPLER: VkDescriptorType = 1
-val VkDescriptorType_SAMPLED_IMAGE: VkDescriptorType = 2
-val VkDescriptorType_STORAGE_IMAGE: VkDescriptorType = 3
-val VkDescriptorType_UNIFORM_TEXEL_BUFFER: VkDescriptorType = 4
-val VkDescriptorType_STORAGE_TEXEL_BUFFER: VkDescriptorType = 5
-val VkDescriptorType_UNIFORM_BUFFER: VkDescriptorType = 6
-val VkDescriptorType_STORAGE_BUFFER: VkDescriptorType = 7
-val VkDescriptorType_UNIFORM_BUFFER_DYNAMIC: VkDescriptorType = 8
-val VkDescriptorType_STORAGE_BUFFER_DYNAMIC: VkDescriptorType = 9
-val VkDescriptorType_INPUT_ATTACHMENT: VkDescriptorType = 10
-
-val VkDescriptorType_BEGIN_RANGE: Int = VkDescriptorType_SAMPLER
-val VkDescriptorType_END_RANGE: Int = VkDescriptorType_INPUT_ATTACHMENT
-val VkDescriptorType_RANGE_SIZE = VkDescriptorType_INPUT_ATTACHMENT - VkDescriptorType_SAMPLER + 1
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 enum class VkAttachmentLoadOp(val i: Int) {
     LOAD(0),
@@ -1319,16 +1320,20 @@ typealias VkPipelineCreateFlags = VkFlags
 
 typealias VkPipelineShaderStageCreateFlags = VkFlags
 
-typealias VkShaderStageFlagBits = Int
+enum class VkShaderStage(val i: Int) {
+    VERTEX_BIT(0x00000001),
+    TESSELLATION_CONTROL_BIT(0x00000002),
+    TESSELLATION_EVALUATION_BIT(0x00000004),
+    GEOMETRY_BIT(0x00000008),
+    FRAGMENT_BIT(0x00000010),
+    COMPUTE_BIT(0x00000020),
+    ALL_GRAPHICS(0x0000001F),
+    ALL(0x7FFFFFFF);
 
-val VkShaderStage_VERTEX_BIT: VkShaderStageFlagBits = 0x00000001
-val VkShaderStage_TESSELLATION_CONTROL_BIT: VkShaderStageFlagBits = 0x00000002
-val VkShaderStage_TESSELLATION_EVALUATION_BIT: VkShaderStageFlagBits = 0x00000004
-val VkShaderStage_GEOMETRY_BIT: VkShaderStageFlagBits = 0x00000008
-val VkShaderStage_FRAGMENT_BIT: VkShaderStageFlagBits = 0x00000010
-val VkShaderStage_COMPUTE_BIT: VkShaderStageFlagBits = 0x00000020
-val VkShaderStage_ALL_GRAPHICS: VkShaderStageFlagBits = 0x0000001F
-val VkShaderStage_ALL: VkShaderStageFlagBits = 0x7FFFFFFF
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
 typealias VkPipelineVertexInputStateCreateFlags = VkFlags
@@ -1340,12 +1345,16 @@ typealias VkPipelineViewportStateCreateFlags = VkFlags
 typealias VkPipelineRasterizationStateCreateFlags = VkFlags
 
 
-typealias VkCullModeFlagBits = Int
+enum class VkCullMode(val i: Int) {
+    NONE(0),
+    FRONT_BIT(0x00000001),
+    BACK_BIT(0x00000002),
+    FRONT_AND_BACK(0x00000003);
 
-val VkCullMode_NONE: VkCullModeFlagBits = 0
-val VkCullMode_FRONT_BIT: VkCullModeFlagBits = 0x00000001
-val VkCullMode_BACK_BIT: VkCullModeFlagBits = 0x00000002
-val VkCullMode_FRONT_AND_BACK: VkCullModeFlagBits = 0x00000003
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkCullModeFlags = VkFlags
 typealias VkPipelineMultisampleStateCreateFlags = VkFlags

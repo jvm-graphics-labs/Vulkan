@@ -302,7 +302,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         vkDestroyRenderPass(device, renderPass)
         vkDestroyFramebuffer(device, frameBuffers)
 
-        vkDestroyShaderModule(device, shaderModules)
+        vk.destroyShaderModule(device, shaderModules)
         vkDestroyImageView(device, depthStencil.view)
         vkDestroyImage(device, depthStencil.image)
         vkFreeMemory(device, depthStencil.mem)

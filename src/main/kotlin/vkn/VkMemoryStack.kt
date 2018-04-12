@@ -369,19 +369,19 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
             pName(value.utf8)
         }
 
-    fun VkClearValue.color(x: Float, y: Float, z: Float, w: Float) {
-        val floats = memByteBuffer(adr, Vec4.size).asFloatBuffer()
-        floats[0] = x
-        floats[1] = y
-        floats[2] = z
-        floats[3] = w
-    }
+//    fun VkClearValue.color(x: Float, y: Float, z: Float, w: Float) {
+//        val floats = memByteBuffer(adr, Vec4.size).asFloatBuffer()
+//        floats[0] = x
+//        floats[1] = y
+//        floats[2] = z
+//        floats[3] = w
+//    }
 
-    fun VkClearValue.depthStencil(float: Float, int: Int) {
-        val bytes = memByteBuffer(adr, Float.BYTES + Int.BYTES)
-        bytes.putFloat(0, float)
-        bytes.putInt(Float.BYTES, int)
-    }
+//    fun VkClearValue.depthStencil(float: Float, int: Int) {
+//        val bytes = memByteBuffer(adr, Float.BYTES + Int.BYTES)
+//        bytes.putFloat(0, float)
+//        bytes.putInt(Float.BYTES, int)
+//    }
 
 
 //    typedef union VkClearValue {

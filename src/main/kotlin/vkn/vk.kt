@@ -4,12 +4,12 @@ import glfw_.advance
 import glfw_.appBuffer
 import glfw_.appBuffer.ptr
 import glm_.*
-import glm_.vec2.Vec2t
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
+import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
@@ -66,8 +66,40 @@ object vk {
 
     inline fun CommandBufferBeginInfo(block: VkCommandBufferBeginInfo.() -> Unit): VkCommandBufferBeginInfo = VkCommandBufferBeginInfo.create(ptr.advance(VkCommandBufferBeginInfo.SIZEOF)).also(block)
 
+    inline fun DescriptorSetLayoutCreateInfo(block: VkDescriptorSetLayoutCreateInfo.() -> Unit): VkDescriptorSetLayoutCreateInfo = VkDescriptorSetLayoutCreateInfo.create(ptr.advance(VkDescriptorSetLayoutCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineLayoutCreateInfo(block: VkPipelineLayoutCreateInfo.() -> Unit): VkPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.create(ptr.advance(VkPipelineLayoutCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineInputAssemblyStateCreateInfo(block: VkPipelineInputAssemblyStateCreateInfo.() -> Unit): VkPipelineInputAssemblyStateCreateInfo = VkPipelineInputAssemblyStateCreateInfo.create(ptr.advance(VkPipelineInputAssemblyStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineRasterizationStateCreateInfo(block: VkPipelineRasterizationStateCreateInfo.() -> Unit): VkPipelineRasterizationStateCreateInfo = VkPipelineRasterizationStateCreateInfo.create(ptr.advance(VkPipelineRasterizationStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineColorBlendStateCreateInfo(block: VkPipelineColorBlendStateCreateInfo.() -> Unit): VkPipelineColorBlendStateCreateInfo = VkPipelineColorBlendStateCreateInfo.create(ptr.advance(VkPipelineColorBlendStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineViewportStateCreateInfo(block: VkPipelineViewportStateCreateInfo.() -> Unit): VkPipelineViewportStateCreateInfo = VkPipelineViewportStateCreateInfo.create(ptr.advance(VkPipelineViewportStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineDynamicStateCreateInfo(block: VkPipelineDynamicStateCreateInfo.() -> Unit): VkPipelineDynamicStateCreateInfo = VkPipelineDynamicStateCreateInfo.create(ptr.advance(VkPipelineDynamicStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineDepthStencilStateCreateInfo(block: VkPipelineDepthStencilStateCreateInfo.() -> Unit): VkPipelineDepthStencilStateCreateInfo = VkPipelineDepthStencilStateCreateInfo.create(ptr.advance(VkPipelineDepthStencilStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineMultisampleStateCreateInfo(block: VkPipelineMultisampleStateCreateInfo.() -> Unit): VkPipelineMultisampleStateCreateInfo = VkPipelineMultisampleStateCreateInfo.create(ptr.advance(VkPipelineMultisampleStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun PipelineVertexInputStateCreateInfo(block: VkPipelineVertexInputStateCreateInfo.() -> Unit): VkPipelineVertexInputStateCreateInfo = VkPipelineVertexInputStateCreateInfo.create(ptr.advance(VkPipelineVertexInputStateCreateInfo.SIZEOF)).also(block)
+
+    inline fun ShaderModuleCreateInfo(block: VkShaderModuleCreateInfo.() -> Unit): VkShaderModuleCreateInfo = VkShaderModuleCreateInfo.create(ptr.advance(VkShaderModuleCreateInfo.SIZEOF)).also(block)
+
+    inline fun DescriptorPoolCreateInfo(block: VkDescriptorPoolCreateInfo.() -> Unit): VkDescriptorPoolCreateInfo = VkDescriptorPoolCreateInfo.create(ptr.advance(VkDescriptorPoolCreateInfo.SIZEOF)).also(block)
+
+    inline fun DescriptorSetAllocateInfo(block: VkDescriptorSetAllocateInfo.() -> Unit): VkDescriptorSetAllocateInfo = VkDescriptorSetAllocateInfo.create(ptr.advance(VkDescriptorSetAllocateInfo.SIZEOF)).also(block)
+
+    inline fun RenderPassBeginInfo(block: VkRenderPassBeginInfo.() -> Unit): VkRenderPassBeginInfo = VkRenderPassBeginInfo.create(ptr.advance(VkRenderPassBeginInfo.SIZEOF)).also(block)
+
 
     inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
+
+    inline fun PipelineShaderStageCreateInfo(capacity: Int): VkPipelineShaderStageCreateInfo.Buffer = VkPipelineShaderStageCreateInfo.create(ptr.advance(VkPipelineShaderStageCreateInfo.SIZEOF * capacity), capacity)
+
+    inline fun VertexInputAttributeDescription(capacity: Int): VkVertexInputAttributeDescription.Buffer = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF * capacity), capacity)
 
     inline fun BufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF * capacity), capacity)
 
@@ -75,11 +107,30 @@ object vk {
 
     inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
 
+    inline fun ClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(ptr.advance(VkClearValue.SIZEOF * capacity), capacity)
+
     inline fun AttachmentReference(block: VkAttachmentReference.() -> Unit): VkAttachmentReference = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF)).also(block)
     inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity).also { it[0].block() }
 
+    inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF * capacity), capacity).also { it[0].block() }
+
     inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
     inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun GraphicsPipelineCreateInfo(capacity: Int, block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo.Buffer = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun PipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState.Buffer = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun VertexInputBindingDescription(capacity: Int, block: VkVertexInputBindingDescription.() -> Unit): VkVertexInputBindingDescription.Buffer = VkVertexInputBindingDescription.create(ptr.advance(VkVertexInputBindingDescription.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun DescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet.Buffer = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun Viewport(capacity: Int, block: VkViewport.() -> Unit): VkViewport.Buffer = VkViewport.create(ptr.advance(VkViewport.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun Rect2D(capacity: Int, block: VkRect2D.() -> Unit): VkRect2D.Buffer = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF * capacity), capacity).also { it[0].block() }
+
 
     inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: LongBuffer) = VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, memAddress(commandPool))
 
@@ -295,9 +346,84 @@ object vk {
         }
     }
 
+    inline fun createDescriptorSetLayout(device: VkDevice, createInfo: VkDescriptorSetLayoutCreateInfo,
+                                         setLayout: KMutableProperty0<VkDescriptorSetLayout>): VkResult {
+        val pSetLayout = appBuffer.long
+        return VkResult of VK10.nvkCreateDescriptorSetLayout(device, createInfo.adr, NULL, pSetLayout).also {
+            setLayout.set(memGetLong(pSetLayout))
+        }
+    }
+
+    inline fun createPipelineLayout(device: VkDevice, createInfo: VkPipelineLayoutCreateInfo,
+                                    pipelineLayout: KMutableProperty0<VkPipelineLayout>): VkResult {
+        val pPipelineLayout = appBuffer.long
+        return VkResult of VK10.nvkCreatePipelineLayout(device, createInfo.adr, NULL, pPipelineLayout).also {
+            pipelineLayout.set(memGetLong(pPipelineLayout))
+        }
+    }
+
+    inline fun createShaderModule(device: VkDevice, createInfo: VkShaderModuleCreateInfo, shaderModule: LongBuffer): VkResult =
+            VkResult of VK10.nvkCreateShaderModule(device, createInfo.adr, NULL, memAddress(shaderModule))
+
+    inline fun createGraphicsPipelines(device: VkDevice, pipelineCache: VkPipelineCache, createInfos: VkGraphicsPipelineCreateInfo.Buffer,
+                                       pipelines: KMutableProperty0<VkPipeline>): VkResult {
+        val pPipelines = appBuffer.long
+        return VkResult of VK10.nvkCreateGraphicsPipelines(device, pipelineCache, createInfos.remaining(), createInfos.adr, NULL, pPipelines).also {
+            pipelines.set(memGetLong(pPipelines))
+        }
+    }
+
+    inline fun createDescriptorPool(device: VkDevice, createInfo: VkDescriptorPoolCreateInfo, descriptorPool: KMutableProperty0<VkDescriptorPool>): VkResult {
+        val pDescriptorPool = appBuffer.long
+        return VkResult of VK10.nvkCreateDescriptorPool(device, createInfo.adr, NULL, pDescriptorPool).also {
+            descriptorPool.set(memGetLong(pDescriptorPool))
+        }
+    }
+
+    inline fun allocateDescriptorSets(device: VkDevice, allocateInfo: VkDescriptorSetAllocateInfo,
+                                      descriptorSets: KMutableProperty0<VkDescriptorSet>): VkResult {
+        val pDescriptorSets = appBuffer.long
+        return VkResult of VK10.nvkAllocateDescriptorSets(device, allocateInfo.adr, pDescriptorSets).also {
+            descriptorSets.set(memGetLong(pDescriptorSets))
+        }
+    }
+
+    inline fun updateDescriptorSets(device: VkDevice, descriptorWrites: VkWriteDescriptorSet.Buffer, descriptorCopies: VkCopyDescriptorSet.Buffer? = null) =
+            VK10.nvkUpdateDescriptorSets(device, descriptorWrites.remaining(), descriptorWrites.adr, descriptorCopies?.remaining()
+                    ?: 0, descriptorCopies?.adr ?: NULL)
+
+    inline fun cmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
+                                     firstSet: Int, descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: IntBuffer? = null) {
+        val pDescriptorSets = appBuffer.long
+        memPutLong(pDescriptorSets, descriptorSets())
+        VK10.nvkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, firstSet, 1, pDescriptorSets,
+                dynamicOffsets?.remaining() ?: 0, dynamicOffsets?.let(::memAddress) ?: NULL).also {
+            descriptorSets.set(memGetLong(pDescriptorSets))
+        }
+    }
+
+    inline fun cmdBindVertexBuffer(commandBuffer: VkCommandBuffer, firstBinding: Int, buffer: KMutableProperty0<VkBuffer>) {
+        val pBuffer = appBuffer.long
+        memPutLong(pBuffer, buffer())
+        val pOffset = appBuffer.long
+        memPutLong(pOffset, 0L) // TODO remove since calloc?
+        VK10.nvkCmdBindVertexBuffers(commandBuffer, firstBinding, 1, pBuffer, pOffset)
+        buffer.set(memGetLong(pBuffer))
+    }
+
+
     inline fun destroyFence(device: VkDevice, fence: VkFence) = VK10.nvkDestroyFence(device, fence, NULL)
     inline fun destroyBuffer(device: VkDevice, buffer: VkBuffer) = VK10.nvkDestroyBuffer(device, buffer, NULL)
     inline fun freeMemory(device: VkDevice, memory: VkDeviceMemory) = VK10.nvkFreeMemory(device, memory, NULL)
+    inline fun destroyShaderModule(device: VkDevice, shaderModules: Iterable<VkShaderModule>, allocator: VkAllocationCallbacks? = null) {
+        for (i in shaderModules)
+            VK10.nvkDestroyShaderModule(device, i, allocator?.address() ?: NULL)
+    }
+
+    inline fun destroyShaderModule(device: VkDevice, shaderModules: VkPipelineShaderStageCreateInfo.Buffer, allocator: VkAllocationCallbacks? = null) {
+        for (i in shaderModules)
+            VK10.nvkDestroyShaderModule(device, i.module, allocator?.adr ?: NULL)
+    }
 }
 
 inline var VkApplicationInfo.type
@@ -1000,26 +1126,18 @@ var VkImageSubresourceRange.layerCount
 //} VkImageViewCreateInfo;
 
 inline var VkShaderModuleCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkShaderModuleCreateInfo.nsType(adr)
+    set(value) = VkShaderModuleCreateInfo.nsType(adr, value.i)
 inline var VkShaderModuleCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkShaderModuleCreateInfo.npNext(adr)
+    set(value) = VkShaderModuleCreateInfo.npNext(adr, value)
 inline var VkShaderModuleCreateInfo.flags: VkShaderModuleCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline val VkShaderModuleCreateInfo.codeSize get() = codeSize()
-inline var VkShaderModuleCreateInfo.code
-    get() = pCode()
-    set(value) {
-        pCode(value)
-    }
+    get() = VkShaderModuleCreateInfo.nflags(adr)
+    set(value) = VkShaderModuleCreateInfo.nflags(adr, value)
+//inline val VkShaderModuleCreateInfo.codeSize get() = VkShaderModuleCreateInfo.ncodeSize(adr)
+inline var VkShaderModuleCreateInfo.code: ByteBuffer
+    get() = VkShaderModuleCreateInfo.npCode(adr)
+    set(value) = VkShaderModuleCreateInfo.npCode(adr, value)
 
 
 inline var VkPipelineCacheCreateInfo.type: VkStructureType
@@ -1052,140 +1170,89 @@ inline var VkPipelineCacheCreateInfo.initialData
 
 
 inline var VkPipelineShaderStageCreateInfo.type
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineShaderStageCreateInfo.nsType(adr)
+    set(value) = VkPipelineShaderStageCreateInfo.nsType(adr, value.i)
 inline var VkPipelineShaderStageCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineShaderStageCreateInfo.npNext(adr)
+    set(value) = VkPipelineShaderStageCreateInfo.npNext(adr, value)
 inline var VkPipelineShaderStageCreateInfo.flags: VkPipelineShaderStageCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline var VkPipelineShaderStageCreateInfo.stage: VkShaderStageFlagBits
-    get() = stage()
-    set(value) {
-        stage(value)
-    }
+    get() = VkPipelineShaderStageCreateInfo.nflags(adr)
+    set(value) = VkPipelineShaderStageCreateInfo.nflags(adr, value)
+inline var VkPipelineShaderStageCreateInfo.stage: VkShaderStage
+    get() = VkShaderStage of VkPipelineShaderStageCreateInfo.nstage(adr)
+    set(value) = VkPipelineShaderStageCreateInfo.nstage(adr, value.i)
 inline var VkPipelineShaderStageCreateInfo.module: VkShaderModule
-    get() = module()
-    set(value) {
-        module(value)
-    }
-//inline var VkPipelineShaderStageCreateInfo.name// TODO
-//    get() = pName()
-//    set(value) {
-//        pName(value)
-//    }
+    get() = VkPipelineShaderStageCreateInfo.nmodule(adr)
+    set(value) = VkPipelineShaderStageCreateInfo.nmodule(adr, value)
+inline var VkPipelineShaderStageCreateInfo.name: String
+    get() = VkPipelineShaderStageCreateInfo.npNameString(adr)
+    set(value) = VkPipelineShaderStageCreateInfo.npName(adr, value.utf8)
 inline var VkPipelineShaderStageCreateInfo.specializationInfo
-    get() = pSpecializationInfo()
-    set(value) {
-        pSpecializationInfo(value)
-    }
+    get() = VkPipelineShaderStageCreateInfo.npSpecializationInfo(adr)
+    set(value) = VkPipelineShaderStageCreateInfo.npSpecializationInfo(adr, value)
 
 
 inline var VkVertexInputBindingDescription.binding
-    get() = binding()
-    set(value) {
-        binding(value)
-    }
+    get() = VkVertexInputBindingDescription.nbinding(adr)
+    set(value) = VkVertexInputBindingDescription.nbinding(adr, value)
 inline var VkVertexInputBindingDescription.stride
-    get() = stride()
-    set(value) {
-        stride(value)
-    }
+    get() = VkVertexInputBindingDescription.nstride(adr)
+    set(value) = VkVertexInputBindingDescription.nstride(adr, value)
 inline var VkVertexInputBindingDescription.inputRate: VkVertexInputRate
-    get() = inputRate()
-    set(value) {
-        inputRate(value)
-    }
+    get() = VkVertexInputRate of VkVertexInputBindingDescription.ninputRate(adr)
+    set(value) = VkVertexInputBindingDescription.ninputRate(adr, value.i)
 
 
 inline var VkVertexInputAttributeDescription.location
-    get() = location()
-    set(value) {
-        location(value)
-    }
+    get() = VkVertexInputAttributeDescription.nlocation(adr)
+    set(value) = VkVertexInputAttributeDescription.nlocation(adr, value)
 inline var VkVertexInputAttributeDescription.binding
-    get() = binding()
-    set(value) {
-        binding(value)
-    }
+    get() = VkVertexInputAttributeDescription.nbinding(adr)
+    set(value) = VkVertexInputAttributeDescription.nbinding(adr, value)
 inline var VkVertexInputAttributeDescription.format: VkFormat
-    get() = VkFormat of format()
-    set(value) {
-        format(value.i)
-    }
+    get() = VkFormat of VkVertexInputAttributeDescription.nformat(adr)
+    set(value) = VkVertexInputAttributeDescription.nformat(adr, value.i)
 inline var VkVertexInputAttributeDescription.offset
-    get() = offset()
-    set(value) {
-        offset(value)
-    }
+    get() = VkVertexInputAttributeDescription.noffset(adr)
+    set(value) = VkVertexInputAttributeDescription.noffset(adr, value)
 
 
 inline var VkPipelineVertexInputStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
+    get() = VkStructureType of VkPipelineVertexInputStateCreateInfo.nsType(adr)
     set(value) {
         sType(value.i)
     }
 inline var VkPipelineVertexInputStateCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineVertexInputStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineVertexInputStateCreateInfo.npNext(adr, value)
 inline var VkPipelineVertexInputStateCreateInfo.flags: VkPipelineVertexInputStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline val VkPipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount get() = vertexBindingDescriptionCount()
+    get() = VkPipelineVertexInputStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineVertexInputStateCreateInfo.nflags(adr, value)
+//inline val VkPipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount get() = VkPipelineVertexInputStateCreateInfo.nvertexBindingDescriptionCount(adr)
 inline var VkPipelineVertexInputStateCreateInfo.vertexBindingDescriptions
-    get() = pVertexBindingDescriptions()
-    set(value) {
-        pVertexBindingDescriptions(value)
-    }
-inline val VkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount get() = vertexAttributeDescriptionCount()
+    get() = VkPipelineVertexInputStateCreateInfo.npVertexBindingDescriptions(adr)
+    set(value) = VkPipelineVertexInputStateCreateInfo.npVertexBindingDescriptions(adr, value)
+//inline val VkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount get() = VkPipelineVertexInputStateCreateInfo.nvertexAttributeDescriptionCount(adr)
 inline var VkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptions
-    get() = pVertexAttributeDescriptions()
-    set(value) {
-        pVertexAttributeDescriptions(value)
-    }
+    get() = VkPipelineVertexInputStateCreateInfo.npVertexAttributeDescriptions(adr)
+    set(value) = VkPipelineVertexInputStateCreateInfo.npVertexAttributeDescriptions(adr, value)
 
-
-//typedef struct VkPipelineVertexInputStateCreateInfo {
-//    VkStructureType                             sType;
-//    const void*                                 pNext;
-//    VkPipelineVertexInputStateCreateFlags       flags;
-//    uint32_t                                    vertexBindingDescriptionCount;
-//    const VkVertexInputBindingDescription*      pVertexBindingDescriptions;
-//    uint32_t                                    vertexAttributeDescriptionCount;
-//    const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions;
-//} VkPipelineVertexInputStateCreateInfo;
 
 inline var VkPipelineInputAssemblyStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
-inline var VkPipelineInputAssemblyStateCreateInfo.next: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineInputAssemblyStateCreateInfo.nsType(adr)
+    set(value) = VkPipelineInputAssemblyStateCreateInfo.nsType(adr, value.i)
+inline var VkPipelineInputAssemblyStateCreateInfo.next
+    get() = VkPipelineInputAssemblyStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineInputAssemblyStateCreateInfo.npNext(adr, value)
 inline var VkPipelineInputAssemblyStateCreateInfo.flags: VkPipelineInputAssemblyStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline var VkPipelineInputAssemblyStateCreateInfo.topology: VkPipelineInputAssemblyStateCreateFlags
-    get() = topology()
-    set(value) {
-        topology(value)
-    }
+    get() = VkPipelineInputAssemblyStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineInputAssemblyStateCreateInfo.nflags(adr, value)
+inline var VkPipelineInputAssemblyStateCreateInfo.topology: VkPrimitiveTopology
+    get() = VkPrimitiveTopology of VkPipelineInputAssemblyStateCreateInfo.ntopology(adr)
+    set(value) = VkPipelineInputAssemblyStateCreateInfo.ntopology(adr, value.i)
+inline var VkPipelineInputAssemblyStateCreateInfo.primitiveRestartEnable
+    get() = VkPipelineInputAssemblyStateCreateInfo.nprimitiveRestartEnable(adr)
+    set(value) = VkPipelineInputAssemblyStateCreateInfo.nprimitiveRestartEnable(adr, value)
 
 //typedef struct VkPipelineInputAssemblyStateCreateInfo {
 //    VkStructureType                            sType;
@@ -1204,35 +1271,23 @@ inline var VkPipelineInputAssemblyStateCreateInfo.topology: VkPipelineInputAssem
 
 
 inline var VkViewport.x
-    get() = x()
-    set(value) {
-        x(value)
-    }
+    get() = VkViewport.nx(adr)
+    set(value) = VkViewport.nx(adr, value)
 inline var VkViewport.y
-    get() = y()
-    set(value) {
-        y(value)
-    }
+    get() = VkViewport.ny(adr)
+    set(value) = VkViewport.ny(adr, value)
 inline var VkViewport.width
-    get() = width()
-    set(value) {
-        width(value)
-    }
+    get() = VkViewport.nwidth(adr)
+    set(value) = VkViewport.nwidth(adr, value)
 inline var VkViewport.height
-    get() = height()
-    set(value) {
-        height(value)
-    }
+    get() = VkViewport.nheight(adr)
+    set(value) = VkViewport.nheight(adr, value)
 inline var VkViewport.minDepth
-    get() = minDepth()
-    set(value) {
-        minDepth(value)
-    }
+    get() = VkViewport.nminDepth(adr)
+    set(value) = VkViewport.nminDepth(adr, value)
 inline var VkViewport.maxDepth
-    get() = maxDepth()
-    set(value) {
-        maxDepth(value)
-    }
+    get() = VkViewport.nmaxDepth(adr)
+    set(value) = VkViewport.nmaxDepth(adr, value)
 
 //inline var VkViewport.pos
 //    get() = Vec2(x, y)
@@ -1240,10 +1295,10 @@ inline var VkViewport.maxDepth
 //        x = value.x
 //        y = value.y
 //    }
-inline fun VkViewport.size(size: Vec2t<out Number>) {
-    width = size.x.f
-    height = size.y.f
-}
+//inline fun VkViewport.size(size: Vec2t<out Number>) { TODO BUG
+//    width = size.x.f
+//    height = size.y.f
+//}
 
 //inline var VkViewport.size
 //    get() = Vec2(width, height)
@@ -1251,10 +1306,10 @@ inline fun VkViewport.size(size: Vec2t<out Number>) {
 //        width = value.x
 //        height = value.y
 //    }
-inline fun VkViewport.depth(min: Float, max: Float) {
-    minDepth = min
-    maxDepth = max
-}
+//inline fun VkViewport.depth(min: Float, max: Float) { TODO BUG
+//    minDepth = min
+//    maxDepth = max
+//}
 //inline var VkViewport.depth
 //    get() = Vec2(minDepth, maxDepth)
 //    set(value) {
@@ -1328,366 +1383,237 @@ inline fun VkExtent3D.size(x: Int, y: Int, z: Int) {
 
 
 inline var VkRect2D.offset: VkOffset2D
-    get() = offset()
-    set(value) {
-        offset(value)
-    }
+    get() = VkRect2D.noffset(adr)
+    set(value) = VkRect2D.noffset(adr, value)
 inline var VkRect2D.extent: VkExtent2D
-    get() = extent()
-    set(value) {
-        extent(value)
-    }
+    get() = VkRect2D.nextent(adr)
+    set(value) = VkRect2D.nextent(adr, value)
+
 
 inline var VkPipelineViewportStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineViewportStateCreateInfo.nsType(adr)
+    set(value) = VkPipelineViewportStateCreateInfo.nsType(adr, value.i)
 inline var VkPipelineViewportStateCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineViewportStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineViewportStateCreateInfo.npNext(adr, value)
 inline var VkPipelineViewportStateCreateInfo.flags: VkPipelineViewportStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
+    get() = VkPipelineViewportStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineViewportStateCreateInfo.nflags(adr, value)
 inline var VkPipelineViewportStateCreateInfo.viewportCount
-    get() = viewportCount()
-    set(value) {
-        viewportCount(value)
-    }
+    get() = VkPipelineViewportStateCreateInfo.nviewportCount(adr)
+    set(value) = VkPipelineViewportStateCreateInfo.nviewportCount(adr, value)
 inline var VkPipelineViewportStateCreateInfo.viewports
-    get() = pViewports()
-    set(value) {
-        pViewports(value)
-    }
+    get() = VkPipelineViewportStateCreateInfo.npViewports(adr)
+    set(value) = VkPipelineViewportStateCreateInfo.npViewports(adr, value)
 inline var VkPipelineViewportStateCreateInfo.scissorCount
-    get() = scissorCount()
-    set(value) {
-        scissorCount(value)
-    }
+    get() = VkPipelineViewportStateCreateInfo.nscissorCount(adr)
+    set(value) = VkPipelineViewportStateCreateInfo.nscissorCount(adr, value)
 inline var VkPipelineViewportStateCreateInfo.scissors
-    get() = pScissors()
-    set(value) {
-        pScissors(value)
-    }
+    get() = VkPipelineViewportStateCreateInfo.npScissors(adr)
+    set(value) = VkPipelineViewportStateCreateInfo.npScissors(adr, value)
+
 
 inline var VkPipelineRasterizationStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineRasterizationStateCreateInfo.nsType(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.nsType(adr, value.i)
 inline var VkPipelineRasterizationStateCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.npNext(adr, value)
 inline var VkPipelineRasterizationStateCreateInfo.flags: VkPipelineRasterizationStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.nflags(adr, value)
 inline var VkPipelineRasterizationStateCreateInfo.depthClampEnable
-    get() = depthClampEnable()
-    set(value) {
-        depthClampEnable(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.ndepthClampEnable(adr).bool
+    set(value) = VkPipelineRasterizationStateCreateInfo.ndepthClampEnable(adr, value.i)
 inline var VkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable
-    get() = rasterizerDiscardEnable()
-    set(value) {
-        rasterizerDiscardEnable(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.nrasterizerDiscardEnable(adr).bool
+    set(value) = VkPipelineRasterizationStateCreateInfo.nrasterizerDiscardEnable(adr, value.i)
 inline var VkPipelineRasterizationStateCreateInfo.polygonMode: VkPolygonMode
-    get() = polygonMode()
-    set(value) {
-        polygonMode(value)
-    }
+    get() = VkPolygonMode of VkPipelineRasterizationStateCreateInfo.npolygonMode(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.npolygonMode(adr, value.i)
 inline var VkPipelineRasterizationStateCreateInfo.cullMode: VkCullModeFlags
-    get() = cullMode()
-    set(value) {
-        cullMode(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.ncullMode(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.ncullMode(adr, value)
 inline var VkPipelineRasterizationStateCreateInfo.frontFace: VkFrontFace
-    get() = frontFace()
-    set(value) {
-        frontFace(value)
-    }
+    get() = VkFrontFace of VkPipelineRasterizationStateCreateInfo.nfrontFace(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.nfrontFace(adr, value.i)
 inline var VkPipelineRasterizationStateCreateInfo.depthBiasEnable
-    get() = depthBiasEnable()
-    set(value) {
-        depthBiasEnable(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.ndepthBiasEnable(adr).bool
+    set(value) = VkPipelineRasterizationStateCreateInfo.ndepthBiasEnable(adr, value.i)
 inline var VkPipelineRasterizationStateCreateInfo.depthBiasConstantFactor
-    get() = depthBiasConstantFactor()
-    set(value) {
-        depthBiasConstantFactor(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.ndepthBiasConstantFactor(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.ndepthBiasConstantFactor(adr, value)
 inline var VkPipelineRasterizationStateCreateInfo.depthBiasClamp
-    get() = depthBiasClamp()
-    set(value) {
-        depthBiasClamp(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.ndepthBiasClamp(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.ndepthBiasClamp(adr, value)
 inline var VkPipelineRasterizationStateCreateInfo.depthBiasSlopeFactor
-    get() = depthBiasSlopeFactor()
-    set(value) {
-        depthBiasSlopeFactor(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.ndepthBiasSlopeFactor(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.ndepthBiasSlopeFactor(adr, value)
 inline var VkPipelineRasterizationStateCreateInfo.lineWidth
-    get() = lineWidth()
-    set(value) {
-        lineWidth(value)
-    }
+    get() = VkPipelineRasterizationStateCreateInfo.nlineWidth(adr)
+    set(value) = VkPipelineRasterizationStateCreateInfo.nlineWidth(adr, value)
 
 
 inline var VkPipelineMultisampleStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineMultisampleStateCreateInfo.nsType(adr)
+    set(value) = VkPipelineMultisampleStateCreateInfo.nsType(adr, value.i)
 inline var VkPipelineMultisampleStateCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineMultisampleStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineMultisampleStateCreateInfo.npNext(adr, value)
 inline var VkPipelineMultisampleStateCreateInfo.flags: VkPipelineMultisampleStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
+    get() = VkPipelineMultisampleStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineMultisampleStateCreateInfo.nflags(adr, value)
 inline var VkPipelineMultisampleStateCreateInfo.rasterizationSamples: VkSampleCount
-    get() = VkSampleCount of rasterizationSamples()
-    set(value) {
-        rasterizationSamples(value.i)
-    }
+    get() = VkSampleCount of VkPipelineMultisampleStateCreateInfo.nrasterizationSamples(adr)
+    set(value) = VkPipelineMultisampleStateCreateInfo.nrasterizationSamples(adr, value.i)
 inline var VkPipelineMultisampleStateCreateInfo.sampleShadingEnable
-    get() = sampleShadingEnable()
-    set(value) {
-        sampleShadingEnable(value)
-    }
+    get() = VkPipelineMultisampleStateCreateInfo.nsampleShadingEnable(adr).bool
+    set(value) = VkPipelineMultisampleStateCreateInfo.nsampleShadingEnable(adr, value.i)
 inline var VkPipelineMultisampleStateCreateInfo.minSampleShading
-    get() = minSampleShading()
+    get() = VkPipelineMultisampleStateCreateInfo.nminSampleShading(adr)
+    set(value) = VkPipelineMultisampleStateCreateInfo.nminSampleShading(adr, value)
+/** https://stackoverflow.com/a/38863042/1047713 */
+inline var VkPipelineMultisampleStateCreateInfo.sampleMask: Int?
+    get() = memGetInt(memGetAddress(adr + VkPipelineMultisampleStateCreateInfo.PSAMPLEMASK))
     set(value) {
-        minSampleShading(value)
-    }
-inline var VkPipelineMultisampleStateCreateInfo.sampleMask: IntBuffer?
-    get() = null
-    set(value) {
-        pSampleMask(value)
+        val pInt = when {
+            value != null -> appBuffer.int.also { memPutInt(it, value) }
+            else -> NULL
+        }
+        memPutAddress(adr + VkPipelineMultisampleStateCreateInfo.PSAMPLEMASK, pInt)
     }
 inline var VkPipelineMultisampleStateCreateInfo.alphaToCoverageEnable
-    get() = alphaToCoverageEnable()
-    set(value) {
-        alphaToCoverageEnable(value)
-    }
+    get() = VkPipelineMultisampleStateCreateInfo.nalphaToCoverageEnable(adr).bool
+    set(value) = VkPipelineMultisampleStateCreateInfo.nalphaToCoverageEnable(adr, value.i)
 inline var VkPipelineMultisampleStateCreateInfo.alphaToOneEnable
-    get() = alphaToOneEnable()
-    set(value) {
-        alphaToOneEnable(value)
-    }
+    get() = VkPipelineMultisampleStateCreateInfo.nalphaToOneEnable(adr).bool
+    set(value) = VkPipelineMultisampleStateCreateInfo.nalphaToOneEnable(adr, value.i)
 
 
 inline var VkStencilOpState.failOp: VkStencilOp
-    get() = failOp()
-    set(value) {
-        failOp(value)
-    }
+    get() = VkStencilOp of VkStencilOpState.nfailOp(adr)
+    set(value) = VkStencilOpState.nfailOp(adr, value.i)
 inline var VkStencilOpState.passOp: VkStencilOp
-    get() = passOp()
-    set(value) {
-        passOp(value)
-    }
+    get() = VkStencilOp of VkStencilOpState.npassOp(adr)
+    set(value) = VkStencilOpState.npassOp(adr, value.i)
 inline var VkStencilOpState.depthFailOp: VkStencilOp
-    get() = depthFailOp()
-    set(value) {
-        depthFailOp(value)
-    }
+    get() = VkStencilOp of VkStencilOpState.ndepthFailOp(adr)
+    set(value) = VkStencilOpState.ndepthFailOp(adr, value.i)
 inline var VkStencilOpState.compareOp: VkCompareOp
-    get() = compareOp()
-    set(value) {
-        compareOp(value)
-    }
+    get() = VkCompareOp of VkStencilOpState.ncompareOp(adr)
+    set(value) = VkStencilOpState.ncompareOp(adr, value.i)
 inline var VkStencilOpState.compareMask
-    get() = compareMask()
-    set(value) {
-        compareMask(value)
-    }
+    get() = VkStencilOpState.ncompareMask(adr)
+    set(value) = VkStencilOpState.ncompareMask(adr, value)
 inline var VkStencilOpState.writeMask
-    get() = writeMask()
-    set(value) {
-        writeMask(value)
-    }
+    get() = VkStencilOpState.nwriteMask(adr)
+    set(value) = VkStencilOpState.nwriteMask(adr, value)
 inline var VkStencilOpState.reference
-    get() = reference()
-    set(value) {
-        reference(value)
-    }
+    get() = VkStencilOpState.nreference(adr)
+    set(value) = VkStencilOpState.nreference(adr, value)
 
 
 inline var VkPipelineDepthStencilStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineDepthStencilStateCreateInfo.nsType(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.nsType(adr, value.i)
 inline var VkPipelineDepthStencilStateCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.npNext(adr, value)
 inline var VkPipelineDepthStencilStateCreateInfo.flags: VkPipelineDepthStencilStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.nflags(adr, value)
 inline var VkPipelineDepthStencilStateCreateInfo.depthTestEnable
-    get() = depthTestEnable()
-    set(value) {
-        depthTestEnable(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.ndepthTestEnable(adr).bool
+    set(value) = VkPipelineDepthStencilStateCreateInfo.ndepthTestEnable(adr, value.i)
 inline var VkPipelineDepthStencilStateCreateInfo.depthWriteEnable
-    get() = depthWriteEnable()
-    set(value) {
-        depthWriteEnable(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.ndepthWriteEnable(adr).bool
+    set(value) = VkPipelineDepthStencilStateCreateInfo.ndepthWriteEnable(adr, value.i)
 inline var VkPipelineDepthStencilStateCreateInfo.depthCompareOp: VkCompareOp
-    get() = depthCompareOp()
-    set(value) {
-        depthCompareOp(value)
-    }
+    get() = VkCompareOp of VkPipelineDepthStencilStateCreateInfo.ndepthCompareOp(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.ndepthCompareOp(adr, value.i)
 inline var VkPipelineDepthStencilStateCreateInfo.depthBoundsTestEnable
-    get() = depthBoundsTestEnable()
-    set(value) {
-        depthBoundsTestEnable(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.ndepthBoundsTestEnable(adr).bool
+    set(value) = VkPipelineDepthStencilStateCreateInfo.ndepthBoundsTestEnable(adr, value.i)
 inline var VkPipelineDepthStencilStateCreateInfo.stencilTestEnable
-    get() = stencilTestEnable()
-    set(value) {
-        stencilTestEnable(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.nstencilTestEnable(adr).bool
+    set(value) = VkPipelineDepthStencilStateCreateInfo.nstencilTestEnable(adr, value.i)
 inline var VkPipelineDepthStencilStateCreateInfo.front: VkStencilOpState
-    get() = front()
-    set(value) {
-        front(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.nfront(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.nfront(adr, value)
 inline var VkPipelineDepthStencilStateCreateInfo.back: VkStencilOpState
-    get() = back()
-    set(value) {
-        back(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.nback(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.nback(adr, value)
 inline var VkPipelineDepthStencilStateCreateInfo.minDepthBounds
-    get() = minDepthBounds()
-    set(value) {
-        minDepthBounds(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.nminDepthBounds(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.nminDepthBounds(adr, value)
 inline var VkPipelineDepthStencilStateCreateInfo.maxDepthBounds
-    get() = maxDepthBounds()
-    set(value) {
-        maxDepthBounds(value)
-    }
+    get() = VkPipelineDepthStencilStateCreateInfo.nmaxDepthBounds(adr)
+    set(value) = VkPipelineDepthStencilStateCreateInfo.nmaxDepthBounds(adr, value)
 
 
 inline var VkPipelineColorBlendAttachmentState.blendEnable
-    get() = blendEnable()
-    set(value) {
-        blendEnable(value)
-    }
+    get() = VkPipelineColorBlendAttachmentState.nblendEnable(adr).bool
+    set(value) = VkPipelineColorBlendAttachmentState.nblendEnable(adr, value.i)
 inline var VkPipelineColorBlendAttachmentState.srcColorBlendFactor: VkBlendFactor
-    get() = srcColorBlendFactor()
-    set(value) {
-        srcColorBlendFactor(value)
-    }
+    get() = VkBlendFactor of VkPipelineColorBlendAttachmentState.nsrcColorBlendFactor(adr)
+    set(value) = VkPipelineColorBlendAttachmentState.nsrcColorBlendFactor(adr, value.i)
 inline var VkPipelineColorBlendAttachmentState.dstColorBlendFactor: VkBlendFactor
-    get() = dstColorBlendFactor()
-    set(value) {
-        dstColorBlendFactor(value)
-    }
+    get() = VkBlendFactor of VkPipelineColorBlendAttachmentState.ndstColorBlendFactor(adr)
+    set(value) = VkPipelineColorBlendAttachmentState.ndstColorBlendFactor(adr, value.i)
 inline var VkPipelineColorBlendAttachmentState.colorBlendOp: VkBlendOp
-    get() = colorBlendOp()
-    set(value) {
-        colorBlendOp(value)
-    }
+    get() = VkBlendOp of VkPipelineColorBlendAttachmentState.ncolorBlendOp(adr)
+    set(value) = VkPipelineColorBlendAttachmentState.ncolorBlendOp(adr, value.i)
 inline var VkPipelineColorBlendAttachmentState.srcAlphaBlendFactor: VkBlendFactor
-    get() = srcAlphaBlendFactor()
-    set(value) {
-        srcAlphaBlendFactor(value)
-    }
+    get() = VkBlendFactor of VkPipelineColorBlendAttachmentState.nsrcAlphaBlendFactor(adr)
+    set(value) = VkPipelineColorBlendAttachmentState.nsrcAlphaBlendFactor(adr, value.i)
 inline var VkPipelineColorBlendAttachmentState.dstAlphaBlendFactor: VkBlendFactor
-    get() = dstAlphaBlendFactor()
-    set(value) {
-        dstAlphaBlendFactor(value)
-    }
+    get() = VkBlendFactor of VkPipelineColorBlendAttachmentState.ndstAlphaBlendFactor(adr)
+    set(value) = VkPipelineColorBlendAttachmentState.ndstAlphaBlendFactor(adr, value.i)
 inline var VkPipelineColorBlendAttachmentState.alphaBlendOp: VkBlendOp
-    get() = alphaBlendOp()
-    set(value) {
-        alphaBlendOp(value)
-    }
+    get() = VkBlendOp of VkPipelineColorBlendAttachmentState.nalphaBlendOp(adr)
+    set(value) = VkPipelineColorBlendAttachmentState.nalphaBlendOp(adr, value.i)
 inline var VkPipelineColorBlendAttachmentState.colorWriteMask: VkColorComponentFlags
-    get() = colorWriteMask()
-    set(value) {
-        colorWriteMask(value)
-    }
+    get() = VkPipelineColorBlendAttachmentState.ncolorWriteMask(adr)
+    set(value) = VkPipelineColorBlendAttachmentState.ncolorWriteMask(adr, value)
 
 
 inline var VkPipelineColorBlendStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineColorBlendStateCreateInfo.nsType(adr)
+    set(value) = VkPipelineColorBlendStateCreateInfo.nsType(adr, value.i)
 inline var VkPipelineColorBlendStateCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineColorBlendStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineColorBlendStateCreateInfo.npNext(adr, value)
 inline var VkPipelineColorBlendStateCreateInfo.flags: VkPipelineColorBlendStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
+    get() = VkPipelineColorBlendStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineColorBlendStateCreateInfo.nflags(adr, value)
 inline var VkPipelineColorBlendStateCreateInfo.logicOpEnable
-    get() = logicOpEnable()
-    set(value) {
-        logicOpEnable(value)
-    }
+    get() = VkPipelineColorBlendStateCreateInfo.nlogicOpEnable(adr).bool
+    set(value) = VkPipelineColorBlendStateCreateInfo.nlogicOpEnable(adr, value.i)
 inline var VkPipelineColorBlendStateCreateInfo.logicOp: VkLogicOp
-    get() = logicOp()
-    set(value) {
-        logicOp(value)
-    }
-inline val VkPipelineColorBlendStateCreateInfo.attachmentCount get() = attachmentCount()
+    get() = VkLogicOp of VkPipelineColorBlendStateCreateInfo.nlogicOp(adr)
+    set(value) = VkPipelineColorBlendStateCreateInfo.nlogicOp(adr, value.i)
+//inline val VkPipelineColorBlendStateCreateInfo.attachmentCount get() = VkPipelineColorBlendStateCreateInfo.nattachmentCount(adr)
 inline var VkPipelineColorBlendStateCreateInfo.attachments
-    get() = pAttachments()
-    set(value) {
-        pAttachments(value)
-    }
-inline var VkPipelineColorBlendStateCreateInfo.blendConstants
-    get() = blendConstants()
-    set(value) {
-        blendConstants(value)
-    }
+    get() = VkPipelineColorBlendStateCreateInfo.npAttachments(adr)
+    set(value) = VkPipelineColorBlendStateCreateInfo.npAttachments(adr, value)
+inline var VkPipelineColorBlendStateCreateInfo.blendConstants: FloatBuffer
+    get() = VkPipelineColorBlendStateCreateInfo.nblendConstants(adr)
+    set(value) = VkPipelineColorBlendStateCreateInfo.nblendConstants(adr, value)
 
 
 inline var VkPipelineDynamicStateCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineDynamicStateCreateInfo.nsType(adr)
+    set(value) = VkPipelineDynamicStateCreateInfo.nsType(adr, value.i)
 inline var VkPipelineDynamicStateCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineDynamicStateCreateInfo.npNext(adr)
+    set(value) = VkPipelineDynamicStateCreateInfo.npNext(adr, value)
 inline var VkPipelineDynamicStateCreateInfo.flags: VkPipelineDynamicStateCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline val VkPipelineDynamicStateCreateInfo.dynamicStateCount get() = dynamicStateCount()
-inline var VkPipelineDynamicStateCreateInfo.dynamicStates
-    get() = pDynamicStates()
-    set(value) {
-        pDynamicStates(value)
-    }
+    get() = VkPipelineDynamicStateCreateInfo.nflags(adr)
+    set(value) = VkPipelineDynamicStateCreateInfo.nflags(adr, value)
+//inline val VkPipelineDynamicStateCreateInfo.dynamicStateCount get() = VkPipelineDynamicStateCreateInfo.ndynamicStateCount(adr)
+inline var VkPipelineDynamicStateCreateInfo.dynamicStates: IntBuffer
+    get() = VkPipelineDynamicStateCreateInfo.npDynamicStates(adr)
+    set(value) = VkPipelineDynamicStateCreateInfo.npDynamicStates(adr, value)
 
 //typedef struct VkPipelineDynamicStateCreateInfo {
 //    VkStructureType                      sType;
@@ -1699,96 +1625,60 @@ inline var VkPipelineDynamicStateCreateInfo.dynamicStates
 //
 
 inline var VkGraphicsPipelineCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkGraphicsPipelineCreateInfo.nsType(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.nsType(adr, value.i)
 inline var VkGraphicsPipelineCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.npNext(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npNext(adr, value)
 inline var VkGraphicsPipelineCreateInfo.flags: VkPipelineCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline val VkGraphicsPipelineCreateInfo.stageCount get() = stageCount()
-inline var VkGraphicsPipelineCreateInfo.stages
-    get() = pStages()
-    set(value) {
-        pStages(value)
-    }
-inline var VkGraphicsPipelineCreateInfo.vertexInputState
-    get() = pVertexInputState()
-    set(value) {
-        pVertexInputState(value)
-    }
-inline var VkGraphicsPipelineCreateInfo.inputAssemblyState
-    get() = pInputAssemblyState()
-    set(value) {
-        pInputAssemblyState(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.nflags(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.nflags(adr, value)
+//inline val VkGraphicsPipelineCreateInfo.stageCount get() = VkGraphicsPipelineCreateInfo.nstageCount(adr)
+inline var VkGraphicsPipelineCreateInfo.stages: VkPipelineShaderStageCreateInfo.Buffer
+    get() = VkGraphicsPipelineCreateInfo.npStages(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npStages(adr, value)
+inline var VkGraphicsPipelineCreateInfo.vertexInputState: VkPipelineVertexInputStateCreateInfo
+    get() = VkGraphicsPipelineCreateInfo.npVertexInputState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npVertexInputState(adr, value)
+inline var VkGraphicsPipelineCreateInfo.inputAssemblyState: VkPipelineInputAssemblyStateCreateInfo
+    get() = VkGraphicsPipelineCreateInfo.npInputAssemblyState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npInputAssemblyState(adr, value)
 inline var VkGraphicsPipelineCreateInfo.tessellationState
-    get() = pTessellationState()
-    set(value) {
-        pTessellationState(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.npTessellationState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npTessellationState(adr, value)
 inline var VkGraphicsPipelineCreateInfo.viewportState
-    get() = pViewportState()
-    set(value) {
-        pViewportState(value)
-    }
-inline var VkGraphicsPipelineCreateInfo.rasterizationState
-    get() = pRasterizationState()
-    set(value) {
-        pRasterizationState(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.npViewportState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npViewportState(adr, value)
+inline var VkGraphicsPipelineCreateInfo.rasterizationState: VkPipelineRasterizationStateCreateInfo
+    get() = VkGraphicsPipelineCreateInfo.npRasterizationState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npRasterizationState(adr, value)
 inline var VkGraphicsPipelineCreateInfo.multisampleState
-    get() = pMultisampleState()
-    set(value) {
-        pMultisampleState(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.npMultisampleState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npMultisampleState(adr, value)
 inline var VkGraphicsPipelineCreateInfo.depthStencilState
-    get() = pDepthStencilState()
-    set(value) {
-        pDepthStencilState(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.npDepthStencilState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npDepthStencilState(adr, value)
 inline var VkGraphicsPipelineCreateInfo.colorBlendState
-    get() = pColorBlendState()
-    set(value) {
-        pColorBlendState(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.npColorBlendState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npColorBlendState(adr, value)
 inline var VkGraphicsPipelineCreateInfo.dynamicState
-    get() = pDynamicState()
-    set(value) {
-        pDynamicState(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.npDynamicState(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.npDynamicState(adr, value)
 inline var VkGraphicsPipelineCreateInfo.layout: VkPipelineLayout
-    get() = layout()
-    set(value) {
-        layout(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.nlayout(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.nlayout(adr, value)
 inline var VkGraphicsPipelineCreateInfo.renderPass: VkRenderPass
-    get() = renderPass()
-    set(value) {
-        renderPass(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.nrenderPass(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.nrenderPass(adr, value)
 inline var VkGraphicsPipelineCreateInfo.subpass
-    get() = subpass()
-    set(value) {
-        subpass(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.nsubpass(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.nsubpass(adr, value)
 inline var VkGraphicsPipelineCreateInfo.basePipelineHandle: VkPipeline
-    get() = basePipelineHandle()
-    set(value) {
-        basePipelineHandle(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.nbasePipelineHandle(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.nbasePipelineHandle(adr, value)
 inline var VkGraphicsPipelineCreateInfo.basePipelineIndex
-    get() = basePipelineIndex()
-    set(value) {
-        basePipelineIndex(value)
-    }
+    get() = VkGraphicsPipelineCreateInfo.nbasePipelineIndex(adr)
+    set(value) = VkGraphicsPipelineCreateInfo.nbasePipelineIndex(adr, value)
 
 //
 //typedef struct VkComputePipelineCreateInfo {
@@ -1809,32 +1699,22 @@ inline var VkGraphicsPipelineCreateInfo.basePipelineIndex
 //
 
 inline var VkPipelineLayoutCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkPipelineLayoutCreateInfo.nsType(adr)
+    set(value) = VkPipelineLayoutCreateInfo.nsType(adr, value.i)
 inline var VkPipelineLayoutCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkPipelineLayoutCreateInfo.npNext(adr)
+    set(value) = VkPipelineLayoutCreateInfo.npNext(adr, value)
 inline var VkPipelineLayoutCreateInfo.flags: VkPipelineLayoutCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline val VkPipelineLayoutCreateInfo.setLayoutCount get() = setLayoutCount()
+    get() = VkPipelineLayoutCreateInfo.nflags(adr)
+    set(value) = VkPipelineLayoutCreateInfo.nflags(adr, value)
+//inline val VkPipelineLayoutCreateInfo.setLayoutCount get() = VkPipelineLayoutCreateInfo.nsetLayoutCount(adr)
 inline var VkPipelineLayoutCreateInfo.setLayouts
-    get() = pSetLayouts()
-    set(value) {
-        pSetLayouts(value)
-    }
-inline val VkPipelineLayoutCreateInfo.pushConstantRangeCount get() = pushConstantRangeCount()
+    get() = VkPipelineLayoutCreateInfo.npSetLayouts(adr)
+    set(value) = VkPipelineLayoutCreateInfo.npSetLayouts(adr, value)
+//inline val VkPipelineLayoutCreateInfo.pushConstantRangeCount get() = VkPipelineLayoutCreateInfo.npushConstantRangeCount(adr)
 inline var VkPipelineLayoutCreateInfo.pushConstantRanges
-    get() = pPushConstantRanges()
-    set(value) {
-        pPushConstantRanges(value)
-    }
+    get() = VkPipelineLayoutCreateInfo.npPushConstantRanges(adr)
+    set(value) = VkPipelineLayoutCreateInfo.npPushConstantRanges(adr, value)
 
 //typedef struct VkPipelineLayoutCreateInfo {
 //    VkStructureType                 sType;
@@ -1869,145 +1749,77 @@ inline var VkPipelineLayoutCreateInfo.pushConstantRanges
 //
 
 inline var VkDescriptorSetLayoutBinding.binding
-    get() = binding()
-    set(value) {
-        binding(value)
-    }
+    get() = VkDescriptorSetLayoutBinding.nbinding(adr)
+    set(value) = VkDescriptorSetLayoutBinding.nbinding(adr, value)
 inline var VkDescriptorSetLayoutBinding.descriptorType: VkDescriptorType
-    get() = descriptorType()
-    set(value) {
-        descriptorType(value)
-    }
+    get() = VkDescriptorType of VkDescriptorSetLayoutBinding.ndescriptorType(adr)
+    set(value) = VkDescriptorSetLayoutBinding.ndescriptorType(adr, value.i)
 inline var VkDescriptorSetLayoutBinding.descriptorCount
-    get() = descriptorCount()
-    set(value) {
-        descriptorCount(value)
-    }
+    get() = VkDescriptorSetLayoutBinding.ndescriptorCount(adr)
+    set(value) = VkDescriptorSetLayoutBinding.ndescriptorCount(adr, value)
 inline var VkDescriptorSetLayoutBinding.stageFlags: VkShaderStageFlags
-    get() = stageFlags()
-    set(value) {
-        stageFlags(value)
-    }
+    get() = VkDescriptorSetLayoutBinding.nstageFlags(adr)
+    set(value) = VkDescriptorSetLayoutBinding.nstageFlags(adr, value)
 inline var VkDescriptorSetLayoutBinding.immutableSamplers: VkSamplerPtr?
-    get() = pImmutableSamplers()
-    set(value) {
-        pImmutableSamplers(value)
-    }
+    get() = VkDescriptorSetLayoutBinding.npImmutableSamplers(adr)
+    set(value) = VkDescriptorSetLayoutBinding.npImmutableSamplers(adr, value)
 
 
 inline var VkDescriptorSetLayoutCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkDescriptorSetLayoutCreateInfo.nsType(adr)
+    set(value) = VkDescriptorSetLayoutCreateInfo.nsType(adr, value.i)
 inline var VkDescriptorSetLayoutCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkDescriptorSetLayoutCreateInfo.npNext(adr)
+    set(value) = VkDescriptorSetLayoutCreateInfo.npNext(adr, value)
 inline var VkDescriptorSetLayoutCreateInfo.flags: VkDescriptorSetLayoutCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
-inline val VkDescriptorSetLayoutCreateInfo.bindingCount get() = bindingCount()
+    get() = VkDescriptorSetLayoutCreateInfo.nflags(adr)
+    set(value) = VkDescriptorSetLayoutCreateInfo.nflags(adr, value)
+inline val VkDescriptorSetLayoutCreateInfo.bindingCount get() = VkDescriptorSetLayoutCreateInfo.nbindingCount(adr)
 inline var VkDescriptorSetLayoutCreateInfo.bindings
-    get() = pBindings()
-    set(value) {
-        pBindings(value)
-    }
+    get() = VkDescriptorSetLayoutCreateInfo.npBindings(adr)
+    set(value) = VkDescriptorSetLayoutCreateInfo.npBindings(adr, value)
 
-//typedef struct VkDescriptorSetLayoutCreateInfo {
-//    VkStructureType                        sType;
-//    const void*                            pNext;
-//    VkDescriptorSetLayoutCreateFlags       flags;
-//    uint32_t                               bindingCount;
-//    const VkDescriptorSetLayoutBinding*    pBindings;
-//} VkDescriptorSetLayoutCreateInfo;
 
 inline var VkDescriptorPoolSize.type: VkDescriptorType
-    get() = type()
-    set(value) {
-        type(value)
-    }
+    get() = VkDescriptorType of VkDescriptorPoolSize.ntype(adr)
+    set(value) = VkDescriptorPoolSize.ntype(adr, value.i)
 inline var VkDescriptorPoolSize.descriptorCount
-    get() = descriptorCount()
-    set(value) {
-        descriptorCount(value)
-    }
+    get() = VkDescriptorPoolSize.ndescriptorCount(adr)
+    set(value) = VkDescriptorPoolSize.ndescriptorCount(adr, value)
 
-//typedef struct VkDescriptorPoolSize {
-//    VkDescriptorType    type;
-//    uint32_t            descriptorCount;
-//} VkDescriptorPoolSize;
 
 inline var VkDescriptorPoolCreateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkDescriptorPoolCreateInfo.nsType(adr)
+    set(value) = VkDescriptorPoolCreateInfo.nsType(adr, value.i)
 inline var VkDescriptorPoolCreateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkDescriptorPoolCreateInfo.npNext(adr)
+    set(value) = VkDescriptorPoolCreateInfo.npNext(adr, value)
 inline var VkDescriptorPoolCreateInfo.flags: VkDescriptorPoolCreateFlags
-    get() = flags()
-    set(value) {
-        flags(value)
-    }
+    get() = VkDescriptorPoolCreateInfo.nflags(adr)
+    set(value) = VkDescriptorPoolCreateInfo.nflags(adr, value)
 inline var VkDescriptorPoolCreateInfo.maxSets
-    get() = maxSets()
-    set(value) {
-        maxSets(value)
-    }
-inline val VkDescriptorPoolCreateInfo.poolSizeCount get() = poolSizeCount()
-inline var VkDescriptorPoolCreateInfo.poolSizes
-    get() = pPoolSizes()
-    set(value) {
-        pPoolSizes(value)
-    }
+    get() = VkDescriptorPoolCreateInfo.nmaxSets(adr)
+    set(value) = VkDescriptorPoolCreateInfo.nmaxSets(adr, value)
+//inline val VkDescriptorPoolCreateInfo.poolSizeCount get() = VkDescriptorPoolCreateInfo.npoolSizeCount(adr)
+inline var VkDescriptorPoolCreateInfo.poolSizes: VkDescriptorPoolSize.Buffer
+    get() = VkDescriptorPoolCreateInfo.npPoolSizes(adr)
+    set(value) = VkDescriptorPoolCreateInfo.npPoolSizes(adr, value)
 
-
-//typedef struct VkDescriptorPoolCreateInfo {
-//    VkStructureType                sType;
-//    const void*                    pNext;
-//    VkDescriptorPoolCreateFlags    flags;
-//    uint32_t                       maxSets;
-//    uint32_t                       poolSizeCount;
-//    const VkDescriptorPoolSize*    pPoolSizes;
-//} VkDescriptorPoolCreateInfo;
 
 inline var VkDescriptorSetAllocateInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkDescriptorSetAllocateInfo.nsType(adr)
+    set(value) = VkDescriptorSetAllocateInfo.nsType(adr, value.i)
 inline var VkDescriptorSetAllocateInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkDescriptorSetAllocateInfo.npNext(adr)
+    set(value) = VkDescriptorSetAllocateInfo.npNext(adr, value)
 inline var VkDescriptorSetAllocateInfo.descriptorPool: VkDescriptorPool
-    get() = descriptorPool()
-    set(value) {
-        descriptorPool(value)
-    }
-inline val VkDescriptorSetAllocateInfo.descriptorSetCount get() = descriptorSetCount()
-inline var VkDescriptorSetAllocateInfo.setLayouts
-    get() = pSetLayouts()
-    set(value) {
-        pSetLayouts(value)
-    }
+    get() = VkDescriptorSetAllocateInfo.ndescriptorPool(adr)
+    set(value) = VkDescriptorSetAllocateInfo.ndescriptorPool(adr, value)
+inline val VkDescriptorSetAllocateInfo.descriptorSetCount get() = VkDescriptorSetAllocateInfo.ndescriptorSetCount(adr)
+inline var VkDescriptorSetAllocateInfo.setLayouts: LongBuffer
+    get() = VkDescriptorSetAllocateInfo.npSetLayouts(adr)
+    set(value) = VkDescriptorSetAllocateInfo.npSetLayouts(adr, value)
 
-//typedef struct VkDescriptorSetAllocateInfo {
-//    VkStructureType                 sType;
-//    const void*                     pNext;
-//    VkDescriptorPool                descriptorPool;
-//    uint32_t                        descriptorSetCount;
-//    const VkDescriptorSetLayout*    pSetLayouts;
-//} VkDescriptorSetAllocateInfo;
-//
 //typedef struct VkDescriptorImageInfo {
 //    VkSampler        sampler;
 //    VkImageView      imageView;
@@ -2048,64 +1860,35 @@ inline var VkDescriptorBufferInfo.Buffer.range: VkDeviceSize
 
 
 inline var VkWriteDescriptorSet.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkWriteDescriptorSet.nsType(adr)
+    set(value) = VkWriteDescriptorSet.nsType(adr, value.i)
 inline var VkWriteDescriptorSet.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkWriteDescriptorSet.npNext(adr)
+    set(value) = VkWriteDescriptorSet.npNext(adr, value)
 inline var VkWriteDescriptorSet.dstSet: VkDescriptorSet
-    get() = dstSet()
-    set(value) {
-        dstSet(value)
-    }
+    get() = VkWriteDescriptorSet.ndstSet(adr)
+    set(value) = VkWriteDescriptorSet.ndstSet(adr, value)
 inline var VkWriteDescriptorSet.dstBinding
-    get() = dstBinding()
-    set(value) {
-        dstBinding(value)
-    }
+    get() = VkWriteDescriptorSet.ndstBinding(adr)
+    set(value) = VkWriteDescriptorSet.ndstBinding(adr, value)
 inline var VkWriteDescriptorSet.dstArrayElement
-    get() = dstArrayElement()
-    set(value) {
-        dstArrayElement(value)
-    }
-inline val VkWriteDescriptorSet.descriptorCount get() = descriptorCount()
+    get() = VkWriteDescriptorSet.ndstArrayElement(adr)
+    set(value) = VkWriteDescriptorSet.ndstArrayElement(adr, value)
+//inline val VkWriteDescriptorSet.descriptorCount get() = VkWriteDescriptorSet.ndescriptorCount(adr)
 inline var VkWriteDescriptorSet.descriptorType: VkDescriptorType
-    get() = descriptorType()
-    set(value) {
-        descriptorType(value)
-    }
+    get() = VkDescriptorType of VkWriteDescriptorSet.ndescriptorType(adr)
+    set(value) = VkWriteDescriptorSet.ndescriptorType(adr, value.i)
 inline var VkWriteDescriptorSet.imageInfo
-    get() = pImageInfo()
-    set(value) {
-        pImageInfo(value)
-    }
+    get() = VkWriteDescriptorSet.npImageInfo(adr)
+    set(value) = VkWriteDescriptorSet.npImageInfo(adr, value)
 inline var VkWriteDescriptorSet.bufferInfo
-    get() = pBufferInfo()
-    set(value) {
-        pBufferInfo(value)
-    }
+    get() = VkWriteDescriptorSet.npBufferInfo(adr)
+    set(value) = VkWriteDescriptorSet.npBufferInfo(adr, value)
 inline var VkWriteDescriptorSet.texelBufferView
-    get() = pTexelBufferView()
-    set(value) {
-        pTexelBufferView(value)
-    }
-//typedef struct VkWriteDescriptorSet {
-//    VkStructureType                  sType;
-//    const void*                      pNext;
-//    VkDescriptorSet                  dstSet;
-//    uint32_t                         dstBinding;
-//    uint32_t                         dstArrayElement;
-//    uint32_t                         descriptorCount;
-//    VkDescriptorType                 descriptorType;
-//    const VkDescriptorImageInfo*     pImageInfo;
-//    const VkDescriptorBufferInfo*    pBufferInfo;
-//    const VkBufferView*              pTexelBufferView;
-//} VkWriteDescriptorSet;
-//
+    get() = VkWriteDescriptorSet.npTexelBufferView(adr)
+    set(value) = VkWriteDescriptorSet.npTexelBufferView(adr, value)
+
+
 //typedef struct VkCopyDescriptorSet {
 //    VkStructureType    sType;
 //    const void*        pNext;
@@ -2387,6 +2170,40 @@ inline var VkBufferCopy.Buffer.size: VkDeviceSize
 //    VkExtent3D                  imageExtent;
 //} VkBufferImageCopy;
 //
+//typedef union VkClearColorValue {
+//    float       float32[4];
+//    int32_t     int32[4];
+//    uint32_t    uint32[4];
+//} VkClearColorValue;
+//
+//typedef struct VkClearDepthStencilValue {
+//    float       depth;
+//    uint32_t    stencil;
+//} VkClearDepthStencilValue;
+
+inline var VkClearValue.color: VkClearColorValue
+    get() = VkClearValue.ncolor(adr)
+    set(value) = VkClearValue.ncolor(adr, value)
+inline var VkClearValue.depthStencil: VkClearDepthStencilValue
+    get() = VkClearValue.ndepthStencil(adr)
+    set(value) = VkClearValue.ndepthStencil(adr, value)
+
+inline fun VkClearValue.color(r: Float, g: Float, b: Float, a: Float) {
+    memPutFloat(adr, r)
+    memPutFloat(adr + Float.BYTES, g)
+    memPutFloat(adr + Float.BYTES * 2, b)
+    memPutFloat(adr + Float.BYTES * 3, a)
+}
+
+inline fun VkClearValue.depthStencil(depth: Float, stencil: Int) {
+    memPutFloat(adr, depth)
+    memPutInt(adr + Float.BYTES, stencil)
+}
+
+//typedef union VkClearValue {
+//    VkClearColorValue           color;
+//    VkClearDepthStencilValue    depthStencil;
+//} VkClearValue;
 
 //typedef struct VkClearAttachment {
 //    VkImageAspectFlags    aspectMask;
