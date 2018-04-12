@@ -3,6 +3,7 @@ package glfw_
 import glm_.vec2.Vec2i
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
+import org.lwjgl.glfw.GLFWVidMode
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.Platform
@@ -41,7 +42,7 @@ object glfw {
     fun videoMode(monitor: Long) = glfwGetVideoMode(monitor)
 
     val resolution
-        get() = Vec2i(videoMode.width(), videoMode.height())
+        get() = videoMode.size
 
     var swapInterval = 0
         set(value) = glfwSwapInterval(value)
@@ -70,3 +71,17 @@ object glfw {
             getLong { VK_CHECK_RESULT(GLFWVulkan.glfwCreateWindowSurface(instance, window.handle, allocator, it)) }
 }
 
+inline val GLFWVidMode.width: Int
+    get() = GLFWVidMode.nwidth(adr)
+inline val GLFWVidMode.height: Int
+    get() = GLFWVidMode.nheight(adr)
+inline val GLFWVidMode.size: Vec2i
+    get() = Vec2i(width, height)
+inline val GLFWVidMode.redBits: Int
+    get() = GLFWVidMode.nredBits(adr)
+inline val GLFWVidMode.greenBits: Int
+    get() = GLFWVidMode.ngreenBits(adr)
+inline val GLFWVidMode.blueBits: Int
+    get() = GLFWVidMode.nblueBits(adr)
+inline val GLFWVidMode.refreshRate: Int
+    get() = GLFWVidMode.nrefreshRate(adr)

@@ -353,9 +353,8 @@ inline var VkDeviceCreateInfo.queueCreateInfos: ArrayList<VkDeviceQueueCreateInf
     get() {
         val count = VkDeviceCreateInfo.nqueueCreateInfoCount(adr)
         val infos = vk.DeviceQueueCreateInfo(count)
-        val res = ArrayList<VkDeviceQueueCreateInfo>()
-        for (i in 0 until count) res += infos[i]
-        return res
+        VkDeviceCreateInfo.npQueueCreateInfos(adr, infos)
+        return infos.toCollection(arrayListOf())
     }
     set(value) {
         val infos = vk.DeviceQueueCreateInfo(value.size)

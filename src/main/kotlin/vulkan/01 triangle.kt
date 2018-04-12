@@ -21,7 +21,6 @@ import vkn.*
 import vkn.ArrayListLong.resize
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.VulkanExampleBase
-import vulkan.base.initializers.commandBufferBeginInfo
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import java.io.File
 
@@ -188,10 +187,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     /** Create the Vulkan synchronization primitives used in this example   */
     fun prepareSynchronizationPrimitives() {
         // Semaphores (Used for correct command ordering)
-        val semaphoreCreateInfo = vk.SemaphoreCreateInfo {
-            type = VkStructureType.SEMAPHORE_CREATE_INFO
-            next = NULL
-        }
+        val semaphoreCreateInfo = vk.SemaphoreCreateInfo {}
 
         // Semaphore used to ensures that image presentation is complete before starting to submit again
         vk.createSemaphore(device, semaphoreCreateInfo, ::presentCompleteSemaphore).check()
@@ -201,7 +197,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Fences (Used to check draw command buffer completion)
         val fenceCreateInfo = vk.FenceCreateInfo {
-            type = VkStructureType.FENCE_CREATE_INFO
             // Create in signaled state so we don't wait on first render of each command buffer
             flags = VkFenceCreate.SIGNALED_BIT.i
         }
@@ -214,7 +209,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     fun getCommandBuffer(begin: Boolean): VkCommandBuffer {
 
         val cmdBufAllocateInfo = vk.CommandBufferAllocateInfo {
-            type = VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO
             commandPool = cmdPool
             level = VkCommandBufferLevel.PRIMARY
             commandBufferCount = 1
@@ -227,7 +221,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // If requested, also start the new command buffer
         if (begin)
-            VK_CHECK_RESULT(vkBeginCommandBuffer(cmdBuffer, commandBufferBeginInfo()))
+            VK_CHECK_RESULT(vkBeginCommandBuffer(cmdBuffer, vk.CommandBufferBeginInfo {}))
 
         return cmdBuffer
     }
@@ -240,16 +234,10 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer))
 
-        val submitInfo = vk.SubmitInfo {
-            type = VkStructureType.SUBMIT_INFO
-            commandBuffers = appBuffer.pointerBufferOf(commandBuffer)
-        }
+        val submitInfo = vk.SubmitInfo { commandBuffers = appBuffer.pointerBufferOf(commandBuffer) }
 
         // Create fence to ensure that the command buffer has finished executing
-        val fenceCreateInfo = vk.FenceCreateInfo {
-            type = VkStructureType.FENCE_CREATE_INFO
-            flags = 0
-        }
+        val fenceCreateInfo = vk.FenceCreateInfo { flags = 0 }
         val fence: VkFence = getLong { vk.createFence(device, fenceCreateInfo, it).check() }
 
         // Submit to the queue
@@ -266,10 +254,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
      *  This allows to generate work upfront and from multiple threads, one of the biggest advantages of Vulkan */
     override fun buildCommandBuffers() {
 
-        val cmdBufInfo = vk.CommandBufferBeginInfo {
-            type = VkStructureType.COMMAND_BUFFER_BEGIN_INFO
-            next = NULL
-        }
+        val cmdBufInfo = vk.CommandBufferBeginInfo {}
 
         /*  Set clear values for all framebuffer attachments with loadOp set to clear
             We use two attachments (color and depth) that are cleared at the start of the subpass and
@@ -279,8 +264,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         clearValues[1].depthStencil(1f, 0)
 
         val renderPassBeginInfo = vk.RenderPassBeginInfo {
-            type = VkStructureType.RENDER_PASS_BEGIN_INFO
-            next = NULL
             renderPass = this@VulkanExample.renderPass
             renderArea.apply {
                 offset.set(0, 0)
@@ -355,7 +338,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         val waitStageMask = appBuffer.intBufferOf(VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i)
         // The submit info structure specifices a command buffer queue submission batch
         val submitInfo = vk.SubmitInfo {
-            type = VkStructureType.SUBMIT_INFO
             // Pointer to the list of pipeline stages that the semaphore waits will occur at
             waitDstStageMask = waitStageMask
             // Semaphore(s) to wait upon before the submitted command buffer starts executing
@@ -401,7 +383,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         indices.count = indexBuffer.capacity
         val indexBufferSize = indexBuffer.size.L
 
-        val memAlloc = vk.MemoryAllocateInfo { type = VkStructureType.MEMORY_ALLOCATE_INFO }
+        val memAlloc = vk.MemoryAllocateInfo {}
         val memReqs = vk.MemoryRequirements {}
 
         val data = appBuffer.pointer
@@ -430,7 +412,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             // Vertex buffer
             val vertexBufferInfo = vk.BufferCreateInfo {
-                type = VkStructureType.BUFFER_CREATE_INFO
                 size = vertexBufferSize
                 // Buffer is used as the copy source
                 usage = VkBufferUsage.TRANSFER_SRC_BIT.i
@@ -460,7 +441,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             // Index buffer
             val indexbufferInfo = vk.BufferCreateInfo {
-                type = VkStructureType.BUFFER_CREATE_INFO
                 size = indexBufferSize
                 usage = VkBufferUsage.TRANSFER_SRC_BIT.i
             }
@@ -521,7 +501,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             // Vertex buffer
             val vertexBufferInfo = vk.BufferCreateInfo {
-                type = VkStructureType.BUFFER_CREATE_INFO
                 size = vertexBufferSize
                 usage = VkBufferUsage.VERTEX_BUFFER_BIT.i
             }
@@ -540,7 +519,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             // Index buffer
             val indexbufferInfo = vk.BufferCreateInfo {
-                type = VkStructureType.BUFFER_CREATE_INFO
                 size = indexBufferSize
                 usage = VkBufferUsage.INDEX_BUFFER_BIT.i
             }
@@ -573,8 +551,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         // Create the global descriptor pool
         // All descriptors used in this example are allocated from this pool
         val descriptorPoolInfo = vk.DescriptorPoolCreateInfo {
-            type = VkStructureType.DESCRIPTOR_POOL_CREATE_INFO
-            next = NULL
             poolSizes = typeCounts
             // Set the max. number of descriptor sets that can be requested from this pool (requesting beyond this limit will result in an error)
             maxSets = 1
@@ -595,19 +571,13 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             immutableSamplers = null
         }
 
-        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo {
-            type = VkStructureType.DESCRIPTOR_SET_LAYOUT_CREATE_INFO
-            next = NULL
-            bindings = layoutBinding
-        }
+        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo { bindings = layoutBinding }
 
         vk.createDescriptorSetLayout(device, descriptorLayout, ::descriptorSetLayout).check()
 
         // Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
         // In a more complex scenario you would have different pipeline layouts for different descriptor set layouts that could be reused
         val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo {
-            type = VkStructureType.PIPELINE_LAYOUT_CREATE_INFO
-            next = NULL
             setLayouts = appBuffer.longBufferOf(descriptorSetLayout)
         }
 
@@ -617,7 +587,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     fun setupDescriptorSet() {
         // Allocate a new descriptor set from the global descriptor pool
         val allocInfo = vk.DescriptorSetAllocateInfo {
-            type = VkStructureType.DESCRIPTOR_SET_ALLOCATE_INFO
             descriptorPool = this@VulkanExample.descriptorPool
             setLayouts = appBuffer.longBufferOf(descriptorSetLayout)
         }
@@ -644,7 +613,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     override fun setupDepthStencil() {
         // Create an optimal image used as the depth stencil attachment
         val image = vk.ImageCreateInfo {
-            type = VkStructureType.IMAGE_CREATE_INFO
             imageType = VkImageType.`2D`
             format = depthFormat
             // Use example's height and width
@@ -660,7 +628,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Allocate memory for the image (device local) and bind it to our image
         val memAlloc = vk.MemoryAllocateInfo {
-            type = VkStructureType.MEMORY_ALLOCATE_INFO
             val memReqs = vk.MemoryRequirements { vkGetImageMemoryRequirements(device, depthStencil.image, this) }
             allocationSize = memReqs.size
             memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
@@ -672,7 +639,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             Images aren't directly accessed in Vulkan, but rather through views described by a subresource range
             This allows for multiple views of one image with differing ranges (e.g. for different layers)   */
         val depthStencilView = vk.ImageViewCreateInfo {
-            type = VkStructureType.IMAGE_VIEW_CREATE_INFO
             viewType = VkImageViewType.`2D`
             format = depthFormat
             subresourceRange.apply {
@@ -700,7 +666,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             val (w, h) = size // TODO BUG
 
             val frameBufferCreateInfo = vk.FramebufferCreateInfo {
-                type = VkStructureType.FRAMEBUFFER_CREATE_INFO
                 // All frame buffers use the same renderpass setup
                 renderPass = this@VulkanExample.renderPass
                 this.attachments = attachments
@@ -808,7 +773,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Create the actual renderpass
         val renderPassInfo = vk.RenderPassCreateInfo {
-            type = VkStructureType.RENDER_PASS_CREATE_INFO
             this.attachments = attachments      // Descriptions of the attachments used by the render pass
             subpasses = subpassDescription      // We only use one subpass in this example, Description of that subpass
             this.dependencies = dependencies    // Subpass dependencies used by the render pass
@@ -830,10 +794,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             file.readBytes().toBuffer().use { shaderCode ->
                 // Create a new shader module that will be used for pipeline creation
-                val moduleCreateInfo = vk.ShaderModuleCreateInfo {
-                    type = VkStructureType.SHADER_MODULE_CREATE_INFO
-                    code = shaderCode
-                }
+                val moduleCreateInfo = vk.ShaderModuleCreateInfo { code = shaderCode }
 
                 shaderModule = getLong { vk.createShaderModule(device, moduleCreateInfo, it).check() }
             }
@@ -850,7 +811,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             Note: There are still a few dynamic states that are not directly part of the pipeline (but the info that they are used is)  */
 
         val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(1) {
-            type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO
             // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
             layout = pipelineLayout
             // Renderpass this pipeline is attached to
@@ -862,13 +822,11 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             Input assembly state describes how primitives are assembled
             This pipeline will assemble vertex data as a triangle lists (though we only use one triangle)   */
         val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo {
-            type = VkStructureType.PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
             topology = VkPrimitiveTopology.TRIANGLE_LIST
         }
 
         // Rasterization state
         val rasterizationState = vk.PipelineRasterizationStateCreateInfo {
-            type = VkStructureType.PIPELINE_RASTERIZATION_STATE_CREATE_INFO
             polygonMode = VkPolygonMode.FILL
             cullMode = VkCullMode.NONE.i
             frontFace = VkFrontFace.COUNTER_CLOCKWISE
@@ -884,15 +842,11 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             colorWriteMask = 0xf
             blendEnable = false
         }
-        val colorBlendState = vk.PipelineColorBlendStateCreateInfo {
-            type = VkStructureType.PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
-            attachments = blendAttachmentState
-        }
+        val colorBlendState = vk.PipelineColorBlendStateCreateInfo { attachments = blendAttachmentState }
 
         /*  Viewport state sets the number of viewports and scissor used in this pipeline
             Note: This is actually overriden by the dynamic states (see below)         */
         val viewportState = vk.PipelineViewportStateCreateInfo {
-            type = VkStructureType.PIPELINE_VIEWPORT_STATE_CREATE_INFO
             viewportCount = 1
             scissorCount = 1
         }
@@ -903,15 +857,11 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
          *  Their actual states are set later on in the command buffer.
          *  For this example we will set the viewport and scissor using dynamic states  */
         val dynamicStateEnables = appBuffer.intBufferOf(VkDynamicState.VIEWPORT.i, VkDynamicState.SCISSOR.i)
-        val dynamicState = vk.PipelineDynamicStateCreateInfo {
-            type = VkStructureType.PIPELINE_DYNAMIC_STATE_CREATE_INFO
-            dynamicStates = dynamicStateEnables
-        }
+        val dynamicState = vk.PipelineDynamicStateCreateInfo { dynamicStates = dynamicStateEnables }
 
         /*  Depth and stencil state containing depth and stencil compare and test operations
             We only use depth tests and want depth tests and writes to be enabled and compare with less or equal         */
         val depthStencilState = vk.PipelineDepthStencilStateCreateInfo {
-            type = VkStructureType.PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
             depthTestEnable = true
             depthWriteEnable = true
             depthCompareOp = VkCompareOp.LESS_OR_EQUAL
@@ -928,7 +878,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         /*  Multi sampling state
             This example does not make use fo multi sampling (for anti-aliasing), the state must still be set and passed to the pipeline         */
         val multisampleState = vk.PipelineMultisampleStateCreateInfo {
-            type = VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
             rasterizationSamples = VkSampleCount.`1_BIT`
             sampleMask = null
         }
@@ -969,7 +918,6 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Vertex input state used for pipeline creation
         val vertexInputState = vk.PipelineVertexInputStateCreateInfo {
-            type = VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
             vertexBindingDescriptions = vertexInputBinding
             vertexAttributeDescriptions = vertexInputAttributs
         }
@@ -1032,14 +980,11 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         // Vertex shader uniform buffer block
         val allocInfo = vk.MemoryAllocateInfo {
-            type = VkStructureType.MEMORY_ALLOCATE_INFO
-            next = NULL
             allocationSize = 0
             memoryTypeIndex = 0
         }
 
         val bufferInfo = vk.BufferCreateInfo {
-            type = VkStructureType.BUFFER_CREATE_INFO
             size = uboVS.size
             // This buffer will be used as a uniform buffer
             usage = VkBufferUsage.UNIFORM_BUFFER_BIT.i

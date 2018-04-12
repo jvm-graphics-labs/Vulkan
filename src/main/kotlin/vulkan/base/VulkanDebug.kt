@@ -61,7 +61,6 @@ object debug {
     fun setupDebugging(instance: VkInstance, flags: Int, callBack: VkDebugReportCallbackI?) {
 
         val dbgCreateInfo = vk.DebugReportCallbackCreateInfoEXT {
-            type = VkStructureType.DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
             callback = VkDebugReportCallbackEXTI { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
                 val type = VkDebugReportObjectType of `object`.i
                 (callBack ?: messageCallback).invoke(flags, type, `object`, location, messageCode, pLayerPrefix.utf8, pMessage.utf8, pUserData as Any).i

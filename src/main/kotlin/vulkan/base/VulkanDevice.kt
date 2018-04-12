@@ -166,7 +166,6 @@ constructor(
         queueFamilyIndices.graphics =
                 if (requestedQueueTypes has VkQueueFlag.GRAPHICS_BIT) { // Graphics queue
                     queueCreateInfos += vk.DeviceQueueCreateInfo {
-                        type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
                         queueFamilyIndex = queueFamilyIndices.graphics
                         queuePriorities = defaultQueuePriority
                     }
@@ -179,7 +178,6 @@ constructor(
                     if (queueFamilyIndices.compute != queueFamilyIndices.graphics) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
                         queueCreateInfos += vk.DeviceQueueCreateInfo {
-                            type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
                             queueFamilyIndex = queueFamilyIndices.compute
                             queuePriorities = defaultQueuePriority
                         }
@@ -193,9 +191,8 @@ constructor(
                     if (queueFamilyIndices.transfer != queueFamilyIndices.graphics && queueFamilyIndices.transfer != queueFamilyIndices.compute) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
                         queueCreateInfos += vk.DeviceQueueCreateInfo {
-                            sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
-                            queueFamilyIndex(queueFamilyIndices.transfer)
-                            pQueuePriorities(defaultQueuePriority)
+                            queueFamilyIndex = queueFamilyIndices.transfer
+                            queuePriorities = defaultQueuePriority
                         }
                     }
                     getQueueFamilyIndex(VkQueueFlag.TRANSFER_BIT)
@@ -208,7 +205,6 @@ constructor(
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
         val deviceCreateInfo = vk.DeviceCreateInfo {
-            type = VkStructureType.DEVICE_CREATE_INFO
             this.queueCreateInfos = queueCreateInfos
             this.enabledFeatures = enabledFeatures
         }
@@ -372,7 +368,6 @@ constructor(
             : VkCommandPool {
 
         val cmdPoolInfo = vk.CommandPoolCreateInfo {
-            type = VkStructureType.COMMAND_POOL_CREATE_INFO
             this.queueFamilyIndex = queueFamilyIndex
             flags = createFlags
         }

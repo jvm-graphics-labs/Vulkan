@@ -191,8 +191,6 @@ class VulkanSwapChain {
 
 
         val swapchainCI = vk.SwapchainCreateInfoKHR {
-            type = VkStructureType.SWAPCHAIN_CREATE_INFO_KHR
-            next = NULL
             this.surface = this@VulkanSwapChain.surface
             minImageCount = desiredNumberOfSwapchainImages
             imageFormat = colorFormat
@@ -234,8 +232,6 @@ class VulkanSwapChain {
         for (i in images.indices) {
 
             val colorAttachmentView = vk.ImageViewCreateInfo {
-                type = VkStructureType.IMAGE_VIEW_CREATE_INFO
-                next = NULL
                 format = colorFormat
                 components.set(
                         VkComponentSwizzle.R,

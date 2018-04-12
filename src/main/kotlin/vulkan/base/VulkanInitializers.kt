@@ -23,7 +23,6 @@ object initializers {
             commandPool: VkCommandPool,
             level: VkCommandBufferLevel,
             bufferCount: Int): VkCommandBufferAllocateInfo = vk.CommandBufferAllocateInfo {
-        type = VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO
         this.commandPool = commandPool
         this.level = level
         commandBufferCount = bufferCount
@@ -37,7 +36,6 @@ object initializers {
 //        return cmdPoolCreateInfo;
 //    }
 //
-    fun commandBufferBeginInfo(): VkCommandBufferBeginInfo = vk.CommandBufferBeginInfo { type = VkStructureType.COMMAND_BUFFER_BEGIN_INFO }
 
     //    inline VkCommandBufferInheritanceInfo commandBufferInheritanceInfo()
 //    {
@@ -116,7 +114,6 @@ object initializers {
 //        return framebufferCreateInfo;
 //    }
 //
-    fun semaphoreCreateInfo(): VkSemaphoreCreateInfo = vk.SemaphoreCreateInfo { type = VkStructureType.SEMAPHORE_CREATE_INFO }
 
     //
 //    inline VkFenceCreateInfo fenceCreateInfo(VkFenceCreateFlags flags = 0)
@@ -134,7 +131,6 @@ object initializers {
 //        return eventCreateInfo;
 //    }
 //
-    fun submitInfo(): VkSubmitInfo = vk.SubmitInfo { type = VkStructureType.SUBMIT_INFO }
 //
 //    inline VkViewport viewport(
 //            float width,

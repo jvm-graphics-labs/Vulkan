@@ -16,8 +16,6 @@ import uno.buffer.longBufferOf
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.initializers.commandBufferAllocateInfo
-import vulkan.base.initializers.semaphoreCreateInfo
-import vulkan.base.initializers.submitInfo
 import kotlin.system.measureTimeMillis
 
 abstract class VulkanExampleBase(enableValidation: Boolean) {
@@ -419,7 +417,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         swapChain.connect(instance, physicalDevice, device)
 
         // Create synchronization objects
-        val semaphoreCreateInfo = semaphoreCreateInfo()
+        val semaphoreCreateInfo = vk.SemaphoreCreateInfo {}
         /*  Create a semaphore used to synchronize image presentation
             Ensures that the image is displayed before we start submitting new commands to the queu             */
         vk.createSemaphore(device, semaphoreCreateInfo, semaphores.presentComplete).check()
@@ -434,7 +432,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
             Command buffer submission info is set by each example   */
-        submitInfo = submitInfo().apply {
+        submitInfo = vk.SubmitInfo {
             waitDstStageMask = submitPipelineStages
             waitSemaphoreCount = 1
             waitSemaphores = semaphores.presentComplete
@@ -454,7 +452,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
                 visible = false
             }
             window = when {
-                fullscreen -> GlfwWindow(videoMode.width(), videoMode.height(), windowTitle, primaryMonitor)
+                fullscreen -> GlfwWindow(videoMode.size, windowTitle, primaryMonitor)
                 else -> GlfwWindow(size, windowTitle)
             }
         }
@@ -478,7 +476,6 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         settings.validation = enableValidation
 
         val appInfo = vk.ApplicationInfo {
-            type = VkStructureType.APPLICATION_INFO
             applicationName = name
             engineName = name
             apiVersion = VK_API_VERSION_1_0
@@ -489,8 +486,6 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
             instanceExtensions += enabledInstanceExtensions
 
         val instanceCreateInfo = vk.InstanceCreateInfo {
-            type = VkStructureType.INSTANCE_CREATE_INFO
-            next = NULL
             applicationInfo = appInfo
             if (instanceExtensions.isNotEmpty()) {
                 if (settings.validation)
@@ -528,7 +523,6 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     fun createCommandPool() {
 
         val cmdPoolInfo = vk.CommandPoolCreateInfo {
-            type = VkStructureType.COMMAND_POOL_CREATE_INFO
             queueFamilyIndex = swapChain.queueNodeIndex
             flags = VkCommandPoolCreate.RESET_COMMAND_BUFFER_BIT.i
         }
@@ -685,7 +679,6 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         }
 
         val renderPassInfo = vk.RenderPassCreateInfo {
-            type = VkStructureType.RENDER_PASS_CREATE_INFO
             this.attachments = attachments
             subpasses = subpassDescription
             this.dependencies = dependencies
@@ -731,7 +724,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //
     /** Create a cache pool for rendering pipelines */
     fun createPipelineCache() {
-        val pipelineCacheCreateInfo = vk.PipelineCacheCreateInfo { type = VkStructureType.PIPELINE_CACHE_CREATE_INFO }
+        val pipelineCacheCreateInfo = vk.PipelineCacheCreateInfo {}
         vk.createPipelineCache(device, pipelineCacheCreateInfo, ::pipelineCache).check()
     }
 
