@@ -4,7 +4,7 @@ A comprehensive collection of open source Kotlin examples for [Vulkan®](https:/
 
 Enhancements:
 
-The examples uses a wrapper/library I'm developing in order to easier and push tedious code behind the curtains without overhead. The idea is pretty simple, a buffer (64k at the moment) gets allocated for the whole time and used as a pool memory for once-time frequent allocations, by moving the pointer for the requested amount of memory. 
+The examples uses a wrapper/library I'm developing in order to easier and push tedious code behind the curtains without overhead (in `inline` we trust). The idea is pretty simple, a buffer (64k at the moment) gets allocated for the whole time and used as a pool memory for once-time frequent allocations, by moving the pointer for the requested amount of memory. 
 
 No manual management, no stack push/pop. Dead simple. And also faster, because you don't have any additional overhead given by continuous memory `malloc`s/`calloc`s or Thread Local Store lookup (which can easily add up in hot loops).
 
