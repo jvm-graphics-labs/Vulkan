@@ -1,72 +1,18 @@
 package vkn
 
+import glfw_.advance
+import glfw_.appBuffer.ptr
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3i
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
-import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
 
-
-val VkPhysicalDeviceMemoryProperties.memoryTypeCount get() = memoryTypeCount()
-val VkPhysicalDeviceMemoryProperties.memoryTypes get() = memoryTypes()
-
-val VkMemoryType.propertyFlags get() = propertyFlags()
-
-
-var VkPresentInfoKHR.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
-var VkPresentInfoKHR.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
-val VkPresentInfoKHR.waitSemaphoreCount get() = waitSemaphoreCount()
-var VkPresentInfoKHR.waitSemaphores: VkSemaphorePtr?
-    get() = pWaitSemaphores()
-    set(value) {
-        pWaitSemaphores(value)
-    }
-val VkPresentInfoKHR.swapchainCount get() = swapchainCount()
-var VkPresentInfoKHR.swapchains: VkSwapchainKHRptr
-    get() = pSwapchains()
-    set(value) {
-        pSwapchains(value)
-    }
-var VkPresentInfoKHR.imageIndices: IntBuffer
-    get() = pImageIndices()
-    set(value) {
-        pImageIndices(value)
-    }
-var VkPresentInfoKHR.results: VkResultPtr?
-    get() = pResults()
-    set(value) {
-        pResults(value)
-    }
-
-
-val VkPhysicalDeviceProperties.apiVersion get() = apiVersion()
-val VkPhysicalDeviceProperties.driverVersion get() = driverVersion()
-val VkPhysicalDeviceProperties.vendorID get() = vendorID()
-val VkPhysicalDeviceProperties.deviceID get() = deviceID()
-val VkPhysicalDeviceProperties.deviceType: VkPhysicalDeviceType get() = deviceType()
-val VkPhysicalDeviceProperties.deviceName get() = deviceNameString()
-var VkPhysicalDeviceProperties.pipelineCacheUUID: ByteBuffer
-    get() = pipelineCacheUUID()
-    set(value) {
-        TODO()
-//        pipelineCacheUUID(value)
-    }
-val VkPhysicalDeviceProperties.limits: VkPhysicalDeviceLimits get() = limits()
-val VkPhysicalDeviceProperties.sparseProperties: VkPhysicalDeviceSparseProperties get() = sparseProperties()
 
 //fun pointerBufferOf(vararg strings: String): PointerBuffer {
 //    val buf = pointerBufferBig(strings.size)
@@ -101,11 +47,6 @@ inline operator fun PointerBuffer.set(index: Int, pointer: Pointer) {
 //fun PointerBuffer.isNotEmpty() = position() > 0
 
 
-public infix fun Int.until(to: IntBuffer): IntRange {
-    if (to[0] <= Int.MIN_VALUE) return IntRange.EMPTY
-    return this..(to[0] - 1)
-}
-
 typealias VkCommandPool = Long
 typealias VkSurfaceKHR = Long
 typealias VkSwapchainKHR = Long
@@ -132,31 +73,6 @@ typealias VkResultPtr = IntBuffer
 typealias VkSamplerPtr = LongBuffer
 typealias VkImageViewPtr = LongBuffer
 
-val VkQueueFamilyProperties.queueFlags: VkQueueFlags get() = queueFlags()
-operator fun VkExtent2D.invoke(width: Int, height: Int) {
-    width(width)
-    height(height)
-}
-
-operator fun VkExtent3D.invoke(width: Int, height: Int, depth: Int) {
-    width(width)
-    height(height)
-    depth(depth)
-}
-
-//operator fun VkExtent3D.invoke(size: Vec2i, depth: Int) {
-fun VkExtent3D.wtf(x: Int, y: Int, z: Int) {
-    width = x
-    height = y
-    depth = z
-}
-
-operator fun VkComponentMapping.invoke(r: Int, g: Int, b: Int, a: Int) {
-    r(r)
-    g(g)
-    b(b)
-    a(a)
-}
 
 object ArrayListLong {
     operator fun ArrayList<Long>.set(index: Int, long: LongBuffer) {
@@ -208,12 +124,24 @@ inline fun vkDestroyBuffer(device: VkDevice, buffer: VkBuffer) = VK10.nvkDestroy
 inline fun vkDestroyShaderModule(device: VkDevice, shaderModule: VkShaderModule) = VK10.vkDestroyShaderModule(device, shaderModule, null)
 
 
-val FloatBuffer.address get() = MemoryUtil.memAddress(this)
-val IntBuffer.address get() = MemoryUtil.memAddress(this)
+val FloatBuffer.adr get() = MemoryUtil.memAddress(this)
+val IntBuffer.adr get() = MemoryUtil.memAddress(this)
 
 inline val Pointer.adr get() = address()
 
-// TODO glm
-operator fun Vec3i.invoke(v: Vec2i, i: Int) {
-    put(v.x, v.y, i)
+
+fun PointerBuffer?.toArrayList(): ArrayList<String> {
+    val count = this?.remaining() ?: 0
+    if (this == null || count == 0) return arrayListOf()
+    val res = ArrayList<String>(count)
+    for (i in 0 until count)
+        res += get(i).utf8
+    return res
+}
+
+fun Collection<String>.toPointerBuffer(): PointerBuffer {
+    val pointers = PointerBuffer.create(ptr.advance(Pointer.POINTER_SIZE * size), size)
+    for (i in indices)
+        pointers.put(i, elementAt(i).utf8)
+    return pointers
 }

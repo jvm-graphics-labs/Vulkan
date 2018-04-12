@@ -297,7 +297,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             /*  Start the first sub pass specified in our default render pass setup by the base class
                 This will clear the color and depth attachment             */
-            vkCmdBeginRenderPass(drawCmdBuffers[i], renderPassBeginInfo, VkSubpassContents_INLINE)
+            vk.cmdBeginRenderPass(drawCmdBuffers[i], renderPassBeginInfo, VkSubpassContents.INLINE)
 
             // Update dynamic viewport state
             val viewport = vk.Viewport(1) {
@@ -329,7 +329,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             vk.cmdBindVertexBuffer(drawCmdBuffers[i], 0, vertices::buffer)
 
             // Bind triangle index buffer
-            vkCmdBindIndexBuffer(drawCmdBuffers[i], indices.buffer, 0, VkIndexType_UINT32)
+            vk.cmdBindIndexBuffer(drawCmdBuffers[i], indices.buffer, 0, VkIndexType.UINT32)
 
             // Draw indexed triangle
             vkCmdDrawIndexed(drawCmdBuffers[i], indices.count, 1, 0, 0, 1)
@@ -445,7 +445,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             vk.allocateMemory(device, memAlloc, stagingBuffers.vertices::memory).check()
             // Map and copy
             VK_CHECK_RESULT(nvkMapMemory(device, stagingBuffers.vertices.memory, 0, memAlloc.allocationSize, 0, data))
-            memCopy(vertexBuffer.address, memGetAddress(data), vertexBufferSize)
+            memCopy(vertexBuffer.adr, memGetAddress(data), vertexBufferSize)
             vkUnmapMemory(device, stagingBuffers.vertices.memory)
             VK_CHECK_RESULT(vkBindBufferMemory(device, stagingBuffers.vertices.buffer, stagingBuffers.vertices.memory, 0))
 
@@ -471,7 +471,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
             vk.allocateMemory(device, memAlloc, stagingBuffers.indices::memory).check()
             VK_CHECK_RESULT(nvkMapMemory(device, stagingBuffers.indices.memory, 0, indexBufferSize, 0, data))
-            memCopy(indexBuffer.address, memGetAddress(data), indexBufferSize)
+            memCopy(indexBuffer.adr, memGetAddress(data), indexBufferSize)
             vkUnmapMemory(device, stagingBuffers.indices.memory)
             VK_CHECK_RESULT(vkBindBufferMemory(device, stagingBuffers.indices.buffer, stagingBuffers.indices.memory, 0))
 
@@ -534,7 +534,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
             vk.allocateMemory(device, memAlloc, vertices::memory).check()
             VK_CHECK_RESULT(nvkMapMemory(device, vertices.memory, 0, memAlloc.allocationSize, 0, data))
-            memCopy(vertexBuffer.address, memGetAddress(data), vertexBufferSize)
+            memCopy(vertexBuffer.adr, memGetAddress(data), vertexBufferSize)
             vkUnmapMemory(device, vertices.memory)
             VK_CHECK_RESULT(vkBindBufferMemory(device, vertices.buffer, vertices.memory, 0))
 
@@ -552,7 +552,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
             vk.allocateMemory(device, memAlloc, indices::memory).check()
             VK_CHECK_RESULT(nvkMapMemory(device, indices.memory, 0, indexBufferSize, 0, data))
-            memCopy(indexBuffer.address, memGetAddress(data), indexBufferSize)
+            memCopy(indexBuffer.adr, memGetAddress(data), indexBufferSize)
             vkUnmapMemory(device, indices.memory)
             VK_CHECK_RESULT(vkBindBufferMemory(device, indices.buffer, indices.memory, 0))
         }

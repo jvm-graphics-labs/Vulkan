@@ -51,15 +51,15 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
             pImages.toCollection(images)
         }
     }
-
-    fun vkCreateDebugReportCallback(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
-                                    allocator: VkAllocationCallbacks?, callback: VkDebugReportCallbackI?): VkResult {
-        vkDebugReportCallback = VkDebugReportCallback().apply { cb = callback }
-        val pCallback = longs(vkDebugReportCallback!!.adr)
-        return VkResult of EXTDebugReport.vkCreateDebugReportCallbackEXT(instance, createInfo, allocator, pCallback).also {
-//                        vkDebugReportCallback = VkDebugReportCallback(pCallback[0]).apply { cb = callback }
-        }
-    }
+//
+//    fun vkCreateDebugReportCallback(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
+//                                    allocator: VkAllocationCallbacks?, callback: VkDebugReportCallbackI?): VkResult {
+//        vkDebugReportCallback = VkDebugReportCallback().apply { cb = callback }
+//        val pCallback = longs(vkDebugReportCallback!!.adr)
+//        return VkResult of EXTDebugReport.vkCreateDebugReportCallbackEXT(instance, createInfo, allocator, pCallback).also {
+////                        vkDebugReportCallback = VkDebugReportCallback(pCallback[0]).apply { cb = callback }
+//        }
+//    }
 
     fun vkCreateImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, allocator: VkAllocationCallbacks?,
                           view: KMutableProperty0<VkImageView>): VkResult {
@@ -290,7 +290,8 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         set(value) {
             value?.let {
                 pfnCallback { flags, objectType, `object`, location, messageCode, layerPrefix, message, userData ->
-                    it(flags, objectType, `object`, location, messageCode, layerPrefix.toUTF8, message.toUTF8, userData as Any).i
+                    val type = VkDebugReportObjectType of objectType
+                    it(flags, type, `object`, location, messageCode, layerPrefix.toUTF8,  message.toUTF8, userData as Any).i
                 }
             }
         }
@@ -714,19 +715,19 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     val ByteBuffer.utf8: String get() = MemoryUtil.memUTF8(this)
 }
 
-typealias VkDebugReportCallbackI = (VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, Long, Long, Int, String, String, Any?) -> Boolean
+typealias VkDebugReportCallbackI = (VkDebugReportFlagsEXT, VkDebugReportObjectType, Long, Long, Int, String, String, Any?) -> Boolean
 
-var vkDebugReportCallback: VkDebugReportCallback? = null
-
-class VkDebugReportCallback : VkDebugReportCallbackEXT() {
-//    val instance: VkDebugReportCallbackEXT = create(address)
-    var cb: VkDebugReportCallbackI? = null
-    override fun invoke(flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT, `object`: Long, location: Long,
-                        messageCode: Int, pLayerPrefix: Long, pMessage: Long, userData: Long): VkBool32 = withStack {
-        val layerPrefix = getString(pLayerPrefix)
-        val message = getString(pMessage)
-        println("ou")
-        return cb?.invoke(flags, objectType, `object`, location, messageCode, layerPrefix, message, userData)?.i
-                ?: VK_FALSE
-    }
-}
+//var vkDebugReportCallback: VkDebugReportCallback? = null
+//
+//class VkDebugReportCallback : VkDebugReportCallbackEXT() {
+////    val instance: VkDebugReportCallbackEXT = create(address)
+//    var cb: VkDebugReportCallbackI? = null
+//    override fun invoke(flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT, `object`: Long, location: Long,
+//                        messageCode: Int, pLayerPrefix: Long, pMessage: Long, userData: Long): VkBool32 = withStack {
+//        val layerPrefix = getString(pLayerPrefix)
+//        val message = getString(pMessage)
+//        println("ou")
+//        return cb?.invoke(flags, objectType, `object`, location, messageCode, layerPrefix, message, userData)?.i
+//                ?: VK_FALSE
+//    }
+//}

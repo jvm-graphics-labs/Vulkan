@@ -3,15 +3,9 @@ package vkn
 
 typealias VkFlags = Int
 
-typealias VkPipelineCacheHeaderversion = Int
-
-val VkPipelineCacheHeaderVersion_ONE: VkPipelineCacheHeaderversion = 1
-
-val VkPipelineCacheHeaderVersion_BEGIN_RANGE = VkPipelineCacheHeaderVersion_ONE
-val VkPipelineCacheHeaderVersion_END_RANGE = VkPipelineCacheHeaderVersion_ONE
-val VkPipelineCacheHeaderVersion_RANGE_SIZE = VkPipelineCacheHeaderVersion_ONE - VkPipelineCacheHeaderVersion_ONE + 1
-
-typealias VkBool32 = Int
+enum class VkPipelineCacheHeaderversion(val i: Int) {
+    ONE(1);
+}
 
 var VULKAN_NO_EXCEPTIONS = false
 
@@ -322,26 +316,26 @@ enum class VkStructureType(val i: Int) {
 }
 
 
-//typedef enum VkSystemAllocationScope {
-//    VK_SYSTEM_ALLOCATION_SCOPE_COMMAND = 0,
-//    VK_SYSTEM_ALLOCATION_SCOPE_OBJECT = 1,
-//    VK_SYSTEM_ALLOCATION_SCOPE_CACHE = 2,
-//    VK_SYSTEM_ALLOCATION_SCOPE_DEVICE = 3,
-//    VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE = 4,
-//    VK_SYSTEM_ALLOCATION_SCOPE_BEGIN_RANGE = VK_SYSTEM_ALLOCATION_SCOPE_COMMAND,
-//    VK_SYSTEM_ALLOCATION_SCOPE_END_RANGE = VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE,
-//    VK_SYSTEM_ALLOCATION_SCOPE_RANGE_SIZE = (VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE - VK_SYSTEM_ALLOCATION_SCOPE_COMMAND + 1),
-//    VK_SYSTEM_ALLOCATION_SCOPE_MAX_ENUM = 0x7FFFFFFF
-//} VkSystemAllocationScope;
-//
-//typedef enum VkInternalAllocationType {
-//    VK_INTERNAL_ALLOCATION_TYPE_EXECUTABLE = 0,
-//    VK_INTERNAL_ALLOCATION_TYPE_BEGIN_RANGE = VK_INTERNAL_ALLOCATION_TYPE_EXECUTABLE,
-//    VK_INTERNAL_ALLOCATION_TYPE_END_RANGE = VK_INTERNAL_ALLOCATION_TYPE_EXECUTABLE,
-//    VK_INTERNAL_ALLOCATION_TYPE_RANGE_SIZE = (VK_INTERNAL_ALLOCATION_TYPE_EXECUTABLE - VK_INTERNAL_ALLOCATION_TYPE_EXECUTABLE + 1),
-//    VK_INTERNAL_ALLOCATION_TYPE_MAX_ENUM = 0x7FFFFFFF
-//} VkInternalAllocationType;
-//
+enum class VkSystemAllocationScope(val i: Int) {
+    COMMAND(0),
+    OBJECT(1),
+    CACHE(2),
+    DEVICE(3),
+    INSTANCE(4);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+enum class VkInternalAllocationType(val i: Int) {
+    EXECUTABLE(0);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
 
 enum class VkFormat(val i: Int) {
     UNDEFINED(0),
@@ -597,28 +591,28 @@ enum class VkImageTiling(val i: Int) {
     }
 }
 
-typealias VkPhysicalDeviceType = Int
+enum class VkPhysicalDeviceType(val i: Int) {
+    OTHER(0),
+    INTEGRATED_GPU(1),
+    DISCRETE_GPU(2),
+    VIRTUAL_GPU(3),
+    CPU(4);
 
-val VkPhysicalDeviceType_OTHER: VkPhysicalDeviceType = 0
-val VkPhysicalDeviceType_INTEGRATED_GPU: VkPhysicalDeviceType = 1
-val VkPhysicalDeviceType_DISCRETE_GPU: VkPhysicalDeviceType = 2
-val VkPhysicalDeviceType_VIRTUAL_GPU: VkPhysicalDeviceType = 3
-val VkPhysicalDeviceType_CPU: VkPhysicalDeviceType = 4
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
-val VkPhysicalDeviceType_BEGIN_RANGE: Int = VkPhysicalDeviceType_OTHER
-val VkPhysicalDeviceType_END_RANGE: Int = VkPhysicalDeviceType_CPU
-val VkPhysicalDeviceType_RANGE_SIZE = VkPhysicalDeviceType_CPU - VkPhysicalDeviceType_OTHER + 1
+enum class VkQueryType(val i: Int) {
+    OCCLUSION(0),
+    PIPELINE_STATISTICS(1),
+    TIMESTAMP(2);
 
-//typedef enum VkQueryType {
-//    VK_QUERY_TYPE_OCCLUSION = 0,
-//    VK_QUERY_TYPE_PIPELINE_STATISTICS = 1,
-//    VK_QUERY_TYPE_TIMESTAMP = 2,
-//    VK_QUERY_TYPE_BEGIN_RANGE = VK_QUERY_TYPE_OCCLUSION,
-//    VK_QUERY_TYPE_END_RANGE = VK_QUERY_TYPE_TIMESTAMP,
-//    VK_QUERY_TYPE_RANGE_SIZE = (VK_QUERY_TYPE_TIMESTAMP - VK_QUERY_TYPE_OCCLUSION + 1),
-//    VK_QUERY_TYPE_MAX_ENUM = 0x7FFFFFFF
-//} VkQueryType;
-//
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
 enum class VkSharingMode(val i: Int) {
     EXCLUSIVE(0),
     CONCURRENT(1);
@@ -887,51 +881,51 @@ enum class VkDynamicState(val i: Int) {
     }
 }
 
-//
-//typedef enum VkFilter {
-//    VK_FILTER_NEAREST = 0,
-//    VK_FILTER_LINEAR = 1,
-//    VK_FILTER_CUBIC_IMG = 1000015000,
-//    VK_FILTER_BEGIN_RANGE = VK_FILTER_NEAREST,
-//    VK_FILTER_END_RANGE = VK_FILTER_LINEAR,
-//    VK_FILTER_RANGE_SIZE = (VK_FILTER_LINEAR - VK_FILTER_NEAREST + 1),
-//    VK_FILTER_MAX_ENUM = 0x7FFFFFFF
-//} VkFilter;
-//
-//typedef enum VkSamplerMipmapMode {
-//    VK_SAMPLER_MIPMAP_MODE_NEAREST = 0,
-//    VK_SAMPLER_MIPMAP_MODE_LINEAR = 1,
-//    VK_SAMPLER_MIPMAP_MODE_BEGIN_RANGE = VK_SAMPLER_MIPMAP_MODE_NEAREST,
-//    VK_SAMPLER_MIPMAP_MODE_END_RANGE = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-//    VK_SAMPLER_MIPMAP_MODE_RANGE_SIZE = (VK_SAMPLER_MIPMAP_MODE_LINEAR - VK_SAMPLER_MIPMAP_MODE_NEAREST + 1),
-//    VK_SAMPLER_MIPMAP_MODE_MAX_ENUM = 0x7FFFFFFF
-//} VkSamplerMipmapMode;
-//
-//typedef enum VkSamplerAddressMode {
-//    VK_SAMPLER_ADDRESS_MODE_REPEAT = 0,
-//    VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT = 1,
-//    VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE = 2,
-//    VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER = 3,
-//    VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE = 4,
-//    VK_SAMPLER_ADDRESS_MODE_BEGIN_RANGE = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-//    VK_SAMPLER_ADDRESS_MODE_END_RANGE = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-//    VK_SAMPLER_ADDRESS_MODE_RANGE_SIZE = (VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER - VK_SAMPLER_ADDRESS_MODE_REPEAT + 1),
-//    VK_SAMPLER_ADDRESS_MODE_MAX_ENUM = 0x7FFFFFFF
-//} VkSamplerAddressMode;
-//
-//typedef enum VkBorderColor {
-//    VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0,
-//    VK_BORDER_COLOR_INT_TRANSPARENT_BLACK = 1,
-//    VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK = 2,
-//    VK_BORDER_COLOR_INT_OPAQUE_BLACK = 3,
-//    VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE = 4,
-//    VK_BORDER_COLOR_INT_OPAQUE_WHITE = 5,
-//    VK_BORDER_COLOR_BEGIN_RANGE = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
-//    VK_BORDER_COLOR_END_RANGE = VK_BORDER_COLOR_INT_OPAQUE_WHITE,
-//    VK_BORDER_COLOR_RANGE_SIZE = (VK_BORDER_COLOR_INT_OPAQUE_WHITE - VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK + 1),
-//    VK_BORDER_COLOR_MAX_ENUM = 0x7FFFFFFF
-//} VkBorderColor;
-//
+
+enum class VkFilter(val i: Int) {
+    NEAREST(0),
+    LINEAR(1),
+    CUBIC_IMG(1000015000);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+enum class VkSamplerMipmapMode(val i: Int) {
+    NEAREST(0),
+    LINEAR(1);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+enum class VkSamplerAddressMode(val i: Int) {
+    REPEAT(0),
+    MIRRORED_REPEAT(1),
+    CLAMP_TO_EDGE(2),
+    CLAMP_TO_BORDER(3),
+    MIRROR_CLAMP_TO_EDGE(4);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+enum class VkBorderColor(val i: Int) {
+    FLOAT_TRANSPARENT_BLACK(0),
+    INT_TRANSPARENT_BLACK(1),
+    FLOAT_OPAQUE_BLACK(2),
+    INT_OPAQUE_BLACK(3),
+    FLOAT_OPAQUE_WHITE(4),
+    INT_OPAQUE_WHITE(5);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
 enum class VkDescriptorType(val i: Int) {
     SAMPLER(0),
     COMBINED_IMAGE_SAMPLER(1),
@@ -989,68 +983,67 @@ enum class VkCommandBufferLevel(val i: Int) {
     }
 }
 
-typealias VkIndexType = Int
+enum class VkIndexType(val i: Int) {
+    UINT16(0),
+    UINT32(1);
 
-val VkIndexType_UINT16: VkIndexType = 0
-val VkIndexType_UINT32: VkIndexType = 1
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
-val VkIndexType_BEGIN_RANGE: Int = VkIndexType_UINT16
-val VkIndexType_END_RANGE: Int = VkIndexType_UINT32
-val VkIndexType_RANGE_SIZE = VkIndexType_UINT32 - VkIndexType_UINT16 + 1
+enum class VkSubpassContents(val i: Int) {
+    INLINE(0),
+    SECONDARY_COMMAND_BUFFERS(1);
 
-typealias VkSubpassContents = Int
-
-val VkSubpassContents_INLINE: VkSubpassContents = 0
-val VkSubpassContents_SECONDARY_COMMAND_BUFFERS: VkSubpassContents = 1
-
-val VkSubpassContents_BEGIN_RANGE = VkSubpassContents_INLINE
-val VkSubpassContents_END_RANGE = VkSubpassContents_SECONDARY_COMMAND_BUFFERS
-val VkSubpassContents_RANGE_SIZE = VkSubpassContents_SECONDARY_COMMAND_BUFFERS - VkSubpassContents_INLINE + 1
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
-//
-//typedef enum VkObjectType {
-//    VK_OBJECT_TYPE_UNKNOWN = 0,
-//    VK_OBJECT_TYPE_INSTANCE = 1,
-//    VK_OBJECT_TYPE_PHYSICAL_DEVICE = 2,
-//    VK_OBJECT_TYPE_DEVICE = 3,
-//    VK_OBJECT_TYPE_QUEUE = 4,
-//    VK_OBJECT_TYPE_SEMAPHORE = 5,
-//    VK_OBJECT_TYPE_COMMAND_BUFFER = 6,
-//    VK_OBJECT_TYPE_FENCE = 7,
-//    VK_OBJECT_TYPE_DEVICE_MEMORY = 8,
-//    VK_OBJECT_TYPE_BUFFER = 9,
-//    VK_OBJECT_TYPE_IMAGE = 10,
-//    VK_OBJECT_TYPE_EVENT = 11,
-//    VK_OBJECT_TYPE_QUERY_POOL = 12,
-//    VK_OBJECT_TYPE_BUFFER_VIEW = 13,
-//    VK_OBJECT_TYPE_IMAGE_VIEW = 14,
-//    VK_OBJECT_TYPE_SHADER_MODULE = 15,
-//    VK_OBJECT_TYPE_PIPELINE_CACHE = 16,
-//    VK_OBJECT_TYPE_PIPELINE_LAYOUT = 17,
-//    VK_OBJECT_TYPE_RENDER_PASS = 18,
-//    VK_OBJECT_TYPE_PIPELINE = 19,
-//    VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT = 20,
-//    VK_OBJECT_TYPE_SAMPLER = 21,
-//    VK_OBJECT_TYPE_DESCRIPTOR_POOL = 22,
-//    VK_OBJECT_TYPE_DESCRIPTOR_SET = 23,
-//    VK_OBJECT_TYPE_FRAMEBUFFER = 24,
-//    VK_OBJECT_TYPE_COMMAND_POOL = 25,
-//    VK_OBJECT_TYPE_SURFACE_KHR = 1000000000,
-//    VK_OBJECT_TYPE_SWAPCHAIN_KHR = 1000001000,
-//    VK_OBJECT_TYPE_DISPLAY_KHR = 1000002000,
-//    VK_OBJECT_TYPE_DISPLAY_MODE_KHR = 1000002001,
-//    VK_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT = 1000011000,
-//    VK_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_KHR = 1000085000,
-//    VK_OBJECT_TYPE_OBJECT_TABLE_NVX = 1000086000,
-//    VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_NVX = 1000086001,
-//    VK_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION_KHR = 1000156000,
-//    VK_OBJECT_TYPE_VALIDATION_CACHE_EXT = 1000160000,
-//    VK_OBJECT_TYPE_BEGIN_RANGE = VK_OBJECT_TYPE_UNKNOWN,
-//    VK_OBJECT_TYPE_END_RANGE = VK_OBJECT_TYPE_COMMAND_POOL,
-//    VK_OBJECT_TYPE_RANGE_SIZE = (VK_OBJECT_TYPE_COMMAND_POOL - VK_OBJECT_TYPE_UNKNOWN + 1),
-//    VK_OBJECT_TYPE_MAX_ENUM = 0x7FFFFFFF
-//} VkObjectType;
+enum class VkObjectType(val i: Int) {
+    UNKNOWN(0),
+    INSTANCE(1),
+    PHYSICAL_DEVICE(2),
+    DEVICE(3),
+    QUEUE(4),
+    SEMAPHORE(5),
+    COMMAND_BUFFER(6),
+    FENCE(7),
+    DEVICE_MEMORY(8),
+    BUFFER(9),
+    IMAGE(10),
+    EVENT(11),
+    QUERY_POOL(12),
+    BUFFER_VIEW(13),
+    IMAGE_VIEW(14),
+    SHADER_MODULE(15),
+    PIPELINE_CACHE(16),
+    PIPELINE_LAYOUT(17),
+    RENDER_PASS(18),
+    PIPELINE(19),
+    DESCRIPTOR_SET_LAYOUT(20),
+    SAMPLER(21),
+    DESCRIPTOR_POOL(22),
+    DESCRIPTOR_SET(23),
+    FRAMEBUFFER(24),
+    COMMAND_POOL(25),
+    SURFACE_KHR(1000000000),
+    SWAPCHAIN_KHR(1000001000),
+    DISPLAY_KHR(1000002000),
+    DISPLAY_MODE_KHR(1000002001),
+    DEBUG_REPORT_CALLBACK_EXT(1000011000),
+    DESCRIPTOR_UPDATE_TEMPLATE_KHR(1000085000),
+    OBJECT_TABLE_NVX(1000086000),
+    INDIRECT_COMMANDS_LAYOUT_NVX(1000086001),
+    SAMPLER_YCBCR_CONVERSION_KHR(1000156000),
+    VALIDATION_CACHE_EXT(1000160000);
+
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkInstanceCreateFlags = VkFlags
 
@@ -1106,20 +1099,25 @@ inline infix fun Int.or(b: VkImageUsage) = or(b.i)
 
 typealias VkImageUsageFlags = VkFlags
 
-typealias VkImageCreateFlagBits = Int
+enum class VkImageCreateFlagBits(val i: Int) {
+    SPARSE_BINDING_BIT(0x00000001),
+    SPARSE_RESIDENCY_BIT(0x00000002),
+    SPARSE_ALIASED_BIT(0x00000004),
+    MUTABLE_FORMAT_BIT(0x00000008),
+    CUBE_COMPATIBLE_BIT(0x00000010),
+    BIND_SFR_BIT_KHX(0x00000040),
+    `2D_ARRAY_COMPATIBLE_BIT_KHR`(0x00000020),
+    BLOCK_TEXEL_VIEW_COMPATIBLE_BIT_KHR(0x00000080),
+    EXTENDED_USAGE_BIT_KHR(0x00000100),
+    SAMPLE_LOCATIONS_COMPATIBLE_DEPTH_BIT_EXT(0x00001000),
+    DISJOINT_BIT_KHR(0x00000200),
+    ALIAS_BIT_KHR(0x00000400);
 
-val VkImageCreate_SPARSE_BINDING_BIT: VkImageCreateFlagBits = 0x00000001
-val VkImageCreate_SPARSE_RESIDENCY_BIT: VkImageCreateFlagBits = 0x00000002
-val VkImageCreate_SPARSE_ALIASED_BIT: VkImageCreateFlagBits = 0x00000004
-val VkImageCreate_MUTABLE_FORMAT_BIT: VkImageCreateFlagBits = 0x00000008
-val VkImageCreate_CUBE_COMPATIBLE_BIT: VkImageCreateFlagBits = 0x00000010
-val VkImageCreate_BIND_SFR_BIT_KHX: VkImageCreateFlagBits = 0x00000040
-val VkImageCreate_2D_ARRAY_COMPATIBLE_BIT_KHR: VkImageCreateFlagBits = 0x00000020
-val VkImageCreate_BLOCK_TEXEL_VIEW_COMPATIBLE_BIT_KHR: VkImageCreateFlagBits = 0x00000080
-val VkImageCreate_EXTENDED_USAGE_BIT_KHR: VkImageCreateFlagBits = 0x00000100
-val VkImageCreate_SAMPLE_LOCATIONS_COMPATIBLE_DEPTH_BIT_EXT: VkImageCreateFlagBits = 0x00001000
-val VkImageCreate_DISJOINT_BIT_KHR: VkImageCreateFlagBits = 0x00000200
-val VkImageCreate_ALIAS_BIT_KHR: VkImageCreateFlagBits = 0x00000400
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
 
 typealias VkImageCreateFlags = VkFlags
 
@@ -1165,13 +1163,16 @@ enum class VkMemoryProperty(val i: Int) {
 
 typealias VkMemoryPropertyFlags = VkFlags
 
-//typedef enum VkMemoryHeapFlagBits {
-//    VK_MEMORY_HEAP_DEVICE_LOCAL_BIT = 0x00000001,
-//    VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX = 0x00000002,
-//    VK_MEMORY_HEAP_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkMemoryHeapFlagBits;
-//typedef VkFlags VkMemoryHeapFlags;
-//typedef VkFlags VkDeviceCreateFlags;
+enum class VkMemoryHeapFlag(val i: Int) {
+    DEVICE_LOCAL_BIT(0x00000001),
+    MULTI_INSTANCE_BIT_KHX(0x00000002);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkMemoryHeapFlags = VkFlags
+typealias VkDeviceCreateFlags = VkFlags
 typealias VkDeviceQueueCreateFlags = VkFlags
 
 enum class VkPipelineStage(val i: Int) {
@@ -1222,20 +1223,26 @@ enum class VkImageAspect(val i: Int) {
 
 typealias VkImageAspectFlags = VkFlags
 
-//typedef enum VkSparseImageFormatFlagBits {
-//    VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT = 0x00000001,
-//    VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT = 0x00000002,
-//    VK_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT = 0x00000004,
-//    VK_SPARSE_IMAGE_FORMAT_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkSparseImageFormatFlagBits;
-//typedef VkFlags VkSparseImageFormatFlags;
-//
-//typedef enum VkSparseMemoryBindFlagBits {
-//    VK_SPARSE_MEMORY_BIND_METADATA_BIT = 0x00000001,
-//    VK_SPARSE_MEMORY_BIND_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkSparseMemoryBindFlagBits;
-//typedef VkFlags VkSparseMemoryBindFlags;
-//
+enum class VkSparseImageFormat(val i: Int) {
+    SINGLE_MIPTAIL_BIT(0x00000001),
+    ALIGNED_MIP_SIZE_BIT(0x00000002),
+    NONSTANDARD_BLOCK_SIZE_BIT(0x00000004);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkSparseImageFormatFlags = VkFlags
+
+enum class VkSparseMemoryBind(val i: Int) {
+    METADATA_BIT(0x00000001);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkSparseMemoryBindFlags = VkFlags
+
 enum class VkFenceCreate(val i: Int) {
     SIGNALED_BIT(0x00000001);
 
@@ -1246,39 +1253,49 @@ enum class VkFenceCreate(val i: Int) {
 
 typealias VkFenceCreateFlags = VkFlags
 typealias VkSemaphoreCreateFlags = VkFlags
-//typedef VkFlags VkEventCreateFlags;
-//typedef VkFlags VkQueryPoolCreateFlags;
-//
-//typedef enum VkQueryPipelineStatisticFlagBits {
-//    VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT = 0x00000001,
-//    VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT = 0x00000002,
-//    VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT = 0x00000004,
-//    VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT = 0x00000008,
-//    VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT = 0x00000010,
-//    VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT = 0x00000020,
-//    VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT = 0x00000040,
-//    VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT = 0x00000080,
-//    VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT = 0x00000100,
-//    VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT = 0x00000200,
-//    VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT = 0x00000400,
-//    VK_QUERY_PIPELINE_STATISTIC_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkQueryPipelineStatisticFlagBits;
-//typedef VkFlags VkQueryPipelineStatisticFlags;
-//
-//typedef enum VkQueryResultFlagBits {
-//    VK_QUERY_RESULT_64_BIT = 0x00000001,
-//    VK_QUERY_RESULT_WAIT_BIT = 0x00000002,
-//    VK_QUERY_RESULT_WITH_AVAILABILITY_BIT = 0x00000004,
-//    VK_QUERY_RESULT_PARTIAL_BIT = 0x00000008,
-//    VK_QUERY_RESULT_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkQueryResultFlagBits;
-//typedef VkFlags VkQueryResultFlags;
+typealias VkEventCreateFlags = VkFlags
+typealias VkQueryPoolCreateFlags = VkFlags
 
-typealias VkBufferCreateFlagBits = Int
+enum class VkQueryPipelineStatistic(val i: Int) {
+    INPUT_ASSEMBLY_VERTICES_BIT(0x00000001),
+    INPUT_ASSEMBLY_PRIMITIVES_BIT(0x00000002),
+    VERTEX_SHADER_INVOCATIONS_BIT(0x00000004),
+    GEOMETRY_SHADER_INVOCATIONS_BIT(0x00000008),
+    GEOMETRY_SHADER_PRIMITIVES_BIT(0x00000010),
+    CLIPPING_INVOCATIONS_BIT(0x00000020),
+    CLIPPING_PRIMITIVES_BIT(0x00000040),
+    FRAGMENT_SHADER_INVOCATIONS_BIT(0x00000080),
+    TESSELLATION_CONTROL_SHADER_PATCHES_BIT(0x00000100),
+    TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT(0x00000200),
+    COMPUTE_SHADER_INVOCATIONS_BIT(0x00000400);
 
-val VkBufferCreate_SPARSE_BINDING_BIT: VkBufferCreateFlagBits = 0x00000001
-val VkBufferCreate_SPARSE_RESIDENCY_BIT: VkBufferCreateFlagBits = 0x00000002
-val VkBufferCreate_SPARSE_ALIASED_BIT: VkBufferCreateFlagBits = 0x00000004
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkQueryPipelineStatisticFlags = VkFlags
+
+enum class VkQueryResult(val i: Int) {
+    `64_BIT`(0x00000001),
+    WAIT_BIT(0x00000002),
+    WITH_AVAILABILITY_BIT(0x00000004),
+    PARTIAL_BIT(0x00000008);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkQueryResultFlags = VkFlags
+
+enum class VkBufferCreate(val i: Int) {
+    SPARSE_BINDING_BIT(0x00000001),
+    SPARSE_RESIDENCY_BIT(0x00000002),
+    SPARSE_ALIASED_BIT(0x00000004);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkBufferCreateFlags = VkFlags
 
@@ -1307,15 +1324,18 @@ typealias VkImageViewCreateFlags = VkFlags
 typealias VkShaderModuleCreateFlags = VkFlags
 typealias VkPipelineCacheCreateFlags = VkFlags
 
-//
-//typedef enum VkPipelineCreateFlagBits {
-//    VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT = 0x00000001,
-//    VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT = 0x00000002,
-//    VK_PIPELINE_CREATE_DERIVATIVE_BIT = 0x00000004,
-//    VK_PIPELINE_CREATE_VIEW_INDEX_FROM_DEVICE_INDEX_BIT_KHX = 0x00000008,
-//    VK_PIPELINE_CREATE_DISPATCH_BASE_KHX = 0x00000010,
-//    VK_PIPELINE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkPipelineCreateFlagBits;
+
+enum class VkPipelineCreate(val i: Int) {
+    DISABLE_OPTIMIZATION_BIT(0x00000001),
+    ALLOW_DERIVATIVES_BIT(0x00000002),
+    DERIVATIVE_BIT(0x00000004),
+    VIEW_INDEX_FROM_DEVICE_INDEX_BIT_KHX(0x00000008),
+    DISPATCH_BASE_KHX(0x00000010);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 typealias VkPipelineCreateFlags = VkFlags
 
 typealias VkPipelineShaderStageCreateFlags = VkFlags
@@ -1339,7 +1359,7 @@ enum class VkShaderStage(val i: Int) {
 typealias VkPipelineVertexInputStateCreateFlags = VkFlags
 typealias VkPipelineInputAssemblyStateCreateFlags = VkFlags
 
-//typedef VkFlags VkPipelineTessellationStateCreateFlags;
+typealias VkPipelineTessellationStateCreateFlags = VkFlags
 typealias VkPipelineViewportStateCreateFlags = VkFlags
 
 typealias VkPipelineRasterizationStateCreateFlags = VkFlags
@@ -1362,12 +1382,16 @@ typealias VkPipelineDepthStencilStateCreateFlags = VkFlags
 
 typealias VkPipelineColorBlendStateCreateFlags = VkFlags
 
-typealias VkColorComponentFlagBits = Int
+enum class VkColorComponent(val i: Int) {
+    R_BIT(0x00000001),
+    G_BIT(0x00000002),
+    B_BIT(0x00000004),
+    A_BIT(0x00000008);
 
-val VkColorComponent_R_BIT: VkColorComponentFlagBits = 0x00000001
-val VkColorComponent_G_BIT: VkColorComponentFlagBits = 0x00000002
-val VkColorComponent_B_BIT: VkColorComponentFlagBits = 0x00000004
-val VkColorComponent_A_BIT: VkColorComponentFlagBits = 0x00000008
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 
 typealias VkColorComponentFlags = VkFlags
@@ -1378,33 +1402,49 @@ typealias VkShaderStageFlags = VkFlags
 
 typealias VkSamplerCreateFlags = VkFlags
 
-typealias VkDescriptorSetLayoutCreateFlagBits = Int
+enum class VkDescriptorSetLayoutCreate(val i: Int) {
+    PUSH_DESCRIPTOR_BIT_KHR(0x00000001);
 
-val VkDescriptorSetLayoutCreate_PUSH_DESCRIPTOR_BIT_KHR: VkDescriptorSetLayoutCreateFlagBits = 0x00000001
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkDescriptorSetLayoutCreateFlags = VkFlags
 
-typealias VkDescriptorPoolCreateFlagBits = Int
+enum class VkDescriptorPoolCreate(val i: Int) {
+    FREE_DESCRIPTOR_SET_BIT(0x00000001);
 
-val VkDescriptiorPoolCreate_FREE_DESCRIPTOR_SET_BIT: VkDescriptorPoolCreateFlagBits = 0x00000001
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkDescriptorPoolCreateFlags = VkFlags
-//typedef VkFlags VkDescriptorPoolResetFlags;
+typealias VkDescriptorPoolResetFlags = VkFlags
 typealias VkFramebufferCreateFlags = VkFlags
 
 typealias VkRenderPassCreateFlags = VkFlags
 
-typealias VkAttachmentDescriptionFlagBits = Int
+enum class VkAttachmentDescriptionFlag(val i: Int) {
+    MAY_ALIAS_BIT(0x00000001);
 
-val VkAttachmentDescription_MAY_ALIAS_BIT: VkAttachmentDescriptionFlagBits = 0x00000001
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkAttachmentDescriptionFlags = VkFlags
 
 
-typealias VkSubpassDescriptionFlagBits = Int
+enum class VkSubpassDescriptionFlag(val i: Int) {
+    PER_VIEW_ATTRIBUTES_BIT_NVX(0x00000001),
+    PER_VIEW_POSITION_X_ONLY_BIT_NVX(0x00000002);
 
-val VkSubpassDescription_PER_VIEW_ATTRIBUTES_BIT_NVX: VkSubpassDescriptionFlagBits = 0x00000001
-val VkSubpassDescription_PER_VIEW_POSITION_X_ONLY_BIT_NVX: VkSubpassDescriptionFlagBits = 0x00000002
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
 
 typealias VkSubpassDescriptionFlags = VkFlags
 
@@ -1453,105 +1493,65 @@ typealias VkDependencyFlags = VkFlags
 
 enum class VkCommandPoolCreate(val i: Int) {
     TRANSIENT_BIT(0x00000001),
-    RESET_COMMAND_BUFFER_BIT(0x00000002)
+    RESET_COMMAND_BUFFER_BIT(0x00000002);
+
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
 }
 
 typealias VkCommandPoolCreateFlags = VkFlags
 
-//typedef enum VkCommandPoolResetFlagBits {
-//    VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT = 0x00000001,
-//    VK_COMMAND_POOL_RESET_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkCommandPoolResetFlagBits;
-//typedef VkFlags VkCommandPoolResetFlags;
-//
-//typedef enum VkCommandBufferUsageFlagBits {
-//    VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT = 0x00000001,
-//    VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT = 0x00000002,
-//    VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT = 0x00000004,
-//    VK_COMMAND_BUFFER_USAGE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkCommandBufferUsageFlagBits;
-typealias VkCommandBufferUsageFlags = VkFlags
-//
-//typedef enum VkQueryControlFlagBits {
-//    VK_QUERY_CONTROL_PRECISE_BIT = 0x00000001,
-//    VK_QUERY_CONTROL_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkQueryControlFlagBits;
-//typedef VkFlags VkQueryControlFlags;
-//
-//typedef enum VkCommandBufferResetFlagBits {
-//    VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT = 0x00000001,
-//    VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkCommandBufferResetFlagBits;
-//typedef VkFlags VkCommandBufferResetFlags;
-//
-//typedef enum VkStencilFaceFlagBits {
-//    VK_STENCIL_FACE_FRONT_BIT = 0x00000001,
-//    VK_STENCIL_FACE_BACK_BIT = 0x00000002,
-//    VK_STENCIL_FRONT_AND_BACK = 0x00000003,
-//    VK_STENCIL_FACE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-//} VkStencilFaceFlagBits;
-//typedef VkFlags VkStencilFaceFlags;
-//
+enum class VkCommandPoolReset(val i: Int) {
+    RELEASE_RESOURCES_BIT(0x00000001);
 
-typealias VkDebugReportObjectTypeEXT = Int
-
-val VkDebugReportObjectType_UNKNOWN_EXT: VkDebugReportObjectTypeEXT = 0
-val VkDebugReportObjectType_INSTANCE_EXT: VkDebugReportObjectTypeEXT = 1
-val VkDebugReportObjectType_PHYSICAL_DEVICE_EXT: VkDebugReportObjectTypeEXT = 2
-val VkDebugReportObjectType_DEVICE_EXT: VkDebugReportObjectTypeEXT = 3
-val VkDebugReportObjectType_QUEUE_EXT: VkDebugReportObjectTypeEXT = 4
-val VkDebugReportObjectType_SEMAPHORE_EXT: VkDebugReportObjectTypeEXT = 5
-val VkDebugReportObjectType_COMMAND_BUFFER_EXT: VkDebugReportObjectTypeEXT = 6
-val VkDebugReportObjectType_FENCE_EXT: VkDebugReportObjectTypeEXT = 7
-val VkDebugReportObjectType_DEVICE_MEMORY_EXT: VkDebugReportObjectTypeEXT = 8
-val VkDebugReportObjectType_BUFFER_EXT: VkDebugReportObjectTypeEXT = 9
-val VkDebugReportObjectType_IMAGE_EXT: VkDebugReportObjectTypeEXT = 10
-val VkDebugReportObjectType_EVENT_EXT: VkDebugReportObjectTypeEXT = 11
-val VkDebugReportObjectType_QUERY_POOL_EXT: VkDebugReportObjectTypeEXT = 12
-val VkDebugReportObjectType_BUFFER_VIEW_EXT: VkDebugReportObjectTypeEXT = 13
-val VkDebugReportObjectType_IMAGE_VIEW_EXT: VkDebugReportObjectTypeEXT = 14
-val VkDebugReportObjectType_SHADER_MODULE_EXT: VkDebugReportObjectTypeEXT = 15
-val VkDebugReportObjectType_PIPELINE_CACHE_EXT: VkDebugReportObjectTypeEXT = 16
-val VkDebugReportObjectType_PIPELINE_LAYOUT_EXT: VkDebugReportObjectTypeEXT = 17
-val VkDebugReportObjectType_RENDER_PASS_EXT: VkDebugReportObjectTypeEXT = 18
-val VkDebugReportObjectType_PIPELINE_EXT: VkDebugReportObjectTypeEXT = 19
-val VkDebugReportObjectType_DESCRIPTOR_SET_LAYOUT_EXT: VkDebugReportObjectTypeEXT = 20
-val VkDebugReportObjectType_SAMPLER_EXT: VkDebugReportObjectTypeEXT = 21
-val VkDebugReportObjectType_DESCRIPTOR_POOL_EXT: VkDebugReportObjectTypeEXT = 22
-val VkDebugReportObjectType_DESCRIPTOR_SET_EXT: VkDebugReportObjectTypeEXT = 23
-val VkDebugReportObjectType_FRAMEBUFFER_EXT: VkDebugReportObjectTypeEXT = 24
-val VkDebugReportObjectType_COMMAND_POOL_EXT: VkDebugReportObjectTypeEXT = 25
-val VkDebugReportObjectType_SURFACE_KHR_EXT: VkDebugReportObjectTypeEXT = 26
-val VkDebugReportObjectType_SWAPCHAIN_KHR_EXT: VkDebugReportObjectTypeEXT = 27
-val VkDebugReportObjectType_DEBUG_REPORT_CALLBACK_EXT_EXT: VkDebugReportObjectTypeEXT = 28
-val VkDebugReportObjectType_DISPLAY_KHR_EXT: VkDebugReportObjectTypeEXT = 29
-val VkDebugReportObjectType_DISPLAY_MODE_KHR_EXT: VkDebugReportObjectTypeEXT = 30
-val VkDebugReportObjectType_OBJECT_TABLE_NVX_EXT: VkDebugReportObjectTypeEXT = 31
-val VkDebugReportObjectType_INDIRECT_COMMANDS_LAYOUT_NVX_EXT: VkDebugReportObjectTypeEXT = 32
-val VkDebugReportObjectType_VALIDATION_CACHE_EXT: VkDebugReportObjectTypeEXT = 33
-val VkDebugReportObjectType_DESCRIPTOR_UPDATE_TEMPLATE_KHR_EXT: VkDebugReportObjectTypeEXT = 1000085000
-val VkDebugReportObjectType_SAMPLER_YCBCR_CONVERSION_KHR_EXT: VkDebugReportObjectTypeEXT = 1000156000
-
-val VkDebugReportObjectType_BEGIN_RANGE_EXT: Int = VkDebugReportObjectType_UNKNOWN_EXT
-val VkDebugReportObjectType_END_RANGE_EXT: Int = VkDebugReportObjectType_VALIDATION_CACHE_EXT
-val VkDebugReportObjectType_RANGE_SIZE_EXT = VkDebugReportObjectType_VALIDATION_CACHE_EXT - VkDebugReportObjectType_UNKNOWN_EXT + 1
-
-
-//typealias VkDebugReportFlagBitsEXT = Int
-
-enum class VkDebugReport(val i: Int) {
-    INFORMATION_BIT_EXT(0x00000001),
-    WARNING_BIT_EXT(0x00000002),
-    PERFORMANCE_WARNING_BIT_EXT(0x00000004),
-    ERROR_BIT_EXT(0x00000008),
-    DEBUG_BIT_EXT(0x00000010);
-
-    inline infix fun or(b: VkDebugReport): VkDebugReportFlagsEXT = i or b.i
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
 }
+typealias VkCommandPoolResetFlags = VkFlags
 
-inline infix fun Int.has(f: VkDebugReport) = and(f.i) != 0
+enum class VkCommandBufferUsage(val i: Int) {
+    ONE_TIME_SUBMIT_BIT(0x00000001),
+    RENDER_PASS_CONTINUE_BIT(0x00000002),
+    SIMULTANEOUS_USE_BIT(0x00000004);
 
-typealias VkDebugReportFlagsEXT = VkFlags
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkCommandBufferUsageFlags = VkFlags
+
+
+enum class VkQueryControl(val i: Int) {
+    PRECISE_BIT(0x00000001);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkQueryControlFlags = VkFlags
+
+enum class VkCommandBufferReset(val i: Int) {
+    RELEASE_RESOURCES_BIT(0x00000001);
+
+    companion object {
+        infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkCommandBufferResetFlags = VkFlags
+
+enum class VkStencilFace(val i: Int) {
+    FRONT_BIT(0x00000001),
+    BACK_BIT(0x00000002),
+    FRONT_AND_BACK(0x00000003);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+typealias VkStencilFaceFlags = VkFlags
+
 
 enum class VkColorSpace(val i: Int) {
     SRGB_NONLINEAR_KHR(0),
@@ -1622,3 +1622,74 @@ enum class VkCompositeAlpha(val i: Int) {
 inline infix fun Int.has(f: VkCompositeAlpha) = and(f.i) != 0
 
 typealias VkCompositeAlphaFlagsKHR = VkFlags
+
+
+enum class VkSwapchainCreateKHR(val i: Int) {
+    BIND_SFR_BIT_KHX(0x00000001);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+
+enum class VkDebugReportObjectType(val i: Int) {
+    UNKNOWN_EXT(0),
+    INSTANCE_EXT(1),
+    PHYSICAL_DEVICE_EXT(2),
+    DEVICE_EXT(3),
+    QUEUE_EXT(4),
+    SEMAPHORE_EXT(5),
+    COMMAND_BUFFER_EXT(6),
+    FENCE_EXT(7),
+    DEVICE_MEMORY_EXT(8),
+    BUFFER_EXT(9),
+    IMAGE_EXT(10),
+    EVENT_EXT(11),
+    QUERY_POOL_EXT(12),
+    BUFFER_VIEW_EXT(13),
+    IMAGE_VIEW_EXT(14),
+    SHADER_MODULE_EXT(15),
+    PIPELINE_CACHE_EXT(16),
+    PIPELINE_LAYOUT_EXT(17),
+    RENDER_PASS_EXT(18),
+    PIPELINE_EXT(19),
+    DESCRIPTOR_SET_LAYOUT_EXT(20),
+    SAMPLER_EXT(21),
+    DESCRIPTOR_POOL_EXT(22),
+    DESCRIPTOR_SET_EXT(23),
+    FRAMEBUFFER_EXT(24),
+    COMMAND_POOL_EXT(25),
+    SURFACE_KHR_EXT(26),
+    SWAPCHAIN_KHR_EXT(27),
+    DEBUG_REPORT_CALLBACK_EXT_EXT(28),
+    DISPLAY_KHR_EXT(29),
+    DISPLAY_MODE_KHR_EXT(30),
+    OBJECT_TABLE_NVX_EXT(31),
+    INDIRECT_COMMANDS_LAYOUT_NVX_EXT(32),
+    VALIDATION_CACHE_EXT(33),
+    DESCRIPTOR_UPDATE_TEMPLATE_KHR_EXT(1000085000),
+    SAMPLER_YCBCR_CONVERSION_KHR_EXT(1000156000);
+
+    companion object {
+        inline infix fun of(i: Int) = values().first { it.i == i }
+    }
+}
+
+
+//typealias VkDebugReportFlagBitsEXT = Int
+
+enum class VkDebugReport(val i: Int) {
+    INFORMATION_BIT_EXT(0x00000001),
+    WARNING_BIT_EXT(0x00000002),
+    PERFORMANCE_WARNING_BIT_EXT(0x00000004),
+    ERROR_BIT_EXT(0x00000008),
+    DEBUG_BIT_EXT(0x00000010);
+
+    inline infix fun or(b: VkDebugReport): VkDebugReportFlagsEXT = i or b.i
+}
+
+inline infix fun Int.has(f: VkDebugReport) = and(f.i) != 0
+
+typealias VkDebugReportFlagsEXT = VkFlags
+

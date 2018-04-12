@@ -56,7 +56,7 @@ object glfw {
     val requiredInstanceExtensions: ArrayList<String>
         get() {
             val pCount = appBuffer.intBuffer
-            val ppNames = GLFWVulkan.nglfwGetRequiredInstanceExtensions(pCount.address)
+            val ppNames = GLFWVulkan.nglfwGetRequiredInstanceExtensions(pCount.adr)
             val a = GLFWVulkan.glfwGetRequiredInstanceExtensions()
             val count = pCount[0]
             val pNames = MemoryUtil.memPointerBufferSafe(ppNames, count) ?: return arrayListOf()
