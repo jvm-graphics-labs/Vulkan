@@ -28,4 +28,4 @@ Using pipeline state objects (pso) that bake state information (rasterization st
 
 - [Sasha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
 - [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :) 
-- [Kai](https://github.com/httpdigest) for its first Hello Triangle in java
+- [Kai](https://github.com/httpdigest), for his first Hello Triangle in java
