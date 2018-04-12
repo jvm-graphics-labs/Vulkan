@@ -1,6 +1,7 @@
 package vkn
 
 import glfw_.advance
+
 import glfw_.appBuffer
 import glfw_.appBuffer.ptr
 import glm_.*
@@ -12,136 +13,11 @@ import org.lwjgl.vulkan.*
 import java.nio.IntBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
-
 object vk {
 
     inline fun ApplicationInfo(block: VkApplicationInfo.() -> Unit): VkApplicationInfo {
         val res = VkApplicationInfo.create(ptr.advance(VkApplicationInfo.SIZEOF))
         res.type = VkStructureType.APPLICATION_INFO
-        res.block()
-        return res
-    }
-
-    inline fun InstanceCreateInfo(block: VkInstanceCreateInfo.() -> Unit): VkInstanceCreateInfo {
-        val res = VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF))
-        res.type = VkStructureType.INSTANCE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun DebugReportCallbackCreateInfoEXT(block: VkDebugReportCallbackCreateInfoEXT.() -> Unit): VkDebugReportCallbackCreateInfoEXT {
-        val res = VkDebugReportCallbackCreateInfoEXT.create(ptr.advance(VkDebugReportCallbackCreateInfoEXT.SIZEOF))
-        res.type = VkStructureType.DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
-        res.block()
-        return res
-    }
-
-    inline fun DeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo {
-        val res = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF))
-        res.type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun DeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
-
-    inline fun SurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ptr.advance(VkSurfaceFormatKHR.SIZEOF * capacity), capacity)
-
-    inline fun DeviceCreateInfo(block: VkDeviceCreateInfo.() -> Unit): VkDeviceCreateInfo {
-        val res = VkDeviceCreateInfo.create(ptr.advance(VkDeviceCreateInfo.SIZEOF))
-        res.type = VkStructureType.DEVICE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun CommandPoolCreateInfo(block: VkCommandPoolCreateInfo.() -> Unit): VkCommandPoolCreateInfo {
-        val res = VkCommandPoolCreateInfo.create(ptr.advance(VkCommandPoolCreateInfo.SIZEOF))
-        res.type = VkStructureType.COMMAND_POOL_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun FormatProperties(block: VkFormatProperties.() -> Unit): VkFormatProperties = VkFormatProperties.create(ptr.advance(VkFormatProperties.SIZEOF)).also(block)
-
-    inline fun SemaphoreCreateInfo(block: VkSemaphoreCreateInfo.() -> Unit): VkSemaphoreCreateInfo {
-        val res = VkSemaphoreCreateInfo.create(ptr.advance(VkSemaphoreCreateInfo.SIZEOF))
-        res.type = VkStructureType.SEMAPHORE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun SubmitInfo(block: VkSubmitInfo.() -> Unit): VkSubmitInfo {
-        val res = VkSubmitInfo.create(ptr.advance(VkSubmitInfo.SIZEOF))
-        res.type = VkStructureType.SUBMIT_INFO
-        res.block()
-        return res
-    }
-
-    inline fun SurfaceCapabilitiesKHR(block: VkSurfaceCapabilitiesKHR.() -> Unit): VkSurfaceCapabilitiesKHR = VkSurfaceCapabilitiesKHR.create(ptr.advance(VkSurfaceCapabilitiesKHR.SIZEOF)).also(block)
-
-    inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
-
-    inline fun SwapchainCreateInfoKHR(block: VkSwapchainCreateInfoKHR.() -> Unit): VkSwapchainCreateInfoKHR {
-        val res = VkSwapchainCreateInfoKHR.create(ptr.advance(VkSwapchainCreateInfoKHR.SIZEOF))
-        res.type = VkStructureType.SWAPCHAIN_CREATE_INFO_KHR
-        res.block()
-        return res
-    }
-
-    inline fun ImageViewCreateInfo(block: VkImageViewCreateInfo.() -> Unit): VkImageViewCreateInfo {
-        val res = VkImageViewCreateInfo.create(ptr.advance(VkImageViewCreateInfo.SIZEOF))
-        res.type = VkStructureType.IMAGE_VIEW_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun CommandBufferAllocateInfo(block: VkCommandBufferAllocateInfo.() -> Unit): VkCommandBufferAllocateInfo {
-        val res = VkCommandBufferAllocateInfo.create(ptr.advance(VkCommandBufferAllocateInfo.SIZEOF))
-        res.type = VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun ImageCreateInfo(block: VkImageCreateInfo.() -> Unit): VkImageCreateInfo {
-        val res = VkImageCreateInfo.create(ptr.advance(VkImageCreateInfo.SIZEOF))
-        res.type = VkStructureType.IMAGE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun MemoryAllocateInfo(block: VkMemoryAllocateInfo.() -> Unit): VkMemoryAllocateInfo {
-        val res = VkMemoryAllocateInfo.create(ptr.advance(VkMemoryAllocateInfo.SIZEOF))
-        res.type = VkStructureType.MEMORY_ALLOCATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
-
-    inline fun RenderPassCreateInfo(block: VkRenderPassCreateInfo.() -> Unit): VkRenderPassCreateInfo {
-        val res = VkRenderPassCreateInfo.create(ptr.advance(VkRenderPassCreateInfo.SIZEOF))
-        res.type = VkStructureType.RENDER_PASS_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineCacheCreateInfo(block: VkPipelineCacheCreateInfo.() -> Unit): VkPipelineCacheCreateInfo {
-        val res = VkPipelineCacheCreateInfo.create(ptr.advance(VkPipelineCacheCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_CACHE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun FramebufferCreateInfo(block: VkFramebufferCreateInfo.() -> Unit): VkFramebufferCreateInfo {
-        val res = VkFramebufferCreateInfo.create(ptr.advance(VkFramebufferCreateInfo.SIZEOF))
-        res.type = VkStructureType.FRAMEBUFFER_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun FenceCreateInfo(block: VkFenceCreateInfo.() -> Unit): VkFenceCreateInfo {
-        val res = VkFenceCreateInfo.create(ptr.advance(VkFenceCreateInfo.SIZEOF))
-        res.type = VkStructureType.FENCE_CREATE_INFO
         res.block()
         return res
     }
@@ -153,6 +29,13 @@ object vk {
         return res
     }
 
+    inline fun CommandBufferAllocateInfo(block: VkCommandBufferAllocateInfo.() -> Unit): VkCommandBufferAllocateInfo {
+        val res = VkCommandBufferAllocateInfo.create(ptr.advance(VkCommandBufferAllocateInfo.SIZEOF))
+        res.type = VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO
+        res.block()
+        return res
+    }
+
     inline fun CommandBufferBeginInfo(block: VkCommandBufferBeginInfo.() -> Unit): VkCommandBufferBeginInfo {
         val res = VkCommandBufferBeginInfo.create(ptr.advance(VkCommandBufferBeginInfo.SIZEOF))
         res.type = VkStructureType.COMMAND_BUFFER_BEGIN_INFO
@@ -160,79 +43,16 @@ object vk {
         return res
     }
 
-    inline fun DescriptorSetLayoutCreateInfo(block: VkDescriptorSetLayoutCreateInfo.() -> Unit): VkDescriptorSetLayoutCreateInfo {
-        val res = VkDescriptorSetLayoutCreateInfo.create(ptr.advance(VkDescriptorSetLayoutCreateInfo.SIZEOF))
-        res.type = VkStructureType.DESCRIPTOR_SET_LAYOUT_CREATE_INFO
+    inline fun CommandPoolCreateInfo(block: VkCommandPoolCreateInfo.() -> Unit): VkCommandPoolCreateInfo {
+        val res = VkCommandPoolCreateInfo.create(ptr.advance(VkCommandPoolCreateInfo.SIZEOF))
+        res.type = VkStructureType.COMMAND_POOL_CREATE_INFO
         res.block()
         return res
     }
 
-    inline fun PipelineLayoutCreateInfo(block: VkPipelineLayoutCreateInfo.() -> Unit): VkPipelineLayoutCreateInfo {
-        val res = VkPipelineLayoutCreateInfo.create(ptr.advance(VkPipelineLayoutCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_LAYOUT_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineInputAssemblyStateCreateInfo(block: VkPipelineInputAssemblyStateCreateInfo.() -> Unit): VkPipelineInputAssemblyStateCreateInfo {
-        val res = VkPipelineInputAssemblyStateCreateInfo.create(ptr.advance(VkPipelineInputAssemblyStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineRasterizationStateCreateInfo(block: VkPipelineRasterizationStateCreateInfo.() -> Unit): VkPipelineRasterizationStateCreateInfo {
-        val res = VkPipelineRasterizationStateCreateInfo.create(ptr.advance(VkPipelineRasterizationStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_RASTERIZATION_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineColorBlendStateCreateInfo(block: VkPipelineColorBlendStateCreateInfo.() -> Unit): VkPipelineColorBlendStateCreateInfo {
-        val res = VkPipelineColorBlendStateCreateInfo.create(ptr.advance(VkPipelineColorBlendStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineViewportStateCreateInfo(block: VkPipelineViewportStateCreateInfo.() -> Unit): VkPipelineViewportStateCreateInfo {
-        val res = VkPipelineViewportStateCreateInfo.create(ptr.advance(VkPipelineViewportStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_VIEWPORT_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineDynamicStateCreateInfo(block: VkPipelineDynamicStateCreateInfo.() -> Unit): VkPipelineDynamicStateCreateInfo {
-        val res = VkPipelineDynamicStateCreateInfo.create(ptr.advance(VkPipelineDynamicStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_DYNAMIC_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineDepthStencilStateCreateInfo(block: VkPipelineDepthStencilStateCreateInfo.() -> Unit): VkPipelineDepthStencilStateCreateInfo {
-        val res = VkPipelineDepthStencilStateCreateInfo.create(ptr.advance(VkPipelineDepthStencilStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineMultisampleStateCreateInfo(block: VkPipelineMultisampleStateCreateInfo.() -> Unit): VkPipelineMultisampleStateCreateInfo {
-        val res = VkPipelineMultisampleStateCreateInfo.create(ptr.advance(VkPipelineMultisampleStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun PipelineVertexInputStateCreateInfo(block: VkPipelineVertexInputStateCreateInfo.() -> Unit): VkPipelineVertexInputStateCreateInfo {
-        val res = VkPipelineVertexInputStateCreateInfo.create(ptr.advance(VkPipelineVertexInputStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun ShaderModuleCreateInfo(block: VkShaderModuleCreateInfo.() -> Unit): VkShaderModuleCreateInfo {
-        val res = VkShaderModuleCreateInfo.create(ptr.advance(VkShaderModuleCreateInfo.SIZEOF))
-        res.type = VkStructureType.SHADER_MODULE_CREATE_INFO
+    inline fun DebugReportCallbackCreateInfoEXT(block: VkDebugReportCallbackCreateInfoEXT.() -> Unit): VkDebugReportCallbackCreateInfoEXT {
+        val res = VkDebugReportCallbackCreateInfoEXT.create(ptr.advance(VkDebugReportCallbackCreateInfoEXT.SIZEOF))
+        res.type = VkStructureType.DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
         res.block()
         return res
     }
@@ -251,10 +71,198 @@ object vk {
         return res
     }
 
+    inline fun DescriptorSetLayoutCreateInfo(block: VkDescriptorSetLayoutCreateInfo.() -> Unit): VkDescriptorSetLayoutCreateInfo {
+        val res = VkDescriptorSetLayoutCreateInfo.create(ptr.advance(VkDescriptorSetLayoutCreateInfo.SIZEOF))
+        res.type = VkStructureType.DESCRIPTOR_SET_LAYOUT_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun DeviceCreateInfo(block: VkDeviceCreateInfo.() -> Unit): VkDeviceCreateInfo {
+        val res = VkDeviceCreateInfo.create(ptr.advance(VkDeviceCreateInfo.SIZEOF))
+        res.type = VkStructureType.DEVICE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun DeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo {
+        val res = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF))
+        res.type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun FenceCreateInfo(block: VkFenceCreateInfo.() -> Unit): VkFenceCreateInfo {
+        val res = VkFenceCreateInfo.create(ptr.advance(VkFenceCreateInfo.SIZEOF))
+        res.type = VkStructureType.FENCE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun FramebufferCreateInfo(block: VkFramebufferCreateInfo.() -> Unit): VkFramebufferCreateInfo {
+        val res = VkFramebufferCreateInfo.create(ptr.advance(VkFramebufferCreateInfo.SIZEOF))
+        res.type = VkStructureType.FRAMEBUFFER_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun ImageCreateInfo(block: VkImageCreateInfo.() -> Unit): VkImageCreateInfo {
+        val res = VkImageCreateInfo.create(ptr.advance(VkImageCreateInfo.SIZEOF))
+        res.type = VkStructureType.IMAGE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun ImageViewCreateInfo(block: VkImageViewCreateInfo.() -> Unit): VkImageViewCreateInfo {
+        val res = VkImageViewCreateInfo.create(ptr.advance(VkImageViewCreateInfo.SIZEOF))
+        res.type = VkStructureType.IMAGE_VIEW_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun InstanceCreateInfo(block: VkInstanceCreateInfo.() -> Unit): VkInstanceCreateInfo {
+        val res = VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF))
+        res.type = VkStructureType.INSTANCE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun MemoryAllocateInfo(block: VkMemoryAllocateInfo.() -> Unit): VkMemoryAllocateInfo {
+        val res = VkMemoryAllocateInfo.create(ptr.advance(VkMemoryAllocateInfo.SIZEOF))
+        res.type = VkStructureType.MEMORY_ALLOCATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineCacheCreateInfo(block: VkPipelineCacheCreateInfo.() -> Unit): VkPipelineCacheCreateInfo {
+        val res = VkPipelineCacheCreateInfo.create(ptr.advance(VkPipelineCacheCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_CACHE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineColorBlendStateCreateInfo(block: VkPipelineColorBlendStateCreateInfo.() -> Unit): VkPipelineColorBlendStateCreateInfo {
+        val res = VkPipelineColorBlendStateCreateInfo.create(ptr.advance(VkPipelineColorBlendStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineDepthStencilStateCreateInfo(block: VkPipelineDepthStencilStateCreateInfo.() -> Unit): VkPipelineDepthStencilStateCreateInfo {
+        val res = VkPipelineDepthStencilStateCreateInfo.create(ptr.advance(VkPipelineDepthStencilStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineDynamicStateCreateInfo(block: VkPipelineDynamicStateCreateInfo.() -> Unit): VkPipelineDynamicStateCreateInfo {
+        val res = VkPipelineDynamicStateCreateInfo.create(ptr.advance(VkPipelineDynamicStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_DYNAMIC_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineInputAssemblyStateCreateInfo(block: VkPipelineInputAssemblyStateCreateInfo.() -> Unit): VkPipelineInputAssemblyStateCreateInfo {
+        val res = VkPipelineInputAssemblyStateCreateInfo.create(ptr.advance(VkPipelineInputAssemblyStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineLayoutCreateInfo(block: VkPipelineLayoutCreateInfo.() -> Unit): VkPipelineLayoutCreateInfo {
+        val res = VkPipelineLayoutCreateInfo.create(ptr.advance(VkPipelineLayoutCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_LAYOUT_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineMultisampleStateCreateInfo(block: VkPipelineMultisampleStateCreateInfo.() -> Unit): VkPipelineMultisampleStateCreateInfo {
+        val res = VkPipelineMultisampleStateCreateInfo.create(ptr.advance(VkPipelineMultisampleStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineRasterizationStateCreateInfo(block: VkPipelineRasterizationStateCreateInfo.() -> Unit): VkPipelineRasterizationStateCreateInfo {
+        val res = VkPipelineRasterizationStateCreateInfo.create(ptr.advance(VkPipelineRasterizationStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_RASTERIZATION_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineVertexInputStateCreateInfo(block: VkPipelineVertexInputStateCreateInfo.() -> Unit): VkPipelineVertexInputStateCreateInfo {
+        val res = VkPipelineVertexInputStateCreateInfo.create(ptr.advance(VkPipelineVertexInputStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun PipelineViewportStateCreateInfo(block: VkPipelineViewportStateCreateInfo.() -> Unit): VkPipelineViewportStateCreateInfo {
+        val res = VkPipelineViewportStateCreateInfo.create(ptr.advance(VkPipelineViewportStateCreateInfo.SIZEOF))
+        res.type = VkStructureType.PIPELINE_VIEWPORT_STATE_CREATE_INFO
+        res.block()
+        return res
+    }
+
     inline fun RenderPassBeginInfo(block: VkRenderPassBeginInfo.() -> Unit): VkRenderPassBeginInfo {
         val res = VkRenderPassBeginInfo.create(ptr.advance(VkRenderPassBeginInfo.SIZEOF))
         res.type = VkStructureType.RENDER_PASS_BEGIN_INFO
         res.block()
+        return res
+    }
+
+    inline fun RenderPassCreateInfo(block: VkRenderPassCreateInfo.() -> Unit): VkRenderPassCreateInfo {
+        val res = VkRenderPassCreateInfo.create(ptr.advance(VkRenderPassCreateInfo.SIZEOF))
+        res.type = VkStructureType.RENDER_PASS_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun SemaphoreCreateInfo(block: VkSemaphoreCreateInfo.() -> Unit): VkSemaphoreCreateInfo {
+        val res = VkSemaphoreCreateInfo.create(ptr.advance(VkSemaphoreCreateInfo.SIZEOF))
+        res.type = VkStructureType.SEMAPHORE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun ShaderModuleCreateInfo(block: VkShaderModuleCreateInfo.() -> Unit): VkShaderModuleCreateInfo {
+        val res = VkShaderModuleCreateInfo.create(ptr.advance(VkShaderModuleCreateInfo.SIZEOF))
+        res.type = VkStructureType.SHADER_MODULE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun SubmitInfo(block: VkSubmitInfo.() -> Unit): VkSubmitInfo {
+        val res = VkSubmitInfo.create(ptr.advance(VkSubmitInfo.SIZEOF))
+        res.type = VkStructureType.SUBMIT_INFO
+        res.block()
+        return res
+    }
+
+    inline fun SwapchainCreateInfoKHR(block: VkSwapchainCreateInfoKHR.() -> Unit): VkSwapchainCreateInfoKHR {
+        val res = VkSwapchainCreateInfoKHR.create(ptr.advance(VkSwapchainCreateInfoKHR.SIZEOF))
+        res.type = VkStructureType.SWAPCHAIN_CREATE_INFO_KHR
+        res.block()
+        return res
+    }
+
+    inline fun DeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
+
+    inline fun SurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ptr.advance(VkSurfaceFormatKHR.SIZEOF * capacity), capacity)
+
+    inline fun FormatProperties(block: VkFormatProperties.() -> Unit): VkFormatProperties = VkFormatProperties.create(ptr.advance(VkFormatProperties.SIZEOF)).also(block)
+
+    inline fun SurfaceCapabilitiesKHR(block: VkSurfaceCapabilitiesKHR.() -> Unit): VkSurfaceCapabilitiesKHR = VkSurfaceCapabilitiesKHR.create(ptr.advance(VkSurfaceCapabilitiesKHR.SIZEOF)).also(block)
+
+    inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
+
+    inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
+
+
+    inline fun GraphicsPipelineCreateInfo(capacity: Int, block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo.Buffer {
+        val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF * capacity), capacity)
+        res.forEach { it.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO }
+        res[0].block()
         return res
     }
 
@@ -272,21 +280,14 @@ object vk {
     inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
 
     inline fun ClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(ptr.advance(VkClearValue.SIZEOF * capacity), capacity)
-
     inline fun AttachmentReference(block: VkAttachmentReference.() -> Unit): VkAttachmentReference = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF)).also(block)
+
     inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity).also { it[0].block() }
 
     inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF * capacity), capacity).also { it[0].block() }
-
     inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
-    inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
 
-    inline fun GraphicsPipelineCreateInfo(capacity: Int, block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo.Buffer {
-        val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF * capacity), capacity)
-        res.forEach { it.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO }
-        res[0].block()
-        return res
-    }
+    inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
 
     inline fun PipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState.Buffer = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF * capacity), capacity).also { it[0].block() }
 
