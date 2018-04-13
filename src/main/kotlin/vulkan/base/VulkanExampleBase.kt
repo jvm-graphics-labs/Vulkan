@@ -6,6 +6,7 @@ import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
+import glm_.vec4.Vec4
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
@@ -92,11 +93,11 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     // Synchronization semaphores
     private val semaphores = object {
         // Swap chain image presentation
-        var presentComplete: VkSemaphorePtr = longBufferOf(NULL)
+        var presentComplete: VkSemaphore = NULL
         // Command buffer submission and execution
-        var renderComplete: VkSemaphorePtr = longBufferOf(NULL)
+        var renderComplete: VkSemaphore = NULL
         // UI overlay submission and execution
-        var overlayComplete: VkSemaphorePtr = longBufferOf(NULL)
+        var overlayComplete: VkSemaphore = NULL
     }
 
     var prepared = false
@@ -113,7 +114,9 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
     lateinit var vulkanDevice: VulkanDevice
 
     /** @brief Example settings that can be changed e.g. by command line arguments */
-    private val settings = object {
+    protected val settings = Settings()
+
+    class Settings {
         /** @brief Activates validation layers (and message output) when set to true */
         var validation = false
         /** @brief Set to true if fullscreen mode has been requested via command line */
@@ -124,7 +127,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         var overlay = false
     }
 
-//    VkClearColorValue defaultClearColor = { { 0.025f, 0.025f, 0.025f, 1.0f } };
+    val defaultClearColor = Vec4(0.025f, 0.025f, 0.025f, 1f)
 
     var zoom = 0f
 
@@ -295,23 +298,23 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         // Clean up Vulkan resources
         swapChain.cleanup()
         if (descriptorPool != NULL)
-            vkDestroyDescriptorPool(device, descriptorPool)
+            vk.destroyDescriptorPool(device, descriptorPool)
         destroyCommandBuffers()
-        vkDestroyRenderPass(device, renderPass)
-        vkDestroyFramebuffer(device, frameBuffers)
+        vk.destroyRenderPass(device, renderPass)
+        vk.destroyFramebuffers(device, frameBuffers)
 
-        vk.destroyShaderModule(device, shaderModules)
-        vkDestroyImageView(device, depthStencil.view)
-        vkDestroyImage(device, depthStencil.image)
-        vkFreeMemory(device, depthStencil.mem)
+        vk.destroyShaderModules(device, shaderModules)
+        vk.destroyImageView(device, depthStencil.view)
+        vk.destroyImage(device, depthStencil.image)
+        vk.freeMemory(device, depthStencil.mem)
 
-        vkDestroyPipelineCache(device, pipelineCache)
+        vk.destroyPipelineCache(device, pipelineCache)
 
-        vkDestroyCommandPool(device, cmdPool)
+        vk.destroyCommandPool(device, cmdPool)
 
-        vkDestroySemaphores(device, semaphores.presentComplete)
-        vkDestroySemaphores(device, semaphores.renderComplete)
-        vkDestroySemaphores(device, semaphores.overlayComplete)
+        vk.destroySemaphore(device, semaphores.presentComplete)
+        vk.destroySemaphore(device, semaphores.renderComplete)
+        vk.destroySemaphore(device, semaphores.overlayComplete)
 
         uiOverlay?.destroy()
 
@@ -420,14 +423,14 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         val semaphoreCreateInfo = vk.SemaphoreCreateInfo {}
         /*  Create a semaphore used to synchronize image presentation
             Ensures that the image is displayed before we start submitting new commands to the queu             */
-        vk.createSemaphore(device, semaphoreCreateInfo, semaphores.presentComplete).check()
+        vk.createSemaphore(device, semaphoreCreateInfo, semaphores::presentComplete).check()
         /*  Create a semaphore used to synchronize command submission
             Ensures that the image is not presented until all commands have been sumbitted and executed             */
-        vk.createSemaphore(device, semaphoreCreateInfo, semaphores.renderComplete).check()
+        vk.createSemaphore(device, semaphoreCreateInfo, semaphores::renderComplete).check()
         // Create a semaphore used to synchronize command submission
         // Ensures that the image is not presented until all commands for the UI overlay have been sumbitted and executed
         // Will be inserted after the render complete semaphore if the UI overlay is enabled
-        vk.createSemaphore(device, semaphoreCreateInfo, semaphores.overlayComplete).check()
+        vk.createSemaphore(device, semaphoreCreateInfo, semaphores::overlayComplete).check()
 
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
@@ -435,8 +438,8 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
         submitInfo = vk.SubmitInfo {
             waitDstStageMask = submitPipelineStages
             waitSemaphoreCount = 1
-            waitSemaphores = semaphores.presentComplete
-            signalSemaphores = semaphores.renderComplete
+            waitSemaphores = appBuffer.longBufferOf(semaphores.presentComplete)
+            signalSemaphores = appBuffer.longBufferOf(semaphores.renderComplete)
         }
     }
 
@@ -713,7 +716,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
     /** Destroy all command buffers and set their handles to VK_NULL_HANDLE
      *  May be necessary during runtime if options are toggled  */
-    fun destroyCommandBuffers() = withStack { vkFreeCommandBuffers(device, cmdPool, drawCmdBuffers) }
+    fun destroyCommandBuffers() = vk.freeCommandBuffers(device, cmdPool, drawCmdBuffers)
 //
 //    // Command buffer creation
 //    // Creates and returns a new command buffer

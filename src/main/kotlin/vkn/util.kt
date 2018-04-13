@@ -46,6 +46,7 @@ inline operator fun PointerBuffer.set(index: Int, pointer: Pointer) {
 //
 //fun PointerBuffer.isNotEmpty() = position() > 0
 
+const val VK_WHOLE_SIZE = 0L.inv()
 
 typealias VkCommandPool = Long
 typealias VkSurfaceKHR = Long
@@ -89,39 +90,22 @@ object ArrayListLong {
     }
 }
 
-// @formatter:off
-inline fun vkDestroyDescriptorPool(device: VkDevice, descriptorPool: VkDescriptorPool, allocator: VkAllocationCallbacks? = null) = VK10.nvkDestroyDescriptorPool(device, descriptorPool, allocator?.address() ?: NULL)
-inline fun vkDestroyRenderPass(device: VkDevice, renderPass: VkRenderPass, allocator: VkAllocationCallbacks? = null) = VK10.nvkDestroyRenderPass(device, renderPass, allocator?.address() ?: NULL)
-inline fun vkDestroyFramebuffer(device: VkDevice, framebuffers: Iterable<VkFramebuffer>, allocator: VkAllocationCallbacks? = null) {
-    for (i in framebuffers)
-        VK10.nvkDestroyFramebuffer(device, i, allocator?.adr ?: NULL)
-}
 
-inline fun vkDestroyFence(device: VkDevice, fences: Iterable<VkFence>, allocator: VkAllocationCallbacks? = null) {
-    for (i in fences)
-        VK10.nvkDestroyFence(device, i, allocator?.address() ?: NULL)
-}
-// @formatter:on
-inline fun vkDestroyImageView(device: VkDevice, imageView: VkImageView) = VK10.nvkDestroyImageView(device, imageView, NULL)
 
-inline fun vkDestroyImage(device: VkDevice, image: VkImage) = VK10.nvkDestroyImage(device, image, NULL)
-inline fun vkFreeMemory(device: VkDevice, memory: VkDeviceMemory) = VK10.nvkFreeMemory(device, memory, NULL)
-inline fun vkDestroyPipelineCache(device: VkDevice, pipelineCache: VkPipelineCache) = VK10.nvkDestroyPipelineCache(device, pipelineCache, NULL)
-inline fun vkDestroyCommandPool(device: VkDevice, commandPool: VkCommandPool) = VK10.nvkDestroyCommandPool(device, commandPool, NULL)
+
+
+
 inline fun vkDestroySemaphores(device: VkDevice, semaphores: VkSemaphorePtr) {
     for (i in 0 until semaphores.remaining())
         VK10.nvkDestroySemaphore(device, semaphores[i], NULL)
 }
 
-inline fun vkDestroySemaphore(device: VkDevice, semaphore: VkSemaphore) = VK10.nvkDestroySemaphore(device, semaphore, NULL)
 
-inline fun vkDestroyDebugReportCallback(instance: VkInstance, callbackAddress: Long) = EXTDebugReport.nvkDestroyDebugReportCallbackEXT(instance, callbackAddress, NULL)
+
 inline fun vkDestroyInstance(instance: VkInstance) = VK10.nvkDestroyInstance(instance, NULL)
-inline fun vkDestroyPipeline(device: VkDevice, pipeline: VkPipeline) = VK10.nvkDestroyPipeline(device, pipeline, NULL)
-inline fun vkDestroyPipelineLayout(device: VkDevice, pipelineLayout: VkPipelineLayout) = VK10.nvkDestroyPipelineLayout(device, pipelineLayout, NULL)
-inline fun vkDestroyDescriptorSetLayout(device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout) = VK10.nvkDestroyDescriptorSetLayout(device, descriptorSetLayout, NULL)
+
 inline fun vkDestroyBuffer(device: VkDevice, buffer: VkBuffer) = VK10.nvkDestroyBuffer(device, buffer, NULL)
-inline fun vkDestroyShaderModule(device: VkDevice, shaderModule: VkShaderModule) = VK10.vkDestroyShaderModule(device, shaderModule, null)
+
 
 
 val FloatBuffer.adr get() = MemoryUtil.memAddress(this)

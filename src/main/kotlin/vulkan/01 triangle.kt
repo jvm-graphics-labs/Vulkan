@@ -26,7 +26,7 @@ import java.io.File
 
 
 fun main(args: Array<String>) {
-    VulkanExample().apply {
+    Triangle().apply {
         setupWindow()
         initVulkan()
         prepare()
@@ -41,7 +41,7 @@ const val ENABLE_VALIDATION = true
  *  See "prepareVertices" for details on what's staging and on why to use it    */
 const val USE_STAGING = true
 
-class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
+private class Triangle : VulkanExampleBase(ENABLE_VALIDATION) {
 
     init {
         zoom = -2.5f
@@ -145,24 +145,24 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
         /*  Clean up used Vulkan resources
             Note: Inherited destructor cleans up resources stored in base class         */
-        vkDestroyPipeline(device, pipeline)
+        vk.destroyPipeline(device, pipeline)
 
-        vkDestroyPipelineLayout(device, pipelineLayout)
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout)
+        vk.destroyPipelineLayout(device, pipelineLayout)
+        vk.destroyDescriptorSetLayout(device, descriptorSetLayout)
 
-        vkDestroyBuffer(device, vertices.buffer)
-        vkFreeMemory(device, vertices.memory)
+        vk.destroyBuffer(device, vertices.buffer)
+        vk.freeMemory(device, vertices.memory)
 
-        vkDestroyBuffer(device, indices.buffer)
-        vkFreeMemory(device, indices.memory)
+        vk.destroyBuffer(device, indices.buffer)
+        vk.freeMemory(device, indices.memory)
 
-        vkDestroyBuffer(device, uniformBufferVS.buffer)
-        vkFreeMemory(device, uniformBufferVS.memory)
+        vk.destroyBuffer(device, uniformBufferVS.buffer)
+        vk.freeMemory(device, uniformBufferVS.memory)
 
-        vkDestroySemaphore(device, presentCompleteSemaphore)
-        vkDestroySemaphore(device, renderCompleteSemaphore)
+        vk.destroySemaphore(device, presentCompleteSemaphore)
+        vk.destroySemaphore(device, renderCompleteSemaphore)
 
-        vkDestroyFence(device, waitFences)
+        vk.destroyFences(device, waitFences)
 
         super.destroy()
     }
@@ -264,7 +264,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         clearValues[1].depthStencil(1f, 0)
 
         val renderPassBeginInfo = vk.RenderPassBeginInfo {
-            renderPass = this@VulkanExample.renderPass
+            renderPass = this@Triangle.renderPass
             renderArea.apply {
                 offset.set(0, 0)
                 extent.set(size.x, size.y)
@@ -284,7 +284,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             // Update dynamic viewport state
             val viewport = vk.Viewport(1) {
-                //                size(this@VulkanExample.size) TODO bug
+                //                size(this@Triangle.size) TODO bug
                 width = size.x.f
                 height = size.y.f
                 //                depth.put(0f, 1f) same
@@ -489,8 +489,8 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             // Destroy staging buffers
             // Note: Staging buffer must not be deleted before the copies have been submitted and executed
-            vkDestroyBuffer(device, stagingBuffers.vertices.buffer)
-            vkFreeMemory(device, stagingBuffers.vertices.memory)
+            vk.destroyBuffer(device, stagingBuffers.vertices.buffer)
+            vk.freeMemory(device, stagingBuffers.vertices.memory)
             vk.destroyBuffer(device, stagingBuffers.indices.buffer)
             vk.freeMemory(device, stagingBuffers.indices.memory)
 
@@ -587,7 +587,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
     fun setupDescriptorSet() {
         // Allocate a new descriptor set from the global descriptor pool
         val allocInfo = vk.DescriptorSetAllocateInfo {
-            descriptorPool = this@VulkanExample.descriptorPool
+            descriptorPool = this@Triangle.descriptorPool
             setLayouts = appBuffer.longBufferOf(descriptorSetLayout)
         }
         vk.allocateDescriptorSets(device, allocInfo, ::descriptorSet).check()
@@ -667,7 +667,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
 
             val frameBufferCreateInfo = vk.FramebufferCreateInfo {
                 // All frame buffers use the same renderpass setup
-                renderPass = this@VulkanExample.renderPass
+                renderPass = this@Triangle.renderPass
                 this.attachments = attachments
                 //it.size(size, 1) TODO
                 width = w
@@ -814,7 +814,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
             // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
             layout = pipelineLayout
             // Renderpass this pipeline is attached to
-            renderPass = this@VulkanExample.renderPass
+            renderPass = this@Triangle.renderPass
         }
 
         /*  Construct the different states making up the pipeline
@@ -969,7 +969,7 @@ class VulkanExample : VulkanExampleBase(ENABLE_VALIDATION) {
         vk.createGraphicsPipelines(device, pipelineCache, pipelineCreateInfo, ::pipeline).check()
 
         // Shader modules are no longer needed once the graphics pipeline has been created
-        vk.destroyShaderModule(device, shaderStages)
+        vk.destroyShaderModules(device, shaderStages)
     }
 
     fun prepareUniformBuffers() {

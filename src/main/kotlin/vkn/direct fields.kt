@@ -4,6 +4,7 @@ import glfw_.appBuffer
 import glm_.BYTES
 import glm_.bool
 import glm_.i
+import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import java.nio.ByteBuffer
@@ -59,64 +60,172 @@ inline var VkInstanceCreateInfo.enabledExtensionNames
 //    PFN_vkInternalAllocationNotification    pfnInternalAllocation;
 //    PFN_vkInternalFreeNotification          pfnInternalFree;
 //} VkAllocationCallbacks;
-//
-//typedef struct VkPhysicalDeviceFeatures {
-//    VkBool32    robustBufferAccess;
-//    VkBool32    fullDrawIndexUint32;
-//    VkBool32    imageCubeArray;
-//    VkBool32    independentBlend;
-//    VkBool32    geometryShader;
-//    VkBool32    tessellationShader;
-//    VkBool32    sampleRateShading;
-//    VkBool32    dualSrcBlend;
-//    VkBool32    logicOp;
-//    VkBool32    multiDrawIndirect;
-//    VkBool32    drawIndirectFirstInstance;
-//    VkBool32    depthClamp;
-//    VkBool32    depthBiasClamp;
-//    VkBool32    fillModeNonSolid;
-//    VkBool32    depthBounds;
-//    VkBool32    wideLines;
-//    VkBool32    largePoints;
-//    VkBool32    alphaToOne;
-//    VkBool32    multiViewport;
-//    VkBool32    samplerAnisotropy;
-//    VkBool32    textureCompressionETC2;
-//    VkBool32    textureCompressionASTC_LDR;
-//    VkBool32    textureCompressionBC;
-//    VkBool32    occlusionQueryPrecise;
-//    VkBool32    pipelineStatisticsQuery;
-//    VkBool32    vertexPipelineStoresAndAtomics;
-//    VkBool32    fragmentStoresAndAtomics;
-//    VkBool32    shaderTessellationAndGeometryPointSize;
-//    VkBool32    shaderImageGatherExtended;
-//    VkBool32    shaderStorageImageExtendedFormats;
-//    VkBool32    shaderStorageImageMultisample;
-//    VkBool32    shaderStorageImageReadWithoutFormat;
-//    VkBool32    shaderStorageImageWriteWithoutFormat;
-//    VkBool32    shaderUniformBufferArrayDynamicIndexing;
-//    VkBool32    shaderSampledImageArrayDynamicIndexing;
-//    VkBool32    shaderStorageBufferArrayDynamicIndexing;
-//    VkBool32    shaderStorageImageArrayDynamicIndexing;
-//    VkBool32    shaderClipDistance;
-//    VkBool32    shaderCullDistance;
-//    VkBool32    shaderFloat64;
-//    VkBool32    shaderInt64;
-//    VkBool32    shaderInt16;
-//    VkBool32    shaderResourceResidency;
-//    VkBool32    shaderResourceMinLod;
-//    VkBool32    sparseBinding;
-//    VkBool32    sparseResidencyBuffer;
-//    VkBool32    sparseResidencyImage2D;
-//    VkBool32    sparseResidencyImage3D;
-//    VkBool32    sparseResidency2Samples;
-//    VkBool32    sparseResidency4Samples;
-//    VkBool32    sparseResidency8Samples;
-//    VkBool32    sparseResidency16Samples;
-//    VkBool32    sparseResidencyAliased;
-//    VkBool32    variableMultisampleRate;
-//    VkBool32    inheritedQueries;
-//} VkPhysicalDeviceFeatures;
+
+inline var VkPhysicalDeviceFeatures.robustBufferAccess: Boolean
+    get() = VkPhysicalDeviceFeatures.nrobustBufferAccess(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nrobustBufferAccess(adr, value.i)
+inline var VkPhysicalDeviceFeatures.fullDrawIndexUint32: Boolean
+    get() = VkPhysicalDeviceFeatures.nfullDrawIndexUint32(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nfullDrawIndexUint32(adr, value.i)
+inline var VkPhysicalDeviceFeatures.imageCubeArray: Boolean
+    get() = VkPhysicalDeviceFeatures.nimageCubeArray(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nimageCubeArray(adr, value.i)
+inline var VkPhysicalDeviceFeatures.independentBlend: Boolean
+    get() = VkPhysicalDeviceFeatures.nindependentBlend(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nindependentBlend(adr, value.i)
+inline var VkPhysicalDeviceFeatures.geometryShader: Boolean
+    get() = VkPhysicalDeviceFeatures.ngeometryShader(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ngeometryShader(adr, value.i)
+inline var VkPhysicalDeviceFeatures.tessellationShader: Boolean
+    get() = VkPhysicalDeviceFeatures.ntessellationShader(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ntessellationShader(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sampleRateShading: Boolean
+    get() = VkPhysicalDeviceFeatures.nsampleRateShading(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsampleRateShading(adr, value.i)
+inline var VkPhysicalDeviceFeatures.dualSrcBlend: Boolean
+    get() = VkPhysicalDeviceFeatures.ndualSrcBlend(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ndualSrcBlend(adr, value.i)
+inline var VkPhysicalDeviceFeatures.logicOp: Boolean
+    get() = VkPhysicalDeviceFeatures.nlogicOp(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nlogicOp(adr, value.i)
+inline var VkPhysicalDeviceFeatures.multiDrawIndirect: Boolean
+    get() = VkPhysicalDeviceFeatures.nmultiDrawIndirect(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nmultiDrawIndirect(adr, value.i)
+inline var VkPhysicalDeviceFeatures.drawIndirectFirstInstance: Boolean
+    get() = VkPhysicalDeviceFeatures.ndrawIndirectFirstInstance(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ndrawIndirectFirstInstance(adr, value.i)
+inline var VkPhysicalDeviceFeatures.depthClamp: Boolean
+    get() = VkPhysicalDeviceFeatures.ndepthClamp(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ndepthClamp(adr, value.i)
+inline var VkPhysicalDeviceFeatures.depthBiasClamp: Boolean
+    get() = VkPhysicalDeviceFeatures.ndepthBiasClamp(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ndepthBiasClamp(adr, value.i)
+inline var VkPhysicalDeviceFeatures.fillModeNonSolid: Boolean
+    get() = VkPhysicalDeviceFeatures.nfillModeNonSolid(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nfillModeNonSolid(adr, value.i)
+inline var VkPhysicalDeviceFeatures.depthBounds: Boolean
+    get() = VkPhysicalDeviceFeatures.ndepthBounds(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ndepthBounds(adr, value.i)
+inline var VkPhysicalDeviceFeatures.wideLines: Boolean
+    get() = VkPhysicalDeviceFeatures.nwideLines(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nwideLines(adr, value.i)
+inline var VkPhysicalDeviceFeatures.largePoints: Boolean
+    get() = VkPhysicalDeviceFeatures.nlargePoints(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nlargePoints(adr, value.i)
+inline var VkPhysicalDeviceFeatures.alphaToOne: Boolean
+    get() = VkPhysicalDeviceFeatures.nalphaToOne(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nalphaToOne(adr, value.i)
+inline var VkPhysicalDeviceFeatures.multiViewport: Boolean
+    get() = VkPhysicalDeviceFeatures.nmultiViewport(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nmultiViewport(adr, value.i)
+inline var VkPhysicalDeviceFeatures.samplerAnisotropy: Boolean
+    get() = VkPhysicalDeviceFeatures.nsamplerAnisotropy(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsamplerAnisotropy(adr, value.i)
+inline var VkPhysicalDeviceFeatures.textureCompressionETC2: Boolean
+    get() = VkPhysicalDeviceFeatures.ntextureCompressionETC2(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ntextureCompressionETC2(adr, value.i)
+inline var VkPhysicalDeviceFeatures.textureCompressionASTC_LDR: Boolean
+    get() = VkPhysicalDeviceFeatures.ntextureCompressionASTC_LDR(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ntextureCompressionASTC_LDR(adr, value.i)
+inline var VkPhysicalDeviceFeatures.textureCompressionBC: Boolean
+    get() = VkPhysicalDeviceFeatures.ntextureCompressionBC(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ntextureCompressionBC(adr, value.i)
+inline var VkPhysicalDeviceFeatures.occlusionQueryPrecise: Boolean
+    get() = VkPhysicalDeviceFeatures.nocclusionQueryPrecise(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nocclusionQueryPrecise(adr, value.i)
+inline var VkPhysicalDeviceFeatures.pipelineStatisticsQuery: Boolean
+    get() = VkPhysicalDeviceFeatures.npipelineStatisticsQuery(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.npipelineStatisticsQuery(adr, value.i)
+inline var VkPhysicalDeviceFeatures.vertexPipelineStoresAndAtomics: Boolean
+    get() = VkPhysicalDeviceFeatures.nvertexPipelineStoresAndAtomics(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nvertexPipelineStoresAndAtomics(adr, value.i)
+inline var VkPhysicalDeviceFeatures.fragmentStoresAndAtomics: Boolean
+    get() = VkPhysicalDeviceFeatures.nfragmentStoresAndAtomics(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nfragmentStoresAndAtomics(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderTessellationAndGeometryPointSize: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderTessellationAndGeometryPointSize(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderTessellationAndGeometryPointSize(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderImageGatherExtended: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderImageGatherExtended(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderImageGatherExtended(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderStorageImageExtendedFormats: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderStorageImageExtendedFormats(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderStorageImageExtendedFormats(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderStorageImageMultisample: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderStorageImageMultisample(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderStorageImageMultisample(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderStorageImageReadWithoutFormat: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderStorageImageReadWithoutFormat(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderStorageImageReadWithoutFormat(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderStorageImageWriteWithoutFormat: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderStorageImageWriteWithoutFormat(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderStorageImageWriteWithoutFormat(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderUniformBufferArrayDynamicIndexing: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderUniformBufferArrayDynamicIndexing(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderUniformBufferArrayDynamicIndexing(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderSampledImageArrayDynamicIndexing: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderSampledImageArrayDynamicIndexing(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderSampledImageArrayDynamicIndexing(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderStorageBufferArrayDynamicIndexing: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderStorageBufferArrayDynamicIndexing(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderStorageBufferArrayDynamicIndexing(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderStorageImageArrayDynamicIndexing: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderStorageImageArrayDynamicIndexing(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderStorageImageArrayDynamicIndexing(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderClipDistance: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderClipDistance(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderClipDistance(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderCullDistance: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderCullDistance(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderCullDistance(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderFloat64: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderFloat64(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderFloat64(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderInt64: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderInt64(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderInt64(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderInt16: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderInt16(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderInt16(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderResourceResidency: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderResourceResidency(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderResourceResidency(adr, value.i)
+inline var VkPhysicalDeviceFeatures.shaderResourceMinLod: Boolean
+    get() = VkPhysicalDeviceFeatures.nshaderResourceMinLod(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nshaderResourceMinLod(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseBinding: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseBinding(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseBinding(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidencyBuffer: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidencyBuffer(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseResidencyBuffer(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidencyImage2D: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidencyImage2D(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseResidencyImage2D(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidencyImage3D: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidencyImage3D(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseResidencyImage3D(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidency2Samples: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidency2Samples(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseResidency2Samples(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidency4Samples: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidency4Samples(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseResidency4Samples(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidency8Samples: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidency8Samples(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseResidency8Samples(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidency16Samples: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidency16Samples(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nrobustBufferAccess(adr, value.i)
+inline var VkPhysicalDeviceFeatures.sparseResidencyAliased: Boolean
+    get() = VkPhysicalDeviceFeatures.nsparseResidencyAliased(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nsparseResidencyAliased(adr, value.i)
+inline var VkPhysicalDeviceFeatures.variableMultisampleRate: Boolean
+    get() = VkPhysicalDeviceFeatures.nvariableMultisampleRate(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.nvariableMultisampleRate(adr, value.i)
+inline var VkPhysicalDeviceFeatures.inheritedQueries: Boolean
+    get() = VkPhysicalDeviceFeatures.ninheritedQueries(adr).bool
+    set(value) = VkPhysicalDeviceFeatures.ninheritedQueries(adr, value.i)
 
 inline val VkFormatProperties.linearTilingFeatures: VkFormatFeatureFlags get() = VkFormatProperties.nlinearTilingFeatures(adr)
 inline val VkFormatProperties.optimalTilingFeatures: VkFormatFeatureFlags get() = VkFormatProperties.noptimalTilingFeatures(adr)
@@ -258,7 +367,7 @@ inline val VkPhysicalDeviceProperties.apiVersion: Int
     get() = VkPhysicalDeviceProperties.napiVersion(adr)
 inline val VkPhysicalDeviceProperties.driverVersion: Int
     get() = VkPhysicalDeviceProperties.ndriverVersion(adr)
-inline val VkPhysicalDeviceProperties.vendorID:Int
+inline val VkPhysicalDeviceProperties.vendorID: Int
     get() = VkPhysicalDeviceProperties.nvendorID(adr)
 inline val VkPhysicalDeviceProperties.deviceID: Int
     get() = VkPhysicalDeviceProperties.ndeviceID(adr)
@@ -436,13 +545,22 @@ inline var VkMemoryAllocateInfo.memoryTypeIndex
     get() = VkMemoryAllocateInfo.nmemoryTypeIndex(adr)
     set(value) = VkMemoryAllocateInfo.nmemoryTypeIndex(adr, value)
 
-//typedef struct VkMappedMemoryRange {
-//    VkStructureType    sType;
-//    const void*        pNext;
-//    VkDeviceMemory     memory;
-//    VkDeviceSize       offset;
-//    VkDeviceSize       size;
-//} VkMappedMemoryRange;
+
+inline var VkMappedMemoryRange.type: VkStructureType
+    get() = VkStructureType of VkMappedMemoryRange.nsType(adr)
+    set(value) = VkMappedMemoryRange.nsType(adr, value.i)
+inline var VkMappedMemoryRange.next
+    get() = VkMappedMemoryRange.npNext(adr)
+    set(value) = VkMappedMemoryRange.npNext(adr, value)
+inline var VkMappedMemoryRange.memory: VkDeviceMemory
+    get() = VkMappedMemoryRange.nmemory(adr)
+    set(value) = VkMappedMemoryRange.nmemory(adr, value)
+inline var VkMappedMemoryRange.offset: VkDeviceSize
+    get() = VkMappedMemoryRange.noffset(adr)
+    set(value) = VkMappedMemoryRange.noffset(adr, value)
+inline var VkMappedMemoryRange.size: VkDeviceSize
+    get() = VkMappedMemoryRange.nsize(adr)
+    set(value) = VkMappedMemoryRange.nsize(adr, value)
 
 
 inline val VkMemoryRequirements.size: VkDeviceSize get() = VkMemoryRequirements.nsize(adr)
@@ -1800,6 +1918,13 @@ inline fun VkClearValue.color(r: Float, g: Float, b: Float, a: Float) {
     memPutFloat(adr + Float.BYTES, g)
     memPutFloat(adr + Float.BYTES * 2, b)
     memPutFloat(adr + Float.BYTES * 3, a)
+}
+
+inline fun VkClearValue.color(color: Vec4) {
+    memPutFloat(adr, color.r)
+    memPutFloat(adr + Float.BYTES, color.g)
+    memPutFloat(adr + Float.BYTES * 2, color.b)
+    memPutFloat(adr + Float.BYTES * 3, color.a)
 }
 
 inline fun VkClearValue.depthStencil(depth: Float, stencil: Int) {

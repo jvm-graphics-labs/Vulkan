@@ -5,7 +5,7 @@ import glfw_.advance
 import glfw_.appBuffer
 import glfw_.appBuffer.ptr
 import glm_.*
-import org.lwjgl.PointerBuffer
+import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
@@ -13,7 +13,13 @@ import org.lwjgl.vulkan.*
 import java.nio.IntBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
+
+
 object vk {
+
+    /*
+        *Info constructor functions
+     */
 
     inline fun ApplicationInfo(block: VkApplicationInfo.() -> Unit): VkApplicationInfo {
         val res = VkApplicationInfo.create(ptr.advance(VkApplicationInfo.SIZEOF))
@@ -246,18 +252,6 @@ object vk {
         return res
     }
 
-    inline fun DeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
-
-    inline fun SurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ptr.advance(VkSurfaceFormatKHR.SIZEOF * capacity), capacity)
-
-    inline fun FormatProperties(block: VkFormatProperties.() -> Unit): VkFormatProperties = VkFormatProperties.create(ptr.advance(VkFormatProperties.SIZEOF)).also(block)
-
-    inline fun SurfaceCapabilitiesKHR(block: VkSurfaceCapabilitiesKHR.() -> Unit): VkSurfaceCapabilitiesKHR = VkSurfaceCapabilitiesKHR.create(ptr.advance(VkSurfaceCapabilitiesKHR.SIZEOF)).also(block)
-
-    inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
-
-    inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
-
 
     inline fun GraphicsPipelineCreateInfo(capacity: Int, block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo.Buffer {
         val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF * capacity), capacity)
@@ -267,191 +261,83 @@ object vk {
     }
 
 
-    inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
-
-    inline fun PipelineShaderStageCreateInfo(capacity: Int): VkPipelineShaderStageCreateInfo.Buffer = VkPipelineShaderStageCreateInfo.create(ptr.advance(VkPipelineShaderStageCreateInfo.SIZEOF * capacity), capacity)
-
-    inline fun VertexInputAttributeDescription(capacity: Int): VkVertexInputAttributeDescription.Buffer = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF * capacity), capacity)
-
-    inline fun BufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF * capacity), capacity)
+    /*
+        normal constructor functions
+     */
 
     inline fun AttachmentDescription(capacity: Int): VkAttachmentDescription.Buffer = VkAttachmentDescription.create(ptr.advance(VkAttachmentDescription.SIZEOF * capacity), capacity)
 
-    inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
-
-    inline fun ClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(ptr.advance(VkClearValue.SIZEOF * capacity), capacity)
     inline fun AttachmentReference(block: VkAttachmentReference.() -> Unit): VkAttachmentReference = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF)).also(block)
-
     inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity).also { it[0].block() }
 
+    inline fun BufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF * capacity), capacity)
+
+    inline fun ClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(ptr.advance(VkClearValue.SIZEOF * capacity), capacity)
+
+    inline fun DeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
+
+    inline fun DescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF * capacity), capacity).also { it[0].block() }
+
     inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
+
+    inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
+
+    inline fun FormatProperties(block: VkFormatProperties.() -> Unit): VkFormatProperties = VkFormatProperties.create(ptr.advance(VkFormatProperties.SIZEOF)).also(block)
+
+    inline fun MappedMemoryRange(block: VkMappedMemoryRange .() -> Unit): VkMappedMemoryRange = VkMappedMemoryRange.create(ptr.advance(VkMappedMemoryRange.SIZEOF)).also(block)
+
+    inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
+
+    inline fun PipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState.Buffer = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF * capacity), capacity).also { it[0].block() }
+
+    inline fun PipelineShaderStageCreateInfo(capacity: Int): VkPipelineShaderStageCreateInfo.Buffer = VkPipelineShaderStageCreateInfo.create(ptr.advance(VkPipelineShaderStageCreateInfo.SIZEOF * capacity), capacity)
+
+    inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
+
+    inline fun Rect2D(capacity: Int): VkRect2D.Buffer = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF * capacity), capacity)
+    inline fun Rect2D(capacity: Int, block: VkRect2D.() -> Unit): VkRect2D.Buffer = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF * capacity), capacity).also { it[0].block() }
+
     inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
 
     inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
 
-    inline fun PipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState.Buffer = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF * capacity), capacity).also { it[0].block() }
+    inline fun SurfaceCapabilitiesKHR(block: VkSurfaceCapabilitiesKHR.() -> Unit): VkSurfaceCapabilitiesKHR = VkSurfaceCapabilitiesKHR.create(ptr.advance(VkSurfaceCapabilitiesKHR.SIZEOF)).also(block)
+
+    inline fun SurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ptr.advance(VkSurfaceFormatKHR.SIZEOF * capacity), capacity)
+
+    inline fun VertexInputAttributeDescription(capacity: Int): VkVertexInputAttributeDescription.Buffer = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF * capacity), capacity)
 
     inline fun VertexInputBindingDescription(capacity: Int, block: VkVertexInputBindingDescription.() -> Unit): VkVertexInputBindingDescription.Buffer = VkVertexInputBindingDescription.create(ptr.advance(VkVertexInputBindingDescription.SIZEOF * capacity), capacity).also { it[0].block() }
-
-    inline fun DescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF * capacity), capacity).also { it[0].block() }
-
-    inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet.Buffer = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF * capacity), capacity).also { it[0].block() }
+    inline fun Viewport(block: VkViewport.() -> Unit): VkViewport = VkViewport.create(ptr.advance(VkViewport.SIZEOF)).also(block)
 
     inline fun Viewport(capacity: Int, block: VkViewport.() -> Unit): VkViewport.Buffer = VkViewport.create(ptr.advance(VkViewport.SIZEOF * capacity), capacity).also { it[0].block() }
 
-    inline fun Rect2D(capacity: Int, block: VkRect2D.() -> Unit): VkRect2D.Buffer = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF * capacity), capacity).also { it[0].block() }
+    inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet.Buffer = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF * capacity), capacity).also { it[0].block() }
 
 
-    inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: LongBuffer) = VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, memAddress(commandPool))
+    /*
+        Function Constructors
+     */
+    inline fun Rect2D(size: Vec2i, offset: Vec2i = Vec2i()) = Rect2D(size.x, size.y, offset.x, offset.y)
 
-
-    inline fun createInstance(createInfo: VkInstanceCreateInfo, instance: KMutableProperty0<VkInstance>): VkResult {
-        val pInstance = appBuffer.pointer
-        val res = VK10.nvkCreateInstance(createInfo.adr, NULL, pInstance)
-        instance.set(VkInstance(MemoryUtil.memGetLong(pInstance), createInfo))
-        return VkResult of res
-    }
-
-    inline fun createDebugReportCallbackEXT(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
-                                            callback: KMutableProperty0<Long>): VkResult {
-        val long = appBuffer.long
-        return VkResult of EXTDebugReport.nvkCreateDebugReportCallbackEXT(instance, createInfo.adr, NULL, long).also {
-            callback.set(MemoryUtil.memGetLong(long))
+    inline fun Rect2D(width: Int, height: Int, offsetX: Int, offsetY: Int): VkRect2D.Buffer {
+        return Rect2D(1) {
+            extent.width = width
+            extent.height = height
+            offset.x = offsetX
+            offset.y = offsetY
         }
     }
 
-    inline fun enumeratePhysicalDevices(instance: VkInstance): ArrayList<VkPhysicalDevice> {
-        // Physical device
-        val pCount = appBuffer.int
-        // Get number of available physical devices
-        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, NULL))
-        // Enumerate devices
-        val count = memGetInt(pCount)
-        val devices = appBuffer.pointerBuffer(count)
-        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, devices.adr))
-        val res = arrayListOf<VkPhysicalDevice>()
-        for (i in 0 until count)
-            res += VkPhysicalDevice(devices[i], instance)
-        return res
-    }
+    /*
+        functions
+     */
 
-    inline fun getPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice): ArrayList<VkQueueFamilyProperties> {
-        val pCount = appBuffer.int
-        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, NULL)
-        val count = memGetInt(pCount)
-        val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count)
-        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, pQueueFamilyProperties.adr)
-        return pQueueFamilyProperties.toCollection(arrayListOf())
-    }
 
-    inline fun enumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String? = null): ArrayList<String> {
-        val pCount = appBuffer.int
-        val pLayerName = layerName?.utf8?.let(::memAddress) ?: NULL
-        VK_CHECK_RESULT(VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, NULL))
-        val count = memGetInt(pCount)
-        val res = ArrayList<String>(count)
-        if (count > 0) {
-            val properties = ExtensionProperties(count)
-            VK_CHECK_RESULT(VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, properties.adr))
-            properties.map { it.extensionNameString() }.toCollection(res)
-        }
-        return res
-    }
-
-    inline fun createDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateInfo, device: KMutableProperty0<VkDevice?>)
-            : VkResult {
-        val pDevice = appBuffer.pointer
-        return VkResult of VK10.nvkCreateDevice(physicalDevice, createInfo.adr, NULL, pDevice).also {
-            device.set(VkDevice(memGetLong(pDevice), physicalDevice, createInfo))
-        }
-    }
-
-    inline fun getDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: KMutableProperty0<VkQueue>) {
-        val pQueue = appBuffer.pointer
-        VK10.nvkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue)
-        queue.set(VkQueue(memGetLong(pQueue), device))
-    }
-
-    inline fun getPhysicalDeviceFormatProperties(physicalDevice: VkPhysicalDevice, format: VkFormat): VkFormatProperties =
-            FormatProperties {
-                VK10.nvkGetPhysicalDeviceFormatProperties(physicalDevice, format.i, adr)
-            }
-
-    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: KMutableProperty0<VkSemaphore>): VkResult {
-        val pSemaphore = appBuffer.long
-        return VkResult of VK10.nvkCreateSemaphore(device, createInfo.adr, NULL, pSemaphore).also {
-            semaphore.set(memGetLong(pSemaphore))
-        }
-    }
-
-    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: VkSemaphorePtr) =
-            VkResult of VK10.nvkCreateSemaphore(device, createInfo.adr, NULL, memAddress(semaphore))
-
-    inline fun getPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): ArrayList<VkSurfaceFormatKHR> {
-        val pCount = appBuffer.int
-        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pCount, NULL))
-        val count = memGetInt(pCount)
-        assert(count > 0)
-        val surfaceFormats = SurfaceFormatKHR(count)
-        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pCount, surfaceFormats.adr))
-        return surfaceFormats.toCollection(arrayListOf())
-    }
-
-    inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: KMutableProperty0<VkCommandPool>): VkResult {
-        val pCommandPool = appBuffer.long
-        return VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, pCommandPool).also {
-            commandPool.set(memGetLong(pCommandPool))
-        }
-    }
-
-    inline fun getPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): VkSurfaceCapabilitiesKHR =
-            SurfaceCapabilitiesKHR {
-                VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, adr))
-            }
-
-    inline fun getPhysicalDeviceSurfacePresentModesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): ArrayList<VkPresentMode> {
-        val pCount = appBuffer.int
-        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pCount, NULL))
-        val count = memGetInt(pCount)
-        assert(count > 0)
-        val presentModes = appBuffer.intArray(count)
-        KHRSurface.nvkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pCount, presentModes)
-        val res = ArrayList<VkPresentMode>()
-        for (i in 0 until count) res += VkPresentMode of memGetInt(presentModes + Int.BYTES * i)
-        return res
-    }
-
-    inline fun createSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, swapchain: KMutableProperty0<VkSwapchainKHR>)
-            : VkResult {
-        val pSwapchain = appBuffer.long
-        return VkResult of KHRSwapchain.nvkCreateSwapchainKHR(device, createInfo.adr, NULL, pSwapchain).also {
-            swapchain.set(memGetLong(pSwapchain))
-        }
-    }
-
-    inline fun destroyImageView(device: VkDevice, imageView: VkImageView) = VK10.nvkDestroyImageView(device, imageView, NULL)
-    inline fun destroySwapchainKHR(device: VkDevice, swapchain: VkSwapchainKHR) = KHRSwapchain.nvkDestroySwapchainKHR(device, swapchain, NULL)
-
-    inline fun getSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR): ArrayList<VkImageView> {
-        val pCount = appBuffer.int
-        VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, NULL))
-        val count = memGetInt(pCount)
-        val images = appBuffer.longArray(count)
-        VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, images))
-        val res = ArrayList<VkImageView>()
-        for (i in 0 until count) res += memGetLong(images + Long.BYTES * i)
-        return res
-    }
-
-    inline fun createImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, view: KMutableProperty0<VkImageView>): VkResult {
-        val pView = appBuffer.long
-        return VkResult of VK10.nvkCreateImageView(device, createInfo.adr, NULL, pView).also {
-            view.set(memGetLong(pView))
-        }
-    }
-
-    inline fun allocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, count: Int, commandBuffers: ArrayList<VkCommandBuffer>)
-            : VkResult {
+    inline fun allocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, count: Int,
+                                      commandBuffers: ArrayList<VkCommandBuffer>): VkResult {
         val pCommandBuffer = appBuffer.pointerArray(count)
         return VkResult of VK10.nvkAllocateCommandBuffers(device, allocateInfo.adr, pCommandBuffer).also {
             for (i in 0 until count)
@@ -459,10 +345,11 @@ object vk {
         }
     }
 
-    inline fun createImage(device: VkDevice, createInfo: VkImageCreateInfo, image: KMutableProperty0<VkImage>): VkResult {
-        val pImage = appBuffer.long
-        return VkResult of VK10.nvkCreateImage(device, createInfo.adr, NULL, pImage).also {
-            image.set(memGetLong(pImage))
+    inline fun allocateDescriptorSets(device: VkDevice, allocateInfo: VkDescriptorSetAllocateInfo,
+                                      descriptorSets: KMutableProperty0<VkDescriptorSet>): VkResult {
+        val pDescriptorSets = appBuffer.long
+        return VkResult of VK10.nvkAllocateDescriptorSets(device, allocateInfo.adr, pDescriptorSets).also {
+            descriptorSets.set(memGetLong(pDescriptorSets))
         }
     }
 
@@ -473,24 +360,92 @@ object vk {
         }
     }
 
-    inline fun createRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo, renderPass: KMutableProperty0<VkRenderPass>): VkResult {
-        val pRenderPass = appBuffer.long
-        return VkResult of VK10.nvkCreateRenderPass(device, createInfo.adr, NULL, pRenderPass).also {
-            renderPass.set(memGetLong(pRenderPass))
+    inline fun beginCommandBuffer(commandBuffer: VkCommandBuffer, beginInfo: VkCommandBufferBeginInfo): VkResult {
+        return VkResult of VK10.nvkBeginCommandBuffer(commandBuffer, beginInfo.adr)
+    }
+
+    inline fun cmdBeginRenderPass(commandBuffer: VkCommandBuffer, renderPassBegin: VkRenderPassBeginInfo, contents: VkSubpassContents) {
+        VK10.nvkCmdBeginRenderPass(commandBuffer, renderPassBegin.adr, contents.i)
+    }
+
+    inline fun cmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
+                                     firstSet: Int, descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: IntBuffer? = null) {
+        val pDescriptorSets = appBuffer.long
+        memPutLong(pDescriptorSets, descriptorSets())
+        VK10.nvkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, firstSet, 1, pDescriptorSets,
+                dynamicOffsets?.remaining() ?: 0, dynamicOffsets?.let(::memAddress) ?: NULL).also {
+            descriptorSets.set(memGetLong(pDescriptorSets))
         }
     }
 
-    inline fun createPipelineCache(device: VkDevice, createInfo: VkPipelineCacheCreateInfo, pipelineCache: KMutableProperty0<VkPipelineCache>): VkResult {
-        val pPipelineCache = appBuffer.long
-        return VkResult of VK10.nvkCreatePipelineCache(device, createInfo.adr, NULL, pPipelineCache).also {
-            pipelineCache.set(memGetLong(pPipelineCache))
+    inline fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
+        VK10.vkCmdBindIndexBuffer(commandBuffer, buffer, offset, indexType.i)
+    }
+
+    inline fun cmdBindVertexBuffer(commandBuffer: VkCommandBuffer, firstBinding: Int, buffer: KMutableProperty0<VkBuffer>) {
+        val pBuffer = appBuffer.long
+        memPutLong(pBuffer, buffer())
+        val pOffset = appBuffer.long
+        memPutLong(pOffset, 0L) // TODO remove since calloc?
+        VK10.nvkCmdBindVertexBuffers(commandBuffer, firstBinding, 1, pBuffer, pOffset)
+        buffer.set(memGetLong(pBuffer))
+    }
+
+    inline fun cmdSetScissor(commandBuffer: VkCommandBuffer, firstScissor: Int, scissors: VkRect2D.Buffer) {
+        VK10.nvkCmdSetScissor(commandBuffer, firstScissor, scissors.remaining(), scissors.adr)
+    }
+
+    inline fun cmdSetViewport(commandBuffer: VkCommandBuffer, firstViewport: Int, viewports: VkViewport.Buffer) {
+        VK10.nvkCmdSetViewport(commandBuffer, firstViewport, viewports.remaining(), viewports.adr)
+    }
+
+    inline fun createBuffer(device: VkDevice, createInfo: VkBufferCreateInfo, buffer: KMutableProperty0<VkBuffer>): VkResult {
+        val pBuffer = appBuffer.long
+        return VkResult of VK10.nvkCreateBuffer(device, createInfo.adr, NULL, pBuffer).also {
+            buffer.set(memGetLong(pBuffer))
         }
     }
 
-    inline fun createFramebuffer(device: VkDevice, createInfo: VkFramebufferCreateInfo, framebuffer: ArrayList<VkFramebuffer>, index: Int): VkResult {
-        val pFramebuffer = appBuffer.long
-        return VkResult of VK10.nvkCreateFramebuffer(device, createInfo.adr, NULL, pFramebuffer).also {
-            framebuffer[index] = memGetLong(pFramebuffer)
+    inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: KMutableProperty0<VkCommandPool>): VkResult {
+        val pCommandPool = appBuffer.long
+        return VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, pCommandPool).also {
+            commandPool.set(memGetLong(pCommandPool))
+        }
+    }
+
+    inline fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: LongBuffer): VkResult {
+        return VkResult of VK10.nvkCreateCommandPool(device, createInfo.adr, NULL, memAddress(commandPool))
+    }
+
+    inline fun createDebugReportCallbackEXT(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
+                                            callback: KMutableProperty0<Long>): VkResult {
+        val long = appBuffer.long
+        return VkResult of EXTDebugReport.nvkCreateDebugReportCallbackEXT(instance, createInfo.adr, NULL, long).also {
+            callback.set(MemoryUtil.memGetLong(long))
+        }
+    }
+
+    inline fun createDescriptorPool(device: VkDevice, createInfo: VkDescriptorPoolCreateInfo,
+                                    descriptorPool: KMutableProperty0<VkDescriptorPool>): VkResult {
+        val pDescriptorPool = appBuffer.long
+        return VkResult of VK10.nvkCreateDescriptorPool(device, createInfo.adr, NULL, pDescriptorPool).also {
+            descriptorPool.set(memGetLong(pDescriptorPool))
+        }
+    }
+
+    inline fun createDescriptorSetLayout(device: VkDevice, createInfo: VkDescriptorSetLayoutCreateInfo,
+                                         setLayout: KMutableProperty0<VkDescriptorSetLayout>): VkResult {
+        val pSetLayout = appBuffer.long
+        return VkResult of VK10.nvkCreateDescriptorSetLayout(device, createInfo.adr, NULL, pSetLayout).also {
+            setLayout.set(memGetLong(pSetLayout))
+        }
+    }
+
+    inline fun createDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateInfo, device: KMutableProperty0<VkDevice?>)
+            : VkResult {
+        val pDevice = appBuffer.pointer
+        return VkResult of VK10.nvkCreateDevice(physicalDevice, createInfo.adr, NULL, pDevice).also {
+            device.set(VkDevice(memGetLong(pDevice), physicalDevice, createInfo))
         }
     }
 
@@ -509,18 +464,47 @@ object vk {
         }
     }
 
-    inline fun createBuffer(device: VkDevice, createInfo: VkBufferCreateInfo, buffer: KMutableProperty0<VkBuffer>): VkResult {
-        val pBuffer = appBuffer.long
-        return VkResult of VK10.nvkCreateBuffer(device, createInfo.adr, NULL, pBuffer).also {
-            buffer.set(memGetLong(pBuffer))
+    inline fun createFramebuffer(device: VkDevice, createInfo: VkFramebufferCreateInfo, framebuffer: ArrayList<VkFramebuffer>, index: Int): VkResult {
+        val pFramebuffer = appBuffer.long
+        return VkResult of VK10.nvkCreateFramebuffer(device, createInfo.adr, NULL, pFramebuffer).also {
+            framebuffer[index] = memGetLong(pFramebuffer)
         }
     }
 
-    inline fun createDescriptorSetLayout(device: VkDevice, createInfo: VkDescriptorSetLayoutCreateInfo,
-                                         setLayout: KMutableProperty0<VkDescriptorSetLayout>): VkResult {
-        val pSetLayout = appBuffer.long
-        return VkResult of VK10.nvkCreateDescriptorSetLayout(device, createInfo.adr, NULL, pSetLayout).also {
-            setLayout.set(memGetLong(pSetLayout))
+    inline fun createGraphicsPipelines(device: VkDevice, pipelineCache: VkPipelineCache,
+                                       createInfos: VkGraphicsPipelineCreateInfo.Buffer,
+                                       pipelines: KMutableProperty0<VkPipeline>): VkResult {
+        val pPipelines = appBuffer.long
+        return VkResult of VK10.nvkCreateGraphicsPipelines(device, pipelineCache, createInfos.remaining(), createInfos.adr, NULL, pPipelines).also {
+            pipelines.set(memGetLong(pPipelines))
+        }
+    }
+
+    inline fun createImage(device: VkDevice, createInfo: VkImageCreateInfo, image: KMutableProperty0<VkImage>): VkResult {
+        val pImage = appBuffer.long
+        return VkResult of VK10.nvkCreateImage(device, createInfo.adr, NULL, pImage).also {
+            image.set(memGetLong(pImage))
+        }
+    }
+
+    inline fun createImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, view: KMutableProperty0<VkImageView>): VkResult {
+        val pView = appBuffer.long
+        return VkResult of VK10.nvkCreateImageView(device, createInfo.adr, NULL, pView).also {
+            view.set(memGetLong(pView))
+        }
+    }
+
+    inline fun createInstance(createInfo: VkInstanceCreateInfo, instance: KMutableProperty0<VkInstance>): VkResult {
+        val pInstance = appBuffer.pointer
+        val res = VK10.nvkCreateInstance(createInfo.adr, NULL, pInstance)
+        instance.set(VkInstance(MemoryUtil.memGetLong(pInstance), createInfo))
+        return VkResult of res
+    }
+
+    inline fun createPipelineCache(device: VkDevice, createInfo: VkPipelineCacheCreateInfo, pipelineCache: KMutableProperty0<VkPipelineCache>): VkResult {
+        val pPipelineCache = appBuffer.long
+        return VkResult of VK10.nvkCreatePipelineCache(device, createInfo.adr, NULL, pPipelineCache).also {
+            pipelineCache.set(memGetLong(pPipelineCache))
         }
     }
 
@@ -532,74 +516,219 @@ object vk {
         }
     }
 
-    inline fun createShaderModule(device: VkDevice, createInfo: VkShaderModuleCreateInfo, shaderModule: LongBuffer): VkResult =
-            VkResult of VK10.nvkCreateShaderModule(device, createInfo.adr, NULL, memAddress(shaderModule))
-
-    inline fun createGraphicsPipelines(device: VkDevice, pipelineCache: VkPipelineCache, createInfos: VkGraphicsPipelineCreateInfo.Buffer,
-                                       pipelines: KMutableProperty0<VkPipeline>): VkResult {
-        val pPipelines = appBuffer.long
-        return VkResult of VK10.nvkCreateGraphicsPipelines(device, pipelineCache, createInfos.remaining(), createInfos.adr, NULL, pPipelines).also {
-            pipelines.set(memGetLong(pPipelines))
+    inline fun createRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo, renderPass: KMutableProperty0<VkRenderPass>): VkResult {
+        val pRenderPass = appBuffer.long
+        return VkResult of VK10.nvkCreateRenderPass(device, createInfo.adr, NULL, pRenderPass).also {
+            renderPass.set(memGetLong(pRenderPass))
         }
     }
 
-    inline fun createDescriptorPool(device: VkDevice, createInfo: VkDescriptorPoolCreateInfo, descriptorPool: KMutableProperty0<VkDescriptorPool>): VkResult {
-        val pDescriptorPool = appBuffer.long
-        return VkResult of VK10.nvkCreateDescriptorPool(device, createInfo.adr, NULL, pDescriptorPool).also {
-            descriptorPool.set(memGetLong(pDescriptorPool))
+    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: KMutableProperty0<VkSemaphore>): VkResult {
+        val pSemaphore = appBuffer.long
+        return VkResult of VK10.nvkCreateSemaphore(device, createInfo.adr, NULL, pSemaphore).also {
+            semaphore.set(memGetLong(pSemaphore))
         }
     }
 
-    inline fun allocateDescriptorSets(device: VkDevice, allocateInfo: VkDescriptorSetAllocateInfo,
-                                      descriptorSets: KMutableProperty0<VkDescriptorSet>): VkResult {
-        val pDescriptorSets = appBuffer.long
-        return VkResult of VK10.nvkAllocateDescriptorSets(device, allocateInfo.adr, pDescriptorSets).also {
-            descriptorSets.set(memGetLong(pDescriptorSets))
+    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: VkSemaphorePtr): VkResult {
+        return VkResult of VK10.nvkCreateSemaphore(device, createInfo.adr, NULL, memAddress(semaphore))
+    }
+
+    inline fun createShaderModule(device: VkDevice, createInfo: VkShaderModuleCreateInfo, shaderModule: LongBuffer): VkResult {
+        return VkResult of VK10.nvkCreateShaderModule(device, createInfo.adr, NULL, memAddress(shaderModule))
+    }
+
+    inline fun createSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, swapchain: KMutableProperty0<VkSwapchainKHR>)
+            : VkResult {
+        val pSwapchain = appBuffer.long
+        return VkResult of KHRSwapchain.nvkCreateSwapchainKHR(device, createInfo.adr, NULL, pSwapchain).also {
+            swapchain.set(memGetLong(pSwapchain))
         }
     }
 
-    inline fun updateDescriptorSets(device: VkDevice, descriptorWrites: VkWriteDescriptorSet.Buffer, descriptorCopies: VkCopyDescriptorSet.Buffer? = null) =
-            VK10.nvkUpdateDescriptorSets(device, descriptorWrites.remaining(), descriptorWrites.adr, descriptorCopies?.remaining()
-                    ?: 0, descriptorCopies?.adr ?: NULL)
-
-    inline fun cmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
-                                     firstSet: Int, descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: IntBuffer? = null) {
-        val pDescriptorSets = appBuffer.long
-        memPutLong(pDescriptorSets, descriptorSets())
-        VK10.nvkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, firstSet, 1, pDescriptorSets,
-                dynamicOffsets?.remaining() ?: 0, dynamicOffsets?.let(::memAddress) ?: NULL).also {
-            descriptorSets.set(memGetLong(pDescriptorSets))
-        }
+    inline fun destroyDescriptorPool(device: VkDevice, descriptorPool: VkDescriptorPool) {
+        VK10.nvkDestroyDescriptorPool(device, descriptorPool, NULL)
     }
 
-    inline fun cmdBindVertexBuffer(commandBuffer: VkCommandBuffer, firstBinding: Int, buffer: KMutableProperty0<VkBuffer>) {
-        val pBuffer = appBuffer.long
-        memPutLong(pBuffer, buffer())
-        val pOffset = appBuffer.long
-        memPutLong(pOffset, 0L) // TODO remove since calloc?
-        VK10.nvkCmdBindVertexBuffers(commandBuffer, firstBinding, 1, pBuffer, pOffset)
-        buffer.set(memGetLong(pBuffer))
+    inline fun destroyDescriptorSetLayout(device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout) {
+        VK10.nvkDestroyDescriptorSetLayout(device, descriptorSetLayout, NULL)
     }
 
-    inline fun cmdBeginRenderPass(commandBuffer: VkCommandBuffer, renderPassBegin: VkRenderPassBeginInfo, contents: VkSubpassContents) {
-        VK10.nvkCmdBeginRenderPass(commandBuffer, renderPassBegin.adr, contents.i)
+    inline fun destroyBuffer(device: VkDevice, buffer: VkBuffer) {
+        VK10.nvkDestroyBuffer(device, buffer, NULL)
     }
 
-    inline fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
-        VK10.vkCmdBindIndexBuffer(commandBuffer, buffer, offset, indexType.i)
+    inline fun destroyCommandPool(device: VkDevice, commandPool: VkCommandPool) {
+        VK10.nvkDestroyCommandPool(device, commandPool, NULL)
     }
 
+    inline fun destroyFence(device: VkDevice, fence: VkFence) {
+        VK10.nvkDestroyFence(device, fence, NULL)
+    }
 
-    inline fun destroyFence(device: VkDevice, fence: VkFence) = VK10.nvkDestroyFence(device, fence, NULL)
-    inline fun destroyBuffer(device: VkDevice, buffer: VkBuffer) = VK10.nvkDestroyBuffer(device, buffer, NULL)
-    inline fun freeMemory(device: VkDevice, memory: VkDeviceMemory) = VK10.nvkFreeMemory(device, memory, NULL)
-    inline fun destroyShaderModule(device: VkDevice, shaderModules: Iterable<VkShaderModule>, allocator: VkAllocationCallbacks? = null) {
+    inline fun destroyFences(device: VkDevice, fences: Iterable<VkFence>) {
+        for (i in fences)
+            VK10.nvkDestroyFence(device, i, NULL)
+    }
+
+    inline fun destroyFramebuffers(device: VkDevice, framebuffers: Iterable<VkFramebuffer>) {
+        for (i in framebuffers)
+            VK10.nvkDestroyFramebuffer(device, i, NULL)
+    }
+
+    inline fun destroyImage(device: VkDevice, image: VkImage) {
+        VK10.nvkDestroyImage(device, image, NULL)
+    }
+
+    inline fun destroyImageView(device: VkDevice, imageView: VkImageView) {
+        VK10.nvkDestroyImageView(device, imageView, NULL)
+    }
+
+    inline fun destroyPipeline(device: VkDevice, pipeline: VkPipeline) {
+        VK10.nvkDestroyPipeline(device, pipeline, NULL)
+    }
+
+    inline fun destroyPipelineCache(device: VkDevice, pipelineCache: VkPipelineCache) {
+        VK10.nvkDestroyPipelineCache(device, pipelineCache, NULL)
+    }
+
+    inline fun destroyPipelineLayout(device: VkDevice, pipelineLayout: VkPipelineLayout) {
+        VK10.nvkDestroyPipelineLayout(device, pipelineLayout, NULL)
+    }
+
+    inline fun destroyRenderPass(device: VkDevice, renderPass: VkRenderPass) {
+        VK10.nvkDestroyRenderPass(device, renderPass, NULL)
+    }
+
+    inline fun destroySemaphore(device: VkDevice, semaphore: VkSemaphore) {
+        VK10.nvkDestroySemaphore(device, semaphore, NULL)
+    }
+
+    inline fun destroyShaderModules(device: VkDevice, shaderModules: Iterable<VkShaderModule>, allocator: VkAllocationCallbacks? = null) {
         for (i in shaderModules)
             VK10.nvkDestroyShaderModule(device, i, allocator?.address() ?: NULL)
     }
 
-    inline fun destroyShaderModule(device: VkDevice, shaderModules: VkPipelineShaderStageCreateInfo.Buffer, allocator: VkAllocationCallbacks? = null) {
+    inline fun destroyShaderModules(device: VkDevice, shaderModules: VkPipelineShaderStageCreateInfo.Buffer) {
         for (i in shaderModules)
-            VK10.nvkDestroyShaderModule(device, i.module, allocator?.adr ?: NULL)
+            VK10.nvkDestroyShaderModule(device, i.module, NULL)
+    }
+
+    inline fun destroySwapchainKHR(device: VkDevice, swapchain: VkSwapchainKHR) {
+        KHRSwapchain.nvkDestroySwapchainKHR(device, swapchain, NULL)
+    }
+
+    inline fun enumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String? = null): ArrayList<String> {
+        val pCount = appBuffer.int
+        val pLayerName = layerName?.utf8?.let(::memAddress) ?: NULL
+        VK_CHECK_RESULT(VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, NULL))
+        val count = memGetInt(pCount)
+        val res = ArrayList<String>(count)
+        if (count > 0) {
+            val properties = ExtensionProperties(count)
+            VK_CHECK_RESULT(VK10.nvkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName, pCount, properties.adr))
+            properties.map { it.extensionNameString() }.toCollection(res)
+        }
+        return res
+    }
+
+    inline fun enumeratePhysicalDevices(instance: VkInstance): ArrayList<VkPhysicalDevice> {
+        // Physical device
+        val pCount = appBuffer.int
+        // Get number of available physical devices
+        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, NULL))
+        // Enumerate devices
+        val count = memGetInt(pCount)
+        val devices = appBuffer.pointerBuffer(count)
+        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, devices.adr))
+        val res = arrayListOf<VkPhysicalDevice>()
+        for (i in 0 until count)
+            res += VkPhysicalDevice(devices[i], instance)
+        return res
+    }
+
+    inline fun flushMappedMemoryRange(device: VkDevice, memoryRange: VkMappedMemoryRange): VkResult {
+        return VkResult of VK10.nvkFlushMappedMemoryRanges(device, 1, memoryRange.adr)
+    }
+
+    inline fun freeCommandBuffers(device: VkDevice, commandPool: VkCommandPool, commandBuffers: ArrayList<VkCommandBuffer>) {
+        val pointers = appBuffer.pointerArray(commandBuffers.size)
+        for (i in commandBuffers.indices)
+            memPutAddress(pointers + Pointer.POINTER_SIZE * i, commandBuffers[i].adr)
+        return VK10.nvkFreeCommandBuffers(device, commandPool, commandBuffers.size, pointers)
+    }
+
+    inline fun freeMemory(device: VkDevice, memory: VkDeviceMemory) {
+        VK10.nvkFreeMemory(device, memory, NULL)
+    }
+
+    inline fun getDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: KMutableProperty0<VkQueue>) {
+        val pQueue = appBuffer.pointer
+        VK10.nvkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue)
+        queue.set(VkQueue(memGetLong(pQueue), device))
+    }
+
+    inline fun getPhysicalDeviceFormatProperties(physicalDevice: VkPhysicalDevice, format: VkFormat): VkFormatProperties {
+        return FormatProperties {
+            VK10.nvkGetPhysicalDeviceFormatProperties(physicalDevice, format.i, adr)
+        }
+    }
+
+    inline fun getPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice): ArrayList<VkQueueFamilyProperties> {
+        val pCount = appBuffer.int
+        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, NULL)
+        val count = memGetInt(pCount)
+        val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count)
+        VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, pQueueFamilyProperties.adr)
+        return pQueueFamilyProperties.toCollection(arrayListOf())
+    }
+
+    inline fun getPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): ArrayList<VkSurfaceFormatKHR> {
+        val pCount = appBuffer.int
+        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pCount, NULL))
+        val count = memGetInt(pCount)
+        assert(count > 0)
+        val surfaceFormats = SurfaceFormatKHR(count)
+        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pCount, surfaceFormats.adr))
+        return surfaceFormats.toCollection(arrayListOf())
+    }
+
+    inline fun getPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): VkSurfaceCapabilitiesKHR {
+        return SurfaceCapabilitiesKHR {
+            VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, adr))
+        }
+    }
+
+    inline fun getPhysicalDeviceSurfacePresentModesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): ArrayList<VkPresentMode> {
+        val pCount = appBuffer.int
+        VK_CHECK_RESULT(KHRSurface.nvkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pCount, NULL))
+        val count = memGetInt(pCount)
+        assert(count > 0)
+        val presentModes = appBuffer.intArray(count)
+        KHRSurface.nvkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pCount, presentModes)
+        val res = ArrayList<VkPresentMode>()
+        for (i in 0 until count) res += VkPresentMode of memGetInt(presentModes + Int.BYTES * i)
+        return res
+    }
+
+    inline fun getSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR): ArrayList<VkImageView> {
+        val pCount = appBuffer.int
+        VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, NULL))
+        val count = memGetInt(pCount)
+        val images = appBuffer.longArray(count)
+        VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, images))
+        val res = ArrayList<VkImageView>()
+        for (i in 0 until count) res += memGetLong(images + Long.BYTES * i)
+        return res
+    }
+
+    inline fun invalidateMappedMemoryRanges(device: VkDevice, memoryRange: VkMappedMemoryRange): VkResult {
+        return VkResult of VK10.nvkInvalidateMappedMemoryRanges(device, 1, memoryRange.adr)
+    }
+
+    inline fun updateDescriptorSets(device: VkDevice, descriptorWrites: VkWriteDescriptorSet.Buffer,
+                                    descriptorCopies: VkCopyDescriptorSet.Buffer? = null) {
+        return VK10.nvkUpdateDescriptorSets(device, descriptorWrites.remaining(), descriptorWrites.adr,
+                descriptorCopies?.remaining() ?: 0, descriptorCopies?.adr ?: NULL)
     }
 }
