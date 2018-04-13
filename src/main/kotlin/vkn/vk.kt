@@ -339,6 +339,7 @@ object vk {
     inline fun allocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, count: Int,
                                       commandBuffers: ArrayList<VkCommandBuffer>): VkResult {
         val pCommandBuffer = appBuffer.pointerArray(count)
+        commandBuffers.clear()
         return VkResult of VK10.nvkAllocateCommandBuffers(device, allocateInfo.adr, pCommandBuffer).also {
             for (i in 0 until count)
                 commandBuffers += VkCommandBuffer(memGetAddress(pCommandBuffer + Pointer.POINTER_SIZE * i), device)
@@ -368,18 +369,31 @@ object vk {
         VK10.nvkCmdBeginRenderPass(commandBuffer, renderPassBegin.adr, contents.i)
     }
 
-    inline fun cmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
-                                     firstSet: Int, descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: IntBuffer? = null) {
+    inline fun cmdBindDescriptorSet(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
+                                    descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: Int? = null) {
         val pDescriptorSets = appBuffer.long
         memPutLong(pDescriptorSets, descriptorSets())
-        VK10.nvkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, firstSet, 1, pDescriptorSets,
-                dynamicOffsets?.remaining() ?: 0, dynamicOffsets?.let(::memAddress) ?: NULL).also {
-            descriptorSets.set(memGetLong(pDescriptorSets))
+        val dynamicOffsetCount: Int
+        val pDynamicOffset: Long
+        if(dynamicOffsets != null) {
+            dynamicOffsetCount = 1
+            pDynamicOffset = appBuffer.int
+            memPutInt(pDynamicOffset, dynamicOffsets)
+        }else {
+            dynamicOffsetCount = 0
+            pDynamicOffset = NULL
         }
+        VK10.nvkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, 0, 1, pDescriptorSets,
+                dynamicOffsetCount, pDynamicOffset)
+        descriptorSets.set(memGetLong(pDescriptorSets))
     }
 
     inline fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
         VK10.vkCmdBindIndexBuffer(commandBuffer, buffer, offset, indexType.i)
+    }
+
+    inline fun cmdBindPipeline(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, pipeline: VkPipeline) {
+        VK10.vkCmdBindPipeline(commandBuffer, pipelineBindPoint.i, pipeline)
     }
 
     inline fun cmdBindVertexBuffer(commandBuffer: VkCommandBuffer, firstBinding: Int, buffer: KMutableProperty0<VkBuffer>) {
@@ -389,6 +403,14 @@ object vk {
         memPutLong(pOffset, 0L) // TODO remove since calloc?
         VK10.nvkCmdBindVertexBuffers(commandBuffer, firstBinding, 1, pBuffer, pOffset)
         buffer.set(memGetLong(pBuffer))
+    }
+
+    inline fun cmdDrawIndexed(commandBuffer: VkCommandBuffer, indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
+        VK10.vkCmdDrawIndexed(commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)
+    }
+
+    inline fun cmdEndRenderPass(commandBuffer: VkCommandBuffer) {
+        VK10.vkCmdEndRenderPass(commandBuffer)
     }
 
     inline fun cmdSetScissor(commandBuffer: VkCommandBuffer, firstScissor: Int, scissors: VkRect2D.Buffer) {
@@ -618,6 +640,10 @@ object vk {
         KHRSwapchain.nvkDestroySwapchainKHR(device, swapchain, NULL)
     }
 
+    inline fun endCommandBuffer(commandBuffer: VkCommandBuffer): VkResult {
+        return VkResult of VK10.vkEndCommandBuffer(commandBuffer)
+    }
+
     inline fun enumerateDeviceExtensionProperties(physicalDevice: VkPhysicalDevice, layerName: String? = null): ArrayList<String> {
         val pCount = appBuffer.int
         val pLayerName = layerName?.utf8?.let(::memAddress) ?: NULL
@@ -724,6 +750,10 @@ object vk {
 
     inline fun invalidateMappedMemoryRanges(device: VkDevice, memoryRange: VkMappedMemoryRange): VkResult {
         return VkResult of VK10.nvkInvalidateMappedMemoryRanges(device, 1, memoryRange.adr)
+    }
+
+    inline fun queueSubmit(queue: VkQueue, submit: VkSubmitInfo, fence: VkFence = NULL): VkResult {
+        return VkResult of VK10.nvkQueueSubmit(queue, 1,  submit.adr, fence)
     }
 
     inline fun updateDescriptorSets(device: VkDevice, descriptorWrites: VkWriteDescriptorSet.Buffer,

@@ -55,7 +55,7 @@ class UIOverlay {
 //    void prepareRenderPass();
 //    void updateCommandBuffers();
 //    public:
-//    bool visible = true;
+    val visible = true
 //    float scale = 1.0f;
 //
 //    std::vector<VkCommandBuffer> cmdBuffers;

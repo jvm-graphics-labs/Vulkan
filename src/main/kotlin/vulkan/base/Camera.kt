@@ -31,7 +31,7 @@ class Camera {
 
     enum class CameraType { lookAt, firstPerson }
 
-    val type = CameraType.lookAt
+    var type = CameraType.lookAt
 
     val rotation = Vec3()
     val position = Vec3()

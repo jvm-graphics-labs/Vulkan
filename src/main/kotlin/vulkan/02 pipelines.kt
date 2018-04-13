@@ -125,7 +125,7 @@
 //            val scissor = vk.Rect2D(size)
 //            vk.cmdSetScissor(drawCmdBuffers[i], 0, scissor)
 //
-//            vk.cmdBindDescriptorSets(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS, pipelineLayout, 0, ::descriptorSet)
+//            vk.cmdBindDescriptorSet(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS, pipelineLayout, 0, ::descriptorSet)
 //
 //            vk.cmdBindVertexBuffer(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, models.cube.vertices.buffer)
 //            vkCmdBindIndexBuffer(drawCmdBuffers[i], models.cube.indices.buffer, 0, VK_INDEX_TYPE_UINT32)

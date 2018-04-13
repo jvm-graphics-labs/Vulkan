@@ -35,13 +35,7 @@ fun main(args: Array<String>) {
     }
 }
 
-/** Set to "true" to enable Vulkan's validation layers (see vulkandebug.cpp for details)    */
-const val ENABLE_VALIDATION = true
-/** Set to "true" to use staging buffers for uploading vertex and index data to device local memory
- *  See "prepareVertices" for details on what's staging and on why to use it    */
-const val USE_STAGING = true
-
-private class Triangle : VulkanExampleBase(ENABLE_VALIDATION) {
+private class Triangle : VulkanExampleBase() {
 
     init {
         zoom = -2.5f
@@ -141,6 +135,7 @@ private class Triangle : VulkanExampleBase(ENABLE_VALIDATION) {
     override fun destroy() {
 
         window.destroy()
+        window.onWindowClosed()
         glfw.terminate()
 
         /*  Clean up used Vulkan resources
@@ -301,7 +296,7 @@ private class Triangle : VulkanExampleBase(ENABLE_VALIDATION) {
             vkCmdSetScissor(drawCmdBuffers[i], 0, scissor)
 
             // Bind descriptor sets describing shader binding points
-            vk.cmdBindDescriptorSets(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS, pipelineLayout, 0, ::descriptorSet)
+            vk.cmdBindDescriptorSet(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS, pipelineLayout, ::descriptorSet)
 
             /*  Bind the rendering pipeline
                 The pipeline (state object) contains all states of the rendering pipeline, binding it will set all

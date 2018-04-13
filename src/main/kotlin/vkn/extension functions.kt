@@ -37,3 +37,12 @@ inline fun VkCommandBuffer.setDepthBias(depthBiasConstantFactor: Float, depthBia
 //inline fun VkCommandBuffer.setBlendConstants(depthBiasConstantFactor: Float, depthBiasClamp: Float, depthBiasSlopeFactor: Float) {
 //    VK10.setBlendConstants(this, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)
 //}
+
+
+inline fun VkQueue.submit(submits: VkSubmitInfo.Buffer, fence: VkFence): VkResult {
+    return VkResult of VK10.nvkQueueSubmit(this, submits.remaining(), submits.adr, fence)
+}
+
+inline fun VkQueue.waitIdle(): VkResult {
+    return VkResult of VK10.vkQueueWaitIdle(this)
+}

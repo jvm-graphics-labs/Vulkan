@@ -16,10 +16,11 @@ import uno.buffer.intBufferOf
 import uno.buffer.longBufferOf
 import vkn.*
 import vkn.VkMemoryStack.Companion.withStack
+import vulkan.ENABLE_VALIDATION
 import vulkan.base.initializers.commandBufferAllocateInfo
 import kotlin.system.measureTimeMillis
 
-abstract class VulkanExampleBase(enableValidation: Boolean) {
+abstract class VulkanExampleBase {
 
     /** fps timer (one second interval) */
     var fpsTimer = 0f
@@ -177,7 +178,7 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
     init {
 
-        settings.validation = enableValidation
+        settings.validation = ENABLE_VALIDATION
 
         // Parse command line arguments
 //        for (size_t i = 0; i < args.size(); i++)
@@ -874,14 +875,57 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 //        UIOverlay->update();
     }
 
-//    // Prepare the frame for workload submission
-//    // - Acquires the next image from the swap chain
-//    // - Sets the default wait and signal semaphores
-//    void prepareFrame();
+    /** Prepare the frame for workload submission
+     *      - Acquires the next image from the swap chain
+     *      - Sets the default wait and signal semaphores   */
+    fun prepareFrame() {
+        // Acquire the next image from the swap chain
+        val err = swapChain.acquireNextImage(semaphores.presentComplete, ::currentBuffer)
+        // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE) or no longer optimal for presentation (SUBOPTIMAL)
+        if (err == VkResult.ERROR_OUT_OF_DATE_KHR || err == VkResult.SUBOPTIMAL_KHR)
+            windowResize(window.size)
+        else
+            err.check()
+    }
+
+    /** Submit the frames' workload */
+    fun submitFrame() {
+
+        val submitOverlay = settings.overlay && uiOverlay!!.visible
+
+        if (submitOverlay) {
+            TODO()
+            // Wait for color attachment output to finish before rendering the text overlay
+//            val stageFlags = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
+//            submitInfo.waitDstStageMask = appBuffer.intBufferOf(stageFlags)
 //
-//    // Submit the frames' workload
-//    void submitFrame();
+//            // Set semaphores
+//            // Wait for render complete semaphore
+//            submitInfo.waitSemaphoreCount = 1
+//            submitInfo.waitSemaphores = appBuffer.longBufferOf(semaphores.renderComplete)
+//            // Signal ready with UI overlay complete semaphpre
+//            submitInfo.signalSemaphores = appBuffer.longBufferOf(semaphores.overlayComplete)
 //
+//            // Submit current UI overlay command buffer
+//            submitInfo.commandBuffers = appBuffer.pointerBufferOf(uiOverlay.cmdBuffers[currentBuffer])
+//            VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE))
+//
+//            // Reset stage mask
+//            submitInfo.pWaitDstStageMask = &submitPipelineStages
+//            // Reset wait and signal semaphores for rendering next frame
+//            // Wait for swap chain presentation to finish
+//            submitInfo.waitSemaphoreCount = 1
+//            submitInfo.pWaitSemaphores = &semaphores.presentComplete
+//            // Signal ready with offscreen semaphore
+//            submitInfo.signalSemaphoreCount = 1
+//            submitInfo.pSignalSemaphores = &semaphores.renderComplete
+        }
+
+        swapChain.queuePresent(queue, currentBuffer, if(submitOverlay) semaphores.overlayComplete else semaphores.renderComplete).check()
+
+//        vk.queueWaitIdle(queue)
+    }
+
 //    /** @brief (Virtual) Called before the UI overlay is created, can be used to do a custom setup e.g. with different renderpass */
 //    virtual void OnSetupUIOverlay(vks::UIOverlayCreateInfo &createInfo);
 //    /** @brief (Virtual) Called when the UI overlay is updating, can be used to add custom elements to the overlay */
@@ -889,6 +933,9 @@ abstract class VulkanExampleBase(enableValidation: Boolean) {
 
     /** Called if the window is resized and some resources have to be recreated    */
     fun windowResize(newSize: Vec2i) {
+
+        appBuffer.reset()
+
         if (!prepared) return
         prepared = false
 
