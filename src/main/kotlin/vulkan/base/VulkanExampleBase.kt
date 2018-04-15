@@ -48,11 +48,11 @@ abstract class VulkanExampleBase {
     /** Physical device (GPU) that Vulkan will use  */
     lateinit var physicalDevice: VkPhysicalDevice
     /** Stores physical device properties (for e.g. checking device limits) */
-    val deviceProperties: VkPhysicalDeviceProperties = VkPhysicalDeviceProperties.calloc()
+    val deviceProperties = VkPhysicalDeviceProperties.calloc()
     /** Stores the features available on the selected physical device (for e.g. checking if a feature is available) */
-    val deviceFeatures: VkPhysicalDeviceFeatures = VkPhysicalDeviceFeatures.calloc()
+    val deviceFeatures = VkPhysicalDeviceFeatures.calloc()
     /** Stores all available memory (type) properties for the physical device   */
-    val deviceMemoryProperties: VkPhysicalDeviceMemoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
+    val deviceMemoryProperties = VkPhysicalDeviceMemoryProperties.calloc()
     /**
      * Set of physical device features to be enabled for this example (must be set in the derived constructor)
      *
@@ -76,7 +76,7 @@ abstract class VulkanExampleBase {
     /** Contains command buffers and semaphores to be presented to the queue    */
     lateinit var submitInfo: VkSubmitInfo
     /** Command buffers used for rendering  */
-    val drawCmdBuffers = ArrayList<VkCommandBuffer>()
+    lateinit var drawCmdBuffers: ArrayList<VkCommandBuffer>
     /** Global render pass for frame buffer writes  */
     var renderPass: VkRenderPass = NULL
     /** List of available frame buffers (same as number of swap chain images)   */
@@ -397,9 +397,11 @@ abstract class VulkanExampleBase {
         physicalDevice = physicalDevices[selectedDevice]
 
         // Store properties (including limits), features and memory properties of the physical device (so that examples can check against them)
-        vkGetPhysicalDeviceProperties(physicalDevice, deviceProperties)
-        vkGetPhysicalDeviceFeatures(physicalDevice, deviceFeatures)
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice, deviceMemoryProperties)
+        physicalDevice.apply {
+            getProperties(deviceProperties)
+            getFeatures(deviceFeatures)
+            getMemoryProperties(deviceMemoryProperties)
+        }
 
         // Derived examples can override this to set actual features (based on above readings) to enable for logical device creation
         getEnabledFeatures()
@@ -412,7 +414,7 @@ abstract class VulkanExampleBase {
         device = vulkanDevice.logicalDevice!!
 
         // Get a graphics queue from the device
-        vk.getDeviceQueue(device, vulkanDevice.queueFamilyIndices.graphics, 0, ::queue)
+        queue = device.getQueue(vulkanDevice.queueFamilyIndices.graphics, 0)
 
         // Find a suitable depth format
         val validDepthFormat = tools.getSupportedDepthFormat(physicalDevice, ::depthFormat)
@@ -422,16 +424,18 @@ abstract class VulkanExampleBase {
 
         // Create synchronization objects
         val semaphoreCreateInfo = vk.SemaphoreCreateInfo {}
-        /*  Create a semaphore used to synchronize image presentation
-            Ensures that the image is displayed before we start submitting new commands to the queu             */
-        vk.createSemaphore(device, semaphoreCreateInfo, semaphores::presentComplete).check()
-        /*  Create a semaphore used to synchronize command submission
-            Ensures that the image is not presented until all commands have been sumbitted and executed             */
-        vk.createSemaphore(device, semaphoreCreateInfo, semaphores::renderComplete).check()
-        // Create a semaphore used to synchronize command submission
-        // Ensures that the image is not presented until all commands for the UI overlay have been sumbitted and executed
-        // Will be inserted after the render complete semaphore if the UI overlay is enabled
-        vk.createSemaphore(device, semaphoreCreateInfo, semaphores::overlayComplete).check()
+        semaphores.apply {
+            /*  Create a semaphore used to synchronize image presentation
+                Ensures that the image is displayed before we start submitting new commands to the queue */
+            presentComplete = device createSemaphore semaphoreCreateInfo
+            /*  Create a semaphore used to synchronize command submission
+                Ensures that the image is not presented until all commands have been submitted and executed */
+            renderComplete = device createSemaphore semaphoreCreateInfo
+            /* Create a semaphore used to synchronize command submission
+                Ensures that the image is not presented until all commands for the UI overlay have been submitted and executed
+                Will be inserted after the render complete semaphore if the UI overlay is enabled */
+            overlayComplete = device createSemaphore semaphoreCreateInfo
+        }
 
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
@@ -530,7 +534,7 @@ abstract class VulkanExampleBase {
             queueFamilyIndex = swapChain.queueNodeIndex
             flags = VkCommandPoolCreate.RESET_COMMAND_BUFFER_BIT.i
         }
-        vk.createCommandPool(device, cmdPoolInfo, ::cmdPool).check()
+        cmdPool = device createCommandPool cmdPoolInfo
     }
 
     /** Setup default depth and stencil views   */
@@ -705,14 +709,10 @@ abstract class VulkanExampleBase {
     /** Create command buffers for drawing commands */
     fun createCommandBuffers() {
         // Create one command buffer for each swap chain image and reuse for rendering
-        drawCmdBuffers.ensureCapacity(swapChain.imageCount)
-
-        val cmdBufAllocateInfo = commandBufferAllocateInfo(
+        drawCmdBuffers = device allocateCommandBuffers commandBufferAllocateInfo(
                 cmdPool,
                 VkCommandBufferLevel.PRIMARY,
                 swapChain.imageCount)
-
-        vk.allocateCommandBuffers(device, cmdBufAllocateInfo, swapChain.imageCount, drawCmdBuffers).check()
     }
 
     /** Destroy all command buffers and set their handles to VK_NULL_HANDLE
@@ -728,8 +728,7 @@ abstract class VulkanExampleBase {
 //
     /** Create a cache pool for rendering pipelines */
     fun createPipelineCache() {
-        val pipelineCacheCreateInfo = vk.PipelineCacheCreateInfo {}
-        vk.createPipelineCache(device, pipelineCacheCreateInfo, ::pipelineCache).check()
+        pipelineCache = device createPipelineCache vk.PipelineCacheCreateInfo {}
     }
 
     /** Prepare commonly used Vulkan functions  */
@@ -796,7 +795,7 @@ abstract class VulkanExampleBase {
         }
 
         // Flush device to make sure all resources can be freed
-        vkDeviceWaitIdle(device)
+        device.waitIdle()
     }
 
     /** Render one frame of a render loop on platforms that sync rendering  */
@@ -921,7 +920,7 @@ abstract class VulkanExampleBase {
 //            submitInfo.pSignalSemaphores = &semaphores.renderComplete
         }
 
-        swapChain.queuePresent(queue, currentBuffer, if(submitOverlay) semaphores.overlayComplete else semaphores.renderComplete).check()
+        swapChain.queuePresent(queue, currentBuffer, if (submitOverlay) semaphores.overlayComplete else semaphores.renderComplete).check()
 
 //        vk.queueWaitIdle(queue)
     }

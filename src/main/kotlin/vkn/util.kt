@@ -67,6 +67,7 @@ typealias VkPipeline = Long
 typealias VkDescriptorSetLayout = Long
 typealias VkDescriptorSet = Long
 typealias VkBuffer = Long
+typealias VkDebugReportCallbackEXT = Long
 
 typealias VkSemaphorePtr = LongBuffer
 typealias VkSwapchainKHRptr = LongBuffer
@@ -75,7 +76,7 @@ typealias VkSamplerPtr = LongBuffer
 typealias VkImageViewPtr = LongBuffer
 
 
-object ArrayListLong {
+object LongArrayList {
     operator fun ArrayList<Long>.set(index: Int, long: LongBuffer) {
         set(index, long[0])
     }
@@ -84,6 +85,20 @@ object ArrayListLong {
         if (size < newSize)
             for (i in size until newSize)
                 add(NULL)
+        else if (size > newSize)
+            for (i in size downTo newSize + 1)
+                removeAt(lastIndex)
+    }
+}
+object VkPhysicalDeviceArrayList {
+//    operator fun ArrayList<VkPhysicalDevice>.set(index: Int, long: LongBuffer) {
+//        set(index, long[0])
+//    }
+
+    infix fun ArrayList<VkPhysicalDevice>.resize(newSize: Int) {
+        if (size < newSize) TODO()
+//            for (i in size until newSize)
+//                add(VkPhysicalDevice())
         else if (size > newSize)
             for (i in size downTo newSize + 1)
                 removeAt(lastIndex)

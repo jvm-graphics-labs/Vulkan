@@ -10,9 +10,9 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
-import java.nio.IntBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
+import vkn.VkPhysicalDeviceArrayList.resize
 
 
 object vk {
@@ -140,6 +140,18 @@ object vk {
         return res
     }
 
+    inline fun PhysicalDeviceFeatures(): VkPhysicalDeviceFeatures {
+        return VkPhysicalDeviceFeatures.create(ptr.advance(VkPhysicalDeviceFeatures.SIZEOF))
+    }
+
+    inline fun PhysicalDeviceMemoryProperties(): VkPhysicalDeviceMemoryProperties {
+        return VkPhysicalDeviceMemoryProperties.create(ptr.advance(VkPhysicalDeviceMemoryProperties.SIZEOF))
+    }
+
+    inline fun PhysicalDeviceProperties(): VkPhysicalDeviceProperties {
+        return VkPhysicalDeviceProperties.create(ptr.advance(VkPhysicalDeviceProperties.SIZEOF))
+    }
+
     inline fun PipelineCacheCreateInfo(block: VkPipelineCacheCreateInfo.() -> Unit): VkPipelineCacheCreateInfo {
         val res = VkPipelineCacheCreateInfo.create(ptr.advance(VkPipelineCacheCreateInfo.SIZEOF))
         res.type = VkStructureType.PIPELINE_CACHE_CREATE_INFO
@@ -253,6 +265,13 @@ object vk {
     }
 
 
+    inline fun GraphicsPipelineCreateInfo(block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo {
+        val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF))
+        res.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO
+        res.block()
+        return res
+    }
+
     inline fun GraphicsPipelineCreateInfo(capacity: Int, block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo.Buffer {
         val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF * capacity), capacity)
         res.forEach { it.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO }
@@ -296,7 +315,7 @@ object vk {
 
     inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
 
-    inline fun Rect2D(capacity: Int): VkRect2D.Buffer = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF * capacity), capacity)
+    inline fun Rect2D(block: VkRect2D.() -> Unit): VkRect2D = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF)).also(block)
     inline fun Rect2D(capacity: Int, block: VkRect2D.() -> Unit): VkRect2D.Buffer = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF * capacity), capacity).also { it[0].block() }
 
     inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
@@ -310,10 +329,11 @@ object vk {
     inline fun VertexInputAttributeDescription(capacity: Int): VkVertexInputAttributeDescription.Buffer = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF * capacity), capacity)
 
     inline fun VertexInputBindingDescription(capacity: Int, block: VkVertexInputBindingDescription.() -> Unit): VkVertexInputBindingDescription.Buffer = VkVertexInputBindingDescription.create(ptr.advance(VkVertexInputBindingDescription.SIZEOF * capacity), capacity).also { it[0].block() }
-    inline fun Viewport(block: VkViewport.() -> Unit): VkViewport = VkViewport.create(ptr.advance(VkViewport.SIZEOF)).also(block)
 
+    inline fun Viewport(block: VkViewport.() -> Unit): VkViewport = VkViewport.create(ptr.advance(VkViewport.SIZEOF)).also(block)
     inline fun Viewport(capacity: Int, block: VkViewport.() -> Unit): VkViewport.Buffer = VkViewport.create(ptr.advance(VkViewport.SIZEOF * capacity), capacity).also { it[0].block() }
 
+    inline fun WriteDescriptorSet(block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF)).also(block)
     inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet.Buffer = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF * capacity), capacity).also { it[0].block() }
 
 
@@ -375,11 +395,11 @@ object vk {
         memPutLong(pDescriptorSets, descriptorSets())
         val dynamicOffsetCount: Int
         val pDynamicOffset: Long
-        if(dynamicOffsets != null) {
+        if (dynamicOffsets != null) {
             dynamicOffsetCount = 1
             pDynamicOffset = appBuffer.int
             memPutInt(pDynamicOffset, dynamicOffsets)
-        }else {
+        } else {
             dynamicOffsetCount = 0
             pDynamicOffset = NULL
         }
@@ -494,6 +514,15 @@ object vk {
     }
 
     inline fun createGraphicsPipelines(device: VkDevice, pipelineCache: VkPipelineCache,
+                                       createInfo: VkGraphicsPipelineCreateInfo,
+                                       pipelines: KMutableProperty0<VkPipeline>): VkResult {
+        val pPipelines = appBuffer.long
+        return VkResult of VK10.nvkCreateGraphicsPipelines(device, pipelineCache, 1, createInfo.adr, NULL, pPipelines).also {
+            pipelines.set(memGetLong(pPipelines))
+        }
+    }
+
+    inline fun createGraphicsPipelines(device: VkDevice, pipelineCache: VkPipelineCache,
                                        createInfos: VkGraphicsPipelineCreateInfo.Buffer,
                                        pipelines: KMutableProperty0<VkPipeline>): VkResult {
         val pPipelines = appBuffer.long
@@ -514,6 +543,12 @@ object vk {
         return VkResult of VK10.nvkCreateImageView(device, createInfo.adr, NULL, pView).also {
             view.set(memGetLong(pView))
         }
+    }
+
+    inline infix fun createInstance(createInfo: VkInstanceCreateInfo): VkInstance {
+        val pInstance = appBuffer.pointer
+        val res = VK10.nvkCreateInstance(createInfo.adr, NULL, pInstance)
+        return VkInstance(MemoryUtil.memGetLong(pInstance), createInfo)
     }
 
     inline fun createInstance(createInfo: VkInstanceCreateInfo, instance: KMutableProperty0<VkInstance>): VkResult {
@@ -659,18 +694,23 @@ object vk {
     }
 
     inline fun enumeratePhysicalDevices(instance: VkInstance): ArrayList<VkPhysicalDevice> {
-        // Physical device
-        val pCount = appBuffer.int
-        // Get number of available physical devices
-        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, NULL))
-        // Enumerate devices
-        val count = memGetInt(pCount)
-        val devices = appBuffer.pointerBuffer(count)
-        VK_CHECK_RESULT(VK10.nvkEnumeratePhysicalDevices(instance, pCount, devices.adr))
-        val res = arrayListOf<VkPhysicalDevice>()
-        for (i in 0 until count)
-            res += VkPhysicalDevice(devices[i], instance)
-        return res
+        val physicalDevices = ArrayList<VkPhysicalDevice>()
+        val pPhysicalDeviceCount = appBuffer.int
+        var physicalDeviceCount: Int
+        var result: Int
+        do {
+            result = VK10.nvkEnumeratePhysicalDevices(instance, pPhysicalDeviceCount, NULL)
+            physicalDeviceCount = memGetInt(pPhysicalDeviceCount)
+            if (result == VkResult.SUCCESS.i && physicalDeviceCount > 0) {
+                val pPhysicalDevices = appBuffer.pointerBuffer(physicalDeviceCount)
+                result = VK10.nvkEnumeratePhysicalDevices(instance, pPhysicalDeviceCount, pPhysicalDevices.adr)
+                for (i in 0 until physicalDeviceCount)
+                    physicalDevices += VkPhysicalDevice(pPhysicalDevices[i], instance)
+            }
+        } while (result == VkResult.INCOMPLETE.i)
+        assert(physicalDeviceCount <= physicalDevices.size)
+        physicalDevices resize physicalDeviceCount
+        return physicalDevices
     }
 
     inline fun flushMappedMemoryRange(device: VkDevice, memoryRange: VkMappedMemoryRange): VkResult {
@@ -707,6 +747,16 @@ object vk {
         val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count)
         VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, pQueueFamilyProperties.adr)
         return pQueueFamilyProperties.toCollection(arrayListOf())
+    }
+
+    inline fun getPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice,
+                                                  queueFamilyProperties: ArrayList<VkQueueFamilyProperties>,
+                                                  surface: VkSurfaceKHR): BooleanArray {
+        val supported = appBuffer.int
+        return BooleanArray(queueFamilyProperties.size) {
+            KHRSurface.nvkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, it, surface, supported)
+            memGetBoolean(supported)
+        }
     }
 
     inline fun getPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surface: VkSurfaceKHR): ArrayList<VkSurfaceFormatKHR> {
@@ -753,7 +803,7 @@ object vk {
     }
 
     inline fun queueSubmit(queue: VkQueue, submit: VkSubmitInfo, fence: VkFence = NULL): VkResult {
-        return VkResult of VK10.nvkQueueSubmit(queue, 1,  submit.adr, fence)
+        return VkResult of VK10.nvkQueueSubmit(queue, 1, submit.adr, fence)
     }
 
     inline fun updateDescriptorSets(device: VkDevice, descriptorWrites: VkWriteDescriptorSet.Buffer,

@@ -304,7 +304,7 @@ open class GlfwWindow(var handle: Long) {
         }
     }
 
-    fun createSurface(instance: VkInstance, allocator: VkAllocationCallbacks? = null) = glfw.createWindowSurface(this, instance, allocator)
+    infix fun createSurface(instance: VkInstance) = glfw.createWindowSurface(this, instance)
 }
 
 typealias CharCallbackT = (codePoint: Int) -> Unit

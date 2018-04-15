@@ -1,6 +1,9 @@
 package vkn
 
 
+var DEBUG = true//java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("jdwp") >= 0
+
+
 typealias VkFlags = Int
 
 enum class VkPipelineCacheHeaderversion(val i: Int) {
@@ -71,35 +74,34 @@ enum class VkResult(val i: Int) {
 
 inline fun VK_CHECK_RESULT(i: Int) = VkResult.of(i).check()
 
-fun VkResult.check(message: String? = null) {
-    val msg = message ?: "Fatal : VkResult is $this"
-    if (this())
+fun VkResult.check(message: String = "Fatal : VkResult is $this") {
+    if (DEBUG && this())
         if (VULKAN_NO_EXCEPTIONS)
-            System.err.println(msg)
+            System.err.println(message)
         else
             when (this) {
-                VkResult.ERROR_OUT_OF_HOST_MEMORY -> throw OutOfHostMemoryError(msg)
-                VkResult.ERROR_OUT_OF_DEVICE_MEMORY -> throw OutOfDeviceMemoryError(msg)
-                VkResult.ERROR_INITIALIZATION_FAILED -> throw InitializationFailedError(msg)
-                VkResult.ERROR_DEVICE_LOST -> throw DeviceLostError(msg)
-                VkResult.ERROR_MEMORY_MAP_FAILED -> throw MemoryMapFailedError(msg)
-                VkResult.ERROR_LAYER_NOT_PRESENT -> throw LayerNotPresentError(msg)
-                VkResult.ERROR_EXTENSION_NOT_PRESENT -> throw ExtensionNotPresentError(msg)
-                VkResult.ERROR_FEATURE_NOT_PRESENT -> throw FeatureNotPresentError(msg)
-                VkResult.ERROR_INCOMPATIBLE_DRIVER -> throw IncompatibleDriverError(msg)
-                VkResult.ERROR_TOO_MANY_OBJECTS -> throw TooManyObjectsError(msg)
-                VkResult.ERROR_FORMAT_NOT_SUPPORTED -> throw FormatNotSupportedError(msg)
-                VkResult.ERROR_FRAGMENTED_POOL -> throw FragmentedPoolError(msg)
-                VkResult.ERROR_SURFACE_LOST_KHR -> throw SurfaceLostKhrError(msg)
-                VkResult.ERROR_NATIVE_WINDOW_IN_USE_KHR -> throw NativeWindowInUseKhrError(msg)
-                VkResult.ERROR_OUT_OF_DATE_KHR -> throw OutOfDateKhrError(msg)
-                VkResult.ERROR_INCOMPATIBLE_DISPLAY_KHR -> throw IncompatibleDisplayKhrError(msg)
-                VkResult.ERROR_VALIDATION_FAILED_EXT -> throw ValidationFailedExtError(msg)
-                VkResult.ERROR_INVALID_SHADER_NV -> throw InvalidShaderNvError(msg)
-                VkResult.ERROR_OUT_OF_POOL_MEMORY -> throw OutOfPoolMemoryError(msg)
-                VkResult.ERROR_INVALID_EXTERNAL_HANDLE -> throw InvalidExternalHandleError(msg)
-                VkResult.ERROR_NOT_PERMITTED_EXT -> throw NotPermittedError(msg)
-                else -> throw Error(msg)
+                VkResult.ERROR_OUT_OF_HOST_MEMORY -> throw OutOfHostMemoryError(message)
+                VkResult.ERROR_OUT_OF_DEVICE_MEMORY -> throw OutOfDeviceMemoryError(message)
+                VkResult.ERROR_INITIALIZATION_FAILED -> throw InitializationFailedError(message)
+                VkResult.ERROR_DEVICE_LOST -> throw DeviceLostError(message)
+                VkResult.ERROR_MEMORY_MAP_FAILED -> throw MemoryMapFailedError(message)
+                VkResult.ERROR_LAYER_NOT_PRESENT -> throw LayerNotPresentError(message)
+                VkResult.ERROR_EXTENSION_NOT_PRESENT -> throw ExtensionNotPresentError(message)
+                VkResult.ERROR_FEATURE_NOT_PRESENT -> throw FeatureNotPresentError(message)
+                VkResult.ERROR_INCOMPATIBLE_DRIVER -> throw IncompatibleDriverError(message)
+                VkResult.ERROR_TOO_MANY_OBJECTS -> throw TooManyObjectsError(message)
+                VkResult.ERROR_FORMAT_NOT_SUPPORTED -> throw FormatNotSupportedError(message)
+                VkResult.ERROR_FRAGMENTED_POOL -> throw FragmentedPoolError(message)
+                VkResult.ERROR_SURFACE_LOST_KHR -> throw SurfaceLostKhrError(message)
+                VkResult.ERROR_NATIVE_WINDOW_IN_USE_KHR -> throw NativeWindowInUseKhrError(message)
+                VkResult.ERROR_OUT_OF_DATE_KHR -> throw OutOfDateKhrError(message)
+                VkResult.ERROR_INCOMPATIBLE_DISPLAY_KHR -> throw IncompatibleDisplayKhrError(message)
+                VkResult.ERROR_VALIDATION_FAILED_EXT -> throw ValidationFailedExtError(message)
+                VkResult.ERROR_INVALID_SHADER_NV -> throw InvalidShaderNvError(message)
+                VkResult.ERROR_OUT_OF_POOL_MEMORY -> throw OutOfPoolMemoryError(message)
+                VkResult.ERROR_INVALID_EXTERNAL_HANDLE -> throw InvalidExternalHandleError(message)
+                VkResult.ERROR_NOT_PERMITTED_EXT -> throw NotPermittedError(message)
+                else -> throw Error(message)
             }
 }
 

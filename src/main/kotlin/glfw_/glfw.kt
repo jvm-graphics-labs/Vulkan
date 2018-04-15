@@ -6,6 +6,8 @@ import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWVidMode
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.memGetLong
 import org.lwjgl.system.Platform
 import org.lwjgl.vulkan.VkAllocationCallbacks
 import org.lwjgl.vulkan.VkInstance
@@ -67,8 +69,11 @@ object glfw {
             return res
         }
 
-    fun createWindowSurface(window: GlfwWindow, instance: VkInstance, allocator: VkAllocationCallbacks? = null): VkSurfaceKHR =
-            getLong { VK_CHECK_RESULT(GLFWVulkan.glfwCreateWindowSurface(instance, window.handle, allocator, it)) }
+    fun createWindowSurface(window: GlfwWindow, instance: VkInstance): VkSurfaceKHR {
+        val pSurface = appBuffer.long
+        VK_CHECK_RESULT(GLFWVulkan.nglfwCreateWindowSurface(instance.adr, window.handle, NULL, pSurface))
+        return memGetLong(pSurface)
+    }
 }
 
 inline val GLFWVidMode.width: Int

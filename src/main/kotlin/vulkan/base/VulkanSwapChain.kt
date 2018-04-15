@@ -48,15 +48,15 @@ class VulkanSwapChain {
     fun initSurface(instance: VkInstance, window: GlfwWindow) {
 
         // Create the os-specific surface
-        surface = window.createSurface(instance)
+        surface = window createSurface instance
 
         // Get available queue family properties
-        val queueProps = vk.getPhysicalDeviceQueueFamilyProperties(physicalDevice)
+        val queueProps = physicalDevice.queueFamilyProperties
 
         /*  Iterate over each queue to learn whether it supports presenting:
             Find a queue with present support
             Will be used to present the swap chain images to the windowing system   */
-        val supportsPresent = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueProps.size, surface)
+        val supportsPresent = physicalDevice.getSurfaceSupportKHR(queueProps, surface)
 
         // Search for a graphics and a present queue in the array of queue families, try to find one that supports both
         var graphicsQueueNodeIndex = UINT32_MAX
@@ -93,7 +93,7 @@ class VulkanSwapChain {
         queueNodeIndex = graphicsQueueNodeIndex
 
         // Get list of supported surface formats
-        val surfaceFormats = vk.getPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface)
+        val surfaceFormats = physicalDevice getSurfaceFormatsKHR surface
 
         /*  If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
             there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM             */
@@ -135,10 +135,10 @@ class VulkanSwapChain {
         val oldSwapchain = swapChain
 
         // Get physical device surface properties and formats
-        val surfCaps = vk.getPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface)
+        val surfCaps = physicalDevice getSurfaceCapabilitiesKHR surface
 
         // Get available present modes
-        val presentModes = vk.getPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface)
+        val presentModes = physicalDevice getSurfacePresentModesKHR surface
 
         var swapchainExtent = vk.Extent2D {}
         // If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
@@ -209,22 +209,22 @@ class VulkanSwapChain {
         }
 
         // Set additional usage flag for blitting from the swapchain images if supported
-        val formatProps = vk.getPhysicalDeviceFormatProperties(physicalDevice, colorFormat)
+        val formatProps = physicalDevice getFormatProperties colorFormat
         if (formatProps.optimalTilingFeatures has VkFormatFeature.TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures has VkFormatFeature.BLIT_SRC_BIT)
             swapchainCI.imageUsage = swapchainCI.imageUsage or VkImageUsage.TRANSFER_SRC_BIT
 
-        vk.createSwapchainKHR(device, swapchainCI, ::swapChain).check()
+        swapChain = device createSwapchainKHR swapchainCI
 
         /*  If an existing swap chain is re-created, destroy the old swap chain
             This also cleans up all the presentable images         */
         if (oldSwapchain != NULL) {
             for (i in 0 until imageCount)
-                vk.destroyImageView(device, buffers[i].view)
-            vk.destroySwapchainKHR(device, oldSwapchain)
+                device destroyImageView buffers[i].view
+            device destroySwapchainKHR oldSwapchain
         }
 
         // Get the swap chain images
-        images = vk.getSwapchainImagesKHR(device, swapChain)
+        images = device getSwapchainImagesKHR swapChain
         imageCount = images.size
 
         // Get the swap chain buffers containing the image and imageview
@@ -250,11 +250,11 @@ class VulkanSwapChain {
 
                 images[i].also {
                     buffers[i].image = it
-                    image(it)
+                    image(it) // TODO BUG
                 }
             }
 
-            vk.createImageView(device, colorAttachmentView, buffers[i]::view).check()
+            buffers[i].view = device createImageView colorAttachmentView
         }
     }
 

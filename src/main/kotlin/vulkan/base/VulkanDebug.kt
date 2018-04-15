@@ -14,7 +14,7 @@ object debug {
     /** Default validation layers   */
     val validationLayerNames = arrayListOf("VK_LAYER_LUNARG_standard_validation")
 
-    var msgCallback = NULL
+    var msgCallback: VkDebugReportCallbackEXT = NULL
 
     /** Default debug callback  */
     val messageCallback: VkDebugReportCallbackI = { flags, objType, srcObject, location, msgCode, layerPrefix, msg, userData ->
@@ -68,15 +68,13 @@ object debug {
             this.flags = flags
         }
 
-        val err = vk.createDebugReportCallbackEXT(instance, dbgCreateInfo, ::msgCallback)
-
-        assert(err())
+        msgCallback = instance createDebugReportCallbackEXT dbgCreateInfo
     }
 
     /** Clear debug callback    */
     fun freeDebugCallback(instance: VkInstance) {
         if (msgCallback != NULL)
-            EXTDebugReport.vkDestroyDebugReportCallbackEXT(instance, msgCallback, null)
+            instance destroyDebugReportCallbackEXT msgCallback
     }
 }
 

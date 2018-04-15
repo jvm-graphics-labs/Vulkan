@@ -1,19 +1,14 @@
 package vkn
 
-import glm_.BYTES
-import glm_.bool
 import glm_.i
 import glm_.set
-import glm_.vec4.Vec4
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.Configuration
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.VK_FALSE
 import uno.kotlin.buffers.toCollection
-import vkn.ArrayListLong.set
-import vkn.VkMemoryStack.Companion.withStack
+import vkn.LongArrayList.set
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer

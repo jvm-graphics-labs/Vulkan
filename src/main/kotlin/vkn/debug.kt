@@ -10,12 +10,9 @@ import glm_.set
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
-import uno.kotlin.buffers.toCollection
 import unsigned.Uint
 import unsigned.Ulong
-import vkn.ArrayListLong.set
 import java.nio.ByteBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
@@ -73,14 +70,6 @@ fun vkCreateSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, alloc
 }
 
 fun Long.toLongBuffer(): LongBuffer = MemoryUtil.memAllocLong(1).also { it[0] = this }
-
-fun vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice, count: Int, surface: VkSurfaceKHR): BooleanArray {
-    val supported = MemoryUtil.memAllocInt(1)
-    return BooleanArray(count) {
-        KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, it, surface, supported)
-        supported[0].bool
-    }
-}
 
 
 
