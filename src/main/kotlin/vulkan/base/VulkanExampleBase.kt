@@ -805,7 +805,6 @@ abstract class VulkanExampleBase {
                 viewUpdated = false
                 viewChanged()
             }
-
             render()
             frameCounter++
         }
@@ -920,9 +919,9 @@ abstract class VulkanExampleBase {
 //            submitInfo.pSignalSemaphores = &semaphores.renderComplete
         }
 
-        swapChain.queuePresent(queue, currentBuffer, if (submitOverlay) semaphores.overlayComplete else semaphores.renderComplete).check()
+        swapChain.queuePresent(queue, currentBuffer, if (submitOverlay) semaphores.overlayComplete else semaphores.renderComplete)
 
-//        vk.queueWaitIdle(queue)
+        queue.waitIdle()
     }
 
 //    /** @brief (Virtual) Called before the UI overlay is created, can be used to do a custom setup e.g. with different renderpass */

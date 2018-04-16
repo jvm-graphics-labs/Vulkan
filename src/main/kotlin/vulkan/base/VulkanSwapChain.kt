@@ -1,6 +1,7 @@
 package vulkan.base
 
 import glfw_.GlfwWindow
+import glfw_.appBuffer
 import gli_.has
 import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil.NULL
@@ -268,10 +269,10 @@ class VulkanSwapChain {
      *
      * @return VkResult of the image acquisition
      */
-    fun acquireNextImage(presentCompleteSemaphore: VkSemaphore, imageIndex: KMutableProperty0<Int>): VkResult = withStack {
+    fun acquireNextImage(presentCompleteSemaphore: VkSemaphore, imageIndex: KMutableProperty0<Int>): VkResult {
         // By setting timeout to UINT64_MAX we will always wait until the next image has been acquired or an actual error is thrown
         // With that we don't have to handle VK_NOT_READY
-        vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, presentCompleteSemaphore, NULL, imageIndex)
+        return vk.acquireNextImageKHR(device, swapChain, UINT64_MAX, presentCompleteSemaphore, NULL, imageIndex)
     }
 
     /**
@@ -283,18 +284,16 @@ class VulkanSwapChain {
      *
      * @return VkResult of the queue presentation
      */
-    fun queuePresent(queue: VkQueue, imageIndex: Int, waitSemaphore: VkSemaphore = NULL): VkResult = withStack {
-        val presentInfo = cVkPresentInfoKHR {
-            sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR)
-            pNext(NULL)
-            swapchainCount(1)
-            pSwapchains(longs(swapChain))
-            pImageIndices(ints(imageIndex))
+    fun queuePresent(queue: VkQueue, imageIndex: Int, waitSemaphore: VkSemaphore = NULL) {
+        val presentInfo = vk.PresentInfoKHR {
+            swapchainCount = 1
+            swapchains = appBuffer.longBufferOf(swapChain)
+            imageIndices = appBuffer.intBufferOf(imageIndex)
             // Check if a wait semaphore has been specified to wait for before presenting the image
             if (waitSemaphore != NULL)
-                pWaitSemaphores(longs(waitSemaphore))
+                waitSemaphores = appBuffer.longBufferOf(waitSemaphore)
         }
-        return VkResult of vkQueuePresentKHR(queue, presentInfo)
+        queue presentKHR presentInfo
     }
 
 

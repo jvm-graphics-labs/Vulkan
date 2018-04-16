@@ -5,34 +5,61 @@ import glm_.i
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
+import kotlin.reflect.KMutableProperty0
 
 
 /*
     VkCommandBuffer
  */
 
-inline infix fun VkCommandBuffer.begin(beginInfo: VkCommandBufferBeginInfo): VkResult {
-    return VkResult of VK10.nvkBeginCommandBuffer(this, beginInfo.adr)
+inline infix fun VkCommandBuffer.begin(beginInfo: VkCommandBufferBeginInfo) {
+    VK_CHECK_RESULT(VK10.nvkBeginCommandBuffer(this, beginInfo.adr))
 }
 
 inline fun VkCommandBuffer.beginRenderPass(renderPassBegin: VkRenderPassBeginInfo, contents: VkSubpassContents) {
     VK10.nvkCmdBeginRenderPass(this, renderPassBegin.adr, contents.i)
 }
 
-inline fun VkCommandBuffer.copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, regions: VkBufferCopy.Buffer) {
-    VK10.nvkCmdCopyBuffer(this, srcBuffer, dstBuffer, regions.remaining(), regions.adr)
+inline fun VkCommandBuffer.bindDescriptorSet(pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
+                                             descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: Int? = null) {
+    vk.cmdBindDescriptorSet(this, pipelineBindPoint, layout, descriptorSets, dynamicOffsets)
 }
 
-inline fun VkCommandBuffer.end(): VkResult {
-    return VkResult of VK10.vkEndCommandBuffer(this)
-}
-
-inline fun VkCommandBuffer.reset(flags: VkCommandBufferResetFlags): VkResult {
-    return VkResult of VK10.vkResetCommandBuffer(this, flags)
+inline fun VkCommandBuffer.bindIndexBuffer(buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
+    VK10.vkCmdBindIndexBuffer(this, buffer, offset, indexType.i)
 }
 
 inline fun VkCommandBuffer.bindPipeline(pipelineBindPoint: VkPipelineBindPoint, pipeline: VkPipeline) {
     VK10.vkCmdBindPipeline(this, pipelineBindPoint.i, pipeline)
+}
+
+inline fun VkCommandBuffer.bindVertexBuffer(firstBinding: Int, buffer: KMutableProperty0<VkBuffer>) {
+    val pBuffer = appBuffer.long
+    memPutLong(pBuffer, buffer())
+    val pOffset = appBuffer.long
+    memPutLong(pOffset, 0L) // TODO remove since calloc?
+    VK10.nvkCmdBindVertexBuffers(this, firstBinding, 1, pBuffer, pOffset)
+    buffer.set(memGetLong(pBuffer))
+}
+
+inline fun VkCommandBuffer.copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, regions: VkBufferCopy.Buffer) {
+    VK10.nvkCmdCopyBuffer(this, srcBuffer, dstBuffer, regions.remaining(), regions.adr)
+}
+
+inline fun VkCommandBuffer.drawIndexed(indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
+    VK10.vkCmdDrawIndexed(this, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)
+}
+
+inline fun VkCommandBuffer.end() {
+    VK_CHECK_RESULT(VK10.vkEndCommandBuffer(this))
+}
+
+inline fun VkCommandBuffer.endRenderPass() {
+    VK10.vkCmdEndRenderPass(this)
+}
+
+inline fun VkCommandBuffer.reset(flags: VkCommandBufferResetFlags) {
+    VK_CHECK_RESULT(VK10.vkResetCommandBuffer(this, flags))
 }
 
 inline infix fun VkCommandBuffer.setViewport(viewport: VkViewport) {
@@ -66,6 +93,12 @@ inline fun VkCommandBuffer.setDepthBias(depthBiasConstantFactor: Float, depthBia
 /*
     VkDevice
  */
+
+inline fun VkDevice.acquireNextImageKHR(swapchain: VkSwapchainKHR, timeout: Long, semaphore: VkSemaphore, fence: VkFence): Int {
+    val pImageIndex = appBuffer.int
+    VK_CHECK_RESULT(KHRSwapchain.nvkAcquireNextImageKHR(this, swapchain, timeout, semaphore, fence, pImageIndex))
+    return memGetInt(pImageIndex)
+}
 
 inline infix fun VkDevice.allocateCommandBuffer(allocateInfo: VkCommandBufferAllocateInfo): VkCommandBuffer {
     val pCmdBuffer = appBuffer.pointer
@@ -265,6 +298,12 @@ inline infix fun VkDevice.getSwapchainImagesKHR(swapchain: VkSwapchainKHR): Arra
     return vk.getSwapchainImagesKHR(this, swapchain)
 }
 
+inline infix fun VkDevice.resetFence(fence: VkFence) {
+    val pFence = appBuffer.long
+    memPutLong(pFence, fence)
+    VK10.nvkResetFences(this, 1, pFence)
+}
+
 inline infix fun VkDevice.unmapMemory(memory: VkDeviceMemory) {
     VK10.vkUnmapMemory(this, memory)
 }
@@ -285,8 +324,8 @@ inline fun VkDevice.waitForFence(fence: VkFence, waitAll: Boolean, timeout: Long
     VK_CHECK_RESULT(VK10.nvkWaitForFences(this, 1, pFence, waitAll.i, timeout))
 }
 
-inline fun VkDevice.waitIdle(): VkResult {
-    return VkResult of VK10.vkDeviceWaitIdle(this)
+inline fun VkDevice.waitIdle() {
+    VK_CHECK_RESULT(VK10.vkDeviceWaitIdle(this))
 }
 
 
@@ -367,12 +406,16 @@ inline infix fun VkPhysicalDevice.getSurfacePresentModesKHR(surface: VkSurfaceKH
     VkQueue
  */
 
-inline fun VkQueue.submit(submits: VkSubmitInfo, fence: VkFence): VkResult {
-    return VkResult of VK10.nvkQueueSubmit(this, 1, submits.adr, fence)
+inline infix fun VkQueue.presentKHR(presentInfo: VkPresentInfoKHR) {
+    VK_CHECK_RESULT(KHRSwapchain.vkQueuePresentKHR(this, presentInfo))
 }
 
-inline fun VkQueue.waitIdle(): VkResult {
-    return VkResult of VK10.vkQueueWaitIdle(this)
+inline fun VkQueue.submit(submits: VkSubmitInfo, fence: VkFence) {
+    VK_CHECK_RESULT(VK10.nvkQueueSubmit(this, 1, submits.adr, fence))
+}
+
+inline fun VkQueue.waitIdle() {
+    VK_CHECK_RESULT(VK10.vkQueueWaitIdle(this))
 }
 
 

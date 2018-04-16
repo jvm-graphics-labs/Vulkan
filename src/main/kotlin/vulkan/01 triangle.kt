@@ -294,28 +294,28 @@ private class Triangle : VulkanExampleBase() {
             drawCmdBuffers[i] setScissor scissor
 
             // Bind descriptor sets describing shader binding points
-            vk.cmdBindDescriptorSet(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS, pipelineLayout, ::descriptorSet)
+            drawCmdBuffers[i].bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, ::descriptorSet)
 
             /*  Bind the rendering pipeline
                 The pipeline (state object) contains all states of the rendering pipeline, binding it will set all
                 the states specified at pipeline creation time             */
-            vkCmdBindPipeline(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS.i, pipeline)
+            drawCmdBuffers[i].bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)
 
             // Bind triangle vertex buffer (contains position and colors)
-            vk.cmdBindVertexBuffer(drawCmdBuffers[i], 0, vertices::buffer)
+            drawCmdBuffers[i].bindVertexBuffer(0, vertices::buffer)
 
             // Bind triangle index buffer
-            vk.cmdBindIndexBuffer(drawCmdBuffers[i], indices.buffer, 0, VkIndexType.UINT32)
+            drawCmdBuffers[i].bindIndexBuffer(indices.buffer, 0, VkIndexType.UINT32)
 
             // Draw indexed triangle
-            vkCmdDrawIndexed(drawCmdBuffers[i], indices.count, 1, 0, 0, 1)
+            drawCmdBuffers[i].drawIndexed(indices.count, 1, 0, 0, 1)
 
-            vkCmdEndRenderPass(drawCmdBuffers[i])
+            drawCmdBuffers[i].endRenderPass()
 
             /*  Ending the render pass will add an implicit barrier transitioning the frame buffer color attachment to
                 VK_IMAGE_LAYOUT_PRESENT_SRC_KHR for presenting it to the windowing system             */
 
-            VK_CHECK_RESULT(vkEndCommandBuffer(drawCmdBuffers[i]))
+            drawCmdBuffers[i].end()
         }
     }
 
@@ -324,8 +324,8 @@ private class Triangle : VulkanExampleBase() {
         swapChain.acquireNextImage(presentCompleteSemaphore, ::currentBuffer).check()
 
         // Use a fence to wait until the command buffer has finished execution before using it again
-        VK_CHECK_RESULT(vkWaitForFences(device, waitFences[currentBuffer], true, UINT64_MAX))
-        VK_CHECK_RESULT(vkResetFences(device, waitFences[currentBuffer]))
+        device.waitForFence(waitFences[currentBuffer], true, UINT64_MAX)
+        device resetFence waitFences[currentBuffer]
 
         // Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
         val waitStageMask = appBuffer.intBufferOf(VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i)
@@ -344,13 +344,13 @@ private class Triangle : VulkanExampleBase() {
         }
 
         // Submit to the graphics queue passing a wait fence
-        VK_CHECK_RESULT(vkQueueSubmit(queue, submitInfo, waitFences[currentBuffer]))
+        queue.submit(submitInfo, waitFences[currentBuffer])
 
         /*  Present the current buffer to the swap chain
             Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore
             for swap chain presentation
             This ensures that the image is not presented to the windowing system until all commands have been submitted */
-        swapChain.queuePresent(queue, currentBuffer, renderCompleteSemaphore).check()
+        swapChain.queuePresent(queue, currentBuffer, renderCompleteSemaphore)
     }
 
     /** Prepare vertex and index buffers for an indexed triangle

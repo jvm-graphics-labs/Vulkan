@@ -1,7 +1,6 @@
 package vkn
 
 import glfw_.advance
-
 import glfw_.appBuffer
 import glfw_.appBuffer.ptr
 import glm_.*
@@ -10,9 +9,9 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
+import vkn.VkPhysicalDeviceArrayList.resize
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
-import vkn.VkPhysicalDeviceArrayList.resize
 
 
 object vk {
@@ -109,6 +108,20 @@ object vk {
         val res = VkFramebufferCreateInfo.create(ptr.advance(VkFramebufferCreateInfo.SIZEOF))
         res.type = VkStructureType.FRAMEBUFFER_CREATE_INFO
         res.block()
+        return res
+    }
+
+    inline fun GraphicsPipelineCreateInfo(block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo {
+        val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF))
+        res.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun GraphicsPipelineCreateInfo(capacity: Int, block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo.Buffer {
+        val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF * capacity), capacity)
+        res.forEach { it.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO }
+        res[0].block()
         return res
     }
 
@@ -222,6 +235,13 @@ object vk {
         return res
     }
 
+    inline fun PresentInfoKHR(block: VkPresentInfoKHR.() -> Unit): VkPresentInfoKHR {
+        val res = VkPresentInfoKHR.create(ptr.advance(VkPresentInfoKHR.SIZEOF))
+        res.type = VkStructureType.PRESENT_INFO_KHR
+        res.block()
+        return res
+    }
+
     inline fun RenderPassBeginInfo(block: VkRenderPassBeginInfo.() -> Unit): VkRenderPassBeginInfo {
         val res = VkRenderPassBeginInfo.create(ptr.advance(VkRenderPassBeginInfo.SIZEOF))
         res.type = VkStructureType.RENDER_PASS_BEGIN_INFO
@@ -261,21 +281,6 @@ object vk {
         val res = VkSwapchainCreateInfoKHR.create(ptr.advance(VkSwapchainCreateInfoKHR.SIZEOF))
         res.type = VkStructureType.SWAPCHAIN_CREATE_INFO_KHR
         res.block()
-        return res
-    }
-
-
-    inline fun GraphicsPipelineCreateInfo(block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo {
-        val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF))
-        res.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO
-        res.block()
-        return res
-    }
-
-    inline fun GraphicsPipelineCreateInfo(capacity: Int, block: VkGraphicsPipelineCreateInfo.() -> Unit): VkGraphicsPipelineCreateInfo.Buffer {
-        val res = VkGraphicsPipelineCreateInfo.create(ptr.advance(VkGraphicsPipelineCreateInfo.SIZEOF * capacity), capacity)
-        res.forEach { it.type = VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO }
-        res[0].block()
         return res
     }
 
@@ -355,6 +360,13 @@ object vk {
         functions
      */
 
+    inline fun acquireNextImageKHR(device: VkDevice, swapchain: VkSwapchainKHR, timeout: Long, semaphore: VkSemaphore, fence: VkFence,
+                                   imageIndex: KMutableProperty0<Int>): VkResult {
+        val pImageIndex = appBuffer.int
+        return VkResult of KHRSwapchain.nvkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex).also {
+            imageIndex.set(memGetInt(pImageIndex))
+        }
+    }
 
     inline fun allocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, count: Int,
                                       commandBuffers: ArrayList<VkCommandBuffer>): VkResult {
