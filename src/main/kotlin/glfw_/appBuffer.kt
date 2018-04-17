@@ -72,6 +72,30 @@ object appBuffer {
         return res
     }
 
+    inline fun floatBufferOf(float0: Float, float1: Float): FloatBuffer {
+        val res = floatBuffer(2)
+        res[0] = float0
+        res[1] = float1
+        return res
+    }
+
+    inline fun floatBufferOf(float0: Float, float1: Float, float2: Float): FloatBuffer {
+        val res = floatBuffer(3)
+        res[0] = float0
+        res[1] = float1
+        res[2] = float2
+        return res
+    }
+
+    inline fun floatBufferOf(float0: Float, float1: Float, float2: Float, float3: Float): FloatBuffer {
+        val res = floatBuffer(4)
+        res[0] = float0
+        res[1] = float1
+        res[2] = float2
+        res[3] = float3
+        return res
+    }
+
     inline fun floatBufferOf(vararg floats: Float): FloatBuffer {
         val res = floatBuffer(floats.size)
         for (i in floats.indices)
@@ -102,6 +126,30 @@ object appBuffer {
         val res = intBuffer(2)
         res[0] = int0
         res[1] = int1
+        return res
+    }
+
+    inline fun intBufferOf(int0: Int, int1: Int, int2: Int): IntBuffer {
+        val res = intBuffer(3)
+        res[0] = int0
+        res[1] = int1
+        res[2] = int2
+        return res
+    }
+
+    inline fun intBufferOf(int0: Int, int1: Int, int2: Int, int3: Int): IntBuffer {
+        val res = intBuffer(4)
+        res[0] = int0
+        res[1] = int1
+        res[2] = int2
+        res[3] = int3
+        return res
+    }
+
+    inline fun intBufferOf(vararg ints: Int): IntBuffer {
+        val res = intBuffer(ints.size)
+        for (i in ints.indices)
+            res[i] = ints[i]
         return res
     }
 

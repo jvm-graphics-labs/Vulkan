@@ -132,6 +132,13 @@ object vk {
         return res
     }
 
+    inline fun ImageMemoryBarrier(block: VkImageMemoryBarrier.() -> Unit): VkImageMemoryBarrier {
+        val res = VkImageMemoryBarrier.create(ptr.advance(VkImageMemoryBarrier.SIZEOF))
+        res.type = VkStructureType.IMAGE_MEMORY_BARRIER
+        res.block()
+        return res
+    }
+
     inline fun ImageViewCreateInfo(block: VkImageViewCreateInfo.() -> Unit): VkImageViewCreateInfo {
         val res = VkImageViewCreateInfo.create(ptr.advance(VkImageViewCreateInfo.SIZEOF))
         res.type = VkStructureType.IMAGE_VIEW_CREATE_INFO
@@ -142,6 +149,13 @@ object vk {
     inline fun InstanceCreateInfo(block: VkInstanceCreateInfo.() -> Unit): VkInstanceCreateInfo {
         val res = VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF))
         res.type = VkStructureType.INSTANCE_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun MappedMemoryRange(block: VkMappedMemoryRange.() -> Unit): VkMappedMemoryRange {
+        val res = VkMappedMemoryRange.create(ptr.advance(VkMappedMemoryRange.SIZEOF))
+        res.type = VkStructureType.MAPPED_MEMORY_RANGE
         res.block()
         return res
     }
@@ -221,6 +235,13 @@ object vk {
         return res
     }
 
+    inline fun PipelineShaderStageCreateInfo(capacity: Int): VkPipelineShaderStageCreateInfo.Buffer {
+        val res = VkPipelineShaderStageCreateInfo.create(ptr.advance(VkPipelineShaderStageCreateInfo.SIZEOF * capacity), capacity)
+        for (info in res)
+            info.type = VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO
+        return res
+    }
+
     inline fun PipelineVertexInputStateCreateInfo(block: VkPipelineVertexInputStateCreateInfo.() -> Unit): VkPipelineVertexInputStateCreateInfo {
         val res = VkPipelineVertexInputStateCreateInfo.create(ptr.advance(VkPipelineVertexInputStateCreateInfo.SIZEOF))
         res.type = VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
@@ -256,6 +277,13 @@ object vk {
         return res
     }
 
+    inline fun SamplerCreateInfo(block: VkSamplerCreateInfo.() -> Unit): VkSamplerCreateInfo {
+        val res = VkSamplerCreateInfo.create(ptr.advance(VkSamplerCreateInfo.SIZEOF))
+        res.type = VkStructureType.SAMPLER_CREATE_INFO
+        res.block()
+        return res
+    }
+
     inline fun SemaphoreCreateInfo(block: VkSemaphoreCreateInfo.() -> Unit): VkSemaphoreCreateInfo {
         val res = VkSemaphoreCreateInfo.create(ptr.advance(VkSemaphoreCreateInfo.SIZEOF))
         res.type = VkStructureType.SEMAPHORE_CREATE_INFO
@@ -284,6 +312,27 @@ object vk {
         return res
     }
 
+    inline fun WriteDescriptorSet(block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet {
+        val res = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF)).also(block)
+        res.type = VkStructureType.WRITE_DESCRIPTOR_SET
+        return res
+    }
+
+    inline fun WriteDescriptorSet(capacity: Int): VkWriteDescriptorSet.Buffer {
+        val res = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF * capacity), capacity)
+        for (set in res)
+            set.type = VkStructureType.WRITE_DESCRIPTOR_SET
+        return res
+    }
+
+    inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet.Buffer = WriteDescriptorSet(capacity).also { it[0].block() }
+
+    inline fun DescriptorImageInfo(capacity: Int): VkDescriptorImageInfo.Buffer {
+        return VkDescriptorImageInfo.create(ptr.advance(VkDescriptorImageInfo.SIZEOF * capacity), capacity)
+    }
+
+    inline fun DescriptorImageInfo(capacity: Int, block: VkDescriptorImageInfo.() -> Unit): VkDescriptorImageInfo.Buffer = DescriptorImageInfo(capacity).also { it[0].block() }
+
 
     /*
         normal constructor functions
@@ -292,7 +341,8 @@ object vk {
     inline fun AttachmentDescription(capacity: Int): VkAttachmentDescription.Buffer = VkAttachmentDescription.create(ptr.advance(VkAttachmentDescription.SIZEOF * capacity), capacity)
 
     inline fun AttachmentReference(block: VkAttachmentReference.() -> Unit): VkAttachmentReference = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF)).also(block)
-    inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity).also { it[0].block() }
+    inline fun AttachmentReference(capacity: Int): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity)
+    inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = AttachmentReference(capacity).also { it[0].block() }
 
     inline fun BufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF * capacity), capacity)
 
@@ -300,23 +350,23 @@ object vk {
 
     inline fun DeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
 
-    inline fun DescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF * capacity), capacity).also { it[0].block() }
+    inline fun DescriptorPoolSize(block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF)).also(block)
+    inline fun DescriptorPoolSize(capacity: Int): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF * capacity), capacity)
+    inline fun DescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize.Buffer = DescriptorPoolSize(capacity).also { it[0].block() }
 
-    inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF * capacity), capacity).also { it[0].block() }
+    inline fun DescriptorSetLayoutBinding(capacity: Int): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF * capacity), capacity)
+    inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = DescriptorSetLayoutBinding(capacity).also { it[0].block() }
 
     inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
-
     inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
 
     inline fun FormatProperties(block: VkFormatProperties.() -> Unit): VkFormatProperties = VkFormatProperties.create(ptr.advance(VkFormatProperties.SIZEOF)).also(block)
 
-    inline fun MappedMemoryRange(block: VkMappedMemoryRange .() -> Unit): VkMappedMemoryRange = VkMappedMemoryRange.create(ptr.advance(VkMappedMemoryRange.SIZEOF)).also(block)
 
     inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
 
+    inline fun PipelineColorBlendAttachmentState(block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF)).also(block)
     inline fun PipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState.Buffer = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF * capacity), capacity).also { it[0].block() }
-
-    inline fun PipelineShaderStageCreateInfo(capacity: Int): VkPipelineShaderStageCreateInfo.Buffer = VkPipelineShaderStageCreateInfo.create(ptr.advance(VkPipelineShaderStageCreateInfo.SIZEOF * capacity), capacity)
 
     inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
 
@@ -331,15 +381,14 @@ object vk {
 
     inline fun SurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ptr.advance(VkSurfaceFormatKHR.SIZEOF * capacity), capacity)
 
+    inline fun VertexInputAttributeDescription(block: VkVertexInputAttributeDescription.() -> Unit): VkVertexInputAttributeDescription = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF)).also(block)
     inline fun VertexInputAttributeDescription(capacity: Int): VkVertexInputAttributeDescription.Buffer = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF * capacity), capacity)
 
+    inline fun VertexInputBindingDescription(block: VkVertexInputBindingDescription.() -> Unit): VkVertexInputBindingDescription = VkVertexInputBindingDescription.create(ptr.advance(VkVertexInputBindingDescription.SIZEOF)).also { it.block() }
     inline fun VertexInputBindingDescription(capacity: Int, block: VkVertexInputBindingDescription.() -> Unit): VkVertexInputBindingDescription.Buffer = VkVertexInputBindingDescription.create(ptr.advance(VkVertexInputBindingDescription.SIZEOF * capacity), capacity).also { it[0].block() }
 
     inline fun Viewport(block: VkViewport.() -> Unit): VkViewport = VkViewport.create(ptr.advance(VkViewport.SIZEOF)).also(block)
     inline fun Viewport(capacity: Int, block: VkViewport.() -> Unit): VkViewport.Buffer = VkViewport.create(ptr.advance(VkViewport.SIZEOF * capacity), capacity).also { it[0].block() }
-
-    inline fun WriteDescriptorSet(block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF)).also(block)
-    inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet.Buffer = VkWriteDescriptorSet.create(ptr.advance(VkWriteDescriptorSet.SIZEOF * capacity), capacity).also { it[0].block() }
 
 
     /*
@@ -353,6 +402,28 @@ object vk {
             extent.height = height
             offset.x = offsetX
             offset.y = offsetY
+        }
+    }
+
+    /*
+        Full Constructors
+     */
+
+    inline fun fVertexInputAttributeDescription(binding: Int, location: Int, format: VkFormat, offset: Int): VkVertexInputAttributeDescription {
+        return VertexInputAttributeDescription {
+            this.location = location
+            this.binding = binding
+            this.format = format
+            this.offset = offset
+        }
+    }
+
+
+    inline fun fVertexInputBindingDescription(binding: Int, stride: Int, inputRate: VkVertexInputRate): VkVertexInputBindingDescription {
+        return vk.VertexInputBindingDescription {
+            this.binding = binding
+            this.stride = stride
+            this.inputRate = inputRate
         }
     }
 

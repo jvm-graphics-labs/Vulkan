@@ -1077,6 +1077,7 @@ enum class VkFormatFeature(val i: Int) {
 }
 
 inline infix fun Int.has(f: VkFormatFeature) = and(f.i) != 0
+inline infix fun Int.hasnt(f: VkFormatFeature) = and(f.i) == 0
 
 typealias VkFormatFeatureFlags = VkFlags
 

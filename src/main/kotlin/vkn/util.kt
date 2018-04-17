@@ -48,26 +48,27 @@ inline operator fun PointerBuffer.set(index: Int, pointer: Pointer) {
 
 const val VK_WHOLE_SIZE = 0L.inv()
 
+typealias VkBuffer = Long
 typealias VkCommandPool = Long
-typealias VkSurfaceKHR = Long
-typealias VkSwapchainKHR = Long
-typealias VkImage = Long
-typealias VkImageView = Long
+typealias VkDebugReportCallbackEXT = Long
+typealias VkDescriptorPool = Long
+typealias VkDescriptorSet = Long
+typealias VkDescriptorSetLayout = Long
 typealias VkDeviceMemory = Long
 typealias VkDeviceSize = Long
-typealias VkRenderPass = Long
-typealias VkPipelineCache = Long
-typealias VkFramebuffer = Long
-typealias VkSemaphore = Long
 typealias VkFence = Long
-typealias VkDescriptorPool = Long
-typealias VkShaderModule = Long
-typealias VkPipelineLayout = Long
+typealias VkFramebuffer = Long
+typealias VkImage = Long
+typealias VkImageView = Long
 typealias VkPipeline = Long
-typealias VkDescriptorSetLayout = Long
-typealias VkDescriptorSet = Long
-typealias VkBuffer = Long
-typealias VkDebugReportCallbackEXT = Long
+typealias VkPipelineCache = Long
+typealias VkPipelineLayout = Long
+typealias VkRenderPass = Long
+typealias VkSampler = Long
+typealias VkSemaphore = Long
+typealias VkShaderModule = Long
+typealias VkSurfaceKHR = Long
+typealias VkSwapchainKHR = Long
 
 typealias VkSemaphorePtr = LongBuffer
 typealias VkSwapchainKHRptr = LongBuffer

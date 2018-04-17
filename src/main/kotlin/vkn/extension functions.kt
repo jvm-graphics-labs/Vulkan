@@ -33,17 +33,21 @@ inline fun VkCommandBuffer.bindPipeline(pipelineBindPoint: VkPipelineBindPoint, 
     VK10.vkCmdBindPipeline(this, pipelineBindPoint.i, pipeline)
 }
 
-inline fun VkCommandBuffer.bindVertexBuffer(firstBinding: Int, buffer: KMutableProperty0<VkBuffer>) {
+inline fun VkCommandBuffer.bindVertexBuffer(firstBinding: Int, buffer: VkBuffer) {
     val pBuffer = appBuffer.long
-    memPutLong(pBuffer, buffer())
+    memPutLong(pBuffer, buffer)
     val pOffset = appBuffer.long
-    memPutLong(pOffset, 0L) // TODO remove since calloc?
+//    memPutLong(pOffset, 0L) // TODO remove since calloc?
     VK10.nvkCmdBindVertexBuffers(this, firstBinding, 1, pBuffer, pOffset)
-    buffer.set(memGetLong(pBuffer))
 }
 
 inline fun VkCommandBuffer.copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, regions: VkBufferCopy.Buffer) {
     VK10.nvkCmdCopyBuffer(this, srcBuffer, dstBuffer, regions.remaining(), regions.adr)
+}
+
+inline fun VkCommandBuffer.copyBufferToImage(srcBuffer: VkBuffer, dstImage: VkImage, dstImageLayout: VkImageLayout,
+                                             region: VkBufferImageCopy.Buffer) {
+    VK10.nvkCmdCopyBufferToImage(this, srcBuffer, dstImage, dstImageLayout.i, region.remaining(), region.adr)
 }
 
 inline fun VkCommandBuffer.drawIndexed(indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
@@ -56,6 +60,17 @@ inline fun VkCommandBuffer.end() {
 
 inline fun VkCommandBuffer.endRenderPass() {
     VK10.vkCmdEndRenderPass(this)
+}
+
+inline fun VkCommandBuffer.pipelineBarrier(srcStageMask: VkPipelineStageFlags, dstStageMask: VkPipelineStageFlags,
+                                           dependencyFlags: VkDependencyFlags,
+                                           memoryBarriers: VkMemoryBarrier? = null,
+                                           bufferMemoryBarriers: VkBufferMemoryBarrier? = null,
+                                           imageMemoryBarriers: VkImageMemoryBarrier? = null) {
+    VK10.nvkCmdPipelineBarrier(this, srcStageMask, dstStageMask, dependencyFlags,
+            if (memoryBarriers != null) 1 else 0, memoryBarriers?.adr ?: NULL,
+            if (bufferMemoryBarriers != null) 1 else 0, bufferMemoryBarriers?.adr ?: NULL,
+            if (imageMemoryBarriers != null) 1 else 0, imageMemoryBarriers?.adr ?: NULL)
 }
 
 inline fun VkCommandBuffer.reset(flags: VkCommandBufferResetFlags) {
@@ -72,6 +87,10 @@ inline fun VkCommandBuffer.setViewport(firstViewport: Int, viewports: VkViewport
 
 inline infix fun VkCommandBuffer.setScissor(scissor: VkRect2D) {
     VK10.nvkCmdSetScissor(this, 0, 1, scissor.adr)
+}
+
+inline infix fun VkCommandBuffer.setScissor(scissors: VkRect2D.Buffer) {
+    VK10.nvkCmdSetScissor(this, 0, scissors.remaining(), scissors.adr)
 }
 
 inline fun VkCommandBuffer.setScissor(firstScissor: Int, scissors: VkRect2D.Buffer) {
@@ -128,7 +147,7 @@ inline infix fun VkDevice.allocateMemory(allocateInfo: VkMemoryAllocateInfo): Vk
     return memGetLong(pMemory)
 }
 
-inline fun VkDevice.bindBufferMemory(buffer: VkBuffer, memory: VkDeviceMemory, memoryOffset: VkDeviceSize) {
+inline fun VkDevice.bindBufferMemory(buffer: VkBuffer, memory: VkDeviceMemory, memoryOffset: VkDeviceSize = 0) { // TODO clean code?
     VK_CHECK_RESULT(VK10.vkBindBufferMemory(this, buffer, memory, memoryOffset))
 }
 
@@ -216,10 +235,22 @@ inline infix fun VkDevice.createRenderPass(createInfo: VkRenderPassCreateInfo): 
     return memGetLong(pRenderPass)
 }
 
+inline infix fun VkDevice.createSampler(createInfo: VkSamplerCreateInfo): VkSampler {
+    val pSampler = appBuffer.long
+    VK_CHECK_RESULT(VK10.nvkCreateSampler(this, createInfo.adr, NULL, pSampler))
+    return memGetLong(pSampler)
+}
+
 inline infix fun VkDevice.createSemaphore(createInfo: VkSemaphoreCreateInfo): VkSemaphore {
     val pSemaphore = appBuffer.long
     VK_CHECK_RESULT(VK10.nvkCreateSemaphore(this, createInfo.adr, NULL, pSemaphore))
     return memGetLong(pSemaphore)
+}
+
+inline infix fun VkDevice.createShaderModule(createInfo: VkShaderModuleCreateInfo): Long {
+    val pShaderModule = appBuffer.long
+    VK_CHECK_RESULT(VK10.nvkCreateShaderModule(this, createInfo.adr, NULL, pShaderModule))
+    return memGetLong(pShaderModule)
 }
 
 inline infix fun VkDevice.createSwapchainKHR(createInfo: VkSwapchainCreateInfoKHR): VkSwapchainKHR {
@@ -230,11 +261,6 @@ inline infix fun VkDevice.createSwapchainKHR(createInfo: VkSwapchainCreateInfoKH
 
 inline infix fun VkDevice.destroyBuffer(buffer: VkBuffer) {
     VK10.nvkDestroyBuffer(this, buffer, NULL)
-}
-
-inline infix fun VkDevice.destroyShaderModules(shaderModules: VkPipelineShaderStageCreateInfo.Buffer) {
-    for (i in shaderModules)
-        VK10.nvkDestroyShaderModule(this, i.module, NULL)
 }
 
 inline infix fun VkDevice.destroyDescriptorSetLayout(descriptorSetLayout: VkDescriptorSetLayout) {
@@ -250,6 +276,10 @@ inline infix fun VkDevice.destroyFences(fences: ArrayList<VkFence>) {
         VK10.nvkDestroyFence(this, fence, NULL)
 }
 
+inline infix fun VkDevice.destroyImage(image: VkImage) {
+    VK10.nvkDestroyImage(this, image, NULL)
+}
+
 inline infix fun VkDevice.destroyImageView(imageView: VkImageView) {
     VK10.nvkDestroyImageView(this, imageView, NULL)
 }
@@ -262,12 +292,25 @@ inline infix fun VkDevice.destroyPipelineLayout(pipelineLayout: VkPipelineLayout
     VK10.nvkDestroyPipelineLayout(this, pipelineLayout, NULL)
 }
 
+inline infix fun VkDevice.destroySampler(sampler: VkSampler) {
+    VK10.nvkDestroySampler(this, sampler, NULL)
+}
+
 inline infix fun VkDevice.destroySemaphore(semaphore: VkSemaphore) {
     VK10.nvkDestroySemaphore(this, semaphore, NULL)
 }
 
+inline infix fun VkDevice.destroyShaderModules(shaderModules: VkPipelineShaderStageCreateInfo.Buffer) {
+    for (i in shaderModules)
+        VK10.nvkDestroyShaderModule(this, i.module, NULL)
+}
+
 inline infix fun VkDevice.destroySwapchainKHR(swapchain: VkSwapchainKHR) {
     KHRSwapchain.nvkDestroySwapchainKHR(this, swapchain, NULL)
+}
+
+inline infix fun VkDevice.flushMappedMemoryRanges(memoryRange: VkMappedMemoryRange) {
+    VK_CHECK_RESULT(VK10.nvkFlushMappedMemoryRanges(this, 1, memoryRange.adr))
 }
 
 inline fun VkDevice.freeCommandBuffer(commandPool: VkCommandPool, commandBuffer: VkCommandBuffer) {
@@ -282,6 +325,10 @@ inline infix fun VkDevice.freeMemory(memory: VkDeviceMemory) {
 
 inline fun VkDevice.getBufferMemoryRequirements(buffer: VkBuffer, memoryRequirements: VkMemoryRequirements) {
     VK10.nvkGetBufferMemoryRequirements(this, buffer, memoryRequirements.adr)
+}
+
+inline fun VkDevice.getImageMemoryRequirements(buffer: VkBuffer, memoryRequirements: VkMemoryRequirements) {
+    VK10.nvkGetImageMemoryRequirements(this, buffer, memoryRequirements.adr)
 }
 
 inline fun VkDevice.mapMemory(memory: Long, offset: Long, size: Long, flags: Int, data: Long) {
@@ -310,6 +357,10 @@ inline infix fun VkDevice.unmapMemory(memory: VkDeviceMemory) {
 
 inline infix fun VkDevice.updateDescriptorSets(descriptorWrites: VkWriteDescriptorSet) {
     VK10.nvkUpdateDescriptorSets(this, 1, descriptorWrites.adr, 0, NULL)
+}
+
+inline infix fun VkDevice.updateDescriptorSets(descriptorWrites: VkWriteDescriptorSet.Buffer) {
+    VK10.nvkUpdateDescriptorSets(this, descriptorWrites.remaining(), descriptorWrites.adr, 0, NULL)
 }
 
 //inline fun VkDevice.updateDescriptorSets(descriptorWrites: VkWriteDescriptorSet.Buffer,
@@ -410,6 +461,10 @@ inline infix fun VkQueue.presentKHR(presentInfo: VkPresentInfoKHR) {
     VK_CHECK_RESULT(KHRSwapchain.vkQueuePresentKHR(this, presentInfo))
 }
 
+inline infix fun VkQueue.submit(submits: VkSubmitInfo) {
+    VK_CHECK_RESULT(VK10.nvkQueueSubmit(this, 1, submits.adr, NULL))
+}
+
 inline fun VkQueue.submit(submits: VkSubmitInfo, fence: VkFence) {
     VK_CHECK_RESULT(VK10.nvkQueueSubmit(this, 1, submits.adr, fence))
 }
@@ -419,3 +474,52 @@ inline fun VkQueue.waitIdle() {
 }
 
 
+/*
+    Invokes (~set)
+ */
+
+
+inline operator fun VkDescriptorPoolSize.invoke(type: VkDescriptorType, descriptorCount: Int): VkDescriptorPoolSize {
+    this.type = type
+    this.descriptorCount = descriptorCount
+    return this
+}
+
+inline operator fun VkDescriptorSetLayoutBinding.invoke(
+        binding: Int,
+        type: VkDescriptorType,
+        descriptorCount: Int = 1,
+        stageFlags: VkShaderStageFlags): VkDescriptorSetLayoutBinding {
+    this.binding = binding
+    this.descriptorType = type
+    this.descriptorCount = descriptorCount
+    this.stageFlags = stageFlags
+    return this
+}
+
+
+inline operator fun VkVertexInputAttributeDescription.invoke(location: Int, binding: Int, format: VkFormat, offset: Int): VkVertexInputAttributeDescription {
+    this.location = location
+    this.binding = binding
+    this.format = format
+    this.offset = offset
+    return this
+}
+
+inline operator fun VkVertexInputBindingDescription.invoke(binding: Int, stride: Int, inputRate: VkVertexInputRate): VkVertexInputBindingDescription {
+    this.binding = binding
+    this.stride = stride
+    this.inputRate = inputRate
+    return this
+}
+
+
+inline operator fun VkWriteDescriptorSet.invoke(dstSet: VkDescriptorSet, dstBinding: Int, descriptorType: VkDescriptorType,
+                                                bufferInfo: VkDescriptorBufferInfo.Buffer): VkWriteDescriptorSet {
+    this.dstSet = dstSet
+    this.dstBinding = dstBinding
+    this.descriptorType = descriptorType
+    this.bufferInfo = bufferInfo
+    this.descriptorCount = 1
+    return this
+}

@@ -1,14 +1,18 @@
 package vulkan.base
 
 import glfw_.appBuffer
-import gli_.has
+import glm_.L
 import glm_.i
-import org.lwjgl.system.MemoryUtil.NULL
+import glm_.size
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import vkn.*
+import java.nio.ByteBuffer
+import java.nio.FloatBuffer
+import java.nio.IntBuffer
 import kotlin.reflect.KMutableProperty0
 
 class VulkanDevice
@@ -229,56 +233,71 @@ constructor(
         return result
     }
 
-//    /**
-//     * Create a buffer on the device
-//     *
-//     * @param usageFlags Usage flag bitmask for the buffer (i.e. index, vertex, uniform buffer)
-//     * @param memoryPropertyFlags Memory properties for this buffer (i.e. device local, host visible, coherent)
-//     * @param size Size of the buffer in byes
-//     * @param buffer Pointer to the buffer handle acquired by the function
-//     * @param memory Pointer to the memory handle acquired by the function
-//     * @param data Pointer to the data that should be copied to the buffer after creation (optional, if not set, no data is copied over)
-//     *
-//     * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
-//     */
-//    VkResult createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, VkBuffer *buffer, VkDeviceMemory *memory, void *data = nullptr)
-//    {
-//        // Create the buffer handle
-//        VkBufferCreateInfo bufferCreateInfo = vks ::initializers::bufferCreateInfo(usageFlags, size)
-//        bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-//        VK_CHECK_RESULT(vkCreateBuffer(logicalDevice, & bufferCreateInfo, nullptr, buffer))
-//
-//        // Create the memory backing up the buffer handle
-//        VkMemoryRequirements memReqs
-//        VkMemoryAllocateInfo memAlloc = vks ::initializers::memoryAllocateInfo()
-//        vkGetBufferMemoryRequirements(logicalDevice, *buffer, & memReqs)
-//        memAlloc.allocationSize = memReqs.size
-//        // Find a memory type index that fits the properties of the buffer
-//        memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags)
-//        VK_CHECK_RESULT(vkAllocateMemory(logicalDevice, & memAlloc, nullptr, memory))
-//
-//        // If a pointer to the buffer data has been passed, map the buffer and copy over the data
-//        if (data != nullptr) {
-//            void * mapped
-//            VK_CHECK_RESULT(vkMapMemory(logicalDevice, *memory, 0, size, 0, & mapped))
-//            memcpy(mapped, data, size)
-//            // If host coherency hasn't been requested, do a manual flush to make writes visible
-//            if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
-//            {
-//                VkMappedMemoryRange mappedRange = vks ::initializers::mappedMemoryRange()
-//                mappedRange.memory = * memory
-//                mappedRange.offset = 0
-//                mappedRange.size = size
-//                vkFlushMappedMemoryRanges(logicalDevice, 1, & mappedRange)
-//            }
-//            vkUnmapMemory(logicalDevice, *memory)
-//        }
-//
-//        // Attach the memory to the buffer object
-//        VK_CHECK_RESULT(vkBindBufferMemory(logicalDevice, *buffer, *memory, 0))
-//
-//        return VK_SUCCESS
-//    }
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: ByteBuffer) {
+        createBuffer(usageFlags, memoryPropertyFlags, buffer, bytes.size.L, memAddress(bytes))
+    }
+
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, floats: FloatBuffer) {
+        createBuffer(usageFlags, memoryPropertyFlags, buffer, floats.size.L, memAddress(floats))
+    }
+
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, ints: IntBuffer) {
+        createBuffer(usageFlags, memoryPropertyFlags, buffer, ints.size.L, memAddress(ints))
+    }
+
+
+    /**
+     * Create a buffer on the device
+     *
+     * @param usageFlags Usage flag bitmask for the buffer (i.e. index, vertex, uniform buffer)
+     * @param memoryPropertyFlags Memory properties for this buffer (i.e. device local, host visible, coherent)
+     * @param buffer Pointer to a vk::Vulkan buffer object
+     * @param size Size of the buffer in byes
+     * @param data Pointer to the data that should be copied to the buffer after creation (optional, if not set, no data is copied over)
+     *
+     * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
+     */
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer,
+                     size: VkDeviceSize, data: Long = NULL) {
+
+        buffer.device = logicalDevice!!
+        // Create the buffer handle
+        val bufferCreateInfo = vk.BufferCreateInfo {
+            usage = usageFlags
+            this.size = size
+            sharingMode = VkSharingMode.EXCLUSIVE
+        }
+        buffer.buffer = logicalDevice!! createBuffer bufferCreateInfo
+
+        // Create the memory backing up the buffer handle
+        val memReqs = vk.MemoryRequirements {}
+        val memAlloc = vk.MemoryAllocateInfo {}
+        logicalDevice!!.getBufferMemoryRequirements(buffer.buffer, memReqs)
+        memAlloc.allocationSize = memReqs.size
+        // Find a memory type index that fits the properties of the buffer
+        memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags)
+        buffer.memory = logicalDevice!! allocateMemory memAlloc
+
+        buffer.let {
+            it.alignment = memReqs.alignment
+            it.size = memAlloc.allocationSize
+            it.usageFlags = usageFlags
+            it.memoryPropertyFlags = memoryPropertyFlags
+        }
+
+        // If a pointer to the buffer data has been passed, map the buffer and copy over the data
+        if (data != NULL) {
+            buffer.map()
+            memCopy(data, buffer.mapped[0], size)
+            buffer.unmap()
+        }
+
+        // Initialize a default descriptor that covers the whole buffer size
+        buffer.setupDescriptor()
+
+        // Attach the memory to the buffer object
+        buffer.bind()
+    }
 //
 //    /**
 //     * Create a buffer on the device
@@ -374,17 +393,17 @@ constructor(
         return getLong { vk.createCommandPool(logicalDevice!!, cmdPoolInfo, it).check() }
     }
 
+
+    /**
+     * Allocate a command buffer from the command pool
+     *
+     * @param level Level of the new command buffer (primary or secondary)
+     * @param (Optional) begin If true, recording on the new command buffer will be started (vkBeginCommandBuffer) (Defaults to false)
+     *
+     * @return A handle to the allocated command buffer
+     */
+//    fun createCommandBuffer(level: VkCommandBufferLevel, begin: Boolean = false): VkCommandBuffer    {
 //
-//    /**
-//     * Allocate a command buffer from the command pool
-//     *
-//     * @param level Level of the new command buffer (primary or secondary)
-//     * @param (Optional) begin If true, recording on the new command buffer will be started (vkBeginCommandBuffer) (Defaults to false)
-//     *
-//     * @return A handle to the allocated command buffer
-//     */
-//    VkCommandBuffer createCommandBuffer(VkCommandBufferLevel level, bool begin = false)
-//    {
 //        VkCommandBufferAllocateInfo cmdBufAllocateInfo = vks ::initializers::commandBufferAllocateInfo(commandPool, level, 1)
 //
 //        VkCommandBuffer cmdBuffer

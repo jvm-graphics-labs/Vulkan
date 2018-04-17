@@ -4,6 +4,9 @@ import glfw_.appBuffer
 import glm_.BYTES
 import glm_.bool
 import glm_.i
+import glm_.vec2.Vec2
+import glm_.vec2.Vec2i
+import glm_.vec3.Vec3i
 import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
@@ -244,116 +247,220 @@ inline val VkFormatProperties.bufferFeatures: VkFormatFeatureFlags get() = VkFor
 //    VkSampleCountFlags    sampleCounts;
 //    VkDeviceSize          maxResourceSize;
 //} VkImageFormatProperties;
-//
-//typedef struct VkPhysicalDeviceLimits {
-//    uint32_t              maxImageDimension1D;
-//    uint32_t              maxImageDimension2D;
-//    uint32_t              maxImageDimension3D;
-//    uint32_t              maxImageDimensionCube;
-//    uint32_t              maxImageArrayLayers;
-//    uint32_t              maxTexelBufferElements;
-//    uint32_t              maxUniformBufferRange;
-//    uint32_t              maxStorageBufferRange;
-//    uint32_t              maxPushConstantsSize;
-//    uint32_t              maxMemoryAllocationCount;
-//    uint32_t              maxSamplerAllocationCount;
-//    VkDeviceSize          bufferImageGranularity;
-//    VkDeviceSize          sparseAddressSpaceSize;
-//    uint32_t              maxBoundDescriptorSets;
-//    uint32_t              maxPerStageDescriptorSamplers;
-//    uint32_t              maxPerStageDescriptorUniformBuffers;
-//    uint32_t              maxPerStageDescriptorStorageBuffers;
-//    uint32_t              maxPerStageDescriptorSampledImages;
-//    uint32_t              maxPerStageDescriptorStorageImages;
-//    uint32_t              maxPerStageDescriptorInputAttachments;
-//    uint32_t              maxPerStageResources;
-//    uint32_t              maxDescriptorSetSamplers;
-//    uint32_t              maxDescriptorSetUniformBuffers;
-//    uint32_t              maxDescriptorSetUniformBuffersDynamic;
-//    uint32_t              maxDescriptorSetStorageBuffers;
-//    uint32_t              maxDescriptorSetStorageBuffersDynamic;
-//    uint32_t              maxDescriptorSetSampledImages;
-//    uint32_t              maxDescriptorSetStorageImages;
-//    uint32_t              maxDescriptorSetInputAttachments;
-//    uint32_t              maxVertexInputAttributes;
-//    uint32_t              maxVertexInputBindings;
-//    uint32_t              maxVertexInputAttributeOffset;
-//    uint32_t              maxVertexInputBindingStride;
-//    uint32_t              maxVertexOutputComponents;
-//    uint32_t              maxTessellationGenerationLevel;
-//    uint32_t              maxTessellationPatchSize;
-//    uint32_t              maxTessellationControlPerVertexInputComponents;
-//    uint32_t              maxTessellationControlPerVertexOutputComponents;
-//    uint32_t              maxTessellationControlPerPatchOutputComponents;
-//    uint32_t              maxTessellationControlTotalOutputComponents;
-//    uint32_t              maxTessellationEvaluationInputComponents;
-//    uint32_t              maxTessellationEvaluationOutputComponents;
-//    uint32_t              maxGeometryShaderInvocations;
-//    uint32_t              maxGeometryInputComponents;
-//    uint32_t              maxGeometryOutputComponents;
-//    uint32_t              maxGeometryOutputVertices;
-//    uint32_t              maxGeometryTotalOutputComponents;
-//    uint32_t              maxFragmentInputComponents;
-//    uint32_t              maxFragmentOutputAttachments;
-//    uint32_t              maxFragmentDualSrcAttachments;
-//    uint32_t              maxFragmentCombinedOutputResources;
-//    uint32_t              maxComputeSharedMemorySize;
-//    uint32_t              maxComputeWorkGroupCount[3];
-//    uint32_t              maxComputeWorkGroupInvocations;
-//    uint32_t              maxComputeWorkGroupSize[3];
-//    uint32_t              subPixelPrecisionBits;
-//    uint32_t              subTexelPrecisionBits;
-//    uint32_t              mipmapPrecisionBits;
-//    uint32_t              maxDrawIndexedIndexValue;
-//    uint32_t              maxDrawIndirectCount;
-//    float                 maxSamplerLodBias;
-//    float                 maxSamplerAnisotropy;
-//    uint32_t              maxViewports;
-//    uint32_t              maxViewportDimensions[2];
-//    float                 viewportBoundsRange[2];
-//    uint32_t              viewportSubPixelBits;
-//    size_t                minMemoryMapAlignment;
-//    VkDeviceSize          minTexelBufferOffsetAlignment;
-//    VkDeviceSize          minUniformBufferOffsetAlignment;
-//    VkDeviceSize          minStorageBufferOffsetAlignment;
-//    int32_t               minTexelOffset;
-//    uint32_t              maxTexelOffset;
-//    int32_t               minTexelGatherOffset;
-//    uint32_t              maxTexelGatherOffset;
-//    float                 minInterpolationOffset;
-//    float                 maxInterpolationOffset;
-//    uint32_t              subPixelInterpolationOffsetBits;
-//    uint32_t              maxFramebufferWidth;
-//    uint32_t              maxFramebufferHeight;
-//    uint32_t              maxFramebufferLayers;
-//    VkSampleCountFlags    framebufferColorSampleCounts;
-//    VkSampleCountFlags    framebufferDepthSampleCounts;
-//    VkSampleCountFlags    framebufferStencilSampleCounts;
-//    VkSampleCountFlags    framebufferNoAttachmentsSampleCounts;
-//    uint32_t              maxColorAttachments;
-//    VkSampleCountFlags    sampledImageColorSampleCounts;
-//    VkSampleCountFlags    sampledImageIntegerSampleCounts;
-//    VkSampleCountFlags    sampledImageDepthSampleCounts;
-//    VkSampleCountFlags    sampledImageStencilSampleCounts;
-//    VkSampleCountFlags    storageImageSampleCounts;
-//    uint32_t              maxSampleMaskWords;
-//    VkBool32              timestampComputeAndGraphics;
-//    float                 timestampPeriod;
-//    uint32_t              maxClipDistances;
-//    uint32_t              maxCullDistances;
-//    uint32_t              maxCombinedClipAndCullDistances;
-//    uint32_t              discreteQueuePriorities;
-//    float                 pointSizeRange[2];
-//    float                 lineWidthRange[2];
-//    float                 pointSizeGranularity;
-//    float                 lineWidthGranularity;
-//    VkBool32              strictLines;
-//    VkBool32              standardSampleLocations;
-//    VkDeviceSize          optimalBufferCopyOffsetAlignment;
-//    VkDeviceSize          optimalBufferCopyRowPitchAlignment;
-//    VkDeviceSize          nonCoherentAtomSize;
-//} VkPhysicalDeviceLimits;
-//
+
+inline val VkPhysicalDeviceLimits.maxImageDimension1D
+    get() = VkPhysicalDeviceLimits.nmaxImageDimension1D(adr)
+inline val VkPhysicalDeviceLimits.maxImageDimension2D
+    get() = VkPhysicalDeviceLimits.nmaxImageDimension2D(adr)
+inline val VkPhysicalDeviceLimits.maxImageDimension3D
+    get() = VkPhysicalDeviceLimits.nmaxImageDimension3D(adr)
+inline val VkPhysicalDeviceLimits.maxImageDimensionCube
+    get() = VkPhysicalDeviceLimits.nmaxImageDimensionCube(adr)
+inline val VkPhysicalDeviceLimits.maxImageArrayLayers
+    get() = VkPhysicalDeviceLimits.nmaxImageArrayLayers(adr)
+inline val VkPhysicalDeviceLimits.maxTexelBufferElements
+    get() = VkPhysicalDeviceLimits.nmaxTexelBufferElements(adr)
+inline val VkPhysicalDeviceLimits.maxUniformBufferRange
+    get() = VkPhysicalDeviceLimits.nmaxUniformBufferRange(adr)
+inline val VkPhysicalDeviceLimits.maxStorageBufferRange
+    get() = VkPhysicalDeviceLimits.nmaxStorageBufferRange(adr)
+inline val VkPhysicalDeviceLimits.maxPushConstantsSize
+    get() = VkPhysicalDeviceLimits.nmaxPushConstantsSize(adr)
+inline val VkPhysicalDeviceLimits.maxMemoryAllocationCount
+    get() = VkPhysicalDeviceLimits.nmaxMemoryAllocationCount(adr)
+inline val VkPhysicalDeviceLimits.maxSamplerAllocationCount
+    get() = VkPhysicalDeviceLimits.nmaxSamplerAllocationCount(adr)
+inline val VkPhysicalDeviceLimits.bufferImageGranularity: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.nbufferImageGranularity(adr)
+inline val VkPhysicalDeviceLimits.sparseAddressSpaceSize: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.nsparseAddressSpaceSize(adr)
+inline val VkPhysicalDeviceLimits.maxBoundDescriptorSets
+    get() = VkPhysicalDeviceLimits.nmaxBoundDescriptorSets(adr)
+inline val VkPhysicalDeviceLimits.maxPerStageDescriptorSamplers
+    get() = VkPhysicalDeviceLimits.nmaxPerStageDescriptorSamplers(adr)
+inline val VkPhysicalDeviceLimits.maxPerStageDescriptorUniformBuffers
+    get() = VkPhysicalDeviceLimits.nmaxPerStageDescriptorUniformBuffers(adr)
+inline val VkPhysicalDeviceLimits.maxPerStageDescriptorStorageBuffers
+    get() = VkPhysicalDeviceLimits.nmaxPerStageDescriptorStorageBuffers(adr)
+inline val VkPhysicalDeviceLimits.maxPerStageDescriptorSampledImages
+    get() = VkPhysicalDeviceLimits.nmaxPerStageDescriptorSampledImages(adr)
+inline val VkPhysicalDeviceLimits.maxPerStageDescriptorStorageImages
+    get() = VkPhysicalDeviceLimits.nmaxPerStageDescriptorStorageImages(adr)
+inline val VkPhysicalDeviceLimits.maxPerStageDescriptorInputAttachments
+    get() = VkPhysicalDeviceLimits.nmaxPerStageDescriptorInputAttachments(adr)
+inline val VkPhysicalDeviceLimits.maxPerStageResources
+    get() = VkPhysicalDeviceLimits.nmaxPerStageResources(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetSamplers
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetSamplers(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetUniformBuffers
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetUniformBuffers(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetUniformBuffersDynamic
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetUniformBuffersDynamic(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetStorageBuffers
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetStorageBuffers(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetStorageBuffersDynamic
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetStorageBuffersDynamic(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetSampledImages
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetSampledImages(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetStorageImages
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetStorageImages(adr)
+inline val VkPhysicalDeviceLimits.maxDescriptorSetInputAttachments
+    get() = VkPhysicalDeviceLimits.nmaxDescriptorSetInputAttachments(adr)
+inline val VkPhysicalDeviceLimits.maxVertexInputAttributes
+    get() = VkPhysicalDeviceLimits.nmaxVertexInputAttributes(adr)
+inline val VkPhysicalDeviceLimits.maxVertexInputBindings
+    get() = VkPhysicalDeviceLimits.nmaxVertexInputBindings(adr)
+inline val VkPhysicalDeviceLimits.maxVertexInputAttributeOffset
+    get() = VkPhysicalDeviceLimits.nmaxVertexInputAttributeOffset(adr)
+inline val VkPhysicalDeviceLimits.maxVertexInputBindingStride
+    get() = VkPhysicalDeviceLimits.nmaxVertexInputBindingStride(adr)
+inline val VkPhysicalDeviceLimits.maxVertexOutputComponents
+    get() = VkPhysicalDeviceLimits.nmaxVertexOutputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationGenerationLevel
+    get() = VkPhysicalDeviceLimits.nmaxTessellationGenerationLevel(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationPatchSize
+    get() = VkPhysicalDeviceLimits.nmaxTessellationPatchSize(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationControlPerVertexInputComponents
+    get() = VkPhysicalDeviceLimits.nmaxTessellationControlPerVertexInputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationControlPerVertexOutputComponents
+    get() = VkPhysicalDeviceLimits.nmaxTessellationControlPerVertexOutputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationControlPerPatchOutputComponents
+    get() = VkPhysicalDeviceLimits.nmaxTessellationControlPerPatchOutputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationControlTotalOutputComponents
+    get() = VkPhysicalDeviceLimits.nmaxTessellationControlTotalOutputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationEvaluationInputComponents
+    get() = VkPhysicalDeviceLimits.nmaxTessellationEvaluationInputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxTessellationEvaluationOutputComponents
+    get() = VkPhysicalDeviceLimits.nmaxTessellationEvaluationOutputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxGeometryShaderInvocations
+    get() = VkPhysicalDeviceLimits.nmaxGeometryShaderInvocations(adr)
+inline val VkPhysicalDeviceLimits.maxGeometryInputComponents
+    get() = VkPhysicalDeviceLimits.nmaxGeometryInputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxGeometryOutputComponents
+    get() = VkPhysicalDeviceLimits.nmaxGeometryOutputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxGeometryOutputVertices
+    get() = VkPhysicalDeviceLimits.nmaxGeometryOutputVertices(adr)
+inline val VkPhysicalDeviceLimits.maxGeometryTotalOutputComponents
+    get() = VkPhysicalDeviceLimits.nmaxGeometryTotalOutputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxFragmentInputComponents
+    get() = VkPhysicalDeviceLimits.nmaxFragmentInputComponents(adr)
+inline val VkPhysicalDeviceLimits.maxFragmentOutputAttachments
+    get() = VkPhysicalDeviceLimits.nmaxFragmentOutputAttachments(adr)
+inline val VkPhysicalDeviceLimits.maxFragmentDualSrcAttachments
+    get() = VkPhysicalDeviceLimits.nmaxFragmentDualSrcAttachments(adr)
+inline val VkPhysicalDeviceLimits.maxFragmentCombinedOutputResources
+    get() = VkPhysicalDeviceLimits.nmaxFragmentCombinedOutputResources(adr)
+inline val VkPhysicalDeviceLimits.maxComputeSharedMemorySize
+    get() = VkPhysicalDeviceLimits.nmaxComputeSharedMemorySize(adr)
+inline val VkPhysicalDeviceLimits.maxComputeWorkGroupCount: Vec3i
+    get() = Vec3i { VkPhysicalDeviceLimits.nmaxComputeWorkGroupCount(adr, it) }
+inline val VkPhysicalDeviceLimits.maxComputeWorkGroupInvocations
+    get() = VkPhysicalDeviceLimits.nmaxComputeWorkGroupInvocations(adr)
+inline val VkPhysicalDeviceLimits.maxComputeWorkGroupSize: Vec3i
+    get() = Vec3i { VkPhysicalDeviceLimits.nmaxComputeWorkGroupSize(adr, it) }
+inline val VkPhysicalDeviceLimits.subPixelPrecisionBits
+    get() = VkPhysicalDeviceLimits.nsubPixelPrecisionBits(adr)
+inline val VkPhysicalDeviceLimits.subTexelPrecisionBits
+    get() = VkPhysicalDeviceLimits.nsubTexelPrecisionBits(adr)
+inline val VkPhysicalDeviceLimits.mipmapPrecisionBits
+    get() = VkPhysicalDeviceLimits.nmipmapPrecisionBits(adr)
+inline val VkPhysicalDeviceLimits.maxDrawIndexedIndexValue
+    get() = VkPhysicalDeviceLimits.nmaxDrawIndexedIndexValue(adr)
+inline val VkPhysicalDeviceLimits.maxDrawIndirectCount
+    get() = VkPhysicalDeviceLimits.nmaxDrawIndirectCount(adr)
+inline val VkPhysicalDeviceLimits.maxSamplerLodBias
+    get() = VkPhysicalDeviceLimits.nmaxSamplerLodBias(adr)
+inline val VkPhysicalDeviceLimits.maxSamplerAnisotropy
+    get() = VkPhysicalDeviceLimits.nmaxSamplerAnisotropy(adr)
+inline val VkPhysicalDeviceLimits.maxViewports
+    get() = VkPhysicalDeviceLimits.nmaxViewports(adr)
+inline val VkPhysicalDeviceLimits.maxViewportDimensions: Vec2i
+    get() = Vec2i { VkPhysicalDeviceLimits.nmaxViewportDimensions(adr, it) }
+inline val VkPhysicalDeviceLimits.viewportBoundsRange: Vec2
+    get() = Vec2 { VkPhysicalDeviceLimits.nviewportBoundsRange(adr, it) }
+inline val VkPhysicalDeviceLimits.viewportSubPixelBits
+    get() = VkPhysicalDeviceLimits.nviewportSubPixelBits(adr)
+inline val VkPhysicalDeviceLimits.minMemoryMapAlignment
+    get() = VkPhysicalDeviceLimits.nminMemoryMapAlignment(adr)
+inline val VkPhysicalDeviceLimits.minTexelBufferOffsetAlignment: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.nminTexelBufferOffsetAlignment(adr)
+inline val VkPhysicalDeviceLimits.minUniformBufferOffsetAlignment: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.nminUniformBufferOffsetAlignment(adr)
+inline val VkPhysicalDeviceLimits.minStorageBufferOffsetAlignment: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.nminStorageBufferOffsetAlignment(adr)
+inline val VkPhysicalDeviceLimits.minTexelOffset
+    get() = VkPhysicalDeviceLimits.nminTexelOffset(adr)
+inline val VkPhysicalDeviceLimits.maxTexelOffset
+    get() = VkPhysicalDeviceLimits.nmaxTexelOffset(adr)
+inline val VkPhysicalDeviceLimits.minTexelGatherOffset
+    get() = VkPhysicalDeviceLimits.nminTexelGatherOffset(adr)
+inline val VkPhysicalDeviceLimits.maxTexelGatherOffset
+    get() = VkPhysicalDeviceLimits.nmaxTexelGatherOffset(adr)
+inline val VkPhysicalDeviceLimits.minInterpolationOffset
+    get() = VkPhysicalDeviceLimits.nminInterpolationOffset(adr)
+inline val VkPhysicalDeviceLimits.maxInterpolationOffset
+    get() = VkPhysicalDeviceLimits.nmaxInterpolationOffset(adr)
+inline val VkPhysicalDeviceLimits.subPixelInterpolationOffsetBits
+    get() = VkPhysicalDeviceLimits.nsubPixelInterpolationOffsetBits(adr)
+inline val VkPhysicalDeviceLimits.maxFramebufferWidth
+    get() = VkPhysicalDeviceLimits.nmaxFramebufferWidth(adr)
+inline val VkPhysicalDeviceLimits.maxFramebufferHeight
+    get() = VkPhysicalDeviceLimits.nmaxFramebufferHeight(adr)
+inline val VkPhysicalDeviceLimits.maxFramebufferLayers
+    get() = VkPhysicalDeviceLimits.nmaxFramebufferLayers(adr)
+inline val VkPhysicalDeviceLimits.framebufferColorSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nframebufferColorSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.framebufferDepthSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nframebufferDepthSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.framebufferStencilSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nframebufferStencilSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.framebufferNoAttachmentsSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nframebufferNoAttachmentsSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.maxColorAttachments: Int
+    get() = VkPhysicalDeviceLimits.nmaxColorAttachments(adr)
+inline val VkPhysicalDeviceLimits.sampledImageColorSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nsampledImageColorSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.sampledImageIntegerSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nsampledImageIntegerSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.sampledImageDepthSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nsampledImageDepthSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.sampledImageStencilSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nsampledImageStencilSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.storageImageSampleCounts: VkSampleCountFlags
+    get() = VkPhysicalDeviceLimits.nstorageImageSampleCounts(adr)
+inline val VkPhysicalDeviceLimits.maxSampleMaskWords: Int
+    get() = VkPhysicalDeviceLimits.nmaxSampleMaskWords(adr)
+inline val VkPhysicalDeviceLimits.timestampComputeAndGraphics: Boolean
+    get() = VkPhysicalDeviceLimits.ntimestampComputeAndGraphics(adr).bool
+inline val VkPhysicalDeviceLimits.timestampPeriod: Float
+    get() = VkPhysicalDeviceLimits.ntimestampPeriod(adr)
+inline val VkPhysicalDeviceLimits.maxClipDistances: Int
+    get() = VkPhysicalDeviceLimits.nmaxClipDistances(adr)
+inline val VkPhysicalDeviceLimits.maxCullDistances: Int
+    get() = VkPhysicalDeviceLimits.nmaxCullDistances(adr)
+inline val VkPhysicalDeviceLimits.maxCombinedClipAndCullDistances: Int
+    get() = VkPhysicalDeviceLimits.nmaxCombinedClipAndCullDistances(adr)
+inline val VkPhysicalDeviceLimits.discreteQueuePriorities: Int
+    get() = VkPhysicalDeviceLimits.ndiscreteQueuePriorities(adr)
+inline val VkPhysicalDeviceLimits.pointSizeRange: Vec2
+    get() = Vec2 { VkPhysicalDeviceLimits.npointSizeRange(adr, it) }
+inline val VkPhysicalDeviceLimits.lineWidthRange: Vec2
+    get() = Vec2 { VkPhysicalDeviceLimits.nlineWidthRange(adr, it) }
+inline val VkPhysicalDeviceLimits.pointSizeGranularity: Float
+    get() = VkPhysicalDeviceLimits.npointSizeGranularity(adr)
+inline val VkPhysicalDeviceLimits.lineWidthGranularity: Float
+    get() = VkPhysicalDeviceLimits.nlineWidthGranularity(adr)
+inline val VkPhysicalDeviceLimits.strictLines: Boolean
+    get() = VkPhysicalDeviceLimits.nstrictLines(adr).bool
+inline val VkPhysicalDeviceLimits.standardSampleLocations: Boolean
+    get() = VkPhysicalDeviceLimits.nstandardSampleLocations(adr).bool
+inline val VkPhysicalDeviceLimits.optimalBufferCopyOffsetAlignment: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.noptimalBufferCopyOffsetAlignment(adr)
+inline val VkPhysicalDeviceLimits.optimalBufferCopyRowPitchAlignment: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.noptimalBufferCopyRowPitchAlignment(adr)
+inline val VkPhysicalDeviceLimits.nonCoherentAtomSize: VkDeviceSize
+    get() = VkPhysicalDeviceLimits.nnonCoherentAtomSize(adr)
+
 //typedef struct VkPhysicalDeviceSparseProperties {
 //    VkBool32    residencyStandard2DBlockShape;
 //    VkBool32    residencyStandard2DMultisampleBlockShape;
@@ -894,7 +1001,7 @@ inline var VkPipelineCacheCreateInfo.initialData
 //} VkSpecializationInfo;
 
 
-inline var VkPipelineShaderStageCreateInfo.type
+inline var VkPipelineShaderStageCreateInfo.type: VkStructureType
     get() = VkStructureType of VkPipelineShaderStageCreateInfo.nsType(adr)
     set(value) = VkPipelineShaderStageCreateInfo.nsType(adr, value.i)
 inline var VkPipelineShaderStageCreateInfo.next
@@ -976,8 +1083,8 @@ inline var VkPipelineInputAssemblyStateCreateInfo.topology: VkPrimitiveTopology
     get() = VkPrimitiveTopology of VkPipelineInputAssemblyStateCreateInfo.ntopology(adr)
     set(value) = VkPipelineInputAssemblyStateCreateInfo.ntopology(adr, value.i)
 inline var VkPipelineInputAssemblyStateCreateInfo.primitiveRestartEnable
-    get() = VkPipelineInputAssemblyStateCreateInfo.nprimitiveRestartEnable(adr)
-    set(value) = VkPipelineInputAssemblyStateCreateInfo.nprimitiveRestartEnable(adr, value)
+    get() = VkPipelineInputAssemblyStateCreateInfo.nprimitiveRestartEnable(adr).bool
+    set(value) = VkPipelineInputAssemblyStateCreateInfo.nprimitiveRestartEnable(adr, value.i)
 
 //typedef struct VkPipelineInputAssemblyStateCreateInfo {
 //    VkStructureType                            sType;
@@ -1450,28 +1557,63 @@ inline var VkPipelineLayoutCreateInfo.pushConstantRanges
 //    uint32_t                        pushConstantRangeCount;
 //    const VkPushConstantRange*      pPushConstantRanges;
 //} VkPipelineLayoutCreateInfo;
-//
-//typedef struct VkSamplerCreateInfo {
-//    VkStructureType         sType;
-//    const void*             pNext;
-//    VkSamplerCreateFlags    flags;
-//    VkFilter                magFilter;
-//    VkFilter                minFilter;
-//    VkSamplerMipmapMode     mipmapMode;
-//    VkSamplerAddressMode    addressModeU;
-//    VkSamplerAddressMode    addressModeV;
-//    VkSamplerAddressMode    addressModeW;
-//    float                   mipLodBias;
-//    VkBool32                anisotropyEnable;
-//    float                   maxAnisotropy;
-//    VkBool32                compareEnable;
-//    VkCompareOp             compareOp;
-//    float                   minLod;
-//    float                   maxLod;
-//    VkBorderColor           borderColor;
-//    VkBool32                unnormalizedCoordinates;
-//} VkSamplerCreateInfo;
-//
+
+
+inline var VkSamplerCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkSamplerCreateInfo.nsType(adr)
+    set(value) = VkSamplerCreateInfo.nsType(adr, value.i)
+inline var VkSamplerCreateInfo.next
+    get() = VkSamplerCreateInfo.npNext(adr)
+    set(value) = VkSamplerCreateInfo.npNext(adr, value)
+inline var VkSamplerCreateInfo.flags: VkSamplerCreateFlags
+    get() = VkSamplerCreateInfo.nflags(adr)
+    set(value) = VkSamplerCreateInfo.nflags(adr, value)
+inline var VkSamplerCreateInfo.magFilter: VkFilter
+    get() = VkFilter of VkSamplerCreateInfo.nmagFilter(adr)
+    set(value) = VkSamplerCreateInfo.nmagFilter(adr, value.i)
+inline var VkSamplerCreateInfo.minFilter: VkFilter
+    get() = VkFilter of VkSamplerCreateInfo.nminFilter(adr)
+    set(value) = VkSamplerCreateInfo.nminFilter(adr, value.i)
+inline var VkSamplerCreateInfo.mipmapMode: VkSamplerMipmapMode
+    get() = VkSamplerMipmapMode of VkSamplerCreateInfo.nmipmapMode(adr)
+    set(value) = VkSamplerCreateInfo.nmipmapMode(adr, value.i)
+inline var VkSamplerCreateInfo.addressModeU: VkSamplerAddressMode
+    get() = VkSamplerAddressMode of VkSamplerCreateInfo.naddressModeU(adr)
+    set(value) = VkSamplerCreateInfo.naddressModeU(adr, value.i)
+inline var VkSamplerCreateInfo.addressModeV: VkSamplerAddressMode
+    get() = VkSamplerAddressMode of VkSamplerCreateInfo.naddressModeV(adr)
+    set(value) = VkSamplerCreateInfo.naddressModeV(adr, value.i)
+inline var VkSamplerCreateInfo.addressModeW: VkSamplerAddressMode
+    get() = VkSamplerAddressMode of VkSamplerCreateInfo.naddressModeW(adr)
+    set(value) = VkSamplerCreateInfo.naddressModeW(adr, value.i)
+inline var VkSamplerCreateInfo.mipLodBias: Float
+    get() = VkSamplerCreateInfo.nmipLodBias(adr)
+    set(value) = VkSamplerCreateInfo.nmipLodBias(adr, value)
+inline var VkSamplerCreateInfo.anisotropyEnable: Boolean
+    get() = VkSamplerCreateInfo.nanisotropyEnable(adr).bool
+    set(value) = VkSamplerCreateInfo.nanisotropyEnable(adr, value.i)
+inline var VkSamplerCreateInfo.maxAnisotropy: Float
+    get() = VkSamplerCreateInfo.nmaxAnisotropy(adr)
+    set(value) = VkSamplerCreateInfo.nmaxAnisotropy(adr, value)
+inline var VkSamplerCreateInfo.compareEnable: Boolean
+    get() = VkSamplerCreateInfo.ncompareEnable(adr).bool
+    set(value) = VkSamplerCreateInfo.ncompareEnable(adr, value.i)
+inline var VkSamplerCreateInfo.compareOp: VkCompareOp
+    get() = VkCompareOp of VkSamplerCreateInfo.ncompareOp(adr)
+    set(value) = VkSamplerCreateInfo.ncompareOp(adr, value.i)
+inline var VkSamplerCreateInfo.minLod: Float
+    get() = VkSamplerCreateInfo.nminLod(adr)
+    set(value) = VkSamplerCreateInfo.nminLod(adr, value)
+inline var VkSamplerCreateInfo.maxLod: Float
+    get() = VkSamplerCreateInfo.nmaxLod(adr)
+    set(value) = VkSamplerCreateInfo.nmaxLod(adr, value)
+inline var VkSamplerCreateInfo.borderColor: VkBorderColor
+    get() = VkBorderColor of VkSamplerCreateInfo.nborderColor(adr)
+    set(value) = VkSamplerCreateInfo.nborderColor(adr, value.i)
+inline var VkSamplerCreateInfo.unnormalizedCoordinates: Boolean
+    get() = VkSamplerCreateInfo.nunnormalizedCoordinates(adr).bool
+    set(value) = VkSamplerCreateInfo.nunnormalizedCoordinates(adr, value.i)
+
 
 inline var VkDescriptorSetLayoutBinding.binding
     get() = VkDescriptorSetLayoutBinding.nbinding(adr)
@@ -1499,7 +1641,9 @@ inline var VkDescriptorSetLayoutCreateInfo.next
 inline var VkDescriptorSetLayoutCreateInfo.flags: VkDescriptorSetLayoutCreateFlags
     get() = VkDescriptorSetLayoutCreateInfo.nflags(adr)
     set(value) = VkDescriptorSetLayoutCreateInfo.nflags(adr, value)
-inline val VkDescriptorSetLayoutCreateInfo.bindingCount get() = VkDescriptorSetLayoutCreateInfo.nbindingCount(adr)
+inline var VkDescriptorSetLayoutCreateInfo.bindingCount
+    get() = VkDescriptorSetLayoutCreateInfo.nbindingCount(adr)
+    set(value) = VkDescriptorSetLayoutCreateInfo.nbindingCount(adr, value)
 inline var VkDescriptorSetLayoutCreateInfo.bindings
     get() = VkDescriptorSetLayoutCreateInfo.npBindings(adr)
     set(value) = VkDescriptorSetLayoutCreateInfo.npBindings(adr, value)
@@ -1540,17 +1684,24 @@ inline var VkDescriptorSetAllocateInfo.next
 inline var VkDescriptorSetAllocateInfo.descriptorPool: VkDescriptorPool
     get() = VkDescriptorSetAllocateInfo.ndescriptorPool(adr)
     set(value) = VkDescriptorSetAllocateInfo.ndescriptorPool(adr, value)
-inline val VkDescriptorSetAllocateInfo.descriptorSetCount get() = VkDescriptorSetAllocateInfo.ndescriptorSetCount(adr)
+inline var VkDescriptorSetAllocateInfo.descriptorSetCount
+    get() = VkDescriptorSetAllocateInfo.ndescriptorSetCount(adr)
+    set(value) = VkDescriptorSetAllocateInfo.ndescriptorSetCount(adr, value)
 inline var VkDescriptorSetAllocateInfo.setLayouts: LongBuffer
     get() = VkDescriptorSetAllocateInfo.npSetLayouts(adr)
     set(value) = VkDescriptorSetAllocateInfo.npSetLayouts(adr, value)
 
-//typedef struct VkDescriptorImageInfo {
-//    VkSampler        sampler;
-//    VkImageView      imageView;
-//    VkImageLayout    imageLayout;
-//} VkDescriptorImageInfo;
-//
+
+inline var VkDescriptorImageInfo.sampler: VkSampler
+    get() = VkDescriptorImageInfo.nsampler(adr)
+    set(value) = VkDescriptorImageInfo.nsampler(adr, value)
+inline var VkDescriptorImageInfo.imageView: VkImageView
+    get() = VkDescriptorImageInfo.nimageView(adr)
+    set(value) = VkDescriptorImageInfo.nimageView(adr, value)
+inline var VkDescriptorImageInfo.imageLayout: VkImageLayout
+    get() = VkImageLayout of VkDescriptorImageInfo.nimageLayout(adr)
+    set(value) = VkDescriptorImageInfo.nimageLayout(adr, value.i)
+
 
 inline var VkDescriptorBufferInfo.buffer: VkBuffer
     get() = buffer()
@@ -1599,7 +1750,9 @@ inline var VkWriteDescriptorSet.dstBinding
 inline var VkWriteDescriptorSet.dstArrayElement
     get() = VkWriteDescriptorSet.ndstArrayElement(adr)
     set(value) = VkWriteDescriptorSet.ndstArrayElement(adr, value)
-//inline val VkWriteDescriptorSet.descriptorCount get() = VkWriteDescriptorSet.ndescriptorCount(adr)
+inline var VkWriteDescriptorSet.descriptorCount
+    get() = VkWriteDescriptorSet.ndescriptorCount(adr)
+    set(value) = VkWriteDescriptorSet.ndescriptorCount(adr, value)
 inline var VkWriteDescriptorSet.descriptorType: VkDescriptorType
     get() = VkDescriptorType of VkWriteDescriptorSet.ndescriptorType(adr)
     set(value) = VkWriteDescriptorSet.ndescriptorType(adr, value.i)
@@ -1864,13 +2017,20 @@ inline var VkBufferCopy.Buffer.size: VkDeviceSize
         size(value)
     }
 
-//typedef struct VkImageSubresourceLayers {
-//    VkImageAspectFlags    aspectMask;
-//    uint32_t              mipLevel;
-//    uint32_t              baseArrayLayer;
-//    uint32_t              layerCount;
-//} VkImageSubresourceLayers;
-//
+
+inline var VkImageSubresourceLayers.aspectMask: VkImageAspectFlags
+    get() = VkImageSubresourceLayers.naspectMask(adr)
+    set(value) = VkImageSubresourceLayers.naspectMask(adr, value)
+inline var VkImageSubresourceLayers.mipLevel: Int
+    get() = VkImageSubresourceLayers.nmipLevel(adr)
+    set(value) = VkImageSubresourceLayers.nmipLevel(adr, value)
+inline var VkImageSubresourceLayers.baseArrayLayer: Int
+    get() = VkImageSubresourceLayers.nbaseArrayLayer(adr)
+    set(value) = VkImageSubresourceLayers.nbaseArrayLayer(adr, value)
+inline var VkImageSubresourceLayers.layerCount: Int
+    get() = VkImageSubresourceLayers.nlayerCount(adr)
+    set(value) = VkImageSubresourceLayers.nlayerCount(adr, value)
+
 //typedef struct VkImageCopy {
 //    VkImageSubresourceLayers    srcSubresource;
 //    VkOffset3D                  srcOffset;
@@ -1885,16 +2045,28 @@ inline var VkBufferCopy.Buffer.size: VkDeviceSize
 //    VkImageSubresourceLayers    dstSubresource;
 //    VkOffset3D                  dstOffsets[2];
 //} VkImageBlit;
-//
-//typedef struct VkBufferImageCopy {
-//    VkDeviceSize                bufferOffset;
-//    uint32_t                    bufferRowLength;
-//    uint32_t                    bufferImageHeight;
-//    VkImageSubresourceLayers    imageSubresource;
-//    VkOffset3D                  imageOffset;
-//    VkExtent3D                  imageExtent;
-//} VkBufferImageCopy;
-//
+
+
+inline var VkBufferImageCopy.bufferOffset: VkDeviceSize
+    get() = VkBufferImageCopy.nbufferOffset(adr)
+    set(value) = VkBufferImageCopy.nbufferOffset(adr, value)
+inline var VkBufferImageCopy.bufferRowLength: Int
+    get() = VkBufferImageCopy.nbufferRowLength(adr)
+    set(value) = VkBufferImageCopy.nbufferRowLength(adr, value)
+inline var VkBufferImageCopy.bufferImageHeight: Int
+    get() = VkBufferImageCopy.nbufferImageHeight(adr)
+    set(value) = VkBufferImageCopy.nbufferImageHeight(adr, value)
+inline var VkBufferImageCopy.imageSubresource: VkImageSubresourceLayers
+    get() = VkBufferImageCopy.nimageSubresource(adr)
+    set(value) = VkBufferImageCopy.nimageSubresource(adr, value)
+inline var VkBufferImageCopy.imageOffset: VkOffset3D
+    get() = VkBufferImageCopy.nimageOffset(adr)
+    set(value) = VkBufferImageCopy.nimageOffset(adr, value)
+inline var VkBufferImageCopy.imageExtent: VkExtent3D
+    get() = VkBufferImageCopy.nimageExtent(adr)
+    set(value) = VkBufferImageCopy.nimageExtent(adr, value)
+
+
 //typedef union VkClearColorValue {
 //    float       float32[4];
 //    int32_t     int32[4];
@@ -1975,19 +2147,38 @@ inline fun VkClearValue.depthStencil(depth: Float, stencil: Int) {
 //    VkDeviceSize       offset;
 //    VkDeviceSize       size;
 //} VkBufferMemoryBarrier;
-//
-//typedef struct VkImageMemoryBarrier {
-//    VkStructureType            sType;
-//    const void*                pNext;
-//    VkAccessFlags              srcAccessMask;
-//    VkAccessFlags              dstAccessMask;
-//    VkImageLayout              oldLayout;
-//    VkImageLayout              newLayout;
-//    uint32_t                   srcQueueFamilyIndex;
-//    uint32_t                   dstQueueFamilyIndex;
-//    VkImage                    image;
-//    VkImageSubresourceRange    subresourceRange;
-//} VkImageMemoryBarrier;
+
+inline var VkImageMemoryBarrier.type: VkStructureType
+    get() = VkStructureType of VkImageMemoryBarrier.nsType(adr)
+    set(value) = VkImageMemoryBarrier.nsType(adr, value.i)
+inline var VkImageMemoryBarrier.next
+    get() = VkImageMemoryBarrier.npNext(adr)
+    set(value) = VkImageMemoryBarrier.npNext(adr, value)
+inline var VkImageMemoryBarrier.srcAccessMask: VkAccessFlags
+    get() = VkImageMemoryBarrier.nsrcAccessMask(adr)
+    set(value) = VkImageMemoryBarrier.nsrcAccessMask(adr, value)
+inline var VkImageMemoryBarrier.dstAccessMask: VkAccessFlags
+    get() = VkImageMemoryBarrier.ndstAccessMask(adr)
+    set(value) = VkImageMemoryBarrier.ndstAccessMask(adr, value)
+inline var VkImageMemoryBarrier.oldLayout: VkImageLayout
+    get() = VkImageLayout of VkImageMemoryBarrier.noldLayout(adr)
+    set(value) = VkImageMemoryBarrier.noldLayout(adr, value.i)
+inline var VkImageMemoryBarrier.newLayout: VkImageLayout
+    get() = VkImageLayout of VkImageMemoryBarrier.nnewLayout(adr)
+    set(value) = VkImageMemoryBarrier.nnewLayout(adr, value.i)
+inline var VkImageMemoryBarrier.srcQueueFamilyIndex
+    get() = VkImageMemoryBarrier.nsrcQueueFamilyIndex(adr)
+    set(value) = VkImageMemoryBarrier.nsrcQueueFamilyIndex(adr, value)
+inline var VkImageMemoryBarrier.dstQueueFamilyIndex
+    get() = VkImageMemoryBarrier.ndstQueueFamilyIndex(adr)
+    set(value) = VkImageMemoryBarrier.ndstQueueFamilyIndex(adr, value)
+inline var VkImageMemoryBarrier.image: VkImage
+    get() = VkImageMemoryBarrier.nimage(adr)
+    set(value) = VkImageMemoryBarrier.nimage(adr, value)
+inline var VkImageMemoryBarrier.subresourceRange: VkImageSubresourceRange
+    get() = VkImageMemoryBarrier.nsubresourceRange(adr)
+    set(value) = VkImageMemoryBarrier.nsubresourceRange(adr, value)
+
 
 inline var VkRenderPassBeginInfo.type: VkStructureType
     get() = VkStructureType of sType()

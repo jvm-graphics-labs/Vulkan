@@ -39,7 +39,9 @@ class Camera {
     var rotationSpeed = 1f
     var movementSpeed = 1f
 
-    private val matrices = object {
+    val matrices = Matrices()
+
+    class Matrices {
         var perspective = Mat4()
         var view = Mat4()
     }

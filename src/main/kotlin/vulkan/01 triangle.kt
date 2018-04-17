@@ -14,15 +14,13 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkCommandBuffer
 import uno.buffer.intBufferOf
-import uno.buffer.toBuffer
-import uno.buffer.use
 import uno.kotlin.buffers.capacity
 import vkn.*
 import vkn.LongArrayList.resize
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
-import java.io.File
+import vulkan.base.tools.loadShader
 
 
 fun main(args: Array<String>) {
@@ -197,7 +195,7 @@ private class Triangle : VulkanExampleBase() {
             // Create in signaled state so we don't wait on first render of each command buffer
             flags = VkFenceCreate.SIGNALED_BIT.i
         }
-        for(i in drawCmdBuffers.indices)
+        for (i in drawCmdBuffers.indices)
             waitFences += device createFence fenceCreateInfo
     }
 
@@ -302,7 +300,7 @@ private class Triangle : VulkanExampleBase() {
             drawCmdBuffers[i].bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)
 
             // Bind triangle vertex buffer (contains position and colors)
-            drawCmdBuffers[i].bindVertexBuffer(0, vertices::buffer)
+            drawCmdBuffers[i].bindVertexBuffer(0, vertices.buffer)
 
             // Bind triangle index buffer
             drawCmdBuffers[i].bindIndexBuffer(indices.buffer, 0, VkIndexType.UINT32)
@@ -776,29 +774,6 @@ private class Triangle : VulkanExampleBase() {
         renderPass = device createRenderPass renderPassInfo
     }
 
-    /** Vulkan loads its shaders from an immediate binary representation called SPIR-V
-     *  Shaders are compiled offline from e.g. GLSL using the reference glslang compiler
-     *  This function loads such a shader from a binary file and returns a shader module structure  */
-    fun loadSPIRVShader(filename: String): VkShaderModule = withStack {
-
-        val file = File(ClassLoader.getSystemResource(filename).toURI())
-
-        var shaderModule = NULL
-
-        if (file.exists() && file.canRead()) {
-
-            file.readBytes().toBuffer().use { shaderCode ->
-                // Create a new shader module that will be used for pipeline creation
-                val moduleCreateInfo = vk.ShaderModuleCreateInfo { code = shaderCode }
-
-                shaderModule = getLong { vk.createShaderModule(device, moduleCreateInfo, it).check() }
-            }
-        } else
-            System.err.println("Error: Could not open shader file \"$filename\"")
-
-        return shaderModule
-    }
-
     fun preparePipelines() {
         /*  Create the graphics pipeline used in this example
             Vulkan uses the concept of rendering pipelines to encapsulate fixed states, replacing OpenGL's complex state machine
@@ -922,11 +897,10 @@ private class Triangle : VulkanExampleBase() {
 
         // Vertex shader
         shaderStages[0].apply {
-            type = VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO
             // Set pipeline stage for this shader
             stage = VkShaderStage.VERTEX_BIT
             // Load binary SPIR-V shader
-            module = loadSPIRVShader("shaders/triangle/triangle.vert.spv")
+            module = device loadShader "shaders/triangle/triangle.vert.spv"
             // Main entry point for the shader
             name = "main"
             assert(module != NULL)
@@ -934,11 +908,10 @@ private class Triangle : VulkanExampleBase() {
 
         // Fragment shader
         shaderStages[1].apply {
-            type = VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO
             // Set pipeline stage for this shader
             stage = VkShaderStage.FRAGMENT_BIT
             // Load binary SPIR-V shader
-            module = loadSPIRVShader("shaders/triangle/triangle.frag.spv")
+            module = device loadShader "shaders/triangle/triangle.frag.spv"
             // Main entry point for the shader
             name = "main"
             assert(module != NULL)

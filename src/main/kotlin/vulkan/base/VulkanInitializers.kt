@@ -2,8 +2,8 @@ package vulkan.base
 
 import glm_.f
 import glm_.vec2.Vec2i
-import org.lwjgl.vulkan.VkCommandBufferAllocateInfo
-import org.lwjgl.vulkan.VkViewport
+import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
 import vkn.*
 
 object initializers {
@@ -22,13 +22,26 @@ object initializers {
 //        return mappedMemoryRange;
 //    }
 //
+    fun cCommandBufferAllocateInfo(
+            commandPool: VkCommandPool,
+            level: VkCommandBufferLevel,
+            bufferCount: Int): VkCommandBufferAllocateInfo {
+        return VkCommandBufferAllocateInfo.calloc().apply {
+            this.commandPool = commandPool
+            this.level = level
+            commandBufferCount = bufferCount
+        }
+    }
+
     fun commandBufferAllocateInfo(
             commandPool: VkCommandPool,
             level: VkCommandBufferLevel,
-            bufferCount: Int): VkCommandBufferAllocateInfo = vk.CommandBufferAllocateInfo {
-        this.commandPool = commandPool
-        this.level = level
-        commandBufferCount = bufferCount
+            bufferCount: Int): VkCommandBufferAllocateInfo {
+        return vk.CommandBufferAllocateInfo {
+            this.commandPool = commandPool
+            this.level = level
+            commandBufferCount = bufferCount
+        }
     }
 
     //
@@ -61,15 +74,20 @@ object initializers {
 //        return renderPassCreateInfo;
 //    }
 //
-//    /** @brief Initialize an image memory barrier with no image transfer ownership */
-//    inline VkImageMemoryBarrier imageMemoryBarrier()
-//    {
-//        VkImageMemoryBarrier imageMemoryBarrier {};
-//        imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-//        imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-//        imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-//        return imageMemoryBarrier;
-//    }
+    /** @brief Initialize an image memory barrier with no image transfer ownership */
+    inline fun cImageMemoryBarrier(): VkImageMemoryBarrier {
+        return VkImageMemoryBarrier.create().apply {
+            srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
+            dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
+        }
+    }
+
+    inline fun imageMemoryBarrier(): VkImageMemoryBarrier {
+        return vk.ImageMemoryBarrier {
+            srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
+            dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
+        }
+    }
 //
 //    /** @brief Initialize a buffer memory barrier with no image transfer ownership */
 //    inline VkBufferMemoryBarrier bufferMemoryBarrier()
@@ -135,8 +153,8 @@ object initializers {
 //    }
 //
 //
-    inline fun viewport(size: Vec2i, minDepth: Float, maxDepth: Float): VkViewport.Buffer {
-        return vk.Viewport(1) {
+    inline fun viewport(size: Vec2i, minDepth: Float, maxDepth: Float): VkViewport {
+        return vk.Viewport {
             width = size.x.f
             height = size.y.f
             this.minDepth = minDepth
@@ -144,7 +162,7 @@ object initializers {
         }
     }
 
-//    inline VkRect2D rect2D(
+    //    inline VkRect2D rect2D(
 //            int32_t width,
 //            int32_t height,
 //            int32_t offsetX,
@@ -176,18 +194,12 @@ object initializers {
 //        return bufCreateInfo;
 //    }
 //
-//    inline VkDescriptorPoolCreateInfo descriptorPoolCreateInfo(
-//            uint32_t poolSizeCount,
-//            VkDescriptorPoolSize* pPoolSizes,
-//            uint32_t maxSets)
-//    {
-//        VkDescriptorPoolCreateInfo descriptorPoolInfo {};
-//        descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-//        descriptorPoolInfo.poolSizeCount = poolSizeCount;
-//        descriptorPoolInfo.pPoolSizes = pPoolSizes;
-//        descriptorPoolInfo.maxSets = maxSets;
-//        return descriptorPoolInfo;
-//    }
+    inline fun descriptorPoolCreateInfo(poolSizes: VkDescriptorPoolSize.Buffer, maxSets: Int): VkDescriptorPoolCreateInfo {
+        return vk.DescriptorPoolCreateInfo {
+            this.poolSizes = poolSizes
+            this.maxSets = maxSets
+        }
+    }
 //
 //    inline VkDescriptorPoolCreateInfo descriptorPoolCreateInfo(
 //            const std::vector<VkDescriptorPoolSize>& poolSizes,
@@ -200,16 +212,13 @@ object initializers {
 //        descriptorPoolInfo.maxSets = maxSets;
 //        return descriptorPoolInfo;
 //    }
-//
-//    inline VkDescriptorPoolSize descriptorPoolSize(
-//            VkDescriptorType type,
-//            uint32_t descriptorCount)
-//    {
-//        VkDescriptorPoolSize descriptorPoolSize {};
-//        descriptorPoolSize.type = type;
-//        descriptorPoolSize.descriptorCount = descriptorCount;
-//        return descriptorPoolSize;
-//    }
+
+    inline fun descriptorPoolSize(type: VkDescriptorType, descriptorCount: Int): VkDescriptorPoolSize {
+        return vk.DescriptorPoolSize {
+            this.type = type
+            this.descriptorCount = descriptorCount
+        }
+    }
 //
 //    inline VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(
 //            VkDescriptorType type,
@@ -322,33 +331,9 @@ object initializers {
 //        return writeDescriptorSet;
 //    }
 //
-//    inline VkVertexInputBindingDescription vertexInputBindingDescription(
-//            uint32_t binding,
-//            uint32_t stride,
-//            VkVertexInputRate inputRate)
-//    {
-//        VkVertexInputBindingDescription vInputBindDescription {};
-//        vInputBindDescription.binding = binding;
-//        vInputBindDescription.stride = stride;
-//        vInputBindDescription.inputRate = inputRate;
-//        return vInputBindDescription;
-//    }
-//
-//    inline VkVertexInputAttributeDescription vertexInputAttributeDescription(
-//            uint32_t binding,
-//            uint32_t location,
-//            VkFormat format,
-//            uint32_t offset)
-//    {
-//        VkVertexInputAttributeDescription vInputAttribDescription {};
-//        vInputAttribDescription.location = location;
-//        vInputAttribDescription.binding = binding;
-//        vInputAttribDescription.format = format;
-//        vInputAttribDescription.offset = offset;
-//        return vInputAttribDescription;
-//    }
-//
-//    inline VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo()
+
+
+    //    inline VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo()
 //    {
 //        VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo {};
 //        pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -368,23 +353,22 @@ object initializers {
 //        return pipelineInputAssemblyStateCreateInfo;
 //    }
 //
-//    inline VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo(
-//            VkPolygonMode polygonMode,
-//            VkCullModeFlags cullMode,
-//            VkFrontFace frontFace,
-//            VkPipelineRasterizationStateCreateFlags flags = 0)
-//    {
-//        VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo {};
-//        pipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-//        pipelineRasterizationStateCreateInfo.polygonMode = polygonMode;
-//        pipelineRasterizationStateCreateInfo.cullMode = cullMode;
-//        pipelineRasterizationStateCreateInfo.frontFace = frontFace;
-//        pipelineRasterizationStateCreateInfo.flags = flags;
-//        pipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
-//        pipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
-//        return pipelineRasterizationStateCreateInfo;
-//    }
-//
+    inline fun pipelineRasterizationStateCreateInfo(
+            polygonMode: VkPolygonMode,
+            cullMode: VkCullModeFlags,
+            frontFace: VkFrontFace,
+            flags: VkPipelineRasterizationStateCreateFlags = 0): VkPipelineRasterizationStateCreateInfo {
+        return vk.PipelineRasterizationStateCreateInfo {
+            this.polygonMode = polygonMode
+            this.cullMode = cullMode
+            this.frontFace = frontFace
+            this.flags = flags
+            this.depthClampEnable = false
+            this.lineWidth = 1f
+        }
+    }
+
+    //
 //    inline VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState(
 //            VkColorComponentFlags colorWriteMask,
 //            VkBool32 blendEnable)
@@ -406,21 +390,19 @@ object initializers {
 //        return pipelineColorBlendStateCreateInfo;
 //    }
 //
-//    inline VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo(
-//            VkBool32 depthTestEnable,
-//            VkBool32 depthWriteEnable,
-//            VkCompareOp depthCompareOp)
-//    {
-//        VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo {};
-//        pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-//        pipelineDepthStencilStateCreateInfo.depthTestEnable = depthTestEnable;
-//        pipelineDepthStencilStateCreateInfo.depthWriteEnable = depthWriteEnable;
-//        pipelineDepthStencilStateCreateInfo.depthCompareOp = depthCompareOp;
-//        pipelineDepthStencilStateCreateInfo.front = pipelineDepthStencilStateCreateInfo.back;
-//        pipelineDepthStencilStateCreateInfo.back.compareOp = VK_COMPARE_OP_ALWAYS;
-//        return pipelineDepthStencilStateCreateInfo;
-//    }
-//
+    inline fun pipelineDepthStencilStateCreateInfo(
+            depthTestEnable: Boolean,
+            depthWriteEnable: Boolean,
+            depthCompareOp: VkCompareOp): VkPipelineDepthStencilStateCreateInfo {
+        return vk.PipelineDepthStencilStateCreateInfo {
+            this.depthTestEnable = depthTestEnable
+            this.depthWriteEnable = depthWriteEnable
+            this.depthCompareOp = depthCompareOp
+            front = back
+            back.compareOp = VkCompareOp.ALWAYS
+        }
+    }
+
 //    inline VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(
 //            uint32_t viewportCount,
 //            uint32_t scissorCount,
@@ -477,21 +459,19 @@ object initializers {
 //        pipelineTessellationStateCreateInfo.patchControlPoints = patchControlPoints;
 //        return pipelineTessellationStateCreateInfo;
 //    }
-//
-//    inline VkGraphicsPipelineCreateInfo pipelineCreateInfo(
-//            VkPipelineLayout layout,
-//            VkRenderPass renderPass,
-//            VkPipelineCreateFlags flags = 0)
-//    {
-//        VkGraphicsPipelineCreateInfo pipelineCreateInfo {};
-//        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-//        pipelineCreateInfo.layout = layout;
-//        pipelineCreateInfo.renderPass = renderPass;
-//        pipelineCreateInfo.flags = flags;
-//        pipelineCreateInfo.basePipelineIndex = -1;
-//        pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
-//        return pipelineCreateInfo;
-//    }
+
+    inline fun pipelineCreateInfo(
+            layout: VkPipelineLayout,
+            renderPass: VkRenderPass,
+            flags: VkPipelineCreateFlags = 0): VkGraphicsPipelineCreateInfo {
+        return vk.GraphicsPipelineCreateInfo {
+            this.layout = layout
+            this.renderPass = renderPass
+            this.flags = flags
+            basePipelineIndex = -1
+//            basePipelineHandle = VK_NULL_HANDLE
+        }
+    }
 //
 //    inline VkComputePipelineCreateInfo computePipelineCreateInfo(
 //            VkPipelineLayout layout,

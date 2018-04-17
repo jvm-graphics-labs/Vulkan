@@ -3,6 +3,7 @@ package vulkan.base
 import glfw_.*
 import glm_.f
 import glm_.i
+import glm_.set
 import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
@@ -15,9 +16,11 @@ import org.lwjgl.vulkan.VK10.*
 import uno.buffer.intBufferOf
 import uno.buffer.longBufferOf
 import vkn.*
+import vkn.LongArrayList.resize
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.ENABLE_VALIDATION
 import vulkan.base.initializers.commandBufferAllocateInfo
+import vulkan.base.tools.loadShader
 import kotlin.system.measureTimeMillis
 
 abstract class VulkanExampleBase {
@@ -440,11 +443,11 @@ abstract class VulkanExampleBase {
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
             Command buffer submission info is set by each example   */
-        submitInfo = vk.SubmitInfo {
+        submitInfo = cVkSubmitInfo {
             waitDstStageMask = submitPipelineStages
             waitSemaphoreCount = 1
-            waitSemaphores = appBuffer.longBufferOf(semaphores.presentComplete)
-            signalSemaphores = appBuffer.longBufferOf(semaphores.renderComplete)
+            waitSemaphores = longBufferOf(semaphores.presentComplete)
+            signalSemaphores = longBufferOf(semaphores.renderComplete)
         }
     }
 
@@ -592,31 +595,32 @@ abstract class VulkanExampleBase {
     /** Create framebuffers for all requested swap chain images
      *  Can be overriden in derived class to setup a custom framebuffer (e.g. for MSAA) */
     open fun setupFrameBuffer() {
-        TODO()
-//        val attachments = cVkImageView(2)
-//
-//        // Depth/Stencil attachment is the same for all frame buffers
-//        attachments[1] = depthStencil.view
-//
-//        val frameBufferCreateInfo = cVkFramebufferCreateInfo {
-//            type = VkStructureType_FRAMEBUFFER_CREATE_INFO
-//            next = NULL
-//            renderPass = this@VulkanExampleBase.renderPass
-//            this.attachments = attachments
-//            width = size.x
-//            height = size.y
-//            layers = 1
-//        }
-//
-//        // Create frame buffers for every swap chain image
-//        frameBuffers resize swapChain.imageCount
-//        for (i in frameBuffers.indices) {
-//            attachments[0] = swapChain.buffers[i].view
-//            vkCreateFramebuffer(device, frameBufferCreateInfo, null, frameBuffers, i).check()
-//        }
+
+        val attachments = appBuffer.longBuffer(2)
+
+        // Depth/Stencil attachment is the same for all frame buffers
+        attachments[1] = depthStencil.view
+
+        val (w, h) = size // TODO BUG
+
+        val frameBufferCreateInfo = vk.FramebufferCreateInfo {
+            renderPass = this@VulkanExampleBase.renderPass
+            this.attachments = attachments
+            width = w
+            height = h
+            layers = 1
+        }
+
+        // Create frame buffers for every swap chain image
+        frameBuffers resize swapChain.imageCount
+        for (i in frameBuffers.indices) {
+            attachments[0] = swapChain.buffers[i].view
+            frameBuffers[i] = device createFramebuffer frameBufferCreateInfo
+        }
     }
-//    // Setup a default render pass
-    /** Can be overriden in derived class to setup a custom render pass (e.g. for MSAA) */
+
+    /** Setup a default render pass
+     *  Can be overriden in derived class to setup a custom render pass (e.g. for MSAA) */
     open fun setupRenderPass() {
 
         val attachments = vk.AttachmentDescription(2)
@@ -718,14 +722,45 @@ abstract class VulkanExampleBase {
     /** Destroy all command buffers and set their handles to VK_NULL_HANDLE
      *  May be necessary during runtime if options are toggled  */
     fun destroyCommandBuffers() = vk.freeCommandBuffers(device, cmdPool, drawCmdBuffers)
-//
-//    // Command buffer creation
-//    // Creates and returns a new command buffer
-//    VkCommandBuffer createCommandBuffer(VkCommandBufferLevel level, bool begin);
-//    // End the command buffer, submit it to the queue and free (if requested)
-//    // Note : Waits for the queue to become idle
-//    void flushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, bool free);
-//
+
+    /** Command buffer creation
+     *  Creates and returns a new command buffer */
+    fun createCommandBuffer(level: VkCommandBufferLevel, begin: Boolean): VkCommandBuffer {
+
+        val cmdBufAllocateInfo = vk.CommandBufferAllocateInfo {
+            commandPool = cmdPool
+            this.level = level
+            commandBufferCount = 1
+        }
+
+        val cmdBuffer = device allocateCommandBuffer cmdBufAllocateInfo
+
+        // If requested, also start the new command buffer
+        if (begin)
+            cmdBuffer begin vk.CommandBufferBeginInfo { }
+
+        return cmdBuffer
+    }
+
+    /** End the command buffer, submit it to the queue and free (if requested)
+     *  Note : Waits for the queue to become idle   */
+    fun flushCommandBuffer(commandBuffer: VkCommandBuffer?, queue: VkQueue, free: Boolean) {
+
+        if (commandBuffer == null) return
+
+        commandBuffer.end()
+
+        val submitInfo = vk.SubmitInfo {
+            commandBuffers = appBuffer.pointerBufferOf(commandBuffer)
+        }
+
+        queue submit submitInfo
+        queue.waitIdle()
+
+        if (free)
+            device.freeCommandBuffer(cmdPool, commandBuffer)
+    }
+
     /** Create a cache pool for rendering pipelines */
     fun createPipelineCache() {
         pipelineCache = device createPipelineCache vk.PipelineCacheCreateInfo {}
@@ -769,10 +804,16 @@ abstract class VulkanExampleBase {
 //            updateOverlay()
         }
     }
-//
-//    // Load a SPIR-V shader
-//    VkPipelineShaderStageCreateInfo loadShader(std::string fileName, VkShaderStageFlagBits stage);
-//
+
+    /** Load a SPIR-V shader    */
+    fun VkPipelineShaderStageCreateInfo.loadShader(fileName: String, stage: VkShaderStage) {
+        this.stage = stage
+        module = device loadShader fileName
+        name = "main" // todo : make param
+        assert(module != NULL)
+        shaderModules += module
+    }
+
     /** Start the main render loop  */
     fun renderLoop() {
 
@@ -816,9 +857,8 @@ abstract class VulkanExampleBase {
         // Convert to clamped timer value
         if (!paused) {
             timer += timerSpeed * frameTimer
-            if (timer > 1.0) {
+            if (timer > 1.0)
                 timer -= 1f
-            }
         }
         fpsTimer += tDiff.f
         if (fpsTimer > 1000f) {

@@ -10,7 +10,8 @@
 
 package vulkan.base
 
-import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.PointerBuffer
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
 import org.lwjgl.vulkan.VkDevice
 import vkn.*
@@ -24,10 +25,10 @@ class Buffer {
     lateinit var device: VkDevice
     var buffer: VkBuffer = NULL
     var memory: VkDeviceMemory = NULL
-    lateinit var descriptor: VkDescriptorBufferInfo
+    val descriptor = VkDescriptorBufferInfo.calloc(1)
     var size: VkDeviceSize = 0
     var alignment: VkDeviceSize = 0
-//    void * mapped = nullptr;
+    var mapped: PointerBuffer = memCallocPointer(1)
 
     /** @brief Usage flags to be filled by external source at buffer creation (to query at some later point) */
     var usageFlags: VkBufferUsageFlags = 0
@@ -42,9 +43,14 @@ class Buffer {
      *
      * @return VkResult of the buffer mapping call
      */
-    fun map(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0): VkResult {
-        TODO()
-//        return VkResult of vk.mapMemory(device, memory, offset, size, 0, & mapped)
+    fun map(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0) {
+        device.mapMemory(memory, offset, size, 0, memAddress(mapped))
+    }
+
+    fun map(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0, block: () -> Unit) {
+        map(size, offset)
+        block()
+        unmap()
     }
 
     /**
@@ -53,11 +59,10 @@ class Buffer {
      * @note Does not return a result as vkUnmapMemory can't fail
      */
     fun unmap() {
-        TODO()
-//        if (mapped) {
-//            vkUnmapMemory(device, memory);
-//            mapped = nullptr;
-//        }
+        if (mapped[0] != NULL) {
+            device unmapMemory memory
+            mapped[0] = NULL
+        }
     }
 
     /**
@@ -67,7 +72,7 @@ class Buffer {
      *
      * @return VkResult of the bindBufferMemory call
      */
-    fun bind(offset: VkDeviceSize = 0): VkResult = TODO()//vk.bindBufferMemory(device, buffer, memory, offset)
+    fun bind(offset: VkDeviceSize = 0) = device.bindBufferMemory(buffer, memory, offset)
 
     /**
      * Setup the default descriptor for this buffer
@@ -125,7 +130,7 @@ class Buffer {
      *
      * @return VkResult of the invalidate call
      */
-    fun invalidate (size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0): VkResult    {
+    fun invalidate(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0): VkResult {
         val mappedRange = vk.MappedMemoryRange {
             type = VkStructureType.MAPPED_MEMORY_RANGE
             this.memory = memory
@@ -138,7 +143,7 @@ class Buffer {
     /**
      * Release all Vulkan resources held by this buffer
      */
-    fun destroy ()    {
+    fun destroy() {
         if (buffer != NULL)
             vk.destroyBuffer(device, buffer)
         if (memory != NULL)
