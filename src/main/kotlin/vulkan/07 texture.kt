@@ -740,8 +740,8 @@ private class Texture : VulkanExampleBase() {
 
         // Load shaders
         val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
-            it[0].loadShader("shaders/texture/texture.vert.spv", VkShaderStage.VERTEX_BIT)
-            it[1].loadShader("shaders/texture/texture.frag.spv", VkShaderStage.FRAGMENT_BIT)
+            it[0].loadShader("shaders/texture/texture.vert", VkShaderStage.VERTEX_BIT)
+            it[1].loadShader("shaders/texture/texture.frag", VkShaderStage.FRAGMENT_BIT)
         }
 
         val pipelineCreateInfo = initializers.pipelineCreateInfo(

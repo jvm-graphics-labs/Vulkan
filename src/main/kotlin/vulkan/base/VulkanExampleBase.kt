@@ -817,7 +817,7 @@ abstract class VulkanExampleBase {
     fun VkPipelineShaderStageCreateInfo.loadShader(fileName: String, stage: VkShaderStage) {
 
         val isSpirV = fileName.substringAfterLast('.') == "spv"
-        if (isSpirV && !spirvCrossLoaded) {
+        if (!isSpirV && !spirvCrossLoaded) {
             // if it's a glsl shader, load spirvCross for conversion if not done yet
             Loader.loadNatives()
             if (!libspirvcrossj.initializeProcess())
@@ -829,7 +829,8 @@ abstract class VulkanExampleBase {
         module = when {
             isSpirV -> device loadShader fileName
             else -> {
-                val bytes = glslToSpirv(Paths.get(fileName))
+                val uri = ClassLoader.getSystemResource(fileName).toURI()
+                val bytes = glslToSpirv(Paths.get(uri))
                 device loadShader bytes
             }
         }
