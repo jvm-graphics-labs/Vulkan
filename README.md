@@ -46,5 +46,6 @@ Loads a 2D texture from disk (including all mip levels), uses staging to upload 
 ##### Credits:
 
 - [Sasha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
-- [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :) 
+- [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :), also the tip about the buffer came from him 
 - [Kai](https://github.com/httpdigest), for his first Hello Triangle in java
+- [Urlick](https://github.com/skalarproduktraum), for some tips and the glsl -> spir-v converter
