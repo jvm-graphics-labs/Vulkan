@@ -45,7 +45,7 @@ private class Triangle : VulkanExampleBase() {
 
     /** Vertex layout used in this example  */
     object Vertex {
-        //        float position [3];
+//        float position [3];
 //        float color [3];
         val size = Vec3.size * 2
         val offsetPosition = 0
@@ -975,7 +975,7 @@ private class Triangle : VulkanExampleBase() {
         device.bindBufferMemory(uniformBufferVS.buffer, uniformBufferVS.memory, 0)
 
         // Store information in the uniform's descriptor that is used by the descriptor set
-        uniformBufferVS.descriptor.apply {
+        uniformBufferVS.descriptor[0].apply {
             buffer = uniformBufferVS.buffer
             offset = 0
             range = uboVS.size
@@ -984,6 +984,7 @@ private class Triangle : VulkanExampleBase() {
     }
 
     fun updateUniformBuffers() {
+
         // Update matrices
         uboVS.projectionMatrix = glm.perspective(60f.rad, size.aspect, 0.1f, 256f)
 

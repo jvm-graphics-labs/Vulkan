@@ -32,6 +32,9 @@ dependencies {
 
     compile 'com.github.kotlin-graphics:uno-sdk:b885fad02bbcced22aa2ef4958050e871bc6e219'
 
+    ext.spirvCrossVersion = "0.4.0"
+    compile "graphics.scenery:spirvcrossj:$spirvCrossVersion"
+
     testCompile 'io.kotlintest:kotlintest:2.0.7'
 
     switch (OperatingSystem.current()) {
@@ -55,6 +58,7 @@ dependencies {
     runtime "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
     runtime "org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives"
     runtime "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
+    runtime "graphics.scenery:spirvcrossj:$spirvCrossVersion:$lwjglNatives"
 }
 
 repositories {

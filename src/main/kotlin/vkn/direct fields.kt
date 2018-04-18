@@ -1704,35 +1704,14 @@ inline var VkDescriptorImageInfo.imageLayout: VkImageLayout
 
 
 inline var VkDescriptorBufferInfo.buffer: VkBuffer
-    get() = buffer()
-    set(value) {
-        buffer(value)
-    }
+    get() = VkDescriptorBufferInfo.nbuffer(adr)
+    set(value) = VkDescriptorBufferInfo.nbuffer(adr, value)
 inline var VkDescriptorBufferInfo.offset: VkDeviceSize
-    get() = offset()
-    set(value) {
-        offset(value)
-    }
+    get() = VkDescriptorBufferInfo.noffset(adr)
+    set(value) = VkDescriptorBufferInfo.noffset(adr, value)
 inline var VkDescriptorBufferInfo.range: VkDeviceSize
-    get() = range()
-    set(value) {
-        range(value)
-    }
-inline var VkDescriptorBufferInfo.Buffer.buffer: VkBuffer
-    get() = buffer()
-    set(value) {
-        buffer(value)
-    }
-inline var VkDescriptorBufferInfo.Buffer.offset: VkDeviceSize
-    get() = offset()
-    set(value) {
-        offset(value)
-    }
-inline var VkDescriptorBufferInfo.Buffer.range: VkDeviceSize
-    get() = range()
-    set(value) {
-        range(value)
-    }
+    get() = VkDescriptorBufferInfo.nrange(adr)
+    set(value) = VkDescriptorBufferInfo.nrange(adr, value)
 
 
 inline var VkWriteDescriptorSet.type: VkStructureType

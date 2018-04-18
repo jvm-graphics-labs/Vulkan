@@ -263,6 +263,14 @@ inline infix fun VkDevice.destroyBuffer(buffer: VkBuffer) {
     VK10.nvkDestroyBuffer(this, buffer, NULL)
 }
 
+inline infix fun VkDevice.destroyCommandPool(commandPool: VkCommandPool) {
+    VK10.nvkDestroyCommandPool(this, commandPool, NULL)
+}
+
+inline infix fun VkDevice.destroyDescriptorPool(descriptorPool: VkDescriptorPool) {
+    VK10.nvkDestroyDescriptorPool(this, descriptorPool, NULL)
+}
+
 inline infix fun VkDevice.destroyDescriptorSetLayout(descriptorSetLayout: VkDescriptorSetLayout) {
     VK10.nvkDestroyDescriptorSetLayout(this, descriptorSetLayout, NULL)
 }
@@ -274,6 +282,11 @@ inline infix fun VkDevice.destroyFence(fence: VkFence) {
 inline infix fun VkDevice.destroyFences(fences: ArrayList<VkFence>) {
     for (fence in fences)
         VK10.nvkDestroyFence(this, fence, NULL)
+}
+
+inline infix fun VkDevice.destroyFramebuffers(framebuffers: Iterable<VkFramebuffer>) {
+    for (i in framebuffers)
+        VK10.nvkDestroyFramebuffer(this, i, NULL)
 }
 
 inline infix fun VkDevice.destroyImage(image: VkImage) {
@@ -288,8 +301,16 @@ inline infix fun VkDevice.destroyPipeline(pipeline: VkPipeline) {
     VK10.nvkDestroyPipeline(this, pipeline, NULL)
 }
 
+inline infix fun VkDevice.destroyPipelineCache(pipelineCache: VkPipelineCache) {
+    VK10.nvkDestroyPipelineCache(this, pipelineCache, NULL)
+}
+
 inline infix fun VkDevice.destroyPipelineLayout(pipelineLayout: VkPipelineLayout) {
     VK10.nvkDestroyPipelineLayout(this, pipelineLayout, NULL)
+}
+
+inline infix fun VkDevice.destroyRenderPass(renderPass: VkRenderPass) {
+    VK10.nvkDestroyRenderPass(this, renderPass, NULL)
 }
 
 inline infix fun VkDevice.destroySampler(sampler: VkSampler) {
@@ -300,13 +321,27 @@ inline infix fun VkDevice.destroySemaphore(semaphore: VkSemaphore) {
     VK10.nvkDestroySemaphore(this, semaphore, NULL)
 }
 
+inline fun VkDevice.destroySemaphores(vararg semaphores: VkSemaphore) {
+    for (semaphore in semaphores)
+        VK10.nvkDestroySemaphore(this, semaphore, NULL)
+}
+
 inline infix fun VkDevice.destroyShaderModules(shaderModules: VkPipelineShaderStageCreateInfo.Buffer) {
     for (i in shaderModules)
         VK10.nvkDestroyShaderModule(this, i.module, NULL)
 }
 
+inline infix fun VkDevice.destroyShaderModules(shaderModules: Iterable<VkShaderModule>) {
+    for (i in shaderModules)
+        VK10.nvkDestroyShaderModule(this, i, NULL)
+}
+
 inline infix fun VkDevice.destroySwapchainKHR(swapchain: VkSwapchainKHR) {
     KHRSwapchain.nvkDestroySwapchainKHR(this, swapchain, NULL)
+}
+
+inline fun VkDevice.freeCommandBuffers(commandPool: VkCommandPool, commandBuffers: ArrayList<VkCommandBuffer>) {
+    return vk.freeCommandBuffers(this, commandPool, commandBuffers)
 }
 
 inline infix fun VkDevice.flushMappedMemoryRanges(memoryRange: VkMappedMemoryRange) {
@@ -388,6 +423,10 @@ inline infix fun VkInstance.createDebugReportCallbackEXT(createInfo: VkDebugRepo
     val long = appBuffer.long
     VK_CHECK_RESULT(EXTDebugReport.nvkCreateDebugReportCallbackEXT(this, createInfo.adr, NULL, long))
     return memGetLong(long)
+}
+
+inline fun VkInstance.destroy() {
+    VK10.nvkDestroyInstance(this, NULL)
 }
 
 inline infix fun VkInstance.destroyDebugReportCallbackEXT(debugReportCallback: VkDebugReportCallbackEXT) {

@@ -1,17 +1,13 @@
 package vulkan.base
 
-import gli_.has
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.Platform
-import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDevice
-import org.lwjgl.vulkan.VkFormatProperties
 import org.lwjgl.vulkan.VkPhysicalDevice
 import uno.buffer.toBuffer
 import uno.buffer.use
 import vkn.*
-import vkn.VkMemoryStack.Companion.withStack
 import java.io.File
+import java.nio.ByteBuffer
 import kotlin.reflect.KMutableProperty0
 
 object tools {
@@ -262,16 +258,18 @@ object tools {
 
         if (file.exists() && file.canRead()) {
 
-            file.readBytes().toBuffer().use { shaderCode ->
-                // Create a new shader module that will be used for pipeline creation
-                val moduleCreateInfo = vk.ShaderModuleCreateInfo { code = shaderCode }
-
-                shaderModule = createShaderModule(moduleCreateInfo)
-            }
+            shaderModule = file.readBytes().toBuffer().use { loadShader(it) }
         } else
             System.err.println("Error: Could not open shader file \"$filename\"")
 
         return shaderModule
+    }
+
+    infix fun VkDevice.loadShader(buffer: ByteBuffer): VkShaderModule {
+        // Create a new shader module that will be used for pipeline creation
+        val moduleCreateInfo = vk.ShaderModuleCreateInfo { code = buffer }
+
+        return createShaderModule(moduleCreateInfo)
     }
 
 //

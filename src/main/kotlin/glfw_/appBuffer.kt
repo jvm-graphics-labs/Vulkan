@@ -8,11 +8,9 @@ import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.Pointer
 import uno.buffer.bufferBig
+import uno.kotlin.buffers.indices
 import vkn.adr
-import java.nio.DoubleBuffer
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
-import java.nio.LongBuffer
+import java.nio.*
 import java.util.concurrent.atomic.AtomicLong
 
 object appBuffer {
@@ -153,7 +151,14 @@ object appBuffer {
         return res
     }
 
+    inline fun buffer(size: Int): ByteBuffer = MemoryUtil.memByteBuffer(ptr.advance(Byte.BYTES * size), size)
     inline fun intBuffer(size: Int): IntBuffer = MemoryUtil.memIntBuffer(ptr.advance(Int.BYTES * size), size)
+    inline fun intBuffer(size: Int, block: (Int) -> Int): IntBuffer {
+        val res = intBuffer(size)
+        for(i in res.indices)
+            res[i] = block(i)
+        return res
+    }
     inline fun floatBuffer(size: Int): FloatBuffer = MemoryUtil.memFloatBuffer(ptr.advance(Float.BYTES * size), size)
     inline fun longBuffer(size: Int): LongBuffer = MemoryUtil.memLongBuffer(ptr.advance(Long.BYTES * size), size)
 

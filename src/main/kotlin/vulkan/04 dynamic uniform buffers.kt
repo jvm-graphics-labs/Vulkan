@@ -19,9 +19,12 @@
 package vulkan
 
 import glfw_.appBuffer
-import glm_.*
+import glm_.L
 import glm_.detail.Random
+import glm_.glm
+import glm_.i
 import glm_.mat4x4.Mat4
+import glm_.pow
 import glm_.vec3.Vec3
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
@@ -111,10 +114,12 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
         /*  Clean up used Vulkan resources
             Note : Inherited destructor cleans up resources stored in base class         */
-        vk.destroyPipeline(device, pipeline)
+        device.apply {
+            destroyPipeline(pipeline)
 
-        vk.destroyPipelineLayout(device, pipelineLayout)
-        vk.destroyDescriptorSetLayout(device, descriptorSetLayout)
+            destroyPipelineLayout(pipelineLayout)
+            destroyDescriptorSetLayout(descriptorSetLayout)
+        }
 
         vertexBuffer.destroy()
         indexBuffer.destroy()
@@ -140,9 +145,11 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
             this.clearValues = clearValues
         }
 
-        drawCmdBuffers.forEachIndexed { i, cmd ->
+        for(i in drawCmdBuffers.indices) {
 
             renderPassBeginInfo.framebuffer(frameBuffers[i])
+
+            val cmd = drawCmdBuffers[i]
 
             cmd begin cmdBufInfo
 
@@ -433,7 +440,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
                 }
 
         animationTimer = 0f
-
+        println(uniformBuffers.dynamic.size)
         memCopy(memAddress(uboDataDynamic.model), uniformBuffers.dynamic.mapped[0], uniformBuffers.dynamic.size)
 //        println(memGetFloat(uniformBuffers.dynamic.mapped[0]))
 //        println(memGetFloat(uniformBuffers.dynamic.mapped[0] + Float.BYTES))

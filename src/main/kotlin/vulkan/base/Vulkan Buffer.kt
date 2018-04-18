@@ -82,9 +82,11 @@ class Buffer {
      *
      */
     fun setupDescriptor(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0) {
-        descriptor.offset = offset
-        descriptor.buffer = buffer
-        descriptor.range = size
+        descriptor[0].also {
+            it.offset = offset
+            it.buffer = buffer
+            it.range = size
+        }
     }
 
     /**

@@ -8,6 +8,8 @@ import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
+import graphics.scenery.spirvcrossj.Loader
+import graphics.scenery.spirvcrossj.libspirvcrossj
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
@@ -21,6 +23,7 @@ import vkn.VkMemoryStack.Companion.withStack
 import vulkan.ENABLE_VALIDATION
 import vulkan.base.initializers.commandBufferAllocateInfo
 import vulkan.base.tools.loadShader
+import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
 
 abstract class VulkanExampleBase {
@@ -179,6 +182,8 @@ abstract class VulkanExampleBase {
 
     lateinit var window: GlfwWindow
 
+    var spirvCrossLoaded = false
+
     init {
 
         settings.validation = ENABLE_VALIDATION
@@ -301,24 +306,24 @@ abstract class VulkanExampleBase {
 
         // Clean up Vulkan resources
         swapChain.cleanup()
-        if (descriptorPool != NULL)
-            vk.destroyDescriptorPool(device, descriptorPool)
-        destroyCommandBuffers()
-        vk.destroyRenderPass(device, renderPass)
-        vk.destroyFramebuffers(device, frameBuffers)
+        device.apply {
+            if (descriptorPool != NULL)
+                destroyDescriptorPool(descriptorPool)
+            destroyCommandBuffers()
+            destroyRenderPass(renderPass)
+            destroyFramebuffers(frameBuffers)
 
-        vk.destroyShaderModules(device, shaderModules)
-        vk.destroyImageView(device, depthStencil.view)
-        vk.destroyImage(device, depthStencil.image)
-        vk.freeMemory(device, depthStencil.mem)
+            destroyShaderModules(shaderModules)
+            destroyImageView(depthStencil.view)
+            destroyImage(depthStencil.image)
+            freeMemory(depthStencil.mem)
 
-        vk.destroyPipelineCache(device, pipelineCache)
+            destroyPipelineCache(pipelineCache)
 
-        vk.destroyCommandPool(device, cmdPool)
+            destroyCommandPool(cmdPool)
 
-        vk.destroySemaphore(device, semaphores.presentComplete)
-        vk.destroySemaphore(device, semaphores.renderComplete)
-        vk.destroySemaphore(device, semaphores.overlayComplete)
+            destroySemaphores(semaphores.presentComplete, semaphores.renderComplete, semaphores.overlayComplete)
+        }
 
         uiOverlay?.destroy()
 
@@ -327,7 +332,10 @@ abstract class VulkanExampleBase {
         if (settings.validation)
             debug.freeDebugCallback(instance)
 
-        vkDestroyInstance(instance)
+        instance.destroy()
+
+        if (spirvCrossLoaded)
+            libspirvcrossj.finalizeProcess()
     }
 
     /** Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)  */
@@ -721,7 +729,7 @@ abstract class VulkanExampleBase {
 
     /** Destroy all command buffers and set their handles to VK_NULL_HANDLE
      *  May be necessary during runtime if options are toggled  */
-    fun destroyCommandBuffers() = vk.freeCommandBuffers(device, cmdPool, drawCmdBuffers)
+    fun destroyCommandBuffers() = device.freeCommandBuffers(cmdPool, drawCmdBuffers)
 
     /** Command buffer creation
      *  Creates and returns a new command buffer */
@@ -807,8 +815,24 @@ abstract class VulkanExampleBase {
 
     /** Load a SPIR-V shader    */
     fun VkPipelineShaderStageCreateInfo.loadShader(fileName: String, stage: VkShaderStage) {
+
+        val isSpirV = fileName.substringAfterLast('.') == "spv"
+        if (isSpirV && !spirvCrossLoaded) {
+            // if it's a glsl shader, load spirvCross for conversion if not done yet
+            Loader.loadNatives()
+            if (!libspirvcrossj.initializeProcess())
+                throw RuntimeException("glslang failed to initialize.")
+            spirvCrossLoaded = true
+        }
+
         this.stage = stage
-        module = device loadShader fileName
+        module = when {
+            isSpirV -> device loadShader fileName
+            else -> {
+                val bytes = glslToSpirv(Paths.get(fileName))
+                device loadShader bytes
+            }
+        }
         name = "main" // todo : make param
         assert(module != NULL)
         shaderModules += module

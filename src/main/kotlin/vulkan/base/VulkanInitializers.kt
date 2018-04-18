@@ -77,6 +77,7 @@ object initializers {
     /** @brief Initialize an image memory barrier with no image transfer ownership */
     inline fun cImageMemoryBarrier(): VkImageMemoryBarrier {
         return VkImageMemoryBarrier.create().apply {
+            type = VkStructureType.IMAGE_MEMORY_BARRIER
             srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
             dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
         }

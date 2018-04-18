@@ -1,17 +1,28 @@
 package vkn
 
 import glfw_.advance
+import glfw_.appBuffer
 import glfw_.appBuffer.ptr
-import glm_.vec2.Vec2i
-import glm_.vec3.Vec3i
+import gli_.extension
+import glm_.BYTES
+import glm_.i
+import glm_.set
+import graphics.scenery.spirvcrossj.*
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.Pointer
-import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkInstance
+import org.lwjgl.vulkan.VkPhysicalDevice
+import uno.kotlin.buffers.indices
+import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
+import java.nio.file.Files
+import java.nio.file.Path
 
 
 //fun pointerBufferOf(vararg strings: String): PointerBuffer {
@@ -91,6 +102,7 @@ object LongArrayList {
                 removeAt(lastIndex)
     }
 }
+
 object VkPhysicalDeviceArrayList {
 //    operator fun ArrayList<VkPhysicalDevice>.set(index: Int, long: LongBuffer) {
 //        set(index, long[0])
@@ -107,10 +119,6 @@ object VkPhysicalDeviceArrayList {
 }
 
 
-
-
-
-
 inline fun vkDestroySemaphores(device: VkDevice, semaphores: VkSemaphorePtr) {
     for (i in 0 until semaphores.remaining())
         VK10.nvkDestroySemaphore(device, semaphores[i], NULL)
@@ -118,10 +126,8 @@ inline fun vkDestroySemaphores(device: VkDevice, semaphores: VkSemaphorePtr) {
 
 
 
-inline fun vkDestroyInstance(instance: VkInstance) = VK10.nvkDestroyInstance(instance, NULL)
 
 inline fun vkDestroyBuffer(device: VkDevice, buffer: VkBuffer) = VK10.nvkDestroyBuffer(device, buffer, NULL)
-
 
 
 val FloatBuffer.adr get() = MemoryUtil.memAddress(this)
@@ -144,4 +150,75 @@ fun Collection<String>.toPointerBuffer(): PointerBuffer {
     for (i in indices)
         pointers.put(i, elementAt(i).utf8)
     return pointers
+}
+
+
+fun glslToSpirv(path: Path): ByteBuffer {
+
+    var compileFail = false
+    var linkFail = false
+    val program = TProgram()
+
+    val code = Files.readAllLines(path).joinToString("\n")
+
+    val extension = path.extension
+    val shaderType = when (extension) {
+        "vert" -> EShLanguage.EShLangVertex
+        "frag" -> EShLanguage.EShLangFragment
+        "geom" -> EShLanguage.EShLangGeometry
+        "tesc" -> EShLanguage.EShLangTessControl
+        "tese" -> EShLanguage.EShLangTessEvaluation
+        "comp" -> EShLanguage.EShLangCompute
+        else -> throw RuntimeException("Unknown shader extension .$extension")
+    }
+
+    println("${path.fileName}: Compiling shader code  (${code.length} bytes)... ")
+
+    val shader = TShader(shaderType).apply {
+        setStrings(arrayOf(code), 1)
+        setAutoMapBindings(true)
+    }
+
+    val messages = EShMessages.EShMsgDefault or EShMessages.EShMsgVulkanRules or EShMessages.EShMsgSpvRules
+
+    val resources = libspirvcrossj.getDefaultTBuiltInResource()
+    if (!shader.parse(resources, 450, false, messages))
+        compileFail = true
+
+    if (compileFail) {
+        println("Info log: " + shader.infoLog)
+        println("Debug log: " + shader.infoDebugLog)
+        throw RuntimeException("Compilation of ${path.fileName} failed")
+    }
+
+    program.addShader(shader)
+
+    if (!program.link(EShMessages.EShMsgDefault) || !program.mapIO())
+        linkFail = true
+
+    if (linkFail) {
+        System.err.println(program.infoLog)
+        System.err.println(program.infoDebugLog)
+
+        throw RuntimeException("Linking of program ${path.fileName} failed!")
+    }
+
+
+    val spirv = IntVec()
+    libspirvcrossj.glslangToSpv(program.getIntermediate(shaderType), spirv)
+
+    println("Generated " + spirv.capacity() + " bytes of SPIRV bytecode.")
+
+    //System.out.println(shader);
+    //System.out.println(program);
+
+    return spirv.toByteBuffer()
+}
+
+private fun IntVec.toByteBuffer(): ByteBuffer {
+    val bytes = appBuffer.buffer(size().i * Int.BYTES)
+    val ints = bytes.asIntBuffer()
+    for (i in ints.indices)
+        ints[i] = get(i).i
+    return bytes
 }
