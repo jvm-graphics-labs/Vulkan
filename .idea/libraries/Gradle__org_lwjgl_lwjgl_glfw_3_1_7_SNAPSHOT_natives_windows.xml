@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.lwjgl:lwjgl-glfw:3.1.7-SNAPSHOT:natives-windows">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.1.7-SNAPSHOT/6b180fc3b725c8f3142812a26bb2c1cb22851e34/lwjgl-glfw-3.1.7-SNAPSHOT-natives-windows.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.1.7-SNAPSHOT/2f22fd52815070927181d865f1b152ae0ec344aa/lwjgl-glfw-3.1.7-SNAPSHOT-natives-windows.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.1.7-SNAPSHOT/6db5a73bf97ac4b7c1d365e54812c4515e192e79/lwjgl-glfw-3.1.7-SNAPSHOT-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.1.7-SNAPSHOT/4ce679a0dcca4345cc69465368cfa7e6f6ba59f8/lwjgl-glfw-3.1.7-SNAPSHOT-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
