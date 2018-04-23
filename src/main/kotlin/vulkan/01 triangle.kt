@@ -154,8 +154,7 @@ private class Triangle : VulkanExampleBase() {
             destroyBuffer(uniformBufferVS.buffer)
             freeMemory(uniformBufferVS.memory)
 
-            destroySemaphore(presentCompleteSemaphore)
-            destroySemaphore(renderCompleteSemaphore)
+            destroySemaphores(presentCompleteSemaphore, renderCompleteSemaphore)
 
             destroyFences(waitFences)
         }
