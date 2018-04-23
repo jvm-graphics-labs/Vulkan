@@ -9,9 +9,10 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.MemoryUtil.memGetLong
 import org.lwjgl.system.Platform
-import org.lwjgl.vulkan.VkAllocationCallbacks
 import org.lwjgl.vulkan.VkInstance
-import vkn.*
+import vkn.VK_CHECK_RESULT
+import vkn.VkSurfaceKHR
+import vkn.adr
 
 /**
  * Created by elect on 22/04/17.
@@ -19,11 +20,12 @@ import vkn.*
 
 object glfw {
 
+    @Throws(RuntimeException::class)
     fun init() {
 
         GLFWErrorCallback.createPrint(System.err).set()
         if (!glfwInit())
-            throw IllegalStateException("Unable to initialize GLFW")
+            throw RuntimeException("Unable to initialize GLFW")
 
         /* This window hint is required to use OpenGL 3.1+ on macOS */
         if (Platform.get() == Platform.MACOSX)
@@ -69,9 +71,9 @@ object glfw {
             return res
         }
 
-    fun createWindowSurface(window: GlfwWindow, instance: VkInstance): VkSurfaceKHR {
+    fun createWindowSurface(windowHandle: Long, instance: VkInstance): VkSurfaceKHR {
         val pSurface = appBuffer.long
-        VK_CHECK_RESULT(GLFWVulkan.nglfwCreateWindowSurface(instance.adr, window.handle, NULL, pSurface))
+        VK_CHECK_RESULT(GLFWVulkan.nglfwCreateWindowSurface(instance.adr, windowHandle, NULL, pSurface))
         return memGetLong(pSurface)
     }
 }

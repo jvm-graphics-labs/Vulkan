@@ -568,6 +568,8 @@ enum class VkFormat(val i: Int) {
     G16_B16R16_2PLANE_422_UNORM_KHR(1000156032),
     G16_B16_R16_3PLANE_444_UNORM_KHR(1000156033);
 
+    infix operator fun plus(i: Int) = of(this.i + i)
+
     companion object {
         inline infix fun of(i: Int) = values().first { it.i == i }
     }
@@ -638,6 +640,17 @@ enum class VkImageLayout(val i: Int) {
     SHARED_PRESENT_KHR(1000111000),
     DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL_KHR(1000117000),
     DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL_KHR(1000117001);
+
+    val accessMask: VkAccessFlags
+        get() = when (this) {
+            PREINITIALIZED -> VkAccess.HOST_WRITE_BIT.i
+            COLOR_ATTACHMENT_OPTIMAL -> VkAccess.COLOR_ATTACHMENT_WRITE_BIT.i
+            DEPTH_STENCIL_ATTACHMENT_OPTIMAL -> VkAccess.DEPTH_STENCIL_ATTACHMENT_WRITE_BIT.i
+            TRANSFER_SRC_OPTIMAL -> VkAccess.TRANSFER_READ_BIT.i
+            TRANSFER_DST_OPTIMAL -> VkAccess.TRANSFER_WRITE_BIT.i
+            SHADER_READ_ONLY_OPTIMAL -> VkAccess.SHADER_READ_BIT.i
+            else -> 0
+        }
 
     companion object {
         inline infix fun of(i: Int) = values().first { it.i == i }
@@ -1091,18 +1104,18 @@ enum class VkImageUsage(val i: Int) {
     TRANSIENT_ATTACHMENT_BIT(0x00000040),
     INPUT_ATTACHMENT_BIT(0x00000080);
 
-    inline infix fun or(b: VkImageUsage) = i or b.i
+    inline infix fun or(b: VkImageUsage): VkImageUsageFlags = i or b.i
 
     companion object {
         inline infix fun of(i: Int) = values().first { it.i == i }
     }
 }
 
-inline infix fun Int.or(b: VkImageUsage) = or(b.i)
+inline infix fun Int.or(b: VkImageUsage): VkImageUsageFlags = or(b.i)
 
 typealias VkImageUsageFlags = VkFlags
 
-enum class VkImageCreateFlagBits(val i: Int) {
+enum class VkImageCreate(val i: Int) {
     SPARSE_BINDING_BIT(0x00000001),
     SPARSE_RESIDENCY_BIT(0x00000002),
     SPARSE_ALIASED_BIT(0x00000004),
@@ -1320,6 +1333,8 @@ enum class VkBufferUsage(val i: Int) {
     }
 }
 
+infix fun Int.or(f: VkBufferUsage): VkBufferCreateFlags = or(f.i)
+
 typealias VkBufferUsageFlags = VkFlags
 typealias VkBufferViewCreateFlags = VkFlags
 typealias VkImageViewCreateFlags = VkFlags
@@ -1396,6 +1411,8 @@ enum class VkColorComponent(val i: Int) {
     }
 }
 
+infix fun VkColorComponent.or(f: VkColorComponent): VkColorComponentFlags = i or f.i
+infix fun Int.or(f: VkColorComponent): VkColorComponentFlags = or(f.i)
 
 typealias VkColorComponentFlags = VkFlags
 typealias VkPipelineDynamicStateCreateFlags = VkFlags
@@ -1479,6 +1496,8 @@ enum class VkAccess(val i: Int) {
         infix fun of(i: Int) = values().first { it.i == i }
     }
 }
+
+inline infix fun Int.or(f: VkAccess) = or(f.i)
 
 typealias VkAccessFlags = VkFlags
 

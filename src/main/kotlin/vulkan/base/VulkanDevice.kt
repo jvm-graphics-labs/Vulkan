@@ -209,7 +209,7 @@ constructor(
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
         val deviceCreateInfo = vk.DeviceCreateInfo {
-            this.queueCreateInfos = queueCreateInfos
+            this.queueCreateInfos = queueCreateInfos.toBuffer()
             this.enabledFeatures = enabledFeatures
         }
 

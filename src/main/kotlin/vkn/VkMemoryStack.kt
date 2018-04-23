@@ -614,7 +614,7 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     inline fun cVkPipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit) = cVkPipelineColorBlendAttachmentState(capacity).apply { get(0).block() }
 
     inline fun cVkImageView(capacity: Int) = callocLong(capacity)
-    inline fun vkImageViewOf(view0: VkImageView, view1: VkImageView): VkImageViewPtr = longs(view0, view1)
+    inline fun vkImageViewOf(view0: VkImageView, view1: VkImageView): VkImageViewBuffer = longs(view0, view1)
 
     operator fun PointerBuffer.plusAssign(string: String) {
         put(string.utf8)

@@ -62,6 +62,18 @@ object vk {
         return res
     }
 
+    inline fun DescriptorBufferInfo(block: VkDescriptorBufferInfo.() -> Unit): VkDescriptorBufferInfo {
+        val res = VkDescriptorBufferInfo.create(ptr.advance(VkDescriptorBufferInfo.SIZEOF))
+        res.block()
+        return res
+    }
+
+    inline fun DescriptorBufferInfo(capacity: Int, block: VkDescriptorBufferInfo.() -> Unit): VkDescriptorBufferInfo.Buffer {
+        val res = VkDescriptorBufferInfo.create(ptr.advance(VkDescriptorBufferInfo.SIZEOF * capacity), capacity)
+        res[0].block()
+        return res
+    }
+
     inline fun DescriptorPoolCreateInfo(block: VkDescriptorPoolCreateInfo.() -> Unit): VkDescriptorPoolCreateInfo {
         val res = VkDescriptorPoolCreateInfo.create(ptr.advance(VkDescriptorPoolCreateInfo.SIZEOF))
         res.type = VkStructureType.DESCRIPTOR_POOL_CREATE_INFO
@@ -94,6 +106,14 @@ object vk {
         val res = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF))
         res.type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
         res.block()
+        return res
+    }
+
+    inline fun DeviceQueueCreateInfo(capacity: Int, block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo.Buffer {
+        val res = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
+        for (b in res)
+            b.type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
+        res[0].block()
         return res
     }
 
@@ -139,6 +159,14 @@ object vk {
         return res
     }
 
+    inline fun ImageMemoryBarrier(capacity: Int, block: VkImageMemoryBarrier.() -> Unit): VkImageMemoryBarrier.Buffer {
+        val res = VkImageMemoryBarrier.create(ptr.advance(VkImageMemoryBarrier.SIZEOF * capacity), capacity)
+        for (i in res)
+            i.type = VkStructureType.IMAGE_MEMORY_BARRIER
+        res[0].block()
+        return res
+    }
+
     inline fun ImageViewCreateInfo(block: VkImageViewCreateInfo.() -> Unit): VkImageViewCreateInfo {
         val res = VkImageViewCreateInfo.create(ptr.advance(VkImageViewCreateInfo.SIZEOF))
         res.type = VkStructureType.IMAGE_VIEW_CREATE_INFO
@@ -167,8 +195,10 @@ object vk {
         return res
     }
 
-    inline fun PhysicalDeviceFeatures(): VkPhysicalDeviceFeatures {
-        return VkPhysicalDeviceFeatures.create(ptr.advance(VkPhysicalDeviceFeatures.SIZEOF))
+    inline fun PhysicalDeviceFeatures(block: VkPhysicalDeviceFeatures.() -> Unit): VkPhysicalDeviceFeatures {
+        val res = VkPhysicalDeviceFeatures.create(ptr.advance(VkPhysicalDeviceFeatures.SIZEOF))
+        res.block()
+        return res
     }
 
     inline fun PhysicalDeviceMemoryProperties(): VkPhysicalDeviceMemoryProperties {
@@ -253,6 +283,18 @@ object vk {
         val res = VkPipelineViewportStateCreateInfo.create(ptr.advance(VkPipelineViewportStateCreateInfo.SIZEOF))
         res.type = VkStructureType.PIPELINE_VIEWPORT_STATE_CREATE_INFO
         res.block()
+        return res
+    }
+
+    inline fun PushConstantRange(block: VkPushConstantRange.() -> Unit): VkPushConstantRange {
+        val res = VkPushConstantRange.create(ptr.advance(VkPushConstantRange.SIZEOF))
+        res.block()
+        return res
+    }
+
+    inline fun PushConstantRange(capacity: Int, block: VkPushConstantRange.() -> Unit): VkPushConstantRange.Buffer {
+        val res = VkPushConstantRange.create(ptr.advance(VkPushConstantRange.SIZEOF * capacity), capacity)
+        res[0].block()
         return res
     }
 
@@ -345,10 +387,10 @@ object vk {
     inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = AttachmentReference(capacity).also { it[0].block() }
 
     inline fun BufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF * capacity), capacity)
+    inline fun BufferImageCopy(block: VkBufferImageCopy.() -> Unit): VkBufferImageCopy = VkBufferImageCopy.create(ptr.advance(VkBufferImageCopy.SIZEOF)).also(block)
+    inline fun BufferImageCopy(capacity: Int, block: VkBufferImageCopy.() -> Unit): VkBufferImageCopy.Buffer = VkBufferImageCopy.create(ptr.advance(VkBufferImageCopy.SIZEOF * capacity), capacity).also { it[0].block() }
 
     inline fun ClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(ptr.advance(VkClearValue.SIZEOF * capacity), capacity)
-
-    inline fun DeviceQueueCreateInfo(capacity: Int): VkDeviceQueueCreateInfo.Buffer = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF * capacity), capacity)
 
     inline fun DescriptorPoolSize(block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF)).also(block)
     inline fun DescriptorPoolSize(capacity: Int): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF * capacity), capacity)
@@ -358,9 +400,18 @@ object vk {
     inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = DescriptorSetLayoutBinding(capacity).also { it[0].block() }
 
     inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
+    inline fun Extent3D(block: VkExtent3D.() -> Unit): VkExtent3D = VkExtent3D.create(ptr.advance(VkExtent3D.SIZEOF)).also(block)
     inline fun Extent2D(block: VkExtent2D.() -> Unit): VkExtent2D = VkExtent2D.create(ptr.advance(VkExtent2D.SIZEOF)).also(block)
 
     inline fun FormatProperties(block: VkFormatProperties.() -> Unit): VkFormatProperties = VkFormatProperties.create(ptr.advance(VkFormatProperties.SIZEOF)).also(block)
+
+    inline fun ImageBlit(block: VkImageBlit.() -> Unit): VkImageBlit = VkImageBlit.create(ptr.advance(VkImageBlit.SIZEOF)).also(block)
+
+    inline fun ImageCopy(block: VkImageCopy.() -> Unit): VkImageCopy = VkImageCopy.create(ptr.advance(VkImageCopy.SIZEOF)).also(block)
+
+    inline fun ImageSubresourceRange(block: VkImageSubresourceRange.() -> Unit): VkImageSubresourceRange = VkImageSubresourceRange.create(ptr.advance(VkImageSubresourceRange.SIZEOF)).also(block)
+
+    inline fun ImageSubresourceLayers(block: VkImageSubresourceLayers.() -> Unit): VkImageSubresourceLayers = VkImageSubresourceLayers.create(ptr.advance(VkImageSubresourceLayers.SIZEOF)).also(block)
 
 
     inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
@@ -409,7 +460,23 @@ object vk {
         Full Constructors
      */
 
-    inline fun fVertexInputAttributeDescription(binding: Int, location: Int, format: VkFormat, offset: Int): VkVertexInputAttributeDescription {
+
+    inline fun ImageSubresourceRange(
+        aspectMask: VkImageAspectFlags,
+        baseMipLevel: Int,
+        levelCount: Int,
+        baseArrayLayer: Int,
+        layerCount: Int): VkImageSubresourceRange {
+        return ImageSubresourceRange {
+            this.aspectMask = aspectMask
+            this.baseMipLevel = baseMipLevel
+            this.levelCount = levelCount
+            this.baseArrayLayer = baseArrayLayer
+            this.layerCount = layerCount
+        }
+    }
+
+    inline fun VertexInputAttributeDescription(binding: Int, location: Int, format: VkFormat, offset: Int): VkVertexInputAttributeDescription {
         return VertexInputAttributeDescription {
             this.location = location
             this.binding = binding
@@ -418,8 +485,7 @@ object vk {
         }
     }
 
-
-    inline fun fVertexInputBindingDescription(binding: Int, stride: Int, inputRate: VkVertexInputRate): VkVertexInputBindingDescription {
+    inline fun VertexInputBindingDescription(binding: Int, stride: Int, inputRate: VkVertexInputRate): VkVertexInputBindingDescription {
         return vk.VertexInputBindingDescription {
             this.binding = binding
             this.stride = stride
@@ -487,7 +553,7 @@ object vk {
             pDynamicOffset = NULL
         }
         VK10.nvkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, 0, 1, pDescriptorSets,
-                dynamicOffsetCount, pDynamicOffset)
+            dynamicOffsetCount, pDynamicOffset)
         descriptorSets.set(memGetLong(pDescriptorSets))
     }
 
@@ -567,7 +633,7 @@ object vk {
     }
 
     inline fun createDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateInfo, device: KMutableProperty0<VkDevice?>)
-            : VkResult {
+        : VkResult {
         val pDevice = appBuffer.pointer
         return VkResult of VK10.nvkCreateDevice(physicalDevice, createInfo.adr, NULL, pDevice).also {
             device.set(VkDevice(memGetLong(pDevice), physicalDevice, createInfo))
@@ -670,7 +736,7 @@ object vk {
         }
     }
 
-    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: VkSemaphorePtr): VkResult {
+    inline fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: VkSemaphoreBuffer): VkResult {
         return VkResult of VK10.nvkCreateSemaphore(device, createInfo.adr, NULL, memAddress(semaphore))
     }
 
@@ -679,7 +745,7 @@ object vk {
     }
 
     inline fun createSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, swapchain: KMutableProperty0<VkSwapchainKHR>)
-            : VkResult {
+        : VkResult {
         val pSwapchain = appBuffer.long
         return VkResult of KHRSwapchain.nvkCreateSwapchainKHR(device, createInfo.adr, NULL, pSwapchain).also {
             swapchain.set(memGetLong(pSwapchain))
@@ -892,6 +958,6 @@ object vk {
     inline fun updateDescriptorSets(device: VkDevice, descriptorWrites: VkWriteDescriptorSet.Buffer,
                                     descriptorCopies: VkCopyDescriptorSet.Buffer? = null) {
         return VK10.nvkUpdateDescriptorSets(device, descriptorWrites.remaining(), descriptorWrites.adr,
-                descriptorCopies?.remaining() ?: 0, descriptorCopies?.adr ?: NULL)
+            descriptorCopies?.remaining() ?: 0, descriptorCopies?.adr ?: NULL)
     }
 }

@@ -7,15 +7,13 @@ import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.KHRSurface.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
 import org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR
-import org.lwjgl.vulkan.KHRSwapchain.*
-import org.lwjgl.vulkan.VK10.VK_IMAGE_VIEW_TYPE_2D
+import org.lwjgl.vulkan.KHRSwapchain.vkDestroySwapchainKHR
 import org.lwjgl.vulkan.VK10.vkDestroyImageView
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
 import org.lwjgl.vulkan.VkPhysicalDevice
 import org.lwjgl.vulkan.VkQueue
 import vkn.*
-import vkn.VkMemoryStack.Companion.withStack
 import kotlin.reflect.KMutableProperty0
 
 class VulkanSwapChain {
@@ -234,11 +232,7 @@ class VulkanSwapChain {
 
             val colorAttachmentView = vk.ImageViewCreateInfo {
                 format = colorFormat
-                components.set(
-                        VkComponentSwizzle.R,
-                        VkComponentSwizzle.G,
-                        VkComponentSwizzle.B,
-                        VkComponentSwizzle.A)
+                components(VkComponentSwizzle.R, VkComponentSwizzle.G, VkComponentSwizzle.B, VkComponentSwizzle.A)
                 subresourceRange.apply {
                     aspectMask = VkImageAspect.COLOR_BIT.i
                     baseMipLevel = 0
@@ -247,7 +241,7 @@ class VulkanSwapChain {
                     layerCount = 1
                 }
                 viewType = VkImageViewType.`2D`
-                flags =0
+                flags = 0
 
                 images[i].also {
                     buffers[i].image = it

@@ -466,7 +466,7 @@ private class Texture : VulkanExampleBase() {
         val view = vk.ImageViewCreateInfo {
             viewType = VkImageViewType.`2D`
             this.format = format
-            components.set(VkComponentSwizzle.R, VkComponentSwizzle.G, VkComponentSwizzle.B, VkComponentSwizzle.A)
+            components(VkComponentSwizzle.R, VkComponentSwizzle.G, VkComponentSwizzle.B, VkComponentSwizzle.A)
             // The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
             // It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
             subresourceRange.apply {

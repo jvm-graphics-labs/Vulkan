@@ -2,6 +2,7 @@ package vkn
 
 import glfw_.appBuffer
 import glm_.i
+import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
@@ -14,6 +15,10 @@ import kotlin.reflect.KMutableProperty0
 
 inline infix fun VkCommandBuffer.begin(beginInfo: VkCommandBufferBeginInfo) {
     VK_CHECK_RESULT(VK10.nvkBeginCommandBuffer(this, beginInfo.adr))
+}
+
+inline fun VkCommandBuffer.begin(flags: VkCommandBufferUsageFlags = VkCommandBufferUsage.SIMULTANEOUS_USE_BIT.i) {
+    begin(vk.CommandBufferBeginInfo { this.flags = flags })
 }
 
 inline fun VkCommandBuffer.beginRenderPass(renderPassBegin: VkRenderPassBeginInfo, contents: VkSubpassContents) {
@@ -41,13 +46,26 @@ inline fun VkCommandBuffer.bindVertexBuffer(firstBinding: Int, buffer: VkBuffer)
     VK10.nvkCmdBindVertexBuffers(this, firstBinding, 1, pBuffer, pOffset)
 }
 
+inline fun VkCommandBuffer.blitImage(srcImage: VkImage, srcImageLayout: VkImageLayout, dstImage: VkImage, dstImageLayout: VkImageLayout, region: VkImageBlit, filter: VkFilter) {
+    VK10.nvkCmdBlitImage(this, srcImage, srcImageLayout.i, dstImage, dstImageLayout.i, 1, region.adr, filter.i)
+}
+
 inline fun VkCommandBuffer.copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, regions: VkBufferCopy.Buffer) {
     VK10.nvkCmdCopyBuffer(this, srcBuffer, dstBuffer, regions.remaining(), regions.adr)
 }
 
 inline fun VkCommandBuffer.copyBufferToImage(srcBuffer: VkBuffer, dstImage: VkImage, dstImageLayout: VkImageLayout,
+                                             region: VkBufferImageCopy) {
+    VK10.nvkCmdCopyBufferToImage(this, srcBuffer, dstImage, dstImageLayout.i, 1, region.adr)
+}
+
+inline fun VkCommandBuffer.copyBufferToImage(srcBuffer: VkBuffer, dstImage: VkImage, dstImageLayout: VkImageLayout,
                                              region: VkBufferImageCopy.Buffer) {
     VK10.nvkCmdCopyBufferToImage(this, srcBuffer, dstImage, dstImageLayout.i, region.remaining(), region.adr)
+}
+
+inline fun VkCommandBuffer.copyImage(srcImage: VkImage, srcImageLayout: VkImageLayout, dstImage: VkImage, dstImageLayout: VkImageLayout, region: VkImageCopy) {
+    VK10.nvkCmdCopyImage(this, srcImage, srcImageLayout.i, dstImage, dstImageLayout.i, 1, region.adr)
 }
 
 inline fun VkCommandBuffer.drawIndexed(indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
@@ -68,9 +86,9 @@ inline fun VkCommandBuffer.pipelineBarrier(srcStageMask: VkPipelineStageFlags, d
                                            bufferMemoryBarriers: VkBufferMemoryBarrier? = null,
                                            imageMemoryBarriers: VkImageMemoryBarrier? = null) {
     VK10.nvkCmdPipelineBarrier(this, srcStageMask, dstStageMask, dependencyFlags,
-            if (memoryBarriers != null) 1 else 0, memoryBarriers?.adr ?: NULL,
-            if (bufferMemoryBarriers != null) 1 else 0, bufferMemoryBarriers?.adr ?: NULL,
-            if (imageMemoryBarriers != null) 1 else 0, imageMemoryBarriers?.adr ?: NULL)
+        if (memoryBarriers != null) 1 else 0, memoryBarriers?.adr ?: NULL,
+        if (bufferMemoryBarriers != null) 1 else 0, bufferMemoryBarriers?.adr ?: NULL,
+        if (imageMemoryBarriers != null) 1 else 0, imageMemoryBarriers?.adr ?: NULL)
 }
 
 inline fun VkCommandBuffer.reset(flags: VkCommandBufferResetFlags) {
@@ -284,6 +302,10 @@ inline infix fun VkDevice.destroyFences(fences: ArrayList<VkFence>) {
         VK10.nvkDestroyFence(this, fence, NULL)
 }
 
+inline infix fun VkDevice.destroyFramebuffer(framebuffer: VkFramebuffer) {
+    VK10.nvkDestroyFramebuffer(this, framebuffer, NULL)
+}
+
 inline infix fun VkDevice.destroyFramebuffers(framebuffers: Iterable<VkFramebuffer>) {
     for (i in framebuffers)
         VK10.nvkDestroyFramebuffer(this, i, NULL)
@@ -326,13 +348,22 @@ inline fun VkDevice.destroySemaphores(vararg semaphores: VkSemaphore) {
         VK10.nvkDestroySemaphore(this, semaphore, NULL)
 }
 
-inline infix fun VkDevice.destroyShaderModules(shaderModules: VkPipelineShaderStageCreateInfo.Buffer) {
-    for (i in shaderModules)
+
+inline fun VkDevice.destroy() {
+    VK10.nvkDestroyDevice(this, NULL)
+}
+
+inline infix fun VkDevice.destroyShaderModule(shaderModule: VkShaderModule) {
+    VK10.nvkDestroyShaderModule(this, shaderModule, NULL)
+}
+
+inline infix fun VkDevice.destroyShaderModules(infos: VkPipelineShaderStageCreateInfo.Buffer) {
+    for (i in infos)
         VK10.nvkDestroyShaderModule(this, i.module, NULL)
 }
 
-inline infix fun VkDevice.destroyShaderModules(shaderModules: Iterable<VkShaderModule>) {
-    for (i in shaderModules)
+inline infix fun VkDevice.destroyShaderModules(modules: Iterable<VkShaderModule>) {
+    for (i in modules)
         VK10.nvkDestroyShaderModule(this, i, NULL)
 }
 
@@ -358,16 +389,56 @@ inline infix fun VkDevice.freeMemory(memory: VkDeviceMemory) {
     VK10.nvkFreeMemory(this, memory, NULL)
 }
 
-inline fun VkDevice.getBufferMemoryRequirements(buffer: VkBuffer, memoryRequirements: VkMemoryRequirements) {
+inline infix fun VkDevice.getBufferMemoryRequirements(buffer: VkBuffer): VkMemoryRequirements {
+    return getBufferMemoryRequirements(buffer, vk.MemoryRequirements { })
+}
+
+inline fun VkDevice.getBufferMemoryRequirements(buffer: VkBuffer, memoryRequirements: VkMemoryRequirements): VkMemoryRequirements {
     VK10.nvkGetBufferMemoryRequirements(this, buffer, memoryRequirements.adr)
+    return memoryRequirements
 }
 
-inline fun VkDevice.getImageMemoryRequirements(buffer: VkBuffer, memoryRequirements: VkMemoryRequirements) {
+inline infix fun VkDevice.getCommandBuffer(commandPool: VkCommandPool): VkCommandBuffer {
+    return getCommandBuffer(commandPool, VkCommandBufferLevel.PRIMARY)
+}
+
+inline fun VkDevice.getCommandBuffer(commandPool: VkCommandPool, level: VkCommandBufferLevel): VkCommandBuffer {
+
+    val cmdBufAllocateInfo = vk.CommandBufferAllocateInfo {
+        this.commandPool = commandPool
+        this.level = level
+        commandBufferCount = 1
+    }
+
+    return allocateCommandBuffer(cmdBufAllocateInfo)
+}
+
+inline infix fun VkDevice.getImageMemoryRequirements(buffer: VkBuffer): VkMemoryRequirements {
+    return getImageMemoryRequirements(buffer, vk.MemoryRequirements { })
+}
+
+inline fun VkDevice.getImageMemoryRequirements(buffer: VkBuffer, memoryRequirements: VkMemoryRequirements): VkMemoryRequirements {
     VK10.nvkGetImageMemoryRequirements(this, buffer, memoryRequirements.adr)
+    return memoryRequirements
 }
 
-inline fun VkDevice.mapMemory(memory: Long, offset: Long, size: Long, flags: Int, data: Long) {
+inline fun VkDevice.mappingMemory(memory: Long, offset: Long, size: Long, flags: VkMemoryMapFlags = 0, block: (Long) -> Unit) {
+    val data = appBuffer.pointer
     VK_CHECK_RESULT(VK10.nvkMapMemory(this, memory, offset, size, flags, data))
+    block(memGetAddress(data))
+    VK10.vkUnmapMemory(this, memory)
+}
+
+inline fun VkDevice.mapMemory(memory: Long, offset: Long, size: Long, flags: VkMemoryMapFlags, data: Long) {
+    VK_CHECK_RESULT(VK10.nvkMapMemory(this, memory, offset, size, flags, data))
+}
+
+inline fun VkDevice.mapMemory(memory: Long, offset: Long, size: Long, flags: VkMemoryMapFlags, data: PointerBuffer) {
+    VK_CHECK_RESULT(VK10.nvkMapMemory(this, memory, offset, size, flags, memAddress(data)))
+}
+
+inline infix fun VkDevice.getQueue(queueFamilyIndex: Int): VkQueue {
+    return getQueue(queueFamilyIndex, 0)
 }
 
 inline fun VkDevice.getQueue(queueFamilyIndex: Int, queueIndex: Int): VkQueue {
@@ -419,7 +490,7 @@ inline fun VkDevice.waitIdle() {
     VkInstance
  */
 
-inline infix fun VkInstance.createDebugReportCallbackEXT(createInfo: VkDebugReportCallbackCreateInfoEXT): VkDebugReportCallbackEXT {
+inline infix fun VkInstance.createDebugReportCallbackEXT(createInfo: VkDebugReportCallbackCreateInfoEXT): VkDebugReportCallback {
     val long = appBuffer.long
     VK_CHECK_RESULT(EXTDebugReport.nvkCreateDebugReportCallbackEXT(this, createInfo.adr, NULL, long))
     return memGetLong(long)
@@ -429,8 +500,12 @@ inline fun VkInstance.destroy() {
     VK10.nvkDestroyInstance(this, NULL)
 }
 
-inline infix fun VkInstance.destroyDebugReportCallbackEXT(debugReportCallback: VkDebugReportCallbackEXT) {
+inline infix fun VkInstance.destroyDebugReportCallbackEXT(debugReportCallback: VkDebugReportCallback) {
     EXTDebugReport.nvkDestroyDebugReportCallbackEXT(this, debugReportCallback, NULL)
+}
+
+inline fun VkInstance.enumeratePhysicalDevices(): ArrayList<VkPhysicalDevice> {
+    return vk.enumeratePhysicalDevices(this)
 }
 
 
@@ -439,14 +514,19 @@ inline infix fun VkInstance.destroyDebugReportCallbackEXT(debugReportCallback: V
  */
 
 inline val VkPhysicalDevice.features: VkPhysicalDeviceFeatures
-    get() = vk.PhysicalDeviceFeatures().also(::getFeatures)
+    get() = vk.PhysicalDeviceFeatures { }.also(::getFeatures)
 
 inline infix fun VkPhysicalDevice.getFeatures(features: VkPhysicalDeviceFeatures) {
     VK10.nvkGetPhysicalDeviceFeatures(this, features.adr)
 }
 
 inline infix fun VkPhysicalDevice.getFormatProperties(format: VkFormat): VkFormatProperties {
-    return vk.getPhysicalDeviceFormatProperties(this, format)
+    return getFormatProperties(format, vk.FormatProperties { })
+}
+
+inline fun VkPhysicalDevice.getFormatProperties(format: VkFormat, formatProperties: VkFormatProperties): VkFormatProperties {
+    VK10.nvkGetPhysicalDeviceFormatProperties(this, format.i, formatProperties.adr)
+    return formatProperties
 }
 
 inline val VkPhysicalDevice.memoryProperties: VkPhysicalDeviceMemoryProperties
@@ -466,7 +546,7 @@ inline infix fun VkPhysicalDevice.getProperties(properties: VkPhysicalDeviceProp
     VK10.nvkGetPhysicalDeviceProperties(this, properties.adr)
 }
 
-inline infix fun VkPhysicalDevice.createDevice(createInfo: VkDeviceCreateInfo): VkDevice? {
+inline infix fun VkPhysicalDevice.createDevice(createInfo: VkDeviceCreateInfo): VkDevice {
     val pDevice = appBuffer.pointer
     VK_CHECK_RESULT(VK10.nvkCreateDevice(this, createInfo.adr, NULL, pDevice))
     return VkDevice(memGetLong(pDevice), this, createInfo)
@@ -525,10 +605,10 @@ inline operator fun VkDescriptorPoolSize.invoke(type: VkDescriptorType, descript
 }
 
 inline operator fun VkDescriptorSetLayoutBinding.invoke(
-        binding: Int,
-        type: VkDescriptorType,
-        descriptorCount: Int = 1,
-        stageFlags: VkShaderStageFlags): VkDescriptorSetLayoutBinding {
+    binding: Int,
+    type: VkDescriptorType,
+    descriptorCount: Int = 1,
+    stageFlags: VkShaderStageFlags): VkDescriptorSetLayoutBinding {
     this.binding = binding
     this.descriptorType = type
     this.descriptorCount = descriptorCount
