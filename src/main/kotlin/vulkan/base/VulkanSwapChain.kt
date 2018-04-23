@@ -209,7 +209,7 @@ class VulkanSwapChain {
 
         // Set additional usage flag for blitting from the swapchain images if supported
         val formatProps = physicalDevice getFormatProperties colorFormat
-        if (formatProps.optimalTilingFeatures has VkFormatFeature.TRANSFER_SRC_BIT_KHR || formatProps.optimalTilingFeatures has VkFormatFeature.BLIT_SRC_BIT)
+        if (formatProps.optimalTilingFeatures has VkFormatFeature.TRANSFER_SRC_BIT || formatProps.optimalTilingFeatures has VkFormatFeature.BLIT_SRC_BIT)
             swapchainCI.imageUsage = swapchainCI.imageUsage or VkImageUsage.TRANSFER_SRC_BIT
 
         swapChain = device createSwapchainKHR swapchainCI

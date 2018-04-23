@@ -27,6 +27,7 @@ class Camera {
             CameraType.firstPerson -> rotM * transM
             else -> transM * rotM
         }
+        update = true
     }
 
     enum class CameraType { lookAt, firstPerson }
@@ -38,6 +39,8 @@ class Camera {
 
     var rotationSpeed = 1f
     var movementSpeed = 1f
+
+    var update = false
 
     val matrices = Matrices()
 
@@ -94,6 +97,7 @@ class Camera {
     }
 
     infix fun update(deltaTime: Float) {
+        update = false
         if (type == CameraType.firstPerson) {
             if (moving) {
                 val camFront = Vec3(

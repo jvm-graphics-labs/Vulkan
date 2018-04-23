@@ -39,7 +39,7 @@ abstract class VulkanExampleBase {
                 windowTitle += " - $frameCounter fps"
             return windowTitle
         }
-    /** brief Indicates that the view (position, rotation) has changed and */
+    /** brief Indicates that the view (position, rotation) has changed and buffers containing camera matrices need to be updated */
     var viewUpdated = false
     /** Destination dimensions for resizing the window  */
     val destSize = Vec2i()
