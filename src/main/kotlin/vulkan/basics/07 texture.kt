@@ -585,7 +585,7 @@ private class Texture : VulkanExampleBase() {
         vertices.bindingDescriptions = VkVertexInputBindingDescription.calloc(1)
         vertices.bindingDescriptions[0].apply {
             binding = VERTEX_BUFFER_BIND_ID
-            stride = vulkan.basics.Vertex.size
+            stride = Vertex.size
             inputRate = VkVertexInputRate.VERTEX
         }
 
@@ -597,21 +597,21 @@ private class Texture : VulkanExampleBase() {
             binding = VERTEX_BUFFER_BIND_ID
             location = 0
             format = VkFormat.R32G32B32_SFLOAT
-            offset = vulkan.basics.Vertex.posOffset
+            offset = Vertex.posOffset
         }
         // Location 1 : Texture coordinates
         vertices.attributeDescriptions[1].apply {
             binding = VERTEX_BUFFER_BIND_ID
             location = 1
             format = VkFormat.R32G32_SFLOAT
-            offset = vulkan.basics.Vertex.uvOffset
+            offset = Vertex.uvOffset
         }
         // Location 1 : Vertex normal
         vertices.attributeDescriptions[2].apply {
             binding = VERTEX_BUFFER_BIND_ID
             location = 2
             format = VkFormat.R32G32B32_SFLOAT
-            offset = vulkan.basics.Vertex.normalOffset
+            offset = Vertex.normalOffset
         }
 
         vertices.inputState.apply {
