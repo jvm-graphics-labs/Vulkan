@@ -57,7 +57,7 @@ inline operator fun PointerBuffer.set(index: Int, pointer: Pointer) {
 //fun PointerBuffer.isNotEmpty() = position() > 0
 
 typealias VkBuffer = Long
-//typealias VkBufferView = Long
+typealias VkBufferView = Long
 typealias VkCommandPool = Long
 typealias VkDebugReportCallback = Long
 typealias VkDescriptorPool = Long
@@ -65,7 +65,7 @@ typealias VkDescriptorSet = Long
 typealias VkDescriptorSetLayout = Long
 typealias VkDeviceMemory = Long
 typealias VkDeviceSize = Long
-//typealias VkEvent = Long
+typealias VkEvent = Long
 typealias VkFence = Long
 typealias VkFramebuffer = Long
 typealias VkImage = Long
@@ -73,7 +73,7 @@ typealias VkImageView = Long
 typealias VkPipeline = Long
 typealias VkPipelineCache = Long
 typealias VkPipelineLayout = Long
-//typealias VkQueryPool = Long
+typealias VkQueryPool = Long
 typealias VkRenderPass = Long
 typealias VkSampler = Long
 typealias VkSemaphore = Long
