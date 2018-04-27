@@ -292,7 +292,7 @@ private class Triangle : VulkanExampleBase() {
             drawCmdBuffers[i] setScissor scissor
 
             // Bind descriptor sets describing shader binding points
-            drawCmdBuffers[i].bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, ::descriptorSet)
+            drawCmdBuffers[i].bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
 
             /*  Bind the rendering pipeline
                 The pipeline (state object) contains all states of the rendering pipeline, binding it will set all
@@ -598,7 +598,7 @@ private class Triangle : VulkanExampleBase() {
             dstBinding = 0
         }
 
-        device updateDescriptorSets writeDescriptorSet
+        device updateDescriptorSet writeDescriptorSet
     }
 
     /** Create the depth (and stencil) buffer attachments used by our framebuffers

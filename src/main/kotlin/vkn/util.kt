@@ -16,6 +16,7 @@ import org.lwjgl.system.Struct
 import org.lwjgl.system.StructBuffer
 import org.lwjgl.vulkan.*
 import uno.kotlin.buffers.indices
+import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
@@ -247,3 +248,4 @@ operator fun <T : Struct, SELF : StructBuffer<T, SELF>> StructBuffer<T, SELF>.se
 
 inline fun <T, C : Iterable<T>> C.applyOnEach(action: T.() -> Unit): C = onEach(action)
 
+fun getResource(resource: String): URL = ClassLoader.getSystemResource(resource)

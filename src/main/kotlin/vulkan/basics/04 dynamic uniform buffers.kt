@@ -146,7 +146,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
             this.clearValues = clearValues
         }
 
-        for(i in drawCmdBuffers.indices) {
+        for (i in drawCmdBuffers.indices) {
 
             renderPassBeginInfo.framebuffer(frameBuffers[i])
 
@@ -170,7 +170,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
                 // One dynamic offset per dynamic descriptor to offset into the ubo containing all model matrices
                 val dynamicOffset = it * dynamicAlignment
                 // Bind the descriptor set for rendering a mesh using the dynamic offset
-                cmd.bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, ::descriptorSet, dynamicOffset.i)
+                cmd.bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet, dynamicOffset.i)
 
                 cmd.drawIndexed(indexCount, 1, 0, 0, 0)
             }
@@ -258,10 +258,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
             it[2](2, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1, VkShaderStage.FRAGMENT_BIT.i)
         }
 
-        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo {
-            bindings = setLayoutBindings
-            bindingCount = 3
-        }
+        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo { bindings = setLayoutBindings }
         descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
 
         val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo {

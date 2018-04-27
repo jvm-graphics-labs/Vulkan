@@ -1,12 +1,13 @@
 package vkn
 
 import glfw_.appBuffer
+import glm_.f
 import glm_.i
+import glm_.vec2.Vec2i
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
-import kotlin.reflect.KMutableProperty0
 
 
 /*
@@ -26,8 +27,8 @@ inline fun VkCommandBuffer.beginRenderPass(renderPassBegin: VkRenderPassBeginInf
 }
 
 inline fun VkCommandBuffer.bindDescriptorSet(pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
-                                             descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: Int? = null) {
-    vk.cmdBindDescriptorSet(this, pipelineBindPoint, layout, descriptorSets, dynamicOffsets)
+                                             descriptorSet: VkDescriptorSet, dynamicOffsets: Int? = null) {
+    vk.cmdBindDescriptorSet(this, pipelineBindPoint, layout, descriptorSet, dynamicOffsets)
 }
 
 inline fun VkCommandBuffer.bindIndexBuffer(buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
@@ -48,6 +49,10 @@ inline fun VkCommandBuffer.bindVertexBuffer(firstBinding: Int, buffer: VkBuffer)
 
 inline fun VkCommandBuffer.blitImage(srcImage: VkImage, srcImageLayout: VkImageLayout, dstImage: VkImage, dstImageLayout: VkImageLayout, region: VkImageBlit, filter: VkFilter) {
     VK10.nvkCmdBlitImage(this, srcImage, srcImageLayout.i, dstImage, dstImageLayout.i, 1, region.adr, filter.i)
+}
+
+inline fun VkCommandBuffer.copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, region: VkBufferCopy) {
+    VK10.nvkCmdCopyBuffer(this, srcBuffer, dstBuffer, 1, region.adr)
 }
 
 inline fun VkCommandBuffer.copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, regions: VkBufferCopy.Buffer) {
@@ -86,21 +91,29 @@ inline fun VkCommandBuffer.pipelineBarrier(srcStageMask: VkPipelineStageFlags, d
                                            bufferMemoryBarriers: VkBufferMemoryBarrier? = null,
                                            imageMemoryBarriers: VkImageMemoryBarrier? = null) {
     VK10.nvkCmdPipelineBarrier(this, srcStageMask, dstStageMask, dependencyFlags,
-        if (memoryBarriers != null) 1 else 0, memoryBarriers?.adr ?: NULL,
-        if (bufferMemoryBarriers != null) 1 else 0, bufferMemoryBarriers?.adr ?: NULL,
-        if (imageMemoryBarriers != null) 1 else 0, imageMemoryBarriers?.adr ?: NULL)
+            if (memoryBarriers != null) 1 else 0, memoryBarriers?.adr ?: NULL,
+            if (bufferMemoryBarriers != null) 1 else 0, bufferMemoryBarriers?.adr ?: NULL,
+            if (imageMemoryBarriers != null) 1 else 0, imageMemoryBarriers?.adr ?: NULL)
 }
 
 inline fun VkCommandBuffer.reset(flags: VkCommandBufferResetFlags) {
     VK_CHECK_RESULT(VK10.vkResetCommandBuffer(this, flags))
 }
 
-inline infix fun VkCommandBuffer.setViewport(viewport: VkViewport) {
-    VK10.nvkCmdSetViewport(this, 0, 1, viewport.adr)
+inline fun VkCommandBuffer.setDepthBias(depthBiasConstantFactor: Float, depthBiasClamp: Float, depthBiasSlopeFactor: Float) {
+    VK10.vkCmdSetDepthBias(this, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)
 }
 
-inline fun VkCommandBuffer.setViewport(firstViewport: Int, viewports: VkViewport.Buffer) {
-    VK10.nvkCmdSetViewport(this, firstViewport, viewports.remaining(), viewports.adr)
+inline infix fun VkCommandBuffer.setLineWidth(lineWidth: Float) {
+    VK10.vkCmdSetLineWidth(this, lineWidth)
+}
+
+inline infix fun VkCommandBuffer.setScissor(size: Vec2i) {
+    setScissor(size, Vec2i())
+}
+
+inline fun VkCommandBuffer.setScissor(size: Vec2i, offset: Vec2i) {
+    setScissor(vk.Rect2D(size, offset))
 }
 
 inline infix fun VkCommandBuffer.setScissor(scissor: VkRect2D) {
@@ -115,13 +128,30 @@ inline fun VkCommandBuffer.setScissor(firstScissor: Int, scissors: VkRect2D.Buff
     VK10.nvkCmdSetScissor(this, firstScissor, scissors.remaining(), scissors.adr)
 }
 
-inline infix fun VkCommandBuffer.setLineWidth(lineWidth: Float) {
-    VK10.vkCmdSetLineWidth(this, lineWidth)
+inline infix fun VkCommandBuffer.setViewport(size: Vec2i) {
+    setViewport(size, 0f, 1f)
 }
 
-inline fun VkCommandBuffer.setDepthBias(depthBiasConstantFactor: Float, depthBiasClamp: Float, depthBiasSlopeFactor: Float) {
-    VK10.vkCmdSetDepthBias(this, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)
+inline fun VkCommandBuffer.setViewport(size: Vec2i, minDepth: Float, maxDepth: Float) {
+    setViewport(vk.Viewport {
+        width = size.x.f
+        height = size.y.f
+        this.minDepth = minDepth
+        this.maxDepth = maxDepth
+    })
 }
+
+inline infix fun VkCommandBuffer.setViewport(viewport: VkViewport) {
+    VK10.nvkCmdSetViewport(this, 0, 1, viewport.adr)
+}
+
+inline fun VkCommandBuffer.setViewport(firstViewport: Int, viewports: VkViewport.Buffer) {
+    VK10.nvkCmdSetViewport(this, firstViewport, viewports.remaining(), viewports.adr)
+}
+
+//inline fun VkCommandBuffer.use(block: ()) {
+//    VK10.nvkCmdSetViewport(this, firstViewport, viewports.remaining(), viewports.adr)
+//}
 //inline fun VkCommandBuffer.setBlendConstants(depthBiasConstantFactor: Float, depthBiasClamp: Float, depthBiasSlopeFactor: Float) {
 //    VK10.setBlendConstants(this, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)
 //}
@@ -173,6 +203,13 @@ inline fun VkDevice.bindImageMemory(image: VkImage, memory: VkDeviceMemory, memo
     VK_CHECK_RESULT(VK10.vkBindImageMemory(this, image, memory, memoryOffset))
 }
 
+inline fun VkDevice.createBuffer(usage: VkBufferUsageFlags, size: VkDeviceSize): VkBuffer {
+    return createBuffer(vk.BufferCreateInfo {
+        this.usage = usage
+        this.size = size
+    })
+}
+
 inline infix fun VkDevice.createBuffer(createInfo: VkBufferCreateInfo): VkBuffer {
     val pBuffer = appBuffer.long
     VK_CHECK_RESULT(VK10.nvkCreateBuffer(this, createInfo.adr, NULL, pBuffer))
@@ -195,6 +232,10 @@ inline infix fun VkDevice.createDescriptorSetLayout(createInfo: VkDescriptorSetL
     val pSetLayout = appBuffer.long
     VK10.nvkCreateDescriptorSetLayout(this, createInfo.adr, NULL, pSetLayout)
     return memGetLong(pSetLayout)
+}
+
+inline infix fun VkDevice.createFence(flags: VkFenceCreateFlags): VkFence {
+    return createFence(vk.FenceCreateInfo { this.flags = flags })
 }
 
 inline infix fun VkDevice.createFence(createInfo: VkFenceCreateInfo): VkFence {
@@ -233,6 +274,12 @@ inline infix fun VkDevice.createImageView(createInfo: VkImageViewCreateInfo): Vk
     val pView = appBuffer.long
     VK10.nvkCreateImageView(this, createInfo.adr, NULL, pView)
     return memGetLong(pView)
+}
+
+inline fun VkDevice.createPipeline(pipelineCache: VkPipelineCache, createInfo: VkGraphicsPipelineCreateInfo): VkPipeline {
+    val pPipeline = appBuffer.long
+    VK_CHECK_RESULT(VK10.nvkCreateGraphicsPipelines(this, pipelineCache, 1, createInfo.adr, NULL, pPipeline))
+    return memGetLong(pPipeline)
 }
 
 inline infix fun VkDevice.createPipelineCache(createInfo: VkPipelineCacheCreateInfo): VkPipelineCache {
@@ -348,7 +395,6 @@ inline fun VkDevice.destroySemaphores(vararg semaphores: VkSemaphore) {
         VK10.nvkDestroySemaphore(this, semaphore, NULL)
 }
 
-
 inline fun VkDevice.destroy() {
     VK10.nvkDestroyDevice(this, NULL)
 }
@@ -422,6 +468,17 @@ inline fun VkDevice.getImageMemoryRequirements(buffer: VkBuffer, memoryRequireme
     return memoryRequirements
 }
 
+inline fun VkDevice.getImageSubresourceLayout(image: VkImage, subresource: VkImageSubresource): VkSubresourceLayout {
+    val layout = vk.SubresourceLayout()
+    VK10.nvkGetImageSubresourceLayout(this, image, subresource.adr, layout.adr)
+    return layout
+}
+
+inline fun VkDevice.getImageSubresourceLayout(image: VkImage, subresource: VkImageSubresource, layout: VkSubresourceLayout): VkSubresourceLayout {
+    VK10.nvkGetImageSubresourceLayout(this, image, subresource.adr, layout.adr)
+    return layout
+}
+
 inline fun VkDevice.mappingMemory(memory: Long, offset: Long, size: Long, flags: VkMemoryMapFlags = 0, block: (Long) -> Unit) {
     val data = appBuffer.pointer
     VK_CHECK_RESULT(VK10.nvkMapMemory(this, memory, offset, size, flags, data))
@@ -461,7 +518,7 @@ inline infix fun VkDevice.unmapMemory(memory: VkDeviceMemory) {
     VK10.vkUnmapMemory(this, memory)
 }
 
-inline infix fun VkDevice.updateDescriptorSets(descriptorWrites: VkWriteDescriptorSet) {
+inline infix fun VkDevice.updateDescriptorSet(descriptorWrites: VkWriteDescriptorSet) {
     VK10.nvkUpdateDescriptorSets(this, 1, descriptorWrites.adr, 0, NULL)
 }
 
@@ -483,6 +540,12 @@ inline fun VkDevice.waitForFence(fence: VkFence, waitAll: Boolean, timeout: Long
 
 inline fun VkDevice.waitIdle() {
     VK_CHECK_RESULT(VK10.vkDeviceWaitIdle(this))
+}
+
+inline fun VkDevice.withFence(flags: VkFenceCreateFlags = 0, block: (VkFence) -> Unit) {
+    val fence = createFence(flags)
+    block(fence)
+    destroyFence(fence)
 }
 
 
@@ -605,10 +668,10 @@ inline operator fun VkDescriptorPoolSize.invoke(type: VkDescriptorType, descript
 }
 
 inline operator fun VkDescriptorSetLayoutBinding.invoke(
-    binding: Int,
-    type: VkDescriptorType,
-    descriptorCount: Int = 1,
-    stageFlags: VkShaderStageFlags): VkDescriptorSetLayoutBinding {
+        binding: Int,
+        type: VkDescriptorType,
+        descriptorCount: Int = 1,
+        stageFlags: VkShaderStageFlags): VkDescriptorSetLayoutBinding {
     this.binding = binding
     this.descriptorType = type
     this.descriptorCount = descriptorCount
@@ -639,6 +702,14 @@ inline operator fun VkWriteDescriptorSet.invoke(dstSet: VkDescriptorSet, dstBind
     this.dstBinding = dstBinding
     this.descriptorType = descriptorType
     this.bufferInfo = bufferInfo
-    this.descriptorCount = 1
+    return this
+}
+
+inline operator fun VkWriteDescriptorSet.invoke(dstSet: VkDescriptorSet, dstBinding: Int, descriptorType: VkDescriptorType,
+                                                bufferInfo: VkDescriptorBufferInfo): VkWriteDescriptorSet {
+    this.dstSet = dstSet
+    this.dstBinding = dstBinding
+    this.descriptorType = descriptorType
+    this.bufferInfo_ = bufferInfo
     return this
 }

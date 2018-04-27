@@ -8,6 +8,7 @@ import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3i
 import glm_.vec4.Vec4
+import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import java.nio.ByteBuffer
@@ -628,10 +629,17 @@ inline var VkSubmitInfo.waitDstStageMask: IntBuffer?
     get() = VkSubmitInfo.npWaitDstStageMask(adr)
     set(value) = VkSubmitInfo.npWaitDstStageMask(adr, value)
 //inline val VkSubmitInfo.commandBufferCount get() = VkSubmitInfo.ncommandBufferCount(address)
-inline var VkSubmitInfo.commandBuffers
-    get() = pCommandBuffers()
+inline var VkSubmitInfo.commandBuffers: PointerBuffer?
+    get() = VkSubmitInfo.npCommandBuffers(adr)
+    set(value) = VkSubmitInfo.npCommandBuffers(adr, value)
+/** JVM custom */
+inline var VkSubmitInfo.commandBuffer: VkCommandBuffer?
+    get() = null
     set(value) {
-        pCommandBuffers(value)
+        val pCmdBuff = appBuffer.pointer
+        memPutAddress(pCmdBuff, value?.adr ?: NULL)
+        memPutAddress(adr + VkSubmitInfo.PCOMMANDBUFFERS, pCmdBuff)
+        VkSubmitInfo.ncommandBufferCount(adr, if (value == null) 0 else 1)
     }
 //inline val VkSubmitInfo.signalSemaphoreCount get() = VkSubmitInfo.nsignalSemaphoreCount(address)
 inline var VkSubmitInfo.signalSemaphores
@@ -720,13 +728,17 @@ inline val VkMemoryRequirements.memoryTypeBits get() = VkMemoryRequirements.nmem
 //    uint32_t                     bindCount;
 //    const VkSparseMemoryBind*    pBinds;
 //} VkSparseImageOpaqueMemoryBindInfo;
-//
-//typedef struct VkImageSubresource {
-//    VkImageAspectFlags    aspectMask;
-//    uint32_t              mipLevel;
-//    uint32_t              arrayLayer;
-//} VkImageSubresource;
-//
+
+inline var VkImageSubresource.aspectMask: VkImageAspectFlags
+    get() = VkImageSubresource.naspectMask(adr)
+    set(value) = VkImageSubresource.naspectMask(adr, value.i)
+inline var VkImageSubresource.mipLevel: Int
+    get() = VkImageSubresource.nmipLevel(adr)
+    set(value) = VkImageSubresource.nmipLevel(adr, value)
+inline var VkImageSubresource.arrayLayer: Int
+    get() = VkImageSubresource.narrayLayer(adr)
+    set(value) = VkImageSubresource.narrayLayer(adr, value)
+
 //typedef struct VkOffset3D {
 //    int32_t    x;
 //    int32_t    y;
@@ -1073,11 +1085,18 @@ inline var VkPipelineVertexInputStateCreateInfo.flags: VkPipelineVertexInputStat
     get() = VkPipelineVertexInputStateCreateInfo.nflags(adr)
     set(value) = VkPipelineVertexInputStateCreateInfo.nflags(adr, value)
 //inline val VkPipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount get() = VkPipelineVertexInputStateCreateInfo.nvertexBindingDescriptionCount(adr)
-inline var VkPipelineVertexInputStateCreateInfo.vertexBindingDescriptions
+inline var VkPipelineVertexInputStateCreateInfo.vertexBindingDescriptions: VkVertexInputBindingDescription.Buffer?
     get() = VkPipelineVertexInputStateCreateInfo.npVertexBindingDescriptions(adr)
     set(value) = VkPipelineVertexInputStateCreateInfo.npVertexBindingDescriptions(adr, value)
+/** JVM custom */
+inline var VkPipelineVertexInputStateCreateInfo.vertexBindingDescription: VkVertexInputBindingDescription?
+    get() = VkVertexInputBindingDescription.createSafe(memGetAddress(adr + VkPipelineVertexInputStateCreateInfo.PVERTEXBINDINGDESCRIPTIONS))
+    set(value) {
+        memPutAddress(adr + VkPipelineVertexInputStateCreateInfo.PVERTEXBINDINGDESCRIPTIONS, memAddressSafe(value))
+        VkPipelineVertexInputStateCreateInfo.nvertexBindingDescriptionCount(adr, if (value == null) 0 else 1)
+    }
 //inline val VkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount get() = VkPipelineVertexInputStateCreateInfo.nvertexAttributeDescriptionCount(adr)
-inline var VkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptions
+inline var VkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptions: VkVertexInputAttributeDescription.Buffer?
     get() = VkPipelineVertexInputStateCreateInfo.npVertexAttributeDescriptions(adr)
     set(value) = VkPipelineVertexInputStateCreateInfo.npVertexAttributeDescriptions(adr, value)
 
@@ -1436,10 +1455,17 @@ inline var VkPipelineColorBlendStateCreateInfo.logicOpEnable
 inline var VkPipelineColorBlendStateCreateInfo.logicOp: VkLogicOp
     get() = VkLogicOp of VkPipelineColorBlendStateCreateInfo.nlogicOp(adr)
     set(value) = VkPipelineColorBlendStateCreateInfo.nlogicOp(adr, value.i)
-//inline val VkPipelineColorBlendStateCreateInfo.attachmentCount get() = VkPipelineColorBlendStateCreateInfo.nattachmentCount(adr)
-inline var VkPipelineColorBlendStateCreateInfo.attachments
+//inline val VkPipelineColorBlendStateCreateInfo.attachmentCount: Int get() = VkPipelineColorBlendStateCreateInfo.nattachmentCount(adr)
+inline var VkPipelineColorBlendStateCreateInfo.attachments: VkPipelineColorBlendAttachmentState.Buffer?
     get() = VkPipelineColorBlendStateCreateInfo.npAttachments(adr)
     set(value) = VkPipelineColorBlendStateCreateInfo.npAttachments(adr, value)
+/** JVM custom */
+inline var VkPipelineColorBlendStateCreateInfo.attachment: VkPipelineColorBlendAttachmentState?
+    get() = VkPipelineColorBlendAttachmentState.createSafe(memGetAddress(adr + VkPipelineColorBlendStateCreateInfo.PATTACHMENTS))
+    set(value) {
+        memPutAddress(adr + VkPipelineColorBlendStateCreateInfo.PATTACHMENTS, memAddressSafe(value))
+        VkPipelineColorBlendStateCreateInfo.nattachmentCount(adr, if (value == null) 0 else 1)
+    }
 inline var VkPipelineColorBlendStateCreateInfo.blendConstants: FloatBuffer
     get() = VkPipelineColorBlendStateCreateInfo.nblendConstants(adr)
     set(value) = VkPipelineColorBlendStateCreateInfo.nblendConstants(adr, value)
@@ -1556,9 +1582,13 @@ inline var VkPipelineLayoutCreateInfo.flags: VkPipelineLayoutCreateFlags
     get() = VkPipelineLayoutCreateInfo.nflags(adr)
     set(value) = VkPipelineLayoutCreateInfo.nflags(adr, value)
 //inline val VkPipelineLayoutCreateInfo.setLayoutCount get() = VkPipelineLayoutCreateInfo.nsetLayoutCount(adr)
-inline var VkPipelineLayoutCreateInfo.setLayouts
+inline var VkPipelineLayoutCreateInfo.setLayouts: LongBuffer?
     get() = VkPipelineLayoutCreateInfo.npSetLayouts(adr)
     set(value) = VkPipelineLayoutCreateInfo.npSetLayouts(adr, value)
+//inline var VkPipelineLayoutCreateInfo.setLayout: VkDescriptorSetLayout? TODO BUG, inline it back
+var VkPipelineLayoutCreateInfo.setLayout: VkDescriptorSetLayout?
+    get() = VkPipelineLayoutCreateInfo.npSetLayouts(adr)?.get(0)
+    set(value) = VkPipelineLayoutCreateInfo.npSetLayouts(adr, value?.let(appBuffer::longBufferOf))
 //inline val VkPipelineLayoutCreateInfo.pushConstantRangeCount get() = VkPipelineLayoutCreateInfo.npushConstantRangeCount(adr)
 inline var VkPipelineLayoutCreateInfo.pushConstantRanges
     get() = VkPipelineLayoutCreateInfo.npPushConstantRanges(adr)
@@ -1657,12 +1687,17 @@ inline var VkDescriptorSetLayoutCreateInfo.next
 inline var VkDescriptorSetLayoutCreateInfo.flags: VkDescriptorSetLayoutCreateFlags
     get() = VkDescriptorSetLayoutCreateInfo.nflags(adr)
     set(value) = VkDescriptorSetLayoutCreateInfo.nflags(adr, value)
-inline var VkDescriptorSetLayoutCreateInfo.bindingCount
-    get() = VkDescriptorSetLayoutCreateInfo.nbindingCount(adr)
-    set(value) = VkDescriptorSetLayoutCreateInfo.nbindingCount(adr, value)
-inline var VkDescriptorSetLayoutCreateInfo.bindings
+//inline val VkDescriptorSetLayoutCreateInfo.bindingCount get() = VkDescriptorSetLayoutCreateInfo.nbindingCount(adr)
+inline var VkDescriptorSetLayoutCreateInfo.bindings: VkDescriptorSetLayoutBinding.Buffer?
     get() = VkDescriptorSetLayoutCreateInfo.npBindings(adr)
     set(value) = VkDescriptorSetLayoutCreateInfo.npBindings(adr, value)
+/** JVM custom */
+inline var VkDescriptorSetLayoutCreateInfo.binding: VkDescriptorSetLayoutBinding?
+    get() = VkDescriptorSetLayoutBinding.createSafe(memGetAddress(adr + VkDescriptorSetLayoutCreateInfo.PBINDINGS))
+    set(value) {
+        memPutAddress(adr + VkDescriptorSetLayoutCreateInfo.PBINDINGS, value?.adr ?: NULL)
+        VkDescriptorSetLayoutCreateInfo.nbindingCount(adr, if (value == null) 0 else 1)
+    }
 
 
 inline var VkDescriptorPoolSize.type: VkDescriptorType
@@ -1689,6 +1724,13 @@ inline var VkDescriptorPoolCreateInfo.maxSets
 inline var VkDescriptorPoolCreateInfo.poolSizes: VkDescriptorPoolSize.Buffer
     get() = VkDescriptorPoolCreateInfo.npPoolSizes(adr)
     set(value) = VkDescriptorPoolCreateInfo.npPoolSizes(adr, value)
+/** JVM custom */
+inline var VkDescriptorPoolCreateInfo.poolSize: VkDescriptorPoolSize
+    get() = VkDescriptorPoolSize.create(memGetAddress(adr + VkDescriptorPoolCreateInfo.PPOOLSIZES))
+    set(value) {
+        memPutAddress(adr + VkDescriptorPoolCreateInfo.PPOOLSIZES, value.adr)
+        VkDescriptorPoolCreateInfo.npoolSizeCount(adr, 1)
+    }
 
 
 inline var VkDescriptorSetAllocateInfo.type: VkStructureType
@@ -1706,6 +1748,10 @@ inline var VkDescriptorSetAllocateInfo.descriptorSetCount
 inline var VkDescriptorSetAllocateInfo.setLayouts: LongBuffer
     get() = VkDescriptorSetAllocateInfo.npSetLayouts(adr)
     set(value) = VkDescriptorSetAllocateInfo.npSetLayouts(adr, value)
+/** JVM custom */
+inline var VkDescriptorSetAllocateInfo.setLayout: VkDescriptorSetLayout
+    get() = VkDescriptorSetAllocateInfo.npSetLayouts(adr)[0]
+    set(value) = VkDescriptorSetAllocateInfo.npSetLayouts(adr, appBuffer longBufferOf value)
 
 
 inline var VkDescriptorImageInfo.sampler: VkSampler
@@ -1745,18 +1791,30 @@ inline var VkWriteDescriptorSet.dstBinding
 inline var VkWriteDescriptorSet.dstArrayElement
     get() = VkWriteDescriptorSet.ndstArrayElement(adr)
     set(value) = VkWriteDescriptorSet.ndstArrayElement(adr, value)
-inline var VkWriteDescriptorSet.descriptorCount
-    get() = VkWriteDescriptorSet.ndescriptorCount(adr)
-    set(value) = VkWriteDescriptorSet.ndescriptorCount(adr, value)
+//inline val VkWriteDescriptorSet.descriptorCount get() = VkWriteDescriptorSet.ndescriptorCount(adr)
 inline var VkWriteDescriptorSet.descriptorType: VkDescriptorType
     get() = VkDescriptorType of VkWriteDescriptorSet.ndescriptorType(adr)
     set(value) = VkWriteDescriptorSet.ndescriptorType(adr, value.i)
-inline var VkWriteDescriptorSet.imageInfo
+inline var VkWriteDescriptorSet.imageInfo: VkDescriptorImageInfo.Buffer?
     get() = VkWriteDescriptorSet.npImageInfo(adr)
     set(value) = VkWriteDescriptorSet.npImageInfo(adr, value)
-inline var VkWriteDescriptorSet.bufferInfo
+/** JVM custom */
+inline var VkWriteDescriptorSet.imageInfo_: VkDescriptorImageInfo?
+    get() = VkDescriptorImageInfo.createSafe(memGetAddress(adr + VkWriteDescriptorSet.PIMAGEINFO))
+    set(value) {
+        memPutAddress(adr + VkWriteDescriptorSet.PIMAGEINFO, memAddressSafe(value))
+        value?.let { VkWriteDescriptorSet.ndescriptorCount(adr, 1) }
+    }
+inline var VkWriteDescriptorSet.bufferInfo: VkDescriptorBufferInfo.Buffer?
     get() = VkWriteDescriptorSet.npBufferInfo(adr)
     set(value) = VkWriteDescriptorSet.npBufferInfo(adr, value)
+/** JVM custom */
+inline var VkWriteDescriptorSet.bufferInfo_: VkDescriptorBufferInfo?
+    get() = VkDescriptorBufferInfo.createSafe(memGetAddress(adr + VkWriteDescriptorSet.PBUFFERINFO))
+    set(value) {
+        memPutAddress(adr + VkWriteDescriptorSet.PBUFFERINFO, memAddressSafe(value))
+        value?.let { VkWriteDescriptorSet.ndescriptorCount(adr, 1) }
+    }
 inline var VkWriteDescriptorSet.texelBufferView
     get() = VkWriteDescriptorSet.npTexelBufferView(adr)
     set(value) = VkWriteDescriptorSet.npTexelBufferView(adr, value)
@@ -1992,21 +2050,16 @@ inline var VkCommandBufferBeginInfo.inheritanceInfo
 
 
 inline var VkBufferCopy.srcOffset: VkDeviceSize
-    get() = srcOffset()
-    set(value) {
-        srcOffset(value)
-    }
+    get() = VkBufferCopy.nsrcOffset(adr)
+    set(value) = VkBufferCopy.nsrcOffset(adr, value)
 inline var VkBufferCopy.dstOffset: VkDeviceSize
-    get() = dstOffset()
-    set(value) {
-        dstOffset(value)
-    }
+    get() = VkBufferCopy.ndstOffset(adr)
+    set(value) = VkBufferCopy.ndstOffset(adr, value)
 inline var VkBufferCopy.size: VkDeviceSize
-    get() = size()
-    set(value) {
-        size(value)
-    }
-inline var VkBufferCopy.Buffer.size: VkDeviceSize
+    get() = VkBufferCopy.nsize(adr)
+    set(value) = VkBufferCopy.nsize(adr, value)
+
+inline var VkBufferCopy.Buffer.size: VkDeviceSize // TODO remove all .Buffer fields?
     get() = size()
     set(value) {
         size(value)

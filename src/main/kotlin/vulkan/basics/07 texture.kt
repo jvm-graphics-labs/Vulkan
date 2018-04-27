@@ -89,11 +89,12 @@ private class Texture : VulkanExampleBase() {
 
         val size = Mat4.size * 2 + Vec4.size + Float.BYTES
         val buffer = bufferBig(size)
+        val address = memAddress(buffer)
         fun pack() {
             projection to buffer
             model.to(buffer, Mat4.size)
             viewPos.to(buffer, Mat4.size * 2)
-//            buffer, Mat4.size * 2)
+            buffer.putFloat(Mat4.size * 2 + Vec4.size, lodBias)
         }
     }
 
@@ -294,7 +295,7 @@ private class Texture : VulkanExampleBase() {
             device.getImageMemoryRequirements(texture.image, memReqs)
 
             memAllocInfo.allocationSize = memReqs.size
-            memAllocInfo.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
+            memAllocInfo.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
 
             texture.deviceMemory = device allocateMemory memAllocInfo
             device.bindImageMemory(texture.image, texture.deviceMemory)
@@ -525,7 +526,7 @@ private class Texture : VulkanExampleBase() {
 
             it setScissor vk.Rect2D(size)
 
-            it.bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, ::descriptorSet)
+            it.bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
             it.bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.solid)
 
             it.bindVertexBuffer(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
@@ -646,7 +647,6 @@ private class Texture : VulkanExampleBase() {
 
         val descriptorLayout = vk.DescriptorSetLayoutCreateInfo {
             bindings = setLayoutBindings
-            bindingCount = 2
         }
 
         descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
@@ -685,7 +685,7 @@ private class Texture : VulkanExampleBase() {
             dstSet = descriptorSet
             descriptorType = VkDescriptorType.UNIFORM_BUFFER
             dstBinding = 0
-            bufferInfo = uniformBufferVS.descriptor
+            bufferInfo_ = uniformBufferVS.descriptor
         }
         // Binding 1 : Fragment shader texture sampler
         //	Fragment shader: layout (binding = 1) uniform sampler2D samplerColor;
@@ -791,7 +791,7 @@ private class Texture : VulkanExampleBase() {
 
         uboVS.pack()
         uniformBufferVS.map()
-        memCopy(memAddress(uboVS.buffer), uniformBufferVS.mapped[0], uboVS.size.L)
+        memCopy(uboVS.address, uniformBufferVS.mapped[0], uboVS.size.L)
         uniformBufferVS.unmap()
     }
 

@@ -8,13 +8,20 @@
 
 package vulkan.base
 
+import assimp.exists
+import gli_.gli
+import glm_.L
+import glm_.f
 import glm_.vec2.Vec2i
-import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkDescriptorImageInfo
+import org.lwjgl.vulkan.VkQueue
 import vkn.*
+import java.net.URI
+import java.net.URL
 
 /** @brief Vulkan texture base class */
-class Texture {
+open class Texture {
 
     lateinit var device: VulkanDevice
     var image: VkImage = NULL
@@ -24,7 +31,7 @@ class Texture {
     val size = Vec2i()
     var mipLevels = 0
     var layerCount = 0
-    lateinit var descriptor: VkDescriptorImageInfo
+    val descriptor = VkDescriptorImageInfo.calloc()
 
     /** @brief Optional sampler to use with this texture */
     var sampler: VkSampler = NULL
@@ -51,322 +58,286 @@ class Texture {
 }
 
 /** @brief 2D texture */
-//class Texture2D : Texture {
-//    public:
-//    /**
-//     * Load a 2D texture including all mip levels
-//     *
-//     * @param filename File to load (supports .ktx and .dds)
-//     * @param format Vulkan format of the image data stored in the file
-//     * @param device Vulkan device to create the texture on
-//     * @param copyQueue Queue used for the texture staging copy commands (must support transfer)
-//     * @param (Optional) imageUsageFlags Usage flags for the texture's image (defaults to VK_IMAGE_USAGE_SAMPLED_BIT)
-//     * @param (Optional) imageLayout Usage layout for the texture (defaults VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-//     * @param (Optional) forceLinear Force linear tiling (not advised, defaults to false)
-//     *
-//     */
-//    void loadFromFile (
-//            std::string filename,
-//    VkFormat format,
-//    vks::VulkanDevice * device,
-//    VkQueue copyQueue,
-//    VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT,
-//    VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-//    bool forceLinear = false)
-//    {
-//        #if defined(__ANDROID__)
-//        // Textures are stored inside the apk on Android (compressed)
-//        // So they need to be loaded via the asset manager
-//        AAsset * asset = AAssetManager_open(androidApp->activity->assetManager, filename.c_str(), AASSET_MODE_STREAMING)
-//        if (!asset) {
-//            vks::tools::exitFatal("Could not load texture from " + filename + "\n\nThe file may be part of the additional asset pack.\n\nRun \"download_assets.py\" in the repository root to download the latest version.", -1)
-//        }
-//        size_t size = AAsset_getLength (asset)
-//        assert(size > 0)
-//
-//        void * textureData = malloc(size)
-//        AAsset_read(asset, textureData, size)
-//        AAsset_close(asset)
-//
-//        gli::texture2d tex2D (gli::load((const char *) textureData, size))
-//
-//        free(textureData)
-//        #else
-//        if (!vks::tools::fileExists(filename)) {
-//            vks::tools::exitFatal("Could not load texture from " + filename + "\n\nThe file may be part of the additional asset pack.\n\nRun \"download_assets.py\" in the repository root to download the latest version.", -1)
-//        }
-//        gli::texture2d tex2D (gli::load(filename.c_str()))
-//        #endif
-//        assert(!tex2D.empty())
-//
-//        this->device = device
-//        width = static_cast<uint32_t>(tex2D[0].extent().x)
-//        height = static_cast<uint32_t>(tex2D[0].extent().y)
-//        mipLevels = static_cast<uint32_t>(tex2D.levels())
-//
-//        // Get device properites for the requested texture format
-//        VkFormatProperties formatProperties
-//                vkGetPhysicalDeviceFormatProperties(device->physicalDevice, format, &formatProperties)
-//
-//        // Only use linear tiling if requested (and supported by the device)
-//        // Support for linear tiling is mostly limited, so prefer to use
-//        // optimal tiling instead
-//        // On most implementations linear tiling will only support a very
-//        // limited amount of formats and features (mip maps, cubemaps, arrays, etc.)
-//        VkBool32 useStaging = !forceLinear
-//
+class Texture2D : Texture() {
+
+    /**
+     * Load a 2D texture including all mip levels
+     *
+     * @param filename File to load (supports .ktx and .dds)
+     * @param format Vulkan format of the image data stored in the file
+     * @param device Vulkan device to create the texture on
+     * @param copyQueue Queue used for the texture staging copy commands (must support transfer)
+     * @param (Optional) imageUsageFlags Usage flags for the texture's image (defaults to VK_IMAGE_USAGE_SAMPLED_BIT)
+     * @param (Optional) imageLayout Usage layout for the texture (defaults VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+     * @param (Optional) forceLinear Force linear tiling (not advised, defaults to false)
+     *
+     */
+    fun loadFromFile(
+            filename: URL,
+            format: VkFormat,
+            device: VulkanDevice,
+            copyQueue: VkQueue,
+            imageUsageFlags: VkImageUsageFlags = VkImageUsage.SAMPLED_BIT.i,
+            imageLayout: VkImageLayout = VkImageLayout.SHADER_READ_ONLY_OPTIMAL,
+            forceLinear: Boolean = false) {
+
+        if (!filename.exists())
+            tools.exitFatal("Could not load texture from $filename\n\nThe file may be part of the additional asset pack.\n\n" +
+                    "Run \"download_assets.py\" in the repository root to download the latest version.", -1)
+
+        val tex2D = gli_.Texture2d(gli.load(filename.toURI()))
+
+        assert(tex2D.notEmpty())
+
+        this.device = device
+        size(tex2D[0].extent())
+        mipLevels = tex2D.levels()
+
+        // Get device properites for the requested texture format
+        val formatProperties = device.physicalDevice getFormatProperties format
+
+        /*  Only use linear tiling if requested (and supported by the device)
+            Support for linear tiling is mostly limited, so prefer to use optimal tiling instead
+            On most implementations linear tiling will only support a very limited amount of formats and features
+            (mip maps, cubemaps, arrays, etc.) */
+        val useStaging = !forceLinear
+
 //        VkMemoryAllocateInfo memAllocInfo = vks ::initializers::memoryAllocateInfo()
 //        VkMemoryRequirements memReqs
-//
-//                // Use a separate command buffer for texture loading
-//                VkCommandBuffer copyCmd = device->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true)
-//
-//        if (useStaging) {
-//            // Create a host-visible staging buffer that contains the raw image data
-//            VkBuffer stagingBuffer
-//                    VkDeviceMemory stagingMemory
-//
-//                    VkBufferCreateInfo bufferCreateInfo = vks ::initializers::bufferCreateInfo()
-//            bufferCreateInfo.size = tex2D.size()
-//            // This buffer is used as a transfer source for the buffer copy
-//            bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-//            bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-//
-//            VK_CHECK_RESULT(vkCreateBuffer(device->logicalDevice, &bufferCreateInfo, nullptr, &stagingBuffer))
-//
-//            // Get memory requirements for the staging buffer (alignment, memory type bits)
-//            vkGetBufferMemoryRequirements(device->logicalDevice, stagingBuffer, &memReqs)
-//
-//            memAllocInfo.allocationSize = memReqs.size
-//            // Get memory type index for a host visible buffer
-//            memAllocInfo.memoryTypeIndex = device->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-//
-//            VK_CHECK_RESULT(vkAllocateMemory(device->logicalDevice, &memAllocInfo, nullptr, &stagingMemory))
-//            VK_CHECK_RESULT(vkBindBufferMemory(device->logicalDevice, stagingBuffer, stagingMemory, 0))
-//
-//            // Copy texture data into staging buffer
-//            uint8_t * data
-//            VK_CHECK_RESULT(vkMapMemory(device->logicalDevice, stagingMemory, 0, memReqs.size, 0, (void **)&data))
-//            memcpy(data, tex2D.data(), tex2D.size())
-//            vkUnmapMemory(device->logicalDevice, stagingMemory)
-//
-//            // Setup buffer copy regions for each mip level
-//            std::vector<VkBufferImageCopy> bufferCopyRegions
-//                    uint32_t offset = 0
-//
-//            for (uint32_t i = 0; i < mipLevels; i++)
-//            {
-//                VkBufferImageCopy bufferCopyRegion = {}
-//                bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//                bufferCopyRegion.imageSubresource.mipLevel = i
-//                bufferCopyRegion.imageSubresource.baseArrayLayer = 0
-//                bufferCopyRegion.imageSubresource.layerCount = 1
-//                bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(tex2D[i].extent().x)
-//                bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(tex2D[i].extent().y)
-//                bufferCopyRegion.imageExtent.depth = 1
-//                bufferCopyRegion.bufferOffset = offset
-//
-//                bufferCopyRegions.push_back(bufferCopyRegion)
-//
-//                offset += static_cast<uint32_t>(tex2D[i].size())
-//            }
-//
-//            // Create optimal tiled target image
-//            VkImageCreateInfo imageCreateInfo = vks ::initializers::imageCreateInfo()
-//            imageCreateInfo.imageType = VK_IMAGE_TYPE_2D
-//            imageCreateInfo.format = format
-//            imageCreateInfo.mipLevels = mipLevels
-//            imageCreateInfo.arrayLayers = 1
-//            imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT
-//            imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL
-//            imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-//            imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-//            imageCreateInfo.extent = { width, height, 1 }
-//            imageCreateInfo.usage = imageUsageFlags
-//            // Ensure that the TRANSFER_DST bit is set for staging
-//            if (!(imageCreateInfo.usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT))
-//            {
-//                imageCreateInfo.usage | = VK_IMAGE_USAGE_TRANSFER_DST_BIT
-//            }
-//            VK_CHECK_RESULT(vkCreateImage(device->logicalDevice, &imageCreateInfo, nullptr, &image))
-//
-//            vkGetImageMemoryRequirements(device->logicalDevice, image, &memReqs)
-//
-//            memAllocInfo.allocationSize = memReqs.size
-//
-//            memAllocInfo.memoryTypeIndex = device->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-//            VK_CHECK_RESULT(vkAllocateMemory(device->logicalDevice, &memAllocInfo, nullptr, &deviceMemory))
-//            VK_CHECK_RESULT(vkBindImageMemory(device->logicalDevice, image, deviceMemory, 0))
-//
-//            VkImageSubresourceRange subresourceRange = {}
-//            subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//            subresourceRange.baseMipLevel = 0
-//            subresourceRange.levelCount = mipLevels
-//            subresourceRange.layerCount = 1
-//
-//            // Image barrier for optimal image (target)
-//            // Optimal image will be used as destination for the copy
-//            vks::tools::setImageLayout(
-//                    copyCmd,
-//                    image,
-//                    VK_IMAGE_LAYOUT_UNDEFINED,
-//                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-//                    subresourceRange)
-//
-//            // Copy mip levels from staging buffer
-//            vkCmdCopyBufferToImage(
-//                    copyCmd,
-//                    stagingBuffer,
-//                    image,
-//                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-//                    static_cast<uint32_t>(bufferCopyRegions.size()),
-//                    bufferCopyRegions.data()
-//            )
-//
-//            // Change texture image layout to shader read after all mip levels have been copied
-//            this->imageLayout = imageLayout
-//            vks::tools::setImageLayout(
-//                    copyCmd,
-//                    image,
-//                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-//                    imageLayout,
-//                    subresourceRange)
-//
-//            device->flushCommandBuffer(copyCmd, copyQueue)
-//
-//            // Clean up staging resources
-//            vkFreeMemory(device->logicalDevice, stagingMemory, nullptr)
-//            vkDestroyBuffer(device->logicalDevice, stagingBuffer, nullptr)
-//        } else {
-//            // Prefer using optimal tiling, as linear tiling
-//            // may support only a small set of features
-//            // depending on implementation (e.g. no mip maps, only one layer, etc.)
-//
-//            // Check if this support is supported for linear tiling
-//            assert(formatProperties.linearTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)
-//
-//            VkImage mappableImage
-//                    VkDeviceMemory mappableMemory
-//
-//                    VkImageCreateInfo imageCreateInfo = vks ::initializers::imageCreateInfo()
-//            imageCreateInfo.imageType = VK_IMAGE_TYPE_2D
-//            imageCreateInfo.format = format
-//            imageCreateInfo.extent = { width, height, 1 }
-//            imageCreateInfo.mipLevels = 1
-//            imageCreateInfo.arrayLayers = 1
-//            imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT
-//            imageCreateInfo.tiling = VK_IMAGE_TILING_LINEAR
-//            imageCreateInfo.usage = imageUsageFlags
-//            imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-//            imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-//
-//            // Load mip map level 0 to linear tiling image
-//            VK_CHECK_RESULT(vkCreateImage(device->logicalDevice, &imageCreateInfo, nullptr, &mappableImage))
-//
-//            // Get memory requirements for this image
-//            // like size and alignment
-//            vkGetImageMemoryRequirements(device->logicalDevice, mappableImage, &memReqs)
-//            // Set memory allocation size to required memory size
-//            memAllocInfo.allocationSize = memReqs.size
-//
-//            // Get memory type that can be mapped to host memory
-//            memAllocInfo.memoryTypeIndex = device->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-//
-//            // Allocate host memory
-//            VK_CHECK_RESULT(vkAllocateMemory(device->logicalDevice, &memAllocInfo, nullptr, &mappableMemory))
-//
-//            // Bind allocated image for use
-//            VK_CHECK_RESULT(vkBindImageMemory(device->logicalDevice, mappableImage, mappableMemory, 0))
-//
-//            // Get sub resource layout
-//            // Mip map count, array layer, etc.
-//            VkImageSubresource subRes = {}
-//            subRes.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//            subRes.mipLevel = 0
-//
-//            VkSubresourceLayout subResLayout
-//                    void * data
-//
-//            // Get sub resources layout
-//            // Includes row pitch, size offsets, etc.
-//            vkGetImageSubresourceLayout(device->logicalDevice, mappableImage, &subRes, &subResLayout)
-//
-//            // Map image memory
-//            VK_CHECK_RESULT(vkMapMemory(device->logicalDevice, mappableMemory, 0, memReqs.size, 0, &data))
-//
-//            // Copy image data into memory
-//            memcpy(data, tex2D[subRes.mipLevel].data(), tex2D[subRes.mipLevel].size())
-//
-//            vkUnmapMemory(device->logicalDevice, mappableMemory)
-//
-//            // Linear tiled images don't need to be staged
-//            // and can be directly used as textures
-//            image = mappableImage
-//            deviceMemory = mappableMemory
-//            imageLayout = imageLayout
-//
-//            // Setup image memory barrier
-//            vks::tools::setImageLayout(copyCmd, image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_UNDEFINED, imageLayout)
-//
-//            device->flushCommandBuffer(copyCmd, copyQueue)
-//        }
-//
-//        // Create a defaultsampler
-//        VkSamplerCreateInfo samplerCreateInfo = {}
-//        samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO
-//        samplerCreateInfo.magFilter = VK_FILTER_LINEAR
-//        samplerCreateInfo.minFilter = VK_FILTER_LINEAR
-//        samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR
-//        samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT
-//        samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT
-//        samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT
-//        samplerCreateInfo.mipLodBias = 0.0f
-//        samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER
-//        samplerCreateInfo.minLod = 0.0f
-//        // Max level-of-detail should match mip level count
-//        samplerCreateInfo.maxLod = (useStaging) ? (float)mipLevels : 0.0f
-//        // Only enable anisotropic filtering if enabled on the devicec
-//        samplerCreateInfo.maxAnisotropy = device->enabledFeatures.samplerAnisotropy ? device->properties.limits.maxSamplerAnisotropy : 1.0f
-//        samplerCreateInfo.anisotropyEnable = device->enabledFeatures.samplerAnisotropy
-//        samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE
-//        VK_CHECK_RESULT(vkCreateSampler(device->logicalDevice, &samplerCreateInfo, nullptr, &sampler))
-//
-//        // Create image view
-//        // Textures are not directly accessed by the shaders and
-//        // are abstracted by image views containing additional
-//        // information and sub resource ranges
-//        VkImageViewCreateInfo viewCreateInfo = {}
-//        viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO
-//        viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D
-//        viewCreateInfo.format = format
-//        viewCreateInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A }
-//        viewCreateInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }
-//        // Linear tiling usually won't support mip maps
-//        // Only set mip map count if optimal tiling is used
-//        viewCreateInfo.subresourceRange.levelCount = (useStaging) ? mipLevels : 1
-//        viewCreateInfo.image = image
-//        VK_CHECK_RESULT(vkCreateImageView(device->logicalDevice, &viewCreateInfo, nullptr, &view))
-//
-//        // Update descriptor image info member that can be used for setting up descriptor sets
-//        updateDescriptor()
-//    }
-//
-//    /**
-//     * Creates a 2D texture from a buffer
-//     *
-//     * @param buffer Buffer containing texture data to upload
-//     * @param bufferSize Size of the buffer in machine units
-//     * @param width Width of the texture to create
-//     * @param height Height of the texture to create
-//     * @param format Vulkan format of the image data stored in the file
-//     * @param device Vulkan device to create the texture on
-//     * @param copyQueue Queue used for the texture staging copy commands (must support transfer)
-//     * @param (Optional) filter Texture filtering for the sampler (defaults to VK_FILTER_LINEAR)
-//     * @param (Optional) imageUsageFlags Usage flags for the texture's image (defaults to VK_IMAGE_USAGE_SAMPLED_BIT)
-//     * @param (Optional) imageLayout Usage layout for the texture (defaults VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-//     */
-//    void fromBuffer (
-//            void * buffer,
+
+        // Use a separate command buffer for texture loading
+        val copyCmd = device.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
+
+        val dev = device.logicalDevice!!
+
+        if (useStaging) {
+            // Create a host-visible staging buffer that contains the raw image data
+
+            val bufferCreateInfo = vk.BufferCreateInfo {
+                size = tex2D.size.L
+                // This buffer is used as a transfer source for the buffer copy
+                usage = VkBufferUsage.TRANSFER_SRC_BIT.i
+                sharingMode = VkSharingMode.EXCLUSIVE
+            }
+            val stagingBuffer = dev createBuffer bufferCreateInfo
+
+            // Get memory requirements for the staging buffer (alignment, memory type bits)
+            val memReqs = dev getBufferMemoryRequirements stagingBuffer
+            val memAllocInfo = vk.MemoryAllocateInfo {
+                allocationSize = memReqs.size
+                // Get memory type index for a host visible buffer
+                memoryTypeIndex = device.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+            }
+            val stagingMemory = dev allocateMemory memAllocInfo
+            dev.bindBufferMemory(stagingBuffer, stagingMemory)
+
+            // Copy texture data into staging buffer
+            dev.mappingMemory(stagingMemory, 0, memReqs.size, 0) { data ->
+                memCopy(memAddress(tex2D.data()), data, tex2D.size.L)
+            }
+
+            // Setup buffer copy regions for each mip level
+            val bufferCopyRegions = vk.BufferImageCopy(mipLevels)
+            var offset = 0L
+
+            for (i in 0 until mipLevels) {
+
+                bufferCopyRegions[i].apply {
+                    imageSubresource.aspectMask = VkImageAspect.COLOR_BIT.i
+                    imageSubresource.mipLevel = i
+                    imageSubresource.baseArrayLayer = 0
+                    imageSubresource.layerCount = 1
+                    imageExtent.set(tex2D[i].extent().x, tex2D[i].extent().y, 1)
+                    bufferOffset = offset
+                }
+
+                offset += tex2D[i].size
+            }
+
+            // Create optimal tiled target image
+            val imageCreateInfo = vk.ImageCreateInfo {
+                imageType = VkImageType.`2D`
+                this.format = format
+                mipLevels = this@Texture2D.mipLevels
+                arrayLayers = 1
+                samples = VkSampleCount.`1_BIT`
+                tiling = VkImageTiling.OPTIMAL
+                sharingMode = VkSharingMode.EXCLUSIVE
+                initialLayout = VkImageLayout.UNDEFINED
+                extent.set(size.x, size.y, 1)
+                usage = imageUsageFlags
+            }
+            // Ensure that the TRANSFER_DST bit is set for staging
+            if (imageCreateInfo.usage hasnt VkImageUsage.TRANSFER_DST_BIT)
+                imageCreateInfo.usage = imageCreateInfo.usage or VkImageUsage.TRANSFER_DST_BIT
+
+            image = dev createImage imageCreateInfo
+
+            dev.getImageMemoryRequirements(image, memReqs)
+
+            memAllocInfo.allocationSize = memReqs.size
+            memAllocInfo.memoryTypeIndex = device.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
+
+            deviceMemory = dev allocateMemory memAllocInfo
+            dev.bindImageMemory(image, deviceMemory)
+
+            val subresourceRange = vk.ImageSubresourceRange {
+                aspectMask = VkImageAspect.COLOR_BIT.i
+                baseMipLevel = 0
+                levelCount = mipLevels
+                layerCount = 1
+            }
+            // Image barrier for optimal image (target)
+            // Optimal image will be used as destination for the copy
+            tools.setImageLayout(
+                    copyCmd,
+                    image,
+                    VkImageLayout.UNDEFINED,
+                    VkImageLayout.TRANSFER_DST_OPTIMAL,
+                    subresourceRange)
+
+            // Copy mip levels from staging buffer
+            copyCmd.copyBufferToImage(
+                    stagingBuffer,
+                    image,
+                    VkImageLayout.TRANSFER_DST_OPTIMAL,
+                    bufferCopyRegions)
+
+            // Change texture image layout to shader read after all mip levels have been copied
+            this.imageLayout = imageLayout
+            tools.setImageLayout(
+                    copyCmd,
+                    image,
+                    VkImageLayout.TRANSFER_DST_OPTIMAL,
+                    imageLayout,
+                    subresourceRange)
+
+            device.flushCommandBuffer(copyCmd, copyQueue)
+
+            // Clean up staging resources
+            dev freeMemory stagingMemory
+            dev destroyBuffer stagingBuffer
+
+        } else {
+
+            /*  Prefer using optimal tiling, as linear tiling may support only a small set of features
+                depending on implementation (e.g. no mip maps, only one layer, etc.)             */
+
+            // Check if this support is supported for linear tiling
+            assert(formatProperties.linearTilingFeatures has VkFormatFeature.SAMPLED_IMAGE_BIT)
+
+            val imageCreateInfo = vk.ImageCreateInfo {
+                imageType = VkImageType.`2D`
+                this.format = format
+                extent.set(size.x, size.y, 1)
+                mipLevels = 1
+                arrayLayers = 1
+                samples = VkSampleCount.`1_BIT`
+                tiling = VkImageTiling.LINEAR
+                usage = imageUsageFlags
+                sharingMode = VkSharingMode.EXCLUSIVE
+                initialLayout = VkImageLayout.UNDEFINED
+            }
+            // Load mip map level 0 to linear tiling image
+            val mappableImage = dev createImage imageCreateInfo
+
+            // Get memory requirements for this image like size and alignment
+            val memReqs = dev getImageMemoryRequirements mappableImage
+            val memAllocInfo = vk.MemoryAllocateInfo {
+                // Set memory allocation size to required memory size
+                allocationSize = memReqs.size
+
+                // Get memory type that can be mapped to host memory
+                memoryTypeIndex = device.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+            }
+            // Allocate host memory
+            val mappableMemory = dev allocateMemory memAllocInfo
+
+            // Bind allocated image for use
+            dev.bindImageMemory(mappableImage, mappableMemory)
+
+            // Get sub resource layout: mip map count, array layer, etc.
+            val subRes = vk.ImageSubresource {
+                aspectMask = VkImageAspect.COLOR_BIT.i
+                mipLevel = 0
+            }
+
+            // Get sub resources layout, includes row pitch, size offsets, etc.
+            val subResLayout = dev.getImageSubresourceLayout(mappableImage, subRes)
+
+            // Map image memory
+            dev.mappingMemory(mappableMemory, 0, memReqs.size, 0) { data ->
+                // Copy image data into memory
+                memCopy(memAddress(tex2D[subRes.mipLevel].data()!!), data, tex2D[subRes.mipLevel].size.L)
+            }
+
+            // Linear tiled images don't need to be staged
+            // and can be directly used as textures
+            image = mappableImage
+            deviceMemory = mappableMemory
+            this.imageLayout = imageLayout
+
+            // Setup image memory barrier
+            tools.setImageLayout(copyCmd, image, VkImageAspect.COLOR_BIT.i, VkImageLayout.UNDEFINED, imageLayout)
+
+            device.flushCommandBuffer(copyCmd, copyQueue)
+        }
+
+        // Create a defaultsampler
+        val samplerCreateInfo = vk.SamplerCreateInfo {
+            magFilter = VkFilter.LINEAR
+            minFilter = VkFilter.LINEAR
+            mipmapMode = VkSamplerMipmapMode.LINEAR
+            addressModeU = VkSamplerAddressMode.REPEAT
+            addressModeV = VkSamplerAddressMode.REPEAT
+            addressModeW = VkSamplerAddressMode.REPEAT
+            mipLodBias = 0f
+            compareOp = VkCompareOp.NEVER
+            minLod = 0f
+            // Max level-of-detail should match mip level count
+            maxLod = if (useStaging) mipLevels.f else 0f
+            // Only enable anisotropic filtering if enabled on the devicec
+            maxAnisotropy = if (device.enabledFeatures.samplerAnisotropy) device.properties.limits.maxSamplerAnisotropy else 1f
+            anisotropyEnable = device.enabledFeatures.samplerAnisotropy
+            borderColor = VkBorderColor.FLOAT_OPAQUE_WHITE
+        }
+        sampler = dev createSampler samplerCreateInfo
+
+        /*  Create image view
+            Textures are not directly accessed by the shaders and are abstracted by image views containing additional
+            information and sub resource ranges */
+        val viewCreateInfo = vk.ImageViewCreateInfo {
+            viewType = VkImageViewType.`2D`
+            this.format = format
+            components(VkComponentSwizzle.R, VkComponentSwizzle.G, VkComponentSwizzle.B, VkComponentSwizzle.A )
+            subresourceRange.set( VkImageAspect.COLOR_BIT.i, 0, 1, 0, 1 )
+            // Linear tiling usually won't support mip maps
+            // Only set mip map count if optimal tiling is used
+            subresourceRange.levelCount = if(useStaging) mipLevels else 1
+            image = this@Texture2D.image
+        }
+        view = dev createImageView viewCreateInfo
+
+        // Update descriptor image info member that can be used for setting up descriptor sets
+        updateDescriptor()
+    }
+
+    /**
+     * Creates a 2D texture from a buffer
+     *
+     * @param buffer Buffer containing texture data to upload
+     * @param bufferSize Size of the buffer in machine units
+     * @param width Width of the texture to create
+     * @param height Height of the texture to create
+     * @param format Vulkan format of the image data stored in the file
+     * @param device Vulkan device to create the texture on
+     * @param copyQueue Queue used for the texture staging copy commands (must support transfer)
+     * @param (Optional) filter Texture filtering for the sampler (defaults to VK_FILTER_LINEAR)
+     * @param (Optional) imageUsageFlags Usage flags for the texture's image (defaults to VK_IMAGE_USAGE_SAMPLED_BIT)
+     * @param (Optional) imageLayout Usage layout for the texture (defaults VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+     */
+//    fun fromBuffer (
+//    void * buffer,
 //    VkDeviceSize bufferSize,
 //    VkFormat format,
 //    uint32_t width,
@@ -526,9 +497,9 @@ class Texture {
 //        // Update descriptor image info member that can be used for setting up descriptor sets
 //        updateDescriptor()
 //    }
-//
-//}
-//
+
+}
+
 ///** @brief 2D array texture */
 //class Texture2DArray : public Texture
 //{

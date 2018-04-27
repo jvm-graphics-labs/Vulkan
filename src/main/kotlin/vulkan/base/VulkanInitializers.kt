@@ -82,13 +82,6 @@ object initializers {
             dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
         }
     }
-
-    inline fun imageMemoryBarrier(): VkImageMemoryBarrier {
-        return vk.ImageMemoryBarrier {
-            srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
-            dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
-        }
-    }
 //
 //    /** @brief Initialize a buffer memory barrier with no image transfer ownership */
 //    inline VkBufferMemoryBarrier bufferMemoryBarrier()

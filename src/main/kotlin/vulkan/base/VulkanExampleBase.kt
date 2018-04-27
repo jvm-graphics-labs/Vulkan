@@ -592,7 +592,7 @@ abstract class VulkanExampleBase {
         vkCreateImage(device, image, null, depthStencil::image)
         vkGetImageMemoryRequirements(device, depthStencil.image, memReqs)
         memAlloc.allocationSize = memReqs.size
-        memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
+        memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
         vkAllocateMemory(device, memAlloc, null, depthStencil::mem).check()
         VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0))
 

@@ -1,5 +1,3 @@
-package vulkan.basics
-
 ///*
 //* Vulkan Example - Cube map texture loading and displaying
 //*
@@ -8,13 +6,19 @@ package vulkan.basics
 //* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
 //*/
 //
-//package vulkan
+//package vulkan.basics
 //
-//import vulkan.base.Texture
-//import vulkan.base.VulkanExampleBase
+//import gli_.gli
+//import glm_.L
+//import glm_.mat4x4.Mat4
+//import org.lwjgl.system.MemoryUtil.NULL
+//import org.lwjgl.system.MemoryUtil.memCopy
+//import vkn.*
+//import vulkan.base.*
+//import java.net.URI
 //
 //fun main(args: Array<String>) {
-//    CubeMapTextures().apply {
+//    TextureCubemap().apply {
 //        setupWindow()
 //        initVulkan()
 //        prepare()
@@ -23,194 +27,170 @@ package vulkan.basics
 //    }
 //}
 //
-//private class CubeMapTextures : VulkanExampleBase(){
+//private class TextureCubemap : VulkanExampleBase() {
 //
 //    var displaySkybox = true
 //
 //    val cubeMap = Texture()
 //
 //    // Vertex layout for the models
-//    vks::VertexLayout vertexLayout = vks::VertexLayout({
-//        vks::VERTEX_COMPONENT_POSITION,
-//        vks::VERTEX_COMPONENT_NORMAL,
-//        vks::VERTEX_COMPONENT_UV,
-//    })
+//    val vertexLayout = VertexLayout(
+//            VertexComponent.POSITION,
+//            VertexComponent.NORMAL,
+//            VertexComponent.UV)
 //
-//    struct Meshes {
-//        vks::Model skybox
-//        std::vector<vks::Model> objects
-//        int32_t objectIndex = 0
-//    } models
-//
-//    struct {
-//        vks::Buffer object
-//        vks::Buffer skybox
-//    } uniformBuffers
-//
-//    struct UBOVS {
-//        glm::mat4 projection
-//        glm::mat4 model
-//        float lodBias = 0.0f
-//    } uboVS
-//
-//    struct {
-//        VkPipeline skybox
-//        VkPipeline reflect
-//    } pipelines
-//
-//    struct {
-//        VkDescriptorSet object
-//        VkDescriptorSet skybox
-//    } descriptorSets
-//
-//    VkPipelineLayout pipelineLayout
-//    VkDescriptorSetLayout descriptorSetLayout
-//
-//    std::vector<std::string> objectNames
-//
-//    VulkanExample() : VulkanExampleBase(ENABLE_VALIDATION)
-//    {
-//        zoom = -4.0f
-//        rotationSpeed = 0.25f
-//        rotation = { -7.25f, -120.0f, 0.0f }
-//        title = "Cube map textures"
-//        settings.overlay = true
+//    private val models = object {
+//        val skybox = Model()
+//        val objects = ArrayList<Model>()
+//        var objectIndex = 0
 //    }
 //
-//    ~VulkanExample()
-//{
-//    // Clean up used Vulkan resources
-//    // Note : Inherited destructor cleans up resources stored in base class
+//    private val uniformBuffers = object {
+//        val `object` = Buffer()
+//        val skybox = Buffer()
+//    }
 //
-//    // Clean up texture resources
-//    vkDestroyImageView(device, cubeMap.view, nullptr)
-//    vkDestroyImage(device, cubeMap.image, nullptr)
-//    vkDestroySampler(device, cubeMap.sampler, nullptr)
-//    vkFreeMemory(device, cubeMap.deviceMemory, nullptr)
+//    private val uboVS = object {
+//        var projection = Mat4()
+//        var model = Mat4()
+//        var lodBias = 0f
+//    }
 //
-//    vkDestroyPipeline(device, pipelines.skybox, nullptr)
-//    vkDestroyPipeline(device, pipelines.reflect, nullptr)
+//    private val pipelines = object {
+//        var skybox: VkPipeline = NULL
+//        var reflect: VkPipeline = NULL
+//    }
 //
-//    vkDestroyPipelineLayout(device, pipelineLayout, nullptr)
-//    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr)
+//    private val descriptorSets = object {
+//        var `object`: VkDescriptorSet = NULL
+//        var skybox: VkDescriptorSet = NULL
+//    }
 //
-//    for (auto& model : models.objects) {
-//    model.destroy()
-//}
-//    models.skybox.destroy()
+//    var pipelineLayout: VkPipelineLayout = NULL
+//    var descriptorSetLayout: VkDescriptorSetLayout = NULL
 //
-//    uniformBuffers.object.destroy()
-//    uniformBuffers.skybox.destroy()
-//}
+//    val objectNames = ArrayList<String>()
+//
+//    init {
+//        zoom = -4f
+//        rotationSpeed = 0.25f
+//        rotation(-7.25f, -120f, 0f)
+//        title = "Cube map textures"
+////        settings.overlay = true
+//    }
+//
+//    override fun destroy() {
+//
+//        // Clean up used Vulkan resources
+//        // Note : Inherited destructor cleans up resources stored in base class
+//
+//        device.apply {
+//            // Clean up texture resources
+//            destroyImageView(cubeMap.view)
+//            destroyImage(cubeMap.image)
+//            destroySampler(cubeMap.sampler)
+//            freeMemory(cubeMap.deviceMemory)
+//
+//            destroyPipeline(pipelines.skybox)
+//            destroyPipeline(pipelines.reflect)
+//
+//            destroyPipelineLayout(pipelineLayout)
+//            destroyDescriptorSetLayout(descriptorSetLayout)
+//        }
+//        for (model in models.objects)
+//            model.destroy()
+//
+//        models.skybox.destroy()
+//
+//        uniformBuffers.`object`.destroy()
+//        uniformBuffers.skybox.destroy()
+//
+//        super.destroy()
+//    }
 //
 //    // Enable physical device features required for this example
-//    virtual void getEnabledFeatures()
-//    {
-//        if (deviceFeatures.samplerAnisotropy) {
-//            enabledFeatures.samplerAnisotropy = VK_TRUE
-//        }
-//        if (deviceFeatures.textureCompressionBC) {
-//            enabledFeatures.textureCompressionBC = VK_TRUE
-//        }
-//        else if (deviceFeatures.textureCompressionASTC_LDR) {
-//            enabledFeatures.textureCompressionASTC_LDR = VK_TRUE
-//        }
-//        else if (deviceFeatures.textureCompressionETC2) {
-//            enabledFeatures.textureCompressionETC2 = VK_TRUE
+//    override fun getEnabledFeatures() {
+//        if (deviceFeatures.samplerAnisotropy)
+//            enabledFeatures.samplerAnisotropy = true
+//
+//        when {
+//            deviceFeatures.textureCompressionBC -> enabledFeatures.textureCompressionBC = true
+//            deviceFeatures.textureCompressionASTC_LDR -> enabledFeatures.textureCompressionASTC_LDR = true
+//            deviceFeatures.textureCompressionETC2 -> enabledFeatures.textureCompressionETC2 = true
 //        }
 //    }
 //
-//    void loadCubemap(std::string filename, VkFormat format, bool forceLinearTiling)
-//    {
-//        #if defined(__ANDROID__)
-//        // Textures are stored inside the apk on Android (compressed)
-//        // So they need to be loaded via the asset manager
-//        AAsset* asset = AAssetManager_open(androidApp->activity->assetManager, filename.c_str(), AASSET_MODE_STREAMING)
-//        assert(asset)
-//        size_t size = AAsset_getLength(asset)
-//        assert(size > 0)
+//    fun loadCubemap(filename: URI, format: VkFormat, forceLinearTiling: Boolean) {
 //
-//        void *textureData = malloc(size)
-//        AAsset_read(asset, textureData, size)
-//        AAsset_close(asset)
+//        val texCube = gli_.TextureCube(gli.load(filename))
 //
-//        gli::texture_cube texCube(gli::load((const char*)textureData, size))
-//        #else
-//        gli::texture_cube texCube(gli::load(filename))
-//        #endif
+//        assert(texCube.notEmpty())
 //
-//        assert(!texCube.empty())
-//
-//        cubeMap.width = texCube.extent().x
-//        cubeMap.height = texCube.extent().y
+//        cubeMap.size(texCube.extent())
 //        cubeMap.mipLevels = texCube.levels()
 //
-//        VkMemoryAllocateInfo memAllocInfo = vks::initializers::memoryAllocateInfo()
-//        VkMemoryRequirements memReqs
 //
 //        // Create a host-visible staging buffer that contains the raw image data
-//        VkBuffer stagingBuffer
-//        VkDeviceMemory stagingMemory
 //
-//        VkBufferCreateInfo bufferCreateInfo = vks::initializers::bufferCreateInfo()
-//        bufferCreateInfo.size = texCube.size()
-//        // This buffer is used as a transfer source for the buffer copy
-//        bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-//        bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-//
-//        VK_CHECK_RESULT(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &stagingBuffer))
+//        val bufferCreateInfo = vk.BufferCreateInfo {
+//            size = texCube.size.L
+//            // This buffer is used as a transfer source for the buffer copy
+//            usage = VkBufferUsage.TRANSFER_SRC_BIT.i
+//            sharingMode = VkSharingMode.EXCLUSIVE
+//        }
+//        val stagingBuffer = device createBuffer bufferCreateInfo
 //
 //        // Get memory requirements for the staging buffer (alignment, memory type bits)
-//        vkGetBufferMemoryRequirements(device, stagingBuffer, &memReqs)
-//        memAllocInfo.allocationSize = memReqs.size
-//        // Get memory type index for a host visible buffer
-//        memAllocInfo.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-//        VK_CHECK_RESULT(vkAllocateMemory(device, &memAllocInfo, nullptr, &stagingMemory))
-//        VK_CHECK_RESULT(vkBindBufferMemory(device, stagingBuffer, stagingMemory, 0))
+//        val memReqs = device getBufferMemoryRequirements stagingBuffer
+//        val memAllocInfo = vk.MemoryAllocateInfo {
+//            allocationSize = memReqs.size
+//            // Get memory type index for a host visible buffer
+//            memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+//        }
+//        val stagingMemory = device allocateMemory memAllocInfo
+//        device.bindBufferMemory(stagingBuffer, stagingMemory)
 //
 //        // Copy texture data into staging buffer
-//        uint8_t *data
-//        VK_CHECK_RESULT(vkMapMemory(device, stagingMemory, 0, memReqs.size, 0, (void **)&data))
-//        memcpy(data, texCube.data(), texCube.size())
-//        vkUnmapMemory(device, stagingMemory)
+//        device.mappingMemory(stagingMemory, 0, memReqs.size, 0) { data ->
+//            memCopy(texCube.data(), data, texCube.size.L)
+//        }
 //
 //        // Create optimal tiled target image
-//        VkImageCreateInfo imageCreateInfo = vks::initializers::imageCreateInfo()
-//        imageCreateInfo.imageType = VK_IMAGE_TYPE_2D
-//        imageCreateInfo.format = format
-//        imageCreateInfo.mipLevels = cubeMap.mipLevels
-//        imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT
-//        imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL
-//        imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-//        imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-//        imageCreateInfo.extent = { cubeMap.width, cubeMap.height, 1 }
-//        imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
-//        // Cube faces count as array layers in Vulkan
-//        imageCreateInfo.arrayLayers = 6
-//        // This flag is required for cube map images
-//        imageCreateInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
+//        val imageCreateInfo = vk.ImageCreateInfo {
+//            imageType = VkImageType.`2D`
+//            this.format = format
+//            mipLevels = cubeMap.mipLevels
+//            samples = VkSampleCount.`1_BIT`
+//            tiling = VkImageTiling.OPTIMAL
+//            sharingMode = VkSharingMode.EXCLUSIVE
+//            initialLayout = VkImageLayout.UNDEFINED
+//            extent.set(cubeMap.size.x, cubeMap.size.y, 1)
+//            usage = VkImageUsage.TRANSFER_DST_BIT or VkImageUsage.SAMPLED_BIT
+//            // Cube faces count as array layers in Vulkan
+//            arrayLayers = 6
+//            // This flag is required for cube map images
+//            flags = VkImageCreate.CUBE_COMPATIBLE_BIT.i
+//        }
+//        cubeMap.image = device createImage imageCreateInfo
 //
-//        VK_CHECK_RESULT(vkCreateImage(device, &imageCreateInfo, nullptr, &cubeMap.image))
-//
-//        vkGetImageMemoryRequirements(device, cubeMap.image, &memReqs)
+//        device.getImageMemoryRequirements(cubeMap.image, memReqs)
 //
 //        memAllocInfo.allocationSize = memReqs.size
-//        memAllocInfo.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+//        memAllocInfo.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
 //
-//        VK_CHECK_RESULT(vkAllocateMemory(device, &memAllocInfo, nullptr, &cubeMap.deviceMemory))
-//        VK_CHECK_RESULT(vkBindImageMemory(device, cubeMap.image, cubeMap.deviceMemory, 0))
+//        cubeMap.deviceMemory = device allocateMemory memAllocInfo
+//        device.bindImageMemory(cubeMap.image, cubeMap.deviceMemory)
 //
-//        VkCommandBuffer copyCmd = VulkanExampleBase::createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true)
+//        val copyCmd = createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
 //
 //        // Setup buffer copy regions for each face including all of it's miplevels
-//        std::vector<VkBufferImageCopy> bufferCopyRegions
-//        uint32_t offset = 0
+//        val bufferCopyRegions = vk.BufferImageCopy(6 * cubeMap.mipLevels)
+//        var offset = 0L
 //
-//        for (uint32_t face = 0; face < 6; face++)
-//        {
-//            for (uint32_t level = 0; level < cubeMap.mipLevels; level++)
-//            {
-//                VkBufferImageCopy bufferCopyRegion = {}
+//        for (face in 0..5)
+//            for (level in 0 until cubeMap.mipLevels)            {
+//
+//                bufferCopyRegions[] = {}
 //                bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
 //                bufferCopyRegion.imageSubresource.mipLevel = level
 //                bufferCopyRegion.imageSubresource.baseArrayLayer = face
@@ -225,7 +205,6 @@ package vulkan.basics
 //                // Increase offset into staging buffer for next level / face
 //                offset += texCube[face][level].size()
 //            }
-//        }
 //
 //        // Image barrier for optimal image (target)
 //        // Set initial layout for all array layers (faces) of the optimal (target) tiled texture
@@ -264,7 +243,7 @@ package vulkan.basics
 //        VulkanExampleBase::flushCommandBuffer(copyCmd, queue, true)
 //
 //        // Create sampler
-//        VkSamplerCreateInfo sampler = vks::initializers::samplerCreateInfo()
+//        VkSamplerCreateInfo sampler = vks ::initializers::samplerCreateInfo()
 //        sampler.magFilter = VK_FILTER_LINEAR
 //        sampler.minFilter = VK_FILTER_LINEAR
 //        sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR
@@ -282,10 +261,10 @@ package vulkan.basics
 //            sampler.maxAnisotropy = vulkanDevice->properties.limits.maxSamplerAnisotropy
 //            sampler.anisotropyEnable = VK_TRUE
 //        }
-//        VK_CHECK_RESULT(vkCreateSampler(device, &sampler, nullptr, &cubeMap.sampler))
+//        VK_CHECK_RESULT(vkCreateSampler(device, & sampler, nullptr, & cubeMap . sampler))
 //
 //        // Create image view
-//        VkImageViewCreateInfo view = vks::initializers::imageViewCreateInfo()
+//        VkImageViewCreateInfo view = vks ::initializers::imageViewCreateInfo()
 //        // Cube map view type
 //        view.viewType = VK_IMAGE_VIEW_TYPE_CUBE
 //        view.format = format
@@ -296,7 +275,7 @@ package vulkan.basics
 //        // Set number of mip levels
 //        view.subresourceRange.levelCount = cubeMap.mipLevels
 //        view.image = cubeMap.image
-//        VK_CHECK_RESULT(vkCreateImageView(device, &view, nullptr, &cubeMap.view))
+//        VK_CHECK_RESULT(vkCreateImageView(device, & view, nullptr, & cubeMap . view))
 //
 //        // Clean up staging resources
 //        vkFreeMemory(device, stagingMemory, nullptr)
@@ -308,35 +287,32 @@ package vulkan.basics
 //        // Vulkan core supports three different compressed texture formats
 //        // As the support differs between implemementations we need to check device features and select a proper format and file
 //        std::string filename
-//        VkFormat format
-//        if (deviceFeatures.textureCompressionBC) {
-//            filename = "cubemap_yokohama_bc3_unorm.ktx"
-//            format = VK_FORMAT_BC2_UNORM_BLOCK
-//        }
-//        else if (deviceFeatures.textureCompressionASTC_LDR) {
-//            filename = "cubemap_yokohama_astc_8x8_unorm.ktx"
-//            format = VK_FORMAT_ASTC_8x8_UNORM_BLOCK
-//        }
-//        else if (deviceFeatures.textureCompressionETC2) {
-//            filename = "cubemap_yokohama_etc2_unorm.ktx"
-//            format = VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK
-//        }
-//        else {
-//            vks::tools::exitFatal("Device does not support any compressed texture format!", VK_ERROR_FEATURE_NOT_PRESENT)
-//        }
+//                VkFormat format
+//                if (deviceFeatures.textureCompressionBC) {
+//                    filename = "cubemap_yokohama_bc3_unorm.ktx"
+//                    format = VK_FORMAT_BC2_UNORM_BLOCK
+//                } else if (deviceFeatures.textureCompressionASTC_LDR) {
+//                    filename = "cubemap_yokohama_astc_8x8_unorm.ktx"
+//                    format = VK_FORMAT_ASTC_8x8_UNORM_BLOCK
+//                } else if (deviceFeatures.textureCompressionETC2) {
+//                    filename = "cubemap_yokohama_etc2_unorm.ktx"
+//                    format = VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK
+//                } else {
+//                    vks::tools::exitFatal("Device does not support any compressed texture format!", VK_ERROR_FEATURE_NOT_PRESENT)
+//                }
 //
 //        loadCubemap(getAssetPath() + "textures/" + filename, format, false)
 //    }
 //
 //    void buildCommandBuffers()
 //    {
-//        VkCommandBufferBeginInfo cmdBufInfo = vks::initializers::commandBufferBeginInfo()
+//        VkCommandBufferBeginInfo cmdBufInfo = vks ::initializers::commandBufferBeginInfo()
 //
-//        VkClearValue clearValues[2]
+//        VkClearValue clearValues [2]
 //        clearValues[0].color = defaultClearColor
 //        clearValues[1].depthStencil = { 1.0f, 0 }
 //
-//        VkRenderPassBeginInfo renderPassBeginInfo = vks::initializers::renderPassBeginInfo()
+//        VkRenderPassBeginInfo renderPassBeginInfo = vks ::initializers::renderPassBeginInfo()
 //        renderPassBeginInfo.renderPass = renderPass
 //        renderPassBeginInfo.renderArea.offset.x = 0
 //        renderPassBeginInfo.renderArea.offset.y = 0
@@ -350,31 +326,30 @@ package vulkan.basics
 //            // Set target frame buffer
 //            renderPassBeginInfo.framebuffer = frameBuffers[i]
 //
-//            VK_CHECK_RESULT(vkBeginCommandBuffer(drawCmdBuffers[i], &cmdBufInfo))
+//            VK_CHECK_RESULT(vkBeginCommandBuffer(drawCmdBuffers[i], & cmdBufInfo))
 //
-//            vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE)
+//            vkCmdBeginRenderPass(drawCmdBuffers[i], & renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE)
 //
-//            VkViewport viewport = vks::initializers::viewport((float)width,	(float)height, 0.0f, 1.0f)
-//            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport)
+//            VkViewport viewport = vks ::initializers::viewport((float) width, (float) height, 0.0f, 1.0f)
+//            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, & viewport)
 //
-//            VkRect2D scissor = vks::initializers::rect2D(width,	height,	0, 0)
-//            vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor)
+//            VkRect2D scissor = vks ::initializers::rect2D(width, height, 0, 0)
+//            vkCmdSetScissor(drawCmdBuffers[i], 0, 1, & scissor)
 //
-//            VkDeviceSize offsets[1] = { 0 }
+//            VkDeviceSize offsets [1] = { 0 }
 //
 //            // Skybox
-//            if (displaySkybox)
-//            {
-//                vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets.skybox, 0, NULL)
-//                vkCmdBindVertexBuffers(drawCmdBuffers[i], 0, 1, &models.skybox.vertices.buffer, offsets)
+//            if (displaySkybox) {
+//                vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, & descriptorSets . skybox, 0, NULL)
+//                vkCmdBindVertexBuffers(drawCmdBuffers[i], 0, 1, & models . skybox . vertices . buffer, offsets)
 //                vkCmdBindIndexBuffer(drawCmdBuffers[i], models.skybox.indices.buffer, 0, VK_INDEX_TYPE_UINT32)
 //                vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.skybox)
 //                vkCmdDrawIndexed(drawCmdBuffers[i], models.skybox.indexCount, 1, 0, 0, 0)
 //            }
 //
 //            // 3D object
-//            vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets.object, 0, NULL)
-//            vkCmdBindVertexBuffers(drawCmdBuffers[i], 0, 1, &models.objects[models.objectIndex].vertices.buffer, offsets)
+//            vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, & descriptorSets .object, 0, NULL)
+//            vkCmdBindVertexBuffers(drawCmdBuffers[i], 0, 1, & models . objects [models.objectIndex].vertices.buffer, offsets)
 //            vkCmdBindIndexBuffer(drawCmdBuffers[i], models.objects[models.objectIndex].indices.buffer, 0, VK_INDEX_TYPE_UINT32)
 //            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.reflect)
 //            vkCmdDrawIndexed(drawCmdBuffers[i], models.objects[models.objectIndex].indexCount, 1, 0, 0, 0)
@@ -390,11 +365,11 @@ package vulkan.basics
 //        // Skybox
 //        models.skybox.loadFromFile(getAssetPath() + "models/cube.obj", vertexLayout, 0.05f, vulkanDevice, queue)
 //        // Objects
-//        std::vector<std::string> filenames = { "sphere.obj", "teapot.dae", "torusknot.obj", "venus.fbx" }
+//        std::vector < std::string > filenames = { "sphere.obj", "teapot.dae", "torusknot.obj", "venus.fbx" }
 //        objectNames = { "Sphere", "Teapot", "Torusknot", "Venus" }
 //        for (auto file : filenames) {
 //        vks::Model model
-//        model.loadFromFile(getAssetPath() + "models/" + file, vertexLayout, 0.05f * (file == "venus.fbx" ? 3.0f : 1.0f), vulkanDevice, queue)
+//                model.loadFromFile(getAssetPath() + "models/" + file, vertexLayout, 0.05f * (file == "venus.fbx" ? 3.0f : 1.0f), vulkanDevice, queue)
 //        models.objects.push_back(model)
 //    }
 //    }
@@ -413,7 +388,7 @@ package vulkan.basics
 //                poolSizes.data(),
 //                2)
 //
-//        VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &descriptorPool))
+//        VK_CHECK_RESULT(vkCreateDescriptorPool(device, & descriptorPoolInfo, nullptr, & descriptorPool))
 //    }
 //
 //    void setupDescriptorSetLayout()
@@ -437,14 +412,14 @@ package vulkan.basics
 //                setLayoutBindings.data(),
 //                setLayoutBindings.size())
 //
-//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout))
+//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, & descriptorLayout, nullptr, & descriptorSetLayout))
 //
 //        VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
 //        vks::initializers::pipelineLayoutCreateInfo(
-//                &descriptorSetLayout,
+//                & descriptorSetLayout,
 //        1)
 //
-//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayout))
+//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, & pPipelineLayoutCreateInfo, nullptr, & pipelineLayout))
 //    }
 //
 //    void setupDescriptorSets()
@@ -459,11 +434,11 @@ package vulkan.basics
 //        VkDescriptorSetAllocateInfo allocInfo =
 //        vks::initializers::descriptorSetAllocateInfo(
 //                descriptorPool,
-//                &descriptorSetLayout,
+//                & descriptorSetLayout,
 //        1)
 //
 //        // 3D object descriptor set
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets.object))
+//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSets .object))
 //
 //        std::vector<VkWriteDescriptorSet> writeDescriptorSets =
 //        {
@@ -472,18 +447,18 @@ package vulkan.basics
 //                    descriptorSets.object,
 //                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 //                    0,
-//                    &uniformBuffers.object.descriptor),
+//                    & uniformBuffers .object.descriptor),
 //            // Binding 1 : Fragment shader cubemap sampler
 //            vks::initializers::writeDescriptorSet(
 //                    descriptorSets.object,
 //                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 //                    1,
-//                    &textureDescriptor)
+//                    & textureDescriptor)
 //        }
 //        vkUpdateDescriptorSets(device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, NULL)
 //
 //        // Sky box descriptor set
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets.skybox))
+//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSets . skybox))
 //
 //        writeDescriptorSets =
 //                {
@@ -492,13 +467,13 @@ package vulkan.basics
 //                            descriptorSets.skybox,
 //                            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 //                            0,
-//                            &uniformBuffers.skybox.descriptor),
+//                            & uniformBuffers . skybox . descriptor),
 //                    // Binding 1 : Fragment shader cubemap sampler
 //                    vks::initializers::writeDescriptorSet(
 //                            descriptorSets.skybox,
 //                            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 //                            1,
-//                            &textureDescriptor)
+//                            & textureDescriptor)
 //                }
 //        vkUpdateDescriptorSets(device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, NULL)
 //    }
@@ -526,7 +501,7 @@ package vulkan.basics
 //        VkPipelineColorBlendStateCreateInfo colorBlendState =
 //        vks::initializers::pipelineColorBlendStateCreateInfo(
 //                1,
-//                &blendAttachmentState)
+//                & blendAttachmentState)
 //
 //        VkPipelineDepthStencilStateCreateInfo depthStencilState =
 //        vks::initializers::pipelineDepthStencilStateCreateInfo(
@@ -542,9 +517,8 @@ package vulkan.basics
 //                VK_SAMPLE_COUNT_1_BIT,
 //                0)
 //
-//        std::vector<VkDynamicState> dynamicStateEnables = {
-//            VK_DYNAMIC_STATE_VIEWPORT,
-//            VK_DYNAMIC_STATE_SCISSOR
+//        std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT,
+//                                                            VK_DYNAMIC_STATE_SCISSOR
 //        }
 //        VkPipelineDynamicStateCreateInfo dynamicState =
 //        vks::initializers::pipelineDynamicStateCreateInfo(
@@ -557,34 +531,34 @@ package vulkan.basics
 //        vks::initializers::vertexInputBindingDescription(0, vertexLayout.stride(), VK_VERTEX_INPUT_RATE_VERTEX)
 //
 //        std::vector<VkVertexInputAttributeDescription> vertexInputAttributes = {
-//            vks::initializers::vertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),					// Location 0: Position
-//            vks::initializers::vertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3),	// Location 1: Normal
+//            vks::initializers::vertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),                    // Location 0: Position
+//            vks::initializers::vertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3),    // Location 1: Normal
 //        }
 //
-//        VkPipelineVertexInputStateCreateInfo vertexInputState = vks::initializers::pipelineVertexInputStateCreateInfo()
+//        VkPipelineVertexInputStateCreateInfo vertexInputState = vks ::initializers::pipelineVertexInputStateCreateInfo()
 //        vertexInputState.vertexBindingDescriptionCount = 1
-//        vertexInputState.pVertexBindingDescriptions = &vertexInputBinding
-//        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size())
+//        vertexInputState.pVertexBindingDescriptions = & vertexInputBinding
+//                vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size())
 //        vertexInputState.pVertexAttributeDescriptions = vertexInputAttributes.data()
 //
-//        std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages
+//        std::array < VkPipelineShaderStageCreateInfo, 2> shaderStages
 //
-//        VkGraphicsPipelineCreateInfo pipelineCreateInfo = vks::initializers::pipelineCreateInfo(pipelineLayout, renderPass, 0)
-//        pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState
-//        pipelineCreateInfo.pRasterizationState = &rasterizationState
-//        pipelineCreateInfo.pColorBlendState = &colorBlendState
-//        pipelineCreateInfo.pMultisampleState = &multisampleState
-//        pipelineCreateInfo.pViewportState = &viewportState
-//        pipelineCreateInfo.pDepthStencilState = &depthStencilState
-//        pipelineCreateInfo.pDynamicState = &dynamicState
-//        pipelineCreateInfo.stageCount = shaderStages.size()
+//        VkGraphicsPipelineCreateInfo pipelineCreateInfo = vks ::initializers::pipelineCreateInfo(pipelineLayout, renderPass, 0)
+//        pipelineCreateInfo.pInputAssemblyState = & inputAssemblyState
+//                pipelineCreateInfo.pRasterizationState = & rasterizationState
+//                pipelineCreateInfo.pColorBlendState = & colorBlendState
+//                pipelineCreateInfo.pMultisampleState = & multisampleState
+//                pipelineCreateInfo.pViewportState = & viewportState
+//                pipelineCreateInfo.pDepthStencilState = & depthStencilState
+//                pipelineCreateInfo.pDynamicState = & dynamicState
+//                pipelineCreateInfo.stageCount = shaderStages.size()
 //        pipelineCreateInfo.pStages = shaderStages.data()
-//        pipelineCreateInfo.pVertexInputState = &vertexInputState
+//        pipelineCreateInfo.pVertexInputState = & vertexInputState
 //
-//        // Skybox pipeline (background cube)
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/texturecubemap/skybox.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
+//                // Skybox pipeline (background cube)
+//                shaderStages[0] = loadShader(getAssetPath() + "shaders/texturecubemap/skybox.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
 //        shaderStages[1] = loadShader(getAssetPath() + "shaders/texturecubemap/skybox.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.skybox))
+//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . skybox))
 //
 //        // Cube map reflect pipeline
 //        shaderStages[0] = loadShader(getAssetPath() + "shaders/texturecubemap/reflect.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
@@ -594,7 +568,7 @@ package vulkan.basics
 //        depthStencilState.depthTestEnable = VK_TRUE
 //        // Flip cull mode
 //        rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.reflect))
+//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . reflect))
 //    }
 //
 //    // Prepare and initialize uniform buffer containing shader uniforms
@@ -624,8 +598,8 @@ package vulkan.basics
 //    void updateUniformBuffers()
 //    {
 //        // 3D object
-//        glm::mat4 viewMatrix = glm::mat4(1.0f)
-//        uboVS.projection = glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.001f, 256.0f)
+//        glm::mat4 viewMatrix = glm ::mat4(1.0f)
+//        uboVS.projection = glm::perspective(glm::radians(60.0f), (float) width /(float) height, 0.001f, 256.0f)
 //        viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, zoom))
 //
 //        uboVS.model = glm::mat4(1.0f)
@@ -634,11 +608,11 @@ package vulkan.basics
 //        uboVS.model = glm::rotate(uboVS.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
 //        uboVS.model = glm::rotate(uboVS.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f))
 //
-//        memcpy(uniformBuffers.object.mapped, &uboVS, sizeof(uboVS))
+//        memcpy(uniformBuffers.object.mapped, & uboVS, sizeof(uboVS))
 //
 //        // Skybox
 //        viewMatrix = glm::mat4(1.0f)
-//        uboVS.projection = glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.001f, 256.0f)
+//        uboVS.projection = glm::perspective(glm::radians(60.0f), (float) width /(float) height, 0.001f, 256.0f)
 //
 //        uboVS.model = glm::mat4(1.0f)
 //        uboVS.model = viewMatrix * glm::translate(uboVS.model, glm::vec3(0, 0, 0))
@@ -646,7 +620,7 @@ package vulkan.basics
 //        uboVS.model = glm::rotate(uboVS.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
 //        uboVS.model = glm::rotate(uboVS.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f))
 //
-//        memcpy(uniformBuffers.skybox.mapped, &uboVS, sizeof(uboVS))
+//        memcpy(uniformBuffers.skybox.mapped, & uboVS, sizeof(uboVS))
 //    }
 //
 //    void draw()
@@ -654,8 +628,8 @@ package vulkan.basics
 //        VulkanExampleBase::prepareFrame()
 //
 //        submitInfo.commandBufferCount = 1
-//        submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer]
-//        VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE))
+//        submitInfo.pCommandBuffers = & drawCmdBuffers [currentBuffer]
+//        VK_CHECK_RESULT(vkQueueSubmit(queue, 1, & submitInfo, VK_NULL_HANDLE))
 //
 //        VulkanExampleBase::submitFrame()
 //    }

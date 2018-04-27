@@ -1,302 +1,300 @@
-///*
-//* Vulkan Model loader using ASSIMP
-//*
-//* Copyright(C) 2016-2017 by Sascha Willems - www.saschawillems.de
-//*
-//* This code is licensed under the MIT license(MIT) (http://opensource.org/licenses/MIT)
-//*/
-//
-//package vulkan.base
-//
-//import glm_.BYTES
-//import glm_.vec2.Vec2
-//import glm_.vec3.Vec3
-//import glm_.vec4.Vec4
-//import org.lwjgl.system.MemoryUtil.NULL
-//import org.lwjgl.vulkan.VkDevice
-//import vkn.vk
-//
-//
-///** @brief Vertex layout components */
-//enum class VertexComponent { POSITION, NORMAL, COLOR, UV, TANGENT, BITANGENT, DUMMY_FLOAT, DUMMY_VEC4 }
-//
-///** @brief Stores vertex layout components for model loading and Vulkan vertex input and atribute bindings  */
-//class VertexLayout(
-//        /** @brief Components used to generate vertices from */
-//        val components: ArrayList<VertexComponent>) {
-//
-//    fun stride() = components.sumBy {
-//        when (it) {
-//            VertexComponent.UV -> Vec2.size
-//            VertexComponent.DUMMY_FLOAT -> Float.BYTES
-//            VertexComponent.DUMMY_VEC4 -> Vec4.size
-//        // All components except the ones listed above are made up of 3 floats
-//            else -> Vec3.size
-//        }
-//    }
-//}
-//
-///** @brief Used to parametrize model loading */
-//class ModelCreateInfo(
-//        val scale: Vec3 = Vec3(),
-//        val uvScale: Vec3 = Vec3(),
-//        val center: Vec3 = Vec3()) {
-//    constructor(scale: Float, uvScale: Float, center: Float) : this(Vec3(scale), Vec3(uvScale), Vec3(center))
-//}
-//
-//class Model {
-//    var device: VkDevice? = null
-//    val vertices = Buffer()
-//    val indices = Buffer()
-//    var indexCount = 0
-//    var vertexCount = 0
-//
-//    /** @brief Stores vertex and index base and counts for each part of a model */
-//    class ModelPart {
-//        var vertexBase = 0
-//        var vertexCount = 0
-//        var indexBase = 0
-//        var indexCount = 0
-//    }
-//
-//    val parts = ArrayList<ModelPart>()
-//
-////    val defaultFlags = AiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals
-//
-//    private val dim = object {
-//        val min = Vec3(Float.MAX_VALUE)
-//        val max = Vec3(-Float.MAX_VALUE)
-//        val size = Vec3()
-//    }
-//
-//    /** @brief Release all Vulkan resources of this model */
-//    fun destroy() {
-//        val dev = device!!
-//        vk.destroyBuffer(dev, vertices.buffer)
-//        vk.freeMemory(dev, vertices.memory)
-//        if (indices.buffer != NULL) {
-//            vk.destroyBuffer(dev, indices.buffer)
-//            vk.freeMemory(dev, indices.memory)
-//        }
-//    }
-//
-//    /**
-//     * Loads a 3D model from a file into Vulkan buffers
-//     *
-//     * @param device Pointer to the Vulkan device used to generated the vertex and index buffers on
-//     * @param filename File to load (must be a model format supported by ASSIMP)
-//     * @param layout Vertex layout components (position, normals, tangents, etc.)
-//     * @param createInfo MeshCreateInfo structure for load time settings like scale, center, etc.
-//     * @param copyQueue Queue used for the memory staging copy commands (must support transfer)
-//     * @param (Optional) flags ASSIMP model loading flags
-//     */
-//    bool loadFromFile (const std ::string& filename, vks::VertexLayout layout, vks::ModelCreateInfo *createInfo, vks::VulkanDevice *device, VkQueue copyQueue, const int flags = defaultFlags)
-//    {
-//        this->device = device->logicalDevice
-//
-//        pScene = Importer.ReadFile(filename.c_str(), flags)
-//        if (!pScene) {
-//            std::string error = Importer . GetErrorString ()
-//            vks::tools::exitFatal(error + "\n\nThe file may be part of the additional asset pack.\n\nRun \"download_assets.py\" in the repository root to download the latest version.", -1)
-//        }
-//        #endif
-//
-//        if (pScene) {
-//            parts.clear()
-//            parts.resize(pScene->mNumMeshes)
-//
-//            glm::vec3 scale (1.0f)
-//            glm::vec2 uvscale (1.0f)
-//            glm::vec3 center (0.0f)
-//            if (createInfo) {
-//                scale = createInfo->scale
-//                uvscale = createInfo->uvscale
-//                center = createInfo->center
-//            }
-//
-//            std::vector<float> vertexBuffer
-//                    std::vector<uint32_t> indexBuffer
-//
-//                    vertexCount = 0
-//            indexCount = 0
-//
-//            // Load meshes
-//            for (unsigned int i = 0; i < pScene->mNumMeshes; i++)
-//            {
-//                const aiMesh * paiMesh = pScene->mMeshes[i]
-//
-//                parts[i] = {}
-//                parts[i].vertexBase = vertexCount
-//                parts[i].indexBase = indexCount
-//
-//                vertexCount += pScene->mMeshes[i]->mNumVertices
-//
-//                aiColor3D pColor (0.f, 0.f, 0.f)
-//                pScene->mMaterials[paiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, pColor)
-//
-//                const aiVector3D Zero3D(0.0f, 0.0f, 0.0f)
-//
-//                for (unsigned int j = 0; j < paiMesh->mNumVertices; j++)
-//                {
-//                    const aiVector3D * pPos = &(paiMesh->mVertices[j])
-//                    const aiVector3D * pNormal = &(paiMesh->mNormals[j])
-//                    const aiVector3D * pTexCoord =(paiMesh->HasTextureCoords(0)) ? &(paiMesh->mTextureCoords[0][j]) : &Zero3D
-//                    const aiVector3D * pTangent =(paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mTangents[j]) : &Zero3D
-//                    const aiVector3D * pBiTangent =(paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mBitangents[j]) : &Zero3D
-//
-//                    for (auto& component : layout.components)
-//                    {
-//                        switch(component) {
-//                            case VERTEX_COMPONENT_POSITION :
-//                            vertexBuffer.push_back(pPos->x * scale.x+center.x)
-//                            vertexBuffer.push_back(-pPos->y * scale.y+center.y)
-//                            vertexBuffer.push_back(pPos->z * scale.z+center.z)
-//                            break
-//                            case VERTEX_COMPONENT_NORMAL :
-//                            vertexBuffer.push_back(pNormal->x)
-//                            vertexBuffer.push_back(-pNormal->y)
-//                            vertexBuffer.push_back(pNormal->z)
-//                            break
-//                            case VERTEX_COMPONENT_UV :
-//                            vertexBuffer.push_back(pTexCoord->x * uvscale.s)
-//                            vertexBuffer.push_back(pTexCoord->y * uvscale.t)
-//                            break
-//                            case VERTEX_COMPONENT_COLOR :
-//                            vertexBuffer.push_back(pColor.r)
-//                            vertexBuffer.push_back(pColor.g)
-//                            vertexBuffer.push_back(pColor.b)
-//                            break
-//                            case VERTEX_COMPONENT_TANGENT :
-//                            vertexBuffer.push_back(pTangent->x)
-//                            vertexBuffer.push_back(pTangent->y)
-//                            vertexBuffer.push_back(pTangent->z)
-//                            break
-//                            case VERTEX_COMPONENT_BITANGENT :
-//                            vertexBuffer.push_back(pBiTangent->x)
-//                            vertexBuffer.push_back(pBiTangent->y)
-//                            vertexBuffer.push_back(pBiTangent->z)
-//                            break
-//                            // Dummy components for padding
-//                            case VERTEX_COMPONENT_DUMMY_FLOAT :
-//                            vertexBuffer.push_back(0.0f)
-//                            break
-//                            case VERTEX_COMPONENT_DUMMY_VEC4 :
-//                            vertexBuffer.push_back(0.0f)
-//                            vertexBuffer.push_back(0.0f)
-//                            vertexBuffer.push_back(0.0f)
-//                            vertexBuffer.push_back(0.0f)
-//                            break
-//                        }
-//                    }
-//
-//                    dim.max.x = fmax(pPos->x, dim.max.x)
-//                    dim.max.y = fmax(pPos->y, dim.max.y)
-//                    dim.max.z = fmax(pPos->z, dim.max.z)
-//
-//                    dim.min.x = fmin(pPos->x, dim.min.x)
-//                    dim.min.y = fmin(pPos->y, dim.min.y)
-//                    dim.min.z = fmin(pPos->z, dim.min.z)
-//                }
-//
-//                dim.size = dim.max - dim.min
-//
-//                parts[i].vertexCount = paiMesh->mNumVertices
-//
-//                uint32_t indexBase = static_cast < uint32_t >(indexBuffer.size())
-//                for (unsigned int j = 0; j < paiMesh->mNumFaces; j++)
-//                {
-//                    const aiFace & Face = paiMesh->mFaces[j]
-//                    if (Face.mNumIndices != 3)
-//                        continue
-//                    indexBuffer.push_back(indexBase + Face.mIndices[0])
-//                    indexBuffer.push_back(indexBase + Face.mIndices[1])
-//                    indexBuffer.push_back(indexBase + Face.mIndices[2])
-//                    parts[i].indexCount += 3
-//                    indexCount += 3
-//                }
-//            }
-//
-//
-//            uint32_t vBufferSize = static_cast < uint32_t >(vertexBuffer.size()) * sizeof(float)
-//            uint32_t iBufferSize = static_cast < uint32_t >(indexBuffer.size()) * sizeof(uint32_t)
-//
-//            // Use staging buffer to move vertex and index buffer to device local memory
-//            // Create staging buffers
-//            vks::Buffer vertexStaging, indexStaging
-//
-//            // Vertex buffer
-//            VK_CHECK_RESULT(device->createBuffer(
-//            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-//            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//            &vertexStaging,
-//            vBufferSize,
-//            vertexBuffer.data()))
-//
-//            // Index buffer
-//            VK_CHECK_RESULT(device->createBuffer(
-//            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-//            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//            &indexStaging,
-//            iBufferSize,
-//            indexBuffer.data()))
-//
-//            // Create device local target buffers
-//            // Vertex buffer
-//            VK_CHECK_RESULT(device->createBuffer(
-//            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-//            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-//            &vertices,
-//            vBufferSize))
-//
-//            // Index buffer
-//            VK_CHECK_RESULT(device->createBuffer(
-//            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-//            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-//            &indices,
-//            iBufferSize))
-//
-//            // Copy from staging buffers
-//            VkCommandBuffer copyCmd = device->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true)
-//
-//            VkBufferCopy copyRegion {}
-//
-//            copyRegion.size = vertices.size
-//            vkCmdCopyBuffer(copyCmd, vertexStaging.buffer, vertices.buffer, 1, & copyRegion)
-//
-//            copyRegion.size = indices.size
-//            vkCmdCopyBuffer(copyCmd, indexStaging.buffer, indices.buffer, 1, & copyRegion)
-//
-//            device->flushCommandBuffer(copyCmd, copyQueue)
-//
-//            // Destroy staging resources
-//            vkDestroyBuffer(device->logicalDevice, vertexStaging.buffer, nullptr)
-//            vkFreeMemory(device->logicalDevice, vertexStaging.memory, nullptr)
-//            vkDestroyBuffer(device->logicalDevice, indexStaging.buffer, nullptr)
-//            vkFreeMemory(device->logicalDevice, indexStaging.memory, nullptr)
-//
-//            return true
-//        } else {
-//            printf("Error parsing '%s': '%s'\n", filename.c_str(), Importer.GetErrorString())
-//            #if defined(__ANDROID__)
-//            LOGE("Error parsing '%s': '%s'", filename.c_str(), Importer.GetErrorString())
-//            #endif
-//            return false
-//        }
-//    }
-//
-//    /**
-//     * Loads a 3D model from a file into Vulkan buffers
-//     *
-//     * @param device Pointer to the Vulkan device used to generated the vertex and index buffers on
-//     * @param filename File to load (must be a model format supported by ASSIMP)
-//     * @param layout Vertex layout components (position, normals, tangents, etc.)
-//     * @param scale Load time scene scale
-//     * @param copyQueue Queue used for the memory staging copy commands (must support transfer)
-//     * @param (Optional) flags ASSIMP model loading flags
-//     */
-//    bool loadFromFile (const std ::string& filename, vks::VertexLayout layout, float scale, vks::VulkanDevice *device, VkQueue copyQueue, const int flags = defaultFlags)
-//    {
-//        vks::ModelCreateInfo modelCreateInfo (scale, 1.0f, 0.0f)
-//        return loadFromFile(filename, layout, & modelCreateInfo, device, copyQueue, flags)
-//    }
-//}
+/*
+* Vulkan Model loader using ASSIMP
+*
+* Copyright(C) 2016-2017 by Sascha Willems - www.saschawillems.de
+*
+* This code is licensed under the MIT license(MIT) (http://opensource.org/licenses/MIT)
+*/
+
+package vulkan.base
+
+import assimp.AiPostProcessStep
+import assimp.AiPostProcessStepsFlags
+import assimp.Importer
+import assimp.or
+import glm_.BYTES
+import glm_.L
+import glm_.max
+import glm_.min
+import glm_.vec2.Vec2
+import glm_.vec3.Vec3
+import glm_.vec4.Vec4
+import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkQueue
+import vkn.*
+import java.net.URL
+
+
+/** @brief Vertex layout components */
+enum class VertexComponent { POSITION, NORMAL, COLOR, UV, TANGENT, BITANGENT, DUMMY_FLOAT, DUMMY_VEC4 }
+
+/** @brief Stores vertex layout components for model loading and Vulkan vertex input and atribute bindings  */
+class VertexLayout(
+        /** @brief Components used to generate vertices from */
+        vararg val components: VertexComponent) {
+
+    val stride
+        get() = components.sumBy {
+            when (it) {
+                VertexComponent.UV -> Vec2.size
+                VertexComponent.DUMMY_FLOAT -> Float.BYTES
+                VertexComponent.DUMMY_VEC4 -> Vec4.size
+            // All components except the ones listed above are made up of 3 floats
+                else -> Vec3.size
+            }
+        }
+}
+
+/** @brief Used to parametrize model loading */
+class ModelCreateInfo(
+        val scale: Vec3 = Vec3(),
+        val uvScale: Vec3 = Vec3(),
+        val center: Vec3 = Vec3()) {
+    constructor(scale: Float, uvScale: Float, center: Float) : this(Vec3(scale), Vec3(uvScale), Vec3(center))
+}
+
+class Model {
+    var device: VkDevice? = null
+    val vertices = Buffer()
+    val indices = Buffer()
+    var indexCount = 0
+    var vertexCount = 0
+
+    /** @brief Stores vertex and index base and counts for each part of a model */
+    class ModelPart {
+        var vertexBase = 0
+        var vertexCount = 0
+        var indexBase = 0
+        var indexCount = 0
+    }
+
+    val parts = ArrayList<ModelPart>()
+
+    val defaultFlags = AiPostProcessStep.FlipWindingOrder or AiPostProcessStep.Triangulate or
+            AiPostProcessStep.PreTransformVertices or AiPostProcessStep.CalcTangentSpace or AiPostProcessStep.GenSmoothNormals
+
+    private val dim = object {
+        val min = Vec3(Float.MAX_VALUE)
+        val max = Vec3(-Float.MAX_VALUE)
+        val size = Vec3()
+    }
+
+    /** @brief Release all Vulkan resources of this model */
+    fun destroy() {
+        val dev = device!!
+        vk.destroyBuffer(dev, vertices.buffer)
+        vk.freeMemory(dev, vertices.memory)
+        if (indices.buffer != NULL) {
+            vk.destroyBuffer(dev, indices.buffer)
+            vk.freeMemory(dev, indices.memory)
+        }
+    }
+
+    /**
+     * Loads a 3D model from a file into Vulkan buffers
+     *
+     * @param device Pointer to the Vulkan device used to generated the vertex and index buffers on
+     * @param filename File to load (must be a model format supported by ASSIMP)
+     * @param layout Vertex layout components (position, normals, tangents, etc.)
+     * @param createInfo MeshCreateInfo structure for load time settings like scale, center, etc.
+     * @param copyQueue Queue used for the memory staging copy commands (must support transfer)
+     * @param (Optional) flags ASSIMP model loading flags
+     */
+    fun loadFromFile(filename: URL, layout: VertexLayout, createInfo: ModelCreateInfo?, device: VulkanDevice, copyQueue: VkQueue,
+                     flags: AiPostProcessStepsFlags = defaultFlags): Boolean {
+        this.device = device.logicalDevice
+
+        val importer = Importer()
+        val scene = importer.readFile(filename, flags)
+        if (scene == null) {
+            val error = importer.errorString
+            tools.exitFatal("$error\n\nThe file may be part of the additional asset pack.\n\nRun \"download_assets.py\" " +
+                    "in the repository root to download the latest version.", -1)
+        }
+
+        if (scene != null) {
+
+            parts.clear()
+            for (i in 0 until scene.numMeshes)
+                parts += ModelPart()
+
+            val scale = Vec3(1f)
+            val uvScale = Vec3(1f)
+            val center = Vec3()
+            createInfo?.also {
+                scale(it.scale)
+                uvScale(it.uvScale)
+                center(it.center)
+            }
+
+            val vertexBuffer = ArrayList<Float>()
+            val indexBuffer = ArrayList<Int>()
+
+            vertexCount = 0
+            indexCount = 0
+
+            // Load meshes
+            for (i in 0 until scene.numMeshes) {
+
+                val mesh = scene.meshes[i]
+
+                parts[i].vertexBase = vertexCount
+                parts[i].indexBase = indexCount
+
+                vertexCount += scene.meshes[i].numVertices
+
+                val color = scene.materials[mesh.materialIndex].color?.diffuse ?: Vec3()
+
+                for (j in 0 until mesh.numVertices) {
+
+                    val pos = mesh.vertices[j]
+                    val normal = mesh.normals[j]
+                    val texCoord = mesh.textureCoords.getOrNull(0)?.getOrNull(j)?.let {
+                        Vec3(it[0], it[1], it.getOrElse(2) { 0f })
+                    } ?: Vec3()
+                    val tangent = mesh.tangents.getOrNull(j) ?: Vec3()
+                    val biTangent = mesh.bitangents.getOrNull(j) ?: Vec3()
+
+                    for (component in layout.components) {
+                        with(vertexBuffer) {
+                            when (component) {
+                                VertexComponent.POSITION -> {
+                                    add(pos.x * scale.x + center.x)
+                                    add(-pos.y * scale.y + center.y)
+                                    add(pos.z * scale.z + center.z)
+                                }
+                                VertexComponent.NORMAL -> {
+                                    add(normal.x)
+                                    add(-normal.y)
+                                    add(normal.z)
+                                }
+                                VertexComponent.UV -> {
+                                    add(texCoord.x * uvScale.s)
+                                    add(texCoord.y * uvScale.t)
+                                }
+                                VertexComponent.COLOR -> {
+                                    add(color.r)
+                                    add(color.g)
+                                    add(color.b)
+                                }
+                                VertexComponent.TANGENT -> {
+                                    add(tangent.x)
+                                    add(tangent.y)
+                                    add(tangent.z)
+                                }
+                                VertexComponent.BITANGENT -> {
+                                    add(biTangent.x)
+                                    add(biTangent.y)
+                                    add(biTangent.z)
+                                }
+                            // Dummy components for padding
+                                VertexComponent.DUMMY_FLOAT -> add(0f)
+                                VertexComponent.DUMMY_VEC4 -> {
+                                    add(0f)
+                                    add(0f)
+                                    add(0f)
+                                    add(0f)
+                                }
+                            }
+                        }
+                    }
+
+                    dim.max.x = pos.x max dim.max.x
+                    dim.max.y = pos.y max dim.max.y
+                    dim.max.z = pos.z max dim.max.z
+
+                    dim.min.x = pos.x min dim.min.x
+                    dim.min.y = pos.y min dim.min.y
+                    dim.min.z = pos.z min dim.min.z
+                }
+
+                dim.size(dim.max - dim.min)
+
+                parts[i].vertexCount = mesh.numVertices
+
+                val indexBase = indexBuffer.size
+                for (j in 0 until mesh.numFaces) {
+                    val face = mesh.faces[j]
+                    if (face.size != 3) continue
+                    for (k in 0..2)
+                        indexBuffer += indexBase + face[k]
+                    parts[i].indexCount += 3
+                    indexCount += 3
+                }
+            }
+
+
+            val vBufferSize = vertexBuffer.size * Float.BYTES
+            val iBufferSize = indexBuffer.size * Int.BYTES
+
+            // Use staging buffer to move vertex and index buffer to device local memory
+            // Create staging buffers
+            val vertexStaging = Buffer()
+            val indexStaging = Buffer()
+
+            val memoryProps = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
+            // Vertex buffer
+            device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, vertexStaging, vertexBuffer)
+            // Index buffer
+            device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, indexStaging, indexBuffer)
+
+            // Create device local target buffers
+            // Vertex buffer
+            device.createBuffer(
+                    VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
+                    VkMemoryProperty.DEVICE_LOCAL_BIT.i,
+                    vertices,
+                    vBufferSize.L)
+
+            // Index buffer
+            device.createBuffer(
+                    VkBufferUsage.INDEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
+                    VkMemoryProperty.DEVICE_LOCAL_BIT.i,
+                    indices,
+                    iBufferSize.L)
+
+            // Copy from staging buffers
+            val copyCmd = device.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
+
+            vk.BufferCopy {
+
+                size = vertices.size
+                copyCmd.copyBuffer(vertexStaging.buffer, vertices.buffer, this)
+
+                size = indices.size
+                copyCmd.copyBuffer(indexStaging.buffer, indices.buffer, this)
+            }
+
+            device.flushCommandBuffer(copyCmd, copyQueue)
+
+            // Destroy staging resources
+            device.logicalDevice!!.apply {
+                destroyBuffer(vertexStaging.buffer)
+                freeMemory(vertexStaging.memory)
+                destroyBuffer(indexStaging.buffer)
+                freeMemory(indexStaging.memory)
+            }
+            return true
+        } else {
+            System.err.println("Error parsing '$filename': '${importer.errorString}'")
+            return false
+        }
+    }
+
+    /**
+     * Loads a 3D model from a file into Vulkan buffers
+     *
+     * @param device Pointer to the Vulkan device used to generated the vertex and index buffers on
+     * @param filename File to load (must be a model format supported by ASSIMP)
+     * @param layout Vertex layout components (position, normals, tangents, etc.)
+     * @param scale Load time scene scale
+     * @param copyQueue Queue used for the memory staging copy commands (must support transfer)
+     * @param (Optional) flags ASSIMP model loading flags
+     */
+    fun loadFromFile(filename: URL, layout: VertexLayout, scale: Float, device: VulkanDevice, copyQueue: VkQueue,
+                     flags: Int = defaultFlags): Boolean {
+        val modelCreateInfo = ModelCreateInfo(scale, 1f, 0f)
+        return loadFromFile(filename, layout, modelCreateInfo, device, copyQueue, flags)
+    }
+}

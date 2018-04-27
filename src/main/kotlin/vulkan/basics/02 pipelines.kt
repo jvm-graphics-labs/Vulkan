@@ -1,423 +1,382 @@
 package vulkan.basics
 
-//package vulkan
-//
-//import org.lwjgl.system.MemoryUtil.NULL
-//import vkn.*
-//import vulkan.base.VulkanExampleBase
-//import vulkan.base.initializers
-//
-///*
-//* Vulkan Example - Using different pipelines in one single renderpass
-//*
-//* Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
-//*
-//* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
-//*/
-//
-//val VERTEX_BUFFER_BIND_ID = 0
-//
-//fun main(args: Array<String>) {
-//    Pipelines().apply {
-//        setupWindow()
-//        initVulkan()
-//        prepare()
-//        renderLoop()
-//        destroy()
-//    }
-//}
-//
-//private class Pipelines : VulkanExampleBase(ENABLE_VALIDATION) {
-//
-//    // Vertex layout for the models
-////    vks::VertexLayout vertexLayout = vks::VertexLayout({
-////        vks::VERTEX_COMPONENT_POSITION,
-////        vks::VERTEX_COMPONENT_NORMAL,
-////        vks::VERTEX_COMPONENT_UV,
-////        vks::VERTEX_COMPONENT_COLOR,
-////    });
-////
-//    private val models = object {
-//        lateinit var cube: Model
-//    }
-//    //
-////    vks::Buffer uniformBuffer;
-////
-////    // Same uniform buffer layout as shader
-////    struct UBOVS {
-////        glm::mat4 projection;
-////        glm::mat4 modelView;
-////        glm::vec4 lightPos = glm::vec4(0.0f, 2.0f, 1.0f, 0.0f);
-////    } uboVS;
-////
-//    var pipelineLayout: VkPipelineLayout = NULL
-//    var descriptorSet: VkDescriptorSet = NULL
-//    var descriptorSetLayout: VkDescriptorSetLayout = NULL
-//
-//    private val pipelines = object {
-//        var phong: VkPipeline = NULL
-//        var wireframe: VkPipeline = NULL
-//        var toon: VkPipeline = NULL
-//    }
-//
-//    init {
-//        zoom = -10.5f
-//        rotation(-25.0f, 15.0f, 0.0f)
-//        title = "Pipeline state objects"
+import glm_.L
+import glm_.func.rad
+import glm_.glm
+import glm_.mat4x4.Mat4
+import glm_.vec2.Vec2
+import glm_.vec3.Vec3
+import glm_.vec4.Vec4
+import org.lwjgl.system.MemoryUtil.*
+import uno.buffer.bufferBig
+import vkn.*
+import vulkan.VERTEX_BUFFER_BIND_ID
+import vulkan.base.*
+
+/*
+* Vulkan Example - Using different pipelines in one single renderpass
+*
+* Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
+*
+* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
+*/
+
+
+fun main(args: Array<String>) {
+    Pipelines().apply {
+        setupWindow()
+        initVulkan()
+        prepare()
+        renderLoop()
+        destroy()
+    }
+}
+
+private class Pipelines : VulkanExampleBase() {
+
+    /** Vertex layout for the models */
+    val vertexLayout = VertexLayout(
+            VertexComponent.POSITION,
+            VertexComponent.NORMAL,
+            VertexComponent.UV,
+            VertexComponent.COLOR)
+
+    private val models = object {
+        val cube = Model()
+    }
+
+    val uniformBuffer = Buffer()
+
+    /** Same uniform buffer layout as shader */
+    private val uboVS = object {
+        var projection = Mat4()
+        var modelView = Mat4()
+        val lightPos = Vec4(0f, 2f, 1f, 0f)
+
+        fun pack() {
+            projection to buffer
+            modelView.to(buffer, Mat4.size)
+            lightPos.to(buffer, Mat4.size * 2)
+        }
+
+        val size = Mat4.size * 2 + Vec4.size
+        val buffer = bufferBig(size)
+        val address = memAddress(buffer)
+    }
+
+    var pipelineLayout: VkPipelineLayout = NULL
+    var descriptorSet: VkDescriptorSet = NULL
+    var descriptorSetLayout: VkDescriptorSetLayout = NULL
+
+    private val pipelines = object {
+        var phong: VkPipeline = NULL
+        var wireframe: VkPipeline = NULL
+        var toon: VkPipeline = NULL
+    }
+
+    init {
+        zoom = -10.5f
+        rotation(-25f, 15f, 0f)
+        title = "Pipeline state objects"
 //        settings.overlay = true
-//    }
-//
-//    override fun destroy() {
-//        // Clean up used Vulkan resources
-//        // Note : Inherited destructor cleans up resources stored in base class
-//        vk.destroyPipeline(device, pipelines.phong)
-//        if (deviceFeatures.fillModeNonSolid)
-//            vk.destroyPipeline(device, pipelines.wireframe)
-//        vk.destroyPipeline(device, pipelines.toon)
-//
-//        vk.destroyPipelineLayout(device, pipelineLayout)
-//        vk.destroyDescriptorSetLayout(device, descriptorSetLayout)
-//
-//        models.cube.destroy()
-//        uniformBuffer.destroy()
-//
-//        super.destroy()
-//    }
-//
-//    // Enable physical device features required for this example
-//    override fun getEnabledFeatures() {
-//        // Fill mode non solid is required for wireframe display
-//        if (deviceFeatures.fillModeNonSolid) {
-//            enabledFeatures.fillModeNonSolid = true
-//            // Wide lines must be present for line width > 1.0f
-//            if (deviceFeatures.wideLines)
-//                enabledFeatures.wideLines = true
-//        }
-//    }
-//
-//    override fun buildCommandBuffers() {
-//
-//        val cmdBufInfo = vk.CommandBufferBeginInfo {}
-//
-//        val clearValues = vk.ClearValue(2)
-//        clearValues[0].color(defaultClearColor)
-//        clearValues[1].depthStencil(1f, 0)
-//
-//        val renderPassBeginInfo = vk.RenderPassBeginInfo {
-//            this.renderPass = renderPass
-//            renderArea.apply {
-//                offset.set(0, 0)
-//                extent.set(size.x, size.y)
-//            }
-//            this.clearValues = clearValues
-//        }
-//
-//        for (i in drawCmdBuffers.indices) {
-//
-//            // Set target frame buffer
-//            renderPassBeginInfo.framebuffer = frameBuffers[i]
-//
-//            vk.beginCommandBuffer(drawCmdBuffers[i], cmdBufInfo).check()
-//
-//            vk.cmdBeginRenderPass(drawCmdBuffers[i], renderPassBeginInfo, VkSubpassContents.INLINE)
-//
-//            val viewport = initializers.viewport(size, 0f, 1f)
-//            vk.cmdSetViewport(drawCmdBuffers[i], 0, viewport)
-//
-//            val scissor = vk.Rect2D(size)
-//            vk.cmdSetScissor(drawCmdBuffers[i], 0, scissor)
-//
-//            vk.cmdBindDescriptorSet(drawCmdBuffers[i], VkPipelineBindPoint.GRAPHICS, pipelineLayout, 0, ::descriptorSet)
-//
-//            vk.cmdBindVertexBuffer(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, models.cube.vertices.buffer)
-//            vkCmdBindIndexBuffer(drawCmdBuffers[i], models.cube.indices.buffer, 0, VK_INDEX_TYPE_UINT32)
-//
-//            // Left : Solid colored
-//            viewport.width = (float) width / 3.0
-//            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, & viewport)
-//            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.phong)
-//
-//            vkCmdDrawIndexed(drawCmdBuffers[i], models.cube.indexCount, 1, 0, 0, 0)
-//
-//            // Center : Toon
-//            viewport.x = (float) width / 3.0
-//            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, & viewport)
-//            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.toon)
-//            // Line width > 1.0f only if wide lines feature is supported
-//            if (deviceFeatures.wideLines) {
-//                vkCmdSetLineWidth(drawCmdBuffers[i], 2.0f)
-//            }
-//            vkCmdDrawIndexed(drawCmdBuffers[i], models.cube.indexCount, 1, 0, 0, 0)
-//
-//            if (deviceFeatures.fillModeNonSolid) {
-//                // Right : Wireframe
-//                viewport.x = (float) width / 3.0+(float)width / 3.0
-//                vkCmdSetViewport(drawCmdBuffers[i], 0, 1, & viewport)
-//                vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.wireframe)
-//                vkCmdDrawIndexed(drawCmdBuffers[i], models.cube.indexCount, 1, 0, 0, 0)
-//            }
-//
-//            vkCmdEndRenderPass(drawCmdBuffers[i])
-//
-//            VK_CHECK_RESULT(vkEndCommandBuffer(drawCmdBuffers[i]))
-//        }
-//    }
-//
-//    void loadAssets()
-//    {
-//        models.cube.loadFromFile(getAssetPath() + "models/treasure_smooth.dae", vertexLayout, 1.0f, vulkanDevice, queue)
-//    }
-//
-//    void setupDescriptorPool()
-//    {
-//        std::vector<VkDescriptorPoolSize> poolSizes =
-//        {
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
-//        }
-//
-//        VkDescriptorPoolCreateInfo descriptorPoolInfo =
-//        vks::initializers::descriptorPoolCreateInfo(
-//                poolSizes.size(),
-//                poolSizes.data(),
-//                2)
-//
-//        VK_CHECK_RESULT(vkCreateDescriptorPool(device, & descriptorPoolInfo, nullptr, & descriptorPool))
-//    }
-//
-//    void setupDescriptorSetLayout()
-//    {
-//        std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    VK_SHADER_STAGE_VERTEX_BIT,
-//                    0)
-//        }
-//
-//        VkDescriptorSetLayoutCreateInfo descriptorLayout =
-//        vks::initializers::descriptorSetLayoutCreateInfo(
-//                setLayoutBindings.data(),
-//                setLayoutBindings.size())
-//
-//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, & descriptorLayout, nullptr, & descriptorSetLayout))
-//
-//        VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-//        vks::initializers::pipelineLayoutCreateInfo(
-//                & descriptorSetLayout,
-//        1)
-//
-//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, & pPipelineLayoutCreateInfo, nullptr, & pipelineLayout))
-//    }
-//
-//    void setupDescriptorSet()
-//    {
-//        VkDescriptorSetAllocateInfo allocInfo =
-//        vks::initializers::descriptorSetAllocateInfo(
-//                descriptorPool,
-//                & descriptorSetLayout,
-//        1)
-//
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSet))
-//
-//        std::vector<VkWriteDescriptorSet> writeDescriptorSets =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    0,
-//                    & uniformBuffer . descriptor)
-//        }
-//
-//        vkUpdateDescriptorSets(device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, NULL)
-//    }
-//
-//    void preparePipelines()
-//    {
-//        VkPipelineInputAssemblyStateCreateInfo inputAssemblyState =
-//        vks::initializers::pipelineInputAssemblyStateCreateInfo(
-//                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-//                0,
-//                VK_FALSE)
-//
-//        VkPipelineRasterizationStateCreateInfo rasterizationState =
-//        vks::initializers::pipelineRasterizationStateCreateInfo(
-//                VK_POLYGON_MODE_FILL,
-//                VK_CULL_MODE_BACK_BIT,
-//                VK_FRONT_FACE_CLOCKWISE,
-//                0)
-//
-//        VkPipelineColorBlendAttachmentState blendAttachmentState =
-//        vks::initializers::pipelineColorBlendAttachmentState(
-//                0xf,
-//                VK_FALSE)
-//
-//        VkPipelineColorBlendStateCreateInfo colorBlendState =
-//        vks::initializers::pipelineColorBlendStateCreateInfo(
-//                1,
-//                & blendAttachmentState)
-//
-//        VkPipelineDepthStencilStateCreateInfo depthStencilState =
-//        vks::initializers::pipelineDepthStencilStateCreateInfo(
-//                VK_TRUE,
-//                VK_TRUE,
-//                VK_COMPARE_OP_LESS_OR_EQUAL)
-//
-//        VkPipelineViewportStateCreateInfo viewportState =
-//        vks::initializers::pipelineViewportStateCreateInfo(1, 1, 0)
-//
-//        VkPipelineMultisampleStateCreateInfo multisampleState =
-//        vks::initializers::pipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT)
-//
-//        std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT,
-//                                                            VK_DYNAMIC_STATE_SCISSOR,
-//                                                            VK_DYNAMIC_STATE_LINE_WIDTH,
-//        }
-//        VkPipelineDynamicStateCreateInfo dynamicState =
-//        vks::initializers::pipelineDynamicStateCreateInfo(dynamicStateEnables)
-//
-//        VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-//        vks::initializers::pipelineCreateInfo(pipelineLayout, renderPass)
-//
-//        std::array < VkPipelineShaderStageCreateInfo, 2> shaderStages
-//
-//        pipelineCreateInfo.pInputAssemblyState = & inputAssemblyState
-//                pipelineCreateInfo.pRasterizationState = & rasterizationState
-//                pipelineCreateInfo.pColorBlendState = & colorBlendState
-//                pipelineCreateInfo.pMultisampleState = & multisampleState
-//                pipelineCreateInfo.pViewportState = & viewportState
-//                pipelineCreateInfo.pDepthStencilState = & depthStencilState
-//                pipelineCreateInfo.pDynamicState = & dynamicState
-//                pipelineCreateInfo.stageCount = shaderStages.size()
-//        pipelineCreateInfo.pStages = shaderStages.data()
-//
-//        // Shared vertex bindings and attributes used by all pipelines
-//
-//        // Binding description
-//        std::vector<VkVertexInputBindingDescription> vertexInputBindings = {
-//            vks::initializers::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vertexLayout.stride(), VK_VERTEX_INPUT_RATE_VERTEX),
-//        }
-//
-//        // Attribute descriptions
-//        std::vector<VkVertexInputAttributeDescription> vertexInputAttributes = {
-//            vks::initializers::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),                    // Location 0: Position
-//            vks::initializers::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3),    // Location 1: Color
-//            vks::initializers::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 6),        // Location 2 : Texture coordinates
-//            vks::initializers::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 8),    // Location 3 : Normal
-//        }
-//
-//        VkPipelineVertexInputStateCreateInfo vertexInputState = vks ::initializers::pipelineVertexInputStateCreateInfo()
-//        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindings.size())
-//        vertexInputState.pVertexBindingDescriptions = vertexInputBindings.data()
-//        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size())
-//        vertexInputState.pVertexAttributeDescriptions = vertexInputAttributes.data()
-//
-//        pipelineCreateInfo.pVertexInputState = & vertexInputState
-//
-//                // Create the graphics pipeline state objects
-//
-//                // We are using this pipeline as the base for the other pipelines (derivatives)
-//                // Pipeline derivatives can be used for pipelines that share most of their state
-//                // Depending on the implementation this may result in better performance for pipeline
-//                // switchting and faster creation time
-//                pipelineCreateInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT
-//
-//        // Textured pipeline
-//        // Phong shading pipeline
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/pipelines/phong.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//        shaderStages[1] = loadShader(getAssetPath() + "shaders/pipelines/phong.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . phong))
-//
-//        // All pipelines created after the base pipeline will be derivatives
-//        pipelineCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT
-//        // Base pipeline will be our first created pipeline
-//        pipelineCreateInfo.basePipelineHandle = pipelines.phong
-//        // It's only allowed to either use a handle or index for the base pipeline
-//        // As we use the handle, we must set the index to -1 (see section 9.5 of the specification)
-//        pipelineCreateInfo.basePipelineIndex = -1
-//
-//        // Toon shading pipeline
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/pipelines/toon.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//        shaderStages[1] = loadShader(getAssetPath() + "shaders/pipelines/toon.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . toon))
-//
-//        // Pipeline for wire frame rendering
-//        // Non solid rendering is not a mandatory Vulkan feature
-//        if (deviceFeatures.fillModeNonSolid) {
-//            rasterizationState.polygonMode = VK_POLYGON_MODE_LINE
-//            shaderStages[0] = loadShader(getAssetPath() + "shaders/pipelines/wireframe.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//            shaderStages[1] = loadShader(getAssetPath() + "shaders/pipelines/wireframe.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//            VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . wireframe))
-//        }
-//    }
-//
-//    // Prepare and initialize uniform buffer containing shader uniforms
-//    void prepareUniformBuffers()
-//    {
-//        // Create the vertex shader uniform buffer block
-//        VK_CHECK_RESULT(vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &uniformBuffer,
-//        sizeof(uboVS)))
-//
-//        // Map persistent
-//        VK_CHECK_RESULT(uniformBuffer.map())
-//
-//        updateUniformBuffers()
-//    }
-//
-//    void updateUniformBuffers()
-//    {
-//        uboVS.projection = glm::perspective(glm::radians(60.0f), (float)(width / 3.0f) / (float) height, 0.1f, 256.0f)
-//
-//        glm::mat4 viewMatrix = glm ::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, zoom))
-//
-//        uboVS.modelView = viewMatrix * glm::translate(glm::mat4(1.0f), cameraPos)
-//        uboVS.modelView = glm::rotate(uboVS.modelView, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f))
-//        uboVS.modelView = glm::rotate(uboVS.modelView, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
-//        uboVS.modelView = glm::rotate(uboVS.modelView, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f))
-//
-//        memcpy(uniformBuffer.mapped, & uboVS, sizeof(uboVS))
-//    }
-//
-//    void draw()
-//    {
-//        VulkanExampleBase::prepareFrame()
-//
-//        submitInfo.commandBufferCount = 1
-//        submitInfo.pCommandBuffers = & drawCmdBuffers [currentBuffer]
-//        VK_CHECK_RESULT(vkQueueSubmit(queue, 1, & submitInfo, VK_NULL_HANDLE))
-//
-//        VulkanExampleBase::submitFrame()
-//    }
-//
-//    void prepare()
-//    {
-//        VulkanExampleBase::prepare()
-//        loadAssets()
-//        prepareUniformBuffers()
-//        setupDescriptorSetLayout()
-//        preparePipelines()
-//        setupDescriptorPool()
-//        setupDescriptorSet()
-//        buildCommandBuffers()
-//        prepared = true
-//    }
-//
-//    virtual void render()
-//    {
-//        if (!prepared)
-//            return
-//        draw()
-//    }
-//
-//    virtual void viewChanged()
-//    {
-//        updateUniformBuffers()
-//    }
-//
+    }
+
+    override fun destroy() {
+        // Clean up used Vulkan resources
+        // Note : Inherited destructor cleans up resources stored in base class
+        device.apply {
+            destroyPipeline(pipelines.phong)
+            if (deviceFeatures.fillModeNonSolid)
+                destroyPipeline(pipelines.wireframe)
+            destroyPipeline(pipelines.toon)
+
+            destroyPipelineLayout(pipelineLayout)
+            destroyDescriptorSetLayout(descriptorSetLayout)
+        }
+        models.cube.destroy()
+        uniformBuffer.destroy()
+
+        super.destroy()
+    }
+
+    // Enable physical device features required for this example
+    override fun getEnabledFeatures() {
+        // Fill mode non solid is required for wireframe display
+        if (deviceFeatures.fillModeNonSolid) {
+            enabledFeatures.fillModeNonSolid = true
+            // Wide lines must be present for line width > 1.0f
+            if (deviceFeatures.wideLines)
+                enabledFeatures.wideLines = true
+        }
+    }
+
+    override fun buildCommandBuffers() {
+
+        val cmdBufInfo = vk.CommandBufferBeginInfo {}
+
+        val clearValues = vk.ClearValue(2)
+        clearValues[0].color(defaultClearColor)
+        clearValues[1].depthStencil(1f, 0)
+
+        val renderPassBeginInfo = vk.RenderPassBeginInfo {
+            renderPass = this@Pipelines.renderPass
+            renderArea.apply {
+                offset.set(0, 0)
+                extent.set(size.x, size.y)
+            }
+            this.clearValues = clearValues
+        }
+
+        for (i in drawCmdBuffers.indices) {
+
+            // Set target frame buffer
+            renderPassBeginInfo.framebuffer(frameBuffers[i])
+
+            drawCmdBuffers[i].apply {
+
+                begin(cmdBufInfo)
+
+                beginRenderPass(renderPassBeginInfo, VkSubpassContents.INLINE)
+
+                val viewport = vk.Viewport(size)
+                setViewport(viewport)
+
+                setScissor(size)
+
+                bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
+
+                bindVertexBuffer(VERTEX_BUFFER_BIND_ID, models.cube.vertices.buffer)
+                bindIndexBuffer(models.cube.indices.buffer, 0, VkIndexType.UINT32)
+
+                // Left : Solid colored
+                viewport.width = size.x / 3f
+                setViewport(viewport)
+                bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.phong)
+
+                drawIndexed(models.cube.indexCount, 1, 0, 0, 0)
+
+                // Center : Toon
+                viewport.x = size.x / 3f
+                setViewport(viewport)
+                bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.toon)
+                // Line width > 1.0f only if wide lines feature is supported
+                if (deviceFeatures.wideLines)
+                    setLineWidth(2f)
+
+                drawIndexed(models.cube.indexCount, 1, 0, 0, 0)
+
+                if (deviceFeatures.fillModeNonSolid) {
+                    // Right : Wireframe
+                    viewport.x = size.x / 3f + size.x / 3f
+                    setViewport(viewport)
+                    bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.wireframe)
+                    drawIndexed(models.cube.indexCount, 1, 0, 0, 0)
+                }
+
+                endRenderPass()
+
+                end()
+            }
+        }
+    }
+
+    fun loadAssets() {
+        models.cube.loadFromFile(getResource("models/treasure_smooth.dae"), vertexLayout, 1f, vulkanDevice, queue)
+    }
+
+    fun setupDescriptorPool() {
+
+        val poolSize = vk.DescriptorPoolSize(VkDescriptorType.UNIFORM_BUFFER, 1)
+
+        val descriptorPoolInfo = vk.DescriptorPoolCreateInfo(poolSize, 2)
+
+        descriptorPool = device createDescriptorPool descriptorPoolInfo
+    }
+
+    fun setupDescriptorSetLayout() {
+
+        val setLayoutBinding = vk.DescriptorSetLayoutBinding(VkDescriptorType.UNIFORM_BUFFER, VkShaderStage.VERTEX_BIT.i, 0)
+
+        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo(setLayoutBinding)
+
+        descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
+
+        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo(descriptorSetLayout)
+
+        pipelineLayout = device createPipelineLayout pipelineLayoutCreateInfo
+    }
+
+    fun setupDescriptorSet() {
+
+        val allocInfo = vk.DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayout)
+
+        descriptorSet = device allocateDescriptorSets allocInfo
+
+        val writeDescriptorSet = vk.WriteDescriptorSet(
+                descriptorSet,
+                VkDescriptorType.UNIFORM_BUFFER,
+                0,  // Binding 0 : Vertex shader uniform buffer
+                uniformBuffer.descriptor)
+
+        device updateDescriptorSet writeDescriptorSet
+    }
+
+    fun preparePipelines() {
+
+        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo(
+                VkPrimitiveTopology.TRIANGLE_LIST,
+                0,
+                false)
+
+        val rasterizationState = vk.PipelineRasterizationStateCreateInfo(
+                VkPolygonMode.FILL,
+                VkCullMode.BACK_BIT.i,
+                VkFrontFace.CLOCKWISE)
+
+        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(0xf, false)
+
+        val colorBlendState = vk.PipelineColorBlendStateCreateInfo(blendAttachmentState)
+
+        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo(true, true, VkCompareOp.LESS_OR_EQUAL)
+
+        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
+
+        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+
+        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR, VkDynamicState.LINE_WIDTH)
+
+        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
+
+        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(pipelineLayout, renderPass)
+
+        val shaderStages = vk.PipelineShaderStageCreateInfo(2)
+
+        pipelineCreateInfo.let {
+            it.inputAssemblyState = inputAssemblyState
+            it.rasterizationState = rasterizationState
+            it.colorBlendState = colorBlendState
+            it.multisampleState = multisampleState
+            it.viewportState = viewportState
+            it.depthStencilState = depthStencilState
+            it.dynamicState = dynamicState
+            it.stages = shaderStages
+        }
+        // Shared vertex bindings and attributes used by all pipelines
+
+        // Binding description
+        val vertexInputBindings = vk.VertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vertexLayout.stride, VkVertexInputRate.VERTEX)
+
+        // Attribute descriptions
+        val vertexInputAttributes = vk.VertexInputAttributeDescription(
+                VERTEX_BUFFER_BIND_ID, 0, VkFormat.R32G32B32_SFLOAT, 0,                         // Location 0: Position
+                VERTEX_BUFFER_BIND_ID, 1, VkFormat.R32G32B32_SFLOAT, Vec3.size,                         // Location 1: Color
+                VERTEX_BUFFER_BIND_ID, 2, VkFormat.R32G32_SFLOAT, Vec3.size * 2,                // Location 2 : Texture coordinates
+                VERTEX_BUFFER_BIND_ID, 3, VkFormat.R32G32B32_SFLOAT, Vec3.size * 2 + Vec2.size) // Location 3 : Normal
+
+        val vertexInputState = vk.PipelineVertexInputStateCreateInfo {
+            vertexBindingDescription = vertexInputBindings
+            vertexAttributeDescriptions = vertexInputAttributes
+        }
+        pipelineCreateInfo.vertexInputState = vertexInputState
+
+        /*  Create the graphics pipeline state objects
+
+            We are using this pipeline as the base for the other pipelines (derivatives)
+            Pipeline derivatives can be used for pipelines that share most of their state
+            Depending on the implementation this may result in better performance for pipeline switchting and faster creation time */
+        pipelineCreateInfo.flags = VkPipelineCreate.ALLOW_DERIVATIVES_BIT.i
+
+        // Textured pipeline
+        // Phong shading pipeline
+        shaderStages[0].loadShader("shaders/pipelines/phong.vert.spv", VkShaderStage.VERTEX_BIT)
+        shaderStages[1].loadShader("shaders/pipelines/phong.frag.spv", VkShaderStage.FRAGMENT_BIT)
+        pipelines.phong = device.createPipeline(pipelineCache, pipelineCreateInfo)
+
+        // All pipelines created after the base pipeline will be derivatives
+        pipelineCreateInfo.flags = VkPipelineCreate.DERIVATIVE_BIT.i
+        // Base pipeline will be our first created pipeline
+        pipelineCreateInfo.basePipelineHandle = pipelines.phong
+        // It's only allowed to either use a handle or index for the base pipeline
+        // As we use the handle, we must set the index to -1 (see section 9.5 of the specification)
+        pipelineCreateInfo.basePipelineIndex = -1
+
+        // Toon shading pipeline
+        shaderStages[0].loadShader("shaders/pipelines/toon.vert.spv", VkShaderStage.VERTEX_BIT)
+        shaderStages[1].loadShader("shaders/pipelines/toon.frag.spv", VkShaderStage.FRAGMENT_BIT)
+        pipelines.toon = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
+
+        // Pipeline for wire frame rendering
+        // Non solid rendering is not a mandatory Vulkan feature
+        if (deviceFeatures.fillModeNonSolid) {
+            rasterizationState.polygonMode = VkPolygonMode.LINE
+            shaderStages[0].loadShader("shaders/pipelines/wireframe.vert.spv", VkShaderStage.VERTEX_BIT)
+            shaderStages[1].loadShader("shaders/pipelines/wireframe.frag.spv", VkShaderStage.FRAGMENT_BIT)
+            pipelines.wireframe = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
+        }
+    }
+
+    // Prepare and initialize uniform buffer containing shader uniforms
+    fun prepareUniformBuffers()    {
+        // Create the vertex shader uniform buffer block
+        vulkanDevice.createBuffer(
+        VkBufferUsage.UNIFORM_BUFFER_BIT.i,
+        VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+        uniformBuffer,
+        uboVS.size.L)
+
+        // Map persistent
+        uniformBuffer.map()
+
+        updateUniformBuffers()
+    }
+
+    fun updateUniformBuffers()    {
+
+        uboVS.projection = glm.perspective(60f.rad, (size.x / 3f) / size.y, 0.1f, 256f)
+
+        val viewMatrix = glm.translate(Mat4(1f), Vec3(0f, 0f, zoom))
+
+        uboVS.modelView = viewMatrix translate cameraPos
+        uboVS.modelView
+                .rotateAssign(rotation.x.rad, 1f, 0f, 0f)
+                .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
+                .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
+
+        uboVS.pack()
+        memCopy(uboVS.address, uniformBuffer.mapped[0], uboVS.size.L)
+    }
+
+    fun draw()    {
+
+        super.prepareFrame()
+
+        submitInfo.commandBuffer = drawCmdBuffers [currentBuffer]
+        queue submit submitInfo
+
+        super.submitFrame()
+    }
+
+    override fun prepare()    {
+        super.prepare()
+        loadAssets()
+        prepareUniformBuffers()
+        setupDescriptorSetLayout()
+        preparePipelines()
+        setupDescriptorPool()
+        setupDescriptorSet()
+        buildCommandBuffers()
+        prepared = true
+        window.show()
+    }
+
+    override fun render()    {
+        if (!prepared)
+            return
+        draw()
+    }
+
+    override fun viewChanged() = updateUniformBuffers()
+
 //    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)
 //    {
 //        if (!deviceFeatures.fillModeNonSolid) {
@@ -426,6 +385,4 @@ package vulkan.basics
 //            }
 //        }
 //    }
-//}
-//
-//VULKAN_EXAMPLE_MAIN()
+}

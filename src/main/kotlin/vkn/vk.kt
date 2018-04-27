@@ -9,6 +9,7 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
 import vkn.VkPhysicalDeviceArrayList.resize
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
@@ -34,6 +35,14 @@ object vk {
         return res
     }
 
+    inline fun CommandBufferAllocateInfo(commandPool: VkCommandPool, level: VkCommandBufferLevel, bufferCount: Int): VkCommandBufferAllocateInfo {
+        return CommandBufferAllocateInfo {
+            this.commandPool = commandPool
+            this.level = level
+            commandBufferCount = bufferCount
+        }
+    }
+
     inline fun CommandBufferAllocateInfo(block: VkCommandBufferAllocateInfo.() -> Unit): VkCommandBufferAllocateInfo {
         val res = VkCommandBufferAllocateInfo.create(ptr.advance(VkCommandBufferAllocateInfo.SIZEOF))
         res.type = VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO
@@ -41,9 +50,13 @@ object vk {
         return res
     }
 
-    inline fun CommandBufferBeginInfo(block: VkCommandBufferBeginInfo.() -> Unit): VkCommandBufferBeginInfo {
+    inline fun CommandBufferBeginInfo(): VkCommandBufferBeginInfo {
         val res = VkCommandBufferBeginInfo.create(ptr.advance(VkCommandBufferBeginInfo.SIZEOF))
         res.type = VkStructureType.COMMAND_BUFFER_BEGIN_INFO
+        return res
+    }
+    inline fun CommandBufferBeginInfo(block: VkCommandBufferBeginInfo.() -> Unit): VkCommandBufferBeginInfo {
+        val res = CommandBufferBeginInfo()
         res.block()
         return res
     }
@@ -155,6 +168,8 @@ object vk {
     inline fun ImageMemoryBarrier(block: VkImageMemoryBarrier.() -> Unit): VkImageMemoryBarrier {
         val res = VkImageMemoryBarrier.create(ptr.advance(VkImageMemoryBarrier.SIZEOF))
         res.type = VkStructureType.IMAGE_MEMORY_BARRIER
+        res.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
+        res.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED
         res.block()
         return res
     }
@@ -387,8 +402,11 @@ object vk {
     inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = AttachmentReference(capacity).also { it[0].block() }
 
     inline fun BufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF * capacity), capacity)
+    inline fun BufferCopy(block: VkBufferCopy.() -> Unit): VkBufferCopy = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF)).also(block)
+
     inline fun BufferImageCopy(block: VkBufferImageCopy.() -> Unit): VkBufferImageCopy = VkBufferImageCopy.create(ptr.advance(VkBufferImageCopy.SIZEOF)).also(block)
-    inline fun BufferImageCopy(capacity: Int, block: VkBufferImageCopy.() -> Unit): VkBufferImageCopy.Buffer = VkBufferImageCopy.create(ptr.advance(VkBufferImageCopy.SIZEOF * capacity), capacity).also { it[0].block() }
+    inline fun BufferImageCopy(capacity: Int, block: VkBufferImageCopy.() -> Unit): VkBufferImageCopy.Buffer = BufferImageCopy(capacity).also { it[0].block() }
+    inline fun BufferImageCopy(capacity: Int): VkBufferImageCopy.Buffer = VkBufferImageCopy.create(ptr.advance(VkBufferImageCopy.SIZEOF * capacity), capacity)
 
     inline fun ClearValue(capacity: Int): VkClearValue.Buffer = VkClearValue.create(ptr.advance(VkClearValue.SIZEOF * capacity), capacity)
 
@@ -398,6 +416,7 @@ object vk {
 
     inline fun DescriptorSetLayoutBinding(capacity: Int): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF * capacity), capacity)
     inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = DescriptorSetLayoutBinding(capacity).also { it[0].block() }
+    inline fun DescriptorSetLayoutBinding(block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF)).also(block)
 
     inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
     inline fun Extent3D(block: VkExtent3D.() -> Unit): VkExtent3D = VkExtent3D.create(ptr.advance(VkExtent3D.SIZEOF)).also(block)
@@ -408,6 +427,8 @@ object vk {
     inline fun ImageBlit(block: VkImageBlit.() -> Unit): VkImageBlit = VkImageBlit.create(ptr.advance(VkImageBlit.SIZEOF)).also(block)
 
     inline fun ImageCopy(block: VkImageCopy.() -> Unit): VkImageCopy = VkImageCopy.create(ptr.advance(VkImageCopy.SIZEOF)).also(block)
+
+    inline fun ImageSubresource(block: VkImageSubresource.() -> Unit): VkImageSubresource = VkImageSubresource.create(ptr.advance(VkImageSubresource.SIZEOF)).also(block)
 
     inline fun ImageSubresourceRange(block: VkImageSubresourceRange.() -> Unit): VkImageSubresourceRange = VkImageSubresourceRange.create(ptr.advance(VkImageSubresourceRange.SIZEOF)).also(block)
 
@@ -428,12 +449,16 @@ object vk {
 
     inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
 
+    inline fun SubresourceLayout(): VkSubresourceLayout = VkSubresourceLayout.create(ptr.advance(VkSubresourceLayout.SIZEOF ))
+    inline fun SubresourceLayout(capacity: Int, block: VkSubresourceLayout.() -> Unit): VkSubresourceLayout.Buffer = VkSubresourceLayout.create(ptr.advance(VkSubresourceLayout.SIZEOF * capacity), capacity).also { it[0].block() }
+
     inline fun SurfaceCapabilitiesKHR(block: VkSurfaceCapabilitiesKHR.() -> Unit): VkSurfaceCapabilitiesKHR = VkSurfaceCapabilitiesKHR.create(ptr.advance(VkSurfaceCapabilitiesKHR.SIZEOF)).also(block)
 
     inline fun SurfaceFormatKHR(capacity: Int): VkSurfaceFormatKHR.Buffer = VkSurfaceFormatKHR.create(ptr.advance(VkSurfaceFormatKHR.SIZEOF * capacity), capacity)
 
     inline fun VertexInputAttributeDescription(block: VkVertexInputAttributeDescription.() -> Unit): VkVertexInputAttributeDescription = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF)).also(block)
     inline fun VertexInputAttributeDescription(capacity: Int): VkVertexInputAttributeDescription.Buffer = VkVertexInputAttributeDescription.create(ptr.advance(VkVertexInputAttributeDescription.SIZEOF * capacity), capacity)
+    inline fun VertexInputAttributeDescription(capacity: Int, block: VkVertexInputAttributeDescription.Buffer.() -> Unit): VkVertexInputAttributeDescription.Buffer = VertexInputAttributeDescription(capacity).also(block)
 
     inline fun VertexInputBindingDescription(block: VkVertexInputBindingDescription.() -> Unit): VkVertexInputBindingDescription = VkVertexInputBindingDescription.create(ptr.advance(VkVertexInputBindingDescription.SIZEOF)).also { it.block() }
     inline fun VertexInputBindingDescription(capacity: Int, block: VkVertexInputBindingDescription.() -> Unit): VkVertexInputBindingDescription.Buffer = VkVertexInputBindingDescription.create(ptr.advance(VkVertexInputBindingDescription.SIZEOF * capacity), capacity).also { it[0].block() }
@@ -445,6 +470,136 @@ object vk {
     /*
         Function Constructors
      */
+
+    inline fun DescriptorPoolCreateInfo(poolSize: VkDescriptorPoolSize, maxSets: Int): VkDescriptorPoolCreateInfo {
+        return DescriptorPoolCreateInfo {
+            this.poolSize = poolSize
+            this.maxSets = maxSets
+        }
+    }
+
+    inline fun DescriptorPoolSize(type: VkDescriptorType, descriptorCount: Int): VkDescriptorPoolSize {
+        return DescriptorPoolSize {
+            this.type = type
+            this.descriptorCount = descriptorCount
+        }
+    }
+
+    inline fun DescriptorSetAllocateInfo(descriptorPool: VkDescriptorPool, setLayout: VkDescriptorSetLayout): VkDescriptorSetAllocateInfo {
+        return DescriptorSetAllocateInfo {
+            this.descriptorPool = descriptorPool
+        }
+    }
+
+    inline fun DescriptorSetLayoutBinding(type: VkDescriptorType, stageFlags: VkShaderStageFlags, binding: Int): VkDescriptorSetLayoutBinding {
+        return DescriptorSetLayoutBinding {
+            descriptorType = type
+            this.stageFlags = stageFlags
+            this.binding = binding
+        }
+    }
+
+    inline fun DescriptorSetLayoutCreateInfo(binding: VkDescriptorSetLayoutBinding): VkDescriptorSetLayoutCreateInfo {
+        return DescriptorSetLayoutCreateInfo {
+            this.binding = binding
+        }
+    }
+
+    inline fun GraphicsPipelineCreateInfo(layout: VkPipelineLayout, renderPass: VkRenderPass, flags: VkPipelineCreateFlags = 0): VkGraphicsPipelineCreateInfo {
+        return GraphicsPipelineCreateInfo {
+            this.layout = layout
+            this.renderPass = renderPass
+            this.flags = flags
+            basePipelineIndex = -1
+            basePipelineHandle = NULL
+        }
+    }
+
+    inline fun PipelineColorBlendAttachmentState(colorWriteMask: VkColorComponentFlags, blendEnable: Boolean): VkPipelineColorBlendAttachmentState {
+        return PipelineColorBlendAttachmentState {
+            this.colorWriteMask = colorWriteMask
+            this.blendEnable = blendEnable
+        }
+    }
+
+    inline fun PipelineColorBlendStateCreateInfo(attachment: VkPipelineColorBlendAttachmentState): VkPipelineColorBlendStateCreateInfo {
+        return PipelineColorBlendStateCreateInfo {
+            this.attachment = attachment
+        }
+    }
+
+    inline fun PipelineDepthStencilStateCreateInfo(depthTestEnable: Boolean,
+                                                   depthWriteEnable: Boolean,
+                                                   depthCompareOp: VkCompareOp): VkPipelineDepthStencilStateCreateInfo {
+        return PipelineDepthStencilStateCreateInfo {
+            this.depthTestEnable = depthTestEnable
+            this.depthWriteEnable = depthWriteEnable
+            this.depthCompareOp = depthCompareOp
+            front = back
+            back.compareOp = VkCompareOp.ALWAYS
+        }
+    }
+
+    inline fun PipelineDynamicStateCreateInfo(dynamicStates: Collection<VkDynamicState>, flags: VkPipelineDynamicStateCreateFlags = 0): VkPipelineDynamicStateCreateInfo {
+        return PipelineDynamicStateCreateInfo {
+            this.dynamicStates = dynamicStates.run {
+                appBuffer.intBuffer(size).also {
+                    for (i in indices)
+                        it[i] = elementAt(i).i
+                }
+            }
+            this.flags = flags
+        }
+    }
+
+    inline fun PipelineInputAssemblyStateCreateInfo(topology: VkPrimitiveTopology,
+                                                    flags: VkPipelineInputAssemblyStateCreateFlags,
+                                                    primitiveRestartEnable: Boolean): VkPipelineInputAssemblyStateCreateInfo {
+        return PipelineInputAssemblyStateCreateInfo {
+            this.topology = topology
+            this.flags = flags
+            this.primitiveRestartEnable = primitiveRestartEnable
+        }
+    }
+
+
+    inline fun PipelineLayoutCreateInfo(setLayout: VkDescriptorSetLayout): VkPipelineLayoutCreateInfo {
+        return PipelineLayoutCreateInfo {
+            setLayouts = appBuffer longBufferOf setLayout
+        }
+    }
+
+    inline fun PipelineMultisampleStateCreateInfo(rasterizationSamples: VkSampleCount, flags: VkPipelineMultisampleStateCreateFlags = 0): VkPipelineMultisampleStateCreateInfo {
+        return PipelineMultisampleStateCreateInfo {
+            this.rasterizationSamples = rasterizationSamples
+            this.flags = flags
+        }
+    }
+
+    inline fun PipelineRasterizationStateCreateInfo(
+            polygonMode: VkPolygonMode,
+            cullMode: VkCullModeFlags,
+            frontFace: VkFrontFace,
+            flags: VkPipelineRasterizationStateCreateFlags = 0
+    ): VkPipelineRasterizationStateCreateInfo {
+        return PipelineRasterizationStateCreateInfo {
+            this.polygonMode = polygonMode
+            this.cullMode = cullMode
+            this.frontFace = frontFace
+            this.flags = flags
+            depthClampEnable = false
+            lineWidth = 1f
+        }
+    }
+
+    inline fun PipelineViewportStateCreateInfo(viewportCount: Int, scissorCount: Int, flags: VkPipelineViewportStateCreateFlags = 0): VkPipelineViewportStateCreateInfo {
+        return PipelineViewportStateCreateInfo {
+            this.viewportCount = viewportCount
+            this.scissorCount = scissorCount
+            this.flags = flags
+        }
+    }
+
     inline fun Rect2D(size: Vec2i, offset: Vec2i = Vec2i()) = Rect2D(size.x, size.y, offset.x, offset.y)
 
     inline fun Rect2D(width: Int, height: Int, offsetX: Int, offsetY: Int): VkRect2D.Buffer {
@@ -456,17 +611,44 @@ object vk {
         }
     }
 
+    inline fun VertexInputBindingDescription(binding: Int, stride: Int, inputRate: VkVertexInputRate): VkVertexInputBindingDescription {
+        return VertexInputBindingDescription {
+            this.binding = binding
+            this.stride = stride
+            this.inputRate = inputRate
+        }
+    }
+
+    inline fun Viewport(size: Vec2i, minDepth: Float = 0f, maxDepth: Float = 1f): VkViewport {
+        return Viewport {
+            width = size.x.f
+            height = size.y.f
+            this.minDepth = minDepth
+            this.maxDepth = maxDepth
+        }
+    }
+
+    inline fun WriteDescriptorSet(dstSet: VkDescriptorSet, type: VkDescriptorType, binding: Int, bufferInfo: VkDescriptorBufferInfo): VkWriteDescriptorSet {
+        return WriteDescriptorSet {
+            this.dstSet = dstSet
+            descriptorType = type
+            dstBinding = binding
+            bufferInfo_ = bufferInfo
+        }
+    }
+
+
     /*
         Full Constructors
      */
 
 
     inline fun ImageSubresourceRange(
-        aspectMask: VkImageAspectFlags,
-        baseMipLevel: Int,
-        levelCount: Int,
-        baseArrayLayer: Int,
-        layerCount: Int): VkImageSubresourceRange {
+            aspectMask: VkImageAspectFlags,
+            baseMipLevel: Int,
+            levelCount: Int,
+            baseArrayLayer: Int,
+            layerCount: Int): VkImageSubresourceRange {
         return ImageSubresourceRange {
             this.aspectMask = aspectMask
             this.baseMipLevel = baseMipLevel
@@ -485,17 +667,131 @@ object vk {
         }
     }
 
-    inline fun VertexInputBindingDescription(binding: Int, stride: Int, inputRate: VkVertexInputRate): VkVertexInputBindingDescription {
-        return vk.VertexInputBindingDescription {
-            this.binding = binding
-            this.stride = stride
-            this.inputRate = inputRate
+    inline fun VertexInputAttributeDescription(
+            binding0: Int, location0: Int, format0: VkFormat, offset0: Int,
+            binding1: Int, location1: Int, format1: VkFormat, offset1: Int): VkVertexInputAttributeDescription.Buffer {
+
+        return VertexInputAttributeDescription(2) {
+            this[0].apply {
+                location = location0
+                binding = binding0
+                format = format0
+                offset = offset0
+            }
+            this[1].apply {
+                location = location1
+                binding = binding1
+                format = format1
+                offset = offset1
+            }
         }
     }
 
-    /*
-        functions
-     */
+    inline fun VertexInputAttributeDescription(
+            binding0: Int, location0: Int, format0: VkFormat, offset0: Int,
+            binding1: Int, location1: Int, format1: VkFormat, offset1: Int,
+            binding2: Int, location2: Int, format2: VkFormat, offset2: Int): VkVertexInputAttributeDescription.Buffer {
+
+        return VertexInputAttributeDescription(3) {
+            this[0].apply {
+                location = location0
+                binding = binding0
+                format = format0
+                offset = offset0
+            }
+            this[1].apply {
+                location = location1
+                binding = binding1
+                format = format1
+                offset = offset1
+            }
+            this[2].apply {
+                location = location2
+                binding = binding2
+                format = format2
+                offset = offset2
+            }
+        }
+    }
+
+    inline fun VertexInputAttributeDescription(
+            binding0: Int, location0: Int, format0: VkFormat, offset0: Int,
+            binding1: Int, location1: Int, format1: VkFormat, offset1: Int,
+            binding2: Int, location2: Int, format2: VkFormat, offset2: Int,
+            binding3: Int, location3: Int, format3: VkFormat, offset3: Int): VkVertexInputAttributeDescription.Buffer {
+
+        return VertexInputAttributeDescription(4) {
+            this[0].apply {
+                location = location0
+                binding = binding0
+                format = format0
+                offset = offset0
+            }
+            this[1].apply {
+                location = location1
+                binding = binding1
+                format = format1
+                offset = offset1
+            }
+            this[2].apply {
+                location = location2
+                binding = binding2
+                format = format2
+                offset = offset2
+            }
+            this[3].apply {
+                location = location3
+                binding = binding3
+                format = format3
+                offset = offset3
+            }
+        }
+    }
+
+    inline fun VertexInputAttributeDescription(
+            binding0: Int, location0: Int, format0: VkFormat, offset0: Int,
+            binding1: Int, location1: Int, format1: VkFormat, offset1: Int,
+            binding2: Int, location2: Int, format2: VkFormat, offset2: Int,
+            binding3: Int, location3: Int, format3: VkFormat, offset3: Int,
+            binding4: Int, location4: Int, format4: VkFormat, offset4: Int): VkVertexInputAttributeDescription.Buffer {
+
+        return VertexInputAttributeDescription(4) {
+            this[0].apply {
+                location = location0
+                binding = binding0
+                format = format0
+                offset = offset0
+            }
+            this[1].apply {
+                location = location1
+                binding = binding1
+                format = format1
+                offset = offset1
+            }
+            this[2].apply {
+                location = location2
+                binding = binding2
+                format = format2
+                offset = offset2
+            }
+            this[3].apply {
+                location = location3
+                binding = binding3
+                format = format3
+                offset = offset3
+            }
+            this[4].apply {
+                location = location4
+                binding = binding4
+                format = format4
+                offset = offset4
+            }
+        }
+    }
+
+/*
+    functions
+ */
 
     inline fun acquireNextImageKHR(device: VkDevice, swapchain: VkSwapchainKHR, timeout: Long, semaphore: VkSemaphore, fence: VkFence,
                                    imageIndex: KMutableProperty0<Int>): VkResult {
@@ -539,9 +835,9 @@ object vk {
     }
 
     inline fun cmdBindDescriptorSet(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
-                                    descriptorSets: KMutableProperty0<VkDescriptorSet>, dynamicOffsets: Int? = null) {
+                                    descriptorSet: VkDescriptorSet, dynamicOffsets: Int? = null) {
         val pDescriptorSets = appBuffer.long
-        memPutLong(pDescriptorSets, descriptorSets())
+        memPutLong(pDescriptorSets, descriptorSet)
         val dynamicOffsetCount: Int
         val pDynamicOffset: Long
         if (dynamicOffsets != null) {
@@ -553,8 +849,7 @@ object vk {
             pDynamicOffset = NULL
         }
         VK10.nvkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint.i, layout, 0, 1, pDescriptorSets,
-            dynamicOffsetCount, pDynamicOffset)
-        descriptorSets.set(memGetLong(pDescriptorSets))
+                dynamicOffsetCount, pDynamicOffset)
     }
 
     inline fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
@@ -565,13 +860,12 @@ object vk {
         VK10.vkCmdBindPipeline(commandBuffer, pipelineBindPoint.i, pipeline)
     }
 
-    inline fun cmdBindVertexBuffer(commandBuffer: VkCommandBuffer, firstBinding: Int, buffer: KMutableProperty0<VkBuffer>) {
+    inline fun cmdBindVertexBuffer(commandBuffer: VkCommandBuffer, firstBinding: Int, buffer: VkBuffer) {
         val pBuffer = appBuffer.long
-        memPutLong(pBuffer, buffer())
+        memPutLong(pBuffer, buffer)
         val pOffset = appBuffer.long
         memPutLong(pOffset, 0L) // TODO remove since calloc?
         VK10.nvkCmdBindVertexBuffers(commandBuffer, firstBinding, 1, pBuffer, pOffset)
-        buffer.set(memGetLong(pBuffer))
     }
 
     inline fun cmdDrawIndexed(commandBuffer: VkCommandBuffer, indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
@@ -633,7 +927,7 @@ object vk {
     }
 
     inline fun createDevice(physicalDevice: VkPhysicalDevice, createInfo: VkDeviceCreateInfo, device: KMutableProperty0<VkDevice?>)
-        : VkResult {
+            : VkResult {
         val pDevice = appBuffer.pointer
         return VkResult of VK10.nvkCreateDevice(physicalDevice, createInfo.adr, NULL, pDevice).also {
             device.set(VkDevice(memGetLong(pDevice), physicalDevice, createInfo))
@@ -745,7 +1039,7 @@ object vk {
     }
 
     inline fun createSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, swapchain: KMutableProperty0<VkSwapchainKHR>)
-        : VkResult {
+            : VkResult {
         val pSwapchain = appBuffer.long
         return VkResult of KHRSwapchain.nvkCreateSwapchainKHR(device, createInfo.adr, NULL, pSwapchain).also {
             swapchain.set(memGetLong(pSwapchain))
@@ -958,6 +1252,6 @@ object vk {
     inline fun updateDescriptorSets(device: VkDevice, descriptorWrites: VkWriteDescriptorSet.Buffer,
                                     descriptorCopies: VkCopyDescriptorSet.Buffer? = null) {
         return VK10.nvkUpdateDescriptorSets(device, descriptorWrites.remaining(), descriptorWrites.adr,
-            descriptorCopies?.remaining() ?: 0, descriptorCopies?.adr ?: NULL)
+                descriptorCopies?.remaining() ?: 0, descriptorCopies?.adr ?: NULL)
     }
 }

@@ -1,7 +1,9 @@
 package vulkan.base
 
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkImageSubresourceRange
 import org.lwjgl.vulkan.VkPhysicalDevice
 import uno.buffer.toBuffer
 import uno.buffer.use
@@ -51,150 +53,123 @@ object tools {
         }
         return false
     }
-//
-//    // Create an image memory barrier for changing the layout of
-//    // an image and put it into an active command buffer
-//    // See chapter 11.4 "Image Layout" for details
-//
-//    void setImageLayout(
-//            VkCommandBuffer cmdbuffer,
-//    VkImage image,
-//    VkImageLayout oldImageLayout,
-//    VkImageLayout newImageLayout,
-//    VkImageSubresourceRange subresourceRange,
-//    VkPipelineStageFlags srcStageMask,
-//    VkPipelineStageFlags dstStageMask)
-//    {
-//        // Create an image barrier object
-//        VkImageMemoryBarrier imageMemoryBarrier = vks::initializers::imageMemoryBarrier();
-//        imageMemoryBarrier.oldLayout = oldImageLayout;
-//        imageMemoryBarrier.newLayout = newImageLayout;
-//        imageMemoryBarrier.image = image;
-//        imageMemoryBarrier.subresourceRange = subresourceRange;
-//
-//        // Source layouts (old)
-//        // Source access mask controls actions that have to be finished on the old layout
-//        // before it will be transitioned to the new layout
-//        switch (oldImageLayout)
-//        {
-//            case VK_IMAGE_LAYOUT_UNDEFINED:
-//            // Image layout is undefined (or does not matter)
-//            // Only valid as initial layout
-//            // No flags required, listed only for completeness
-//            imageMemoryBarrier.srcAccessMask = 0;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_PREINITIALIZED:
-//            // Image is preinitialized
-//            // Only valid as initial layout for linear images, preserves memory contents
-//            // Make sure host writes have been finished
-//            imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-//            // Image is a color attachment
-//            // Make sure any writes to the color buffer have been finished
-//            imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-//            // Image is a depth/stencil attachment
-//            // Make sure any writes to the depth/stencil buffer have been finished
-//            imageMemoryBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-//            // Image is a transfer source
-//            // Make sure any reads from the image have been finished
-//            imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-//            // Image is a transfer destination
-//            // Make sure any writes to the image have been finished
-//            imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-//            // Image is read by a shader
-//            // Make sure any shader reads from the image have been finished
-//            imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-//            break;
-//            default:
-//            // Other source layouts aren't handled (yet)
-//            break;
-//        }
-//
-//        // Target layouts (new)
-//        // Destination access mask controls the dependency for the new image layout
-//        switch (newImageLayout)
-//        {
-//            case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-//            // Image will be used as a transfer destination
-//            // Make sure any writes to the image have been finished
-//            imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-//            // Image will be used as a transfer source
-//            // Make sure any reads from the image have been finished
-//            imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-//            // Image will be used as a color attachment
-//            // Make sure any writes to the color buffer have been finished
-//            imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-//            // Image layout will be used as a depth/stencil attachment
-//            // Make sure any writes to depth/stencil buffer have been finished
-//            imageMemoryBarrier.dstAccessMask = imageMemoryBarrier.dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-//            break;
-//
-//            case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-//            // Image will be read in a shader (sampler, input attachment)
-//            // Make sure any writes to the image have been finished
-//            if (imageMemoryBarrier.srcAccessMask == 0)
-//            {
-//                imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
-//            }
-//            imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-//            break;
-//            default:
-//            // Other source layouts aren't handled (yet)
-//            break;
-//        }
-//
-//        // Put barrier inside setup command buffer
-//        vkCmdPipelineBarrier(
-//                cmdbuffer,
-//                srcStageMask,
-//                dstStageMask,
-//                0,
-//                0, nullptr,
-//                0, nullptr,
-//                1, &imageMemoryBarrier);
-//    }
-//
-//    // Fixed sub resource on first mip level and layer
-//    void setImageLayout(
-//            VkCommandBuffer cmdbuffer,
-//    VkImage image,
-//    VkImageAspectFlags aspectMask,
-//    VkImageLayout oldImageLayout,
-//    VkImageLayout newImageLayout,
-//    VkPipelineStageFlags srcStageMask,
-//    VkPipelineStageFlags dstStageMask)
-//    {
-//        VkImageSubresourceRange subresourceRange = {};
-//        subresourceRange.aspectMask = aspectMask;
-//        subresourceRange.baseMipLevel = 0;
-//        subresourceRange.levelCount = 1;
-//        subresourceRange.layerCount = 1;
-//        setImageLayout(cmdbuffer, image, oldImageLayout, newImageLayout, subresourceRange, srcStageMask, dstStageMask);
-//    }
+
+    /** Create an image memory barrier for changing the layout of an image and put it into an active command buffer
+     *  See chapter 11.4 "Image Layout" for details */
+    fun setImageLayout(
+            cmdbuffer: VkCommandBuffer,
+            image: VkImage,
+            oldImageLayout: VkImageLayout,
+            newImageLayout: VkImageLayout,
+            subresourceRange: VkImageSubresourceRange,
+            srcStageMask: VkPipelineStageFlags = VkPipelineStage.ALL_COMMANDS_BIT.i,
+            dstStageMask: VkPipelineStageFlags = VkPipelineStage.ALL_COMMANDS_BIT.i) {
+
+        // Create an image barrier object
+        val imageMemoryBarrier = vk.ImageMemoryBarrier {
+            oldLayout = oldImageLayout
+            newLayout = newImageLayout
+            this.image = image
+            this.subresourceRange = subresourceRange
+        }
+        /*  Source layouts (old)
+            Source access mask controls actions that have to be finished on the old layout before
+            it will be transitioned to the new layout */
+        imageMemoryBarrier.srcAccessMask = when (oldImageLayout) {
+
+        /*  Image layout is undefined (or does not matter)
+            Only valid as initial layout
+            No flags required, listed only for completeness */
+            VkImageLayout.UNDEFINED -> 0
+
+        /*  Image is preinitialized
+            Only valid as initial layout for linear images, preserves memory contents
+            Make sure host writes have been finished */
+            VkImageLayout.PREINITIALIZED -> VkAccess.HOST_WRITE_BIT.i
+
+        /*  Image is a color attachment
+            Make sure any writes to the color buffer have been finished         */
+            VkImageLayout.COLOR_ATTACHMENT_OPTIMAL -> VkAccess.COLOR_ATTACHMENT_WRITE_BIT.i
+
+        /*  Image is a depth/stencil attachment
+            Make sure any writes to the depth/stencil buffer have been finished         */
+            VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL -> VkAccess.DEPTH_STENCIL_ATTACHMENT_WRITE_BIT.i
+
+        /*  Image is a transfer source
+            Make sure any reads from the image have been finished         */
+            VkImageLayout.TRANSFER_SRC_OPTIMAL -> VkAccess.TRANSFER_READ_BIT.i
+
+        /*  Image is a transfer destination
+            Make sure any writes to the image have been finished         */
+            VkImageLayout.TRANSFER_DST_OPTIMAL -> VkAccess.TRANSFER_WRITE_BIT.i
+
+        /*  Image is read by a shader
+            Make sure any shader reads from the image have been finished         */
+            VkImageLayout.SHADER_READ_ONLY_OPTIMAL -> VkAccess.SHADER_READ_BIT.i
+
+        // Other source layouts aren't handled (yet)
+            else -> imageMemoryBarrier.srcAccessMask
+        }
+
+        /*  Target layouts (new)
+            Destination access mask controls the dependency for the new image layout         */
+        imageMemoryBarrier.dstAccessMask = when (newImageLayout) {
+
+        /*  Image will be used as a transfer destination
+            Make sure any writes to the image have been finished         */
+            VkImageLayout.TRANSFER_DST_OPTIMAL -> VkAccess.TRANSFER_WRITE_BIT.i
+
+        /*  Image will be used as a transfer source
+            Make sure any reads from the image have been finished         */
+            VkImageLayout.TRANSFER_SRC_OPTIMAL -> VkAccess.TRANSFER_READ_BIT.i
+
+        /*  Image will be used as a color attachment
+            Make sure any writes to the color buffer have been finished         */
+            VkImageLayout.COLOR_ATTACHMENT_OPTIMAL -> VkAccess.COLOR_ATTACHMENT_WRITE_BIT.i
+
+        /*  Image layout will be used as a depth/stencil attachment
+            Make sure any writes to depth/stencil buffer have been finished         */
+            VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL -> imageMemoryBarrier.dstAccessMask or VkAccess.DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+
+        /*  Image will be read in a shader (sampler, input attachment)
+            Make sure any writes to the image have been finished         */
+            VkImageLayout.SHADER_READ_ONLY_OPTIMAL -> {
+                if (imageMemoryBarrier.srcAccessMask == 0)
+                    imageMemoryBarrier.srcAccessMask = VkAccess.HOST_WRITE_BIT or VkAccess.TRANSFER_WRITE_BIT
+                VkAccess.SHADER_READ_BIT.i
+            }
+
+        // Other source layouts aren't handled (yet)
+            else -> imageMemoryBarrier.dstAccessMask
+        }
+
+        // Put barrier inside setup command buffer
+        cmdbuffer.pipelineBarrier(
+                srcStageMask,
+                dstStageMask,
+                0,
+                null,
+                null,
+                imageMemoryBarrier)
+    }
+
+    // Fixed sub resource on first mip level and layer
+    fun setImageLayout(
+            cmdbuffer: VkCommandBuffer,
+            image: VkImage,
+            aspectMask: VkImageAspectFlags,
+            oldImageLayout: VkImageLayout,
+            newImageLayout: VkImageLayout,
+            srcStageMask: VkPipelineStageFlags = VkPipelineStage.ALL_COMMANDS_BIT.i,
+            dstStageMask: VkPipelineStageFlags = VkPipelineStage.ALL_COMMANDS_BIT.i) {
+        val subresourceRange = vk.ImageSubresourceRange {
+            this.aspectMask = aspectMask
+            baseMipLevel = 0
+            levelCount = 1
+            layerCount = 1
+        }
+        setImageLayout(cmdbuffer, image, oldImageLayout, newImageLayout, subresourceRange, srcStageMask, dstStageMask)
+    }
 //
 //    void insertImageMemoryBarrier(
 //            VkCommandBuffer cmdbuffer,

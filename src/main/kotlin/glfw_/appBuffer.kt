@@ -9,6 +9,7 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.Pointer
 import uno.buffer.bufferBig
 import uno.kotlin.buffers.indices
+import vkn.VkDynamicState
 import vkn.adr
 import java.nio.*
 import java.util.concurrent.atomic.AtomicLong
@@ -179,6 +180,15 @@ object appBuffer {
     fun printNext() = println("@${ptr.get() - address}: ${next()}")
     val remaining get() = SIZE - consumed
     val consumed get() = ptr.get() - address
+
+
+    // TODO decide if keep
+    inline fun dynamicStatesOf(vararg dynamicStates: VkDynamicState): IntBuffer {
+        val res = intBuffer(dynamicStates.size)
+        for(i in dynamicStates.indices)
+            res[i] = dynamicStates[i].i
+        return res
+    }
 }
 
 inline fun AtomicLong.advance(int: Int) = getAndAdd(int.L)
