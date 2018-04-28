@@ -19,6 +19,7 @@ import vkn.*
 import vkn.LongArrayList.resize
 import vkn.VkMemoryStack.Companion.withStack
 import vulkan.USE_STAGING
+import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import vulkan.base.tools.loadShader
@@ -896,14 +897,14 @@ private class Triangle : VulkanExampleBase() {
         // Shaders
         val shaderStages = vk.PipelineShaderStageCreateInfo(2)
 
-        println(Paths.get(""))
+        println(Paths.get("").toAbsolutePath())
 
         // Vertex shader
         shaderStages[0].apply {
             // Set pipeline stage for this shader
             stage = VkShaderStage.VERTEX_BIT
             // Load binary SPIR-V shader
-            module = device loadShader "shaders/triangle/triangle.vert.spv"
+            module = device loadShader "$assetPath/shaders/triangle/triangle.vert.spv"
             // Main entry point for the shader
             name = "main"
             assert(module != NULL)
@@ -914,7 +915,7 @@ private class Triangle : VulkanExampleBase() {
             // Set pipeline stage for this shader
             stage = VkShaderStage.FRAGMENT_BIT
             // Load binary SPIR-V shader
-            module = device loadShader "shaders/triangle/triangle.frag.spv"
+            module = device loadShader "$assetPath/shaders/triangle/triangle.frag.spv"
             // Main entry point for the shader
             name = "main"
             assert(module != NULL)

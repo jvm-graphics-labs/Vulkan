@@ -27,6 +27,7 @@ import uno.kotlin.buffers.capacity
 import vkn.*
 import vulkan.USE_STAGING
 import vulkan.VERTEX_BUFFER_BIND_ID
+import vulkan.assetPath
 import vulkan.base.Buffer
 import vulkan.base.VulkanExampleBase
 import vulkan.base.initializers
@@ -195,7 +196,7 @@ private class Texture : VulkanExampleBase() {
 
     fun loadTexture() {
         // We use the Khronos texture format (https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/)
-        val filename = ClassLoader.getSystemResource("textures/metalplate01_rgba.ktx").toURI()
+        val filename = "$assetPath/textures/metalplate01_rgba.ktx"
         // Texture data contains 4 channels (RGBA) with unnormalized 8-bit values, this is the most commonly supported format
         val format = VkFormat.R8G8B8A8_UNORM
 
@@ -742,8 +743,8 @@ private class Texture : VulkanExampleBase() {
 
         // Load shaders
         val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
-            it[0].loadShader("shaders/texture/texture.vert", VkShaderStage.VERTEX_BIT)
-            it[1].loadShader("shaders/texture/texture.frag", VkShaderStage.FRAGMENT_BIT)
+            it[0].loadShader("$assetPath/shaders/texture/texture.vert", VkShaderStage.VERTEX_BIT)
+            it[1].loadShader("$assetPath/shaders/texture/texture.frag", VkShaderStage.FRAGMENT_BIT)
         }
 
         val pipelineCreateInfo = initializers.pipelineCreateInfo(

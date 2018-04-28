@@ -101,7 +101,7 @@ class Model {
      * @param copyQueue Queue used for the memory staging copy commands (must support transfer)
      * @param (Optional) flags ASSIMP model loading flags
      */
-    fun loadFromFile(filename: URL, layout: VertexLayout, createInfo: ModelCreateInfo?, device: VulkanDevice, copyQueue: VkQueue,
+    fun loadFromFile(filename: String, layout: VertexLayout, createInfo: ModelCreateInfo?, device: VulkanDevice, copyQueue: VkQueue,
                      flags: AiPostProcessStepsFlags = defaultFlags): Boolean {
         this.device = device.logicalDevice
 
@@ -113,173 +113,168 @@ class Model {
                     "in the repository root to download the latest version.", -1)
         }
 
-        if (scene != null) {
 
-            parts.clear()
-            for (i in 0 until scene.numMeshes)
-                parts += ModelPart()
+        parts.clear()
+        for (i in 0 until scene.numMeshes)
+            parts += ModelPart()
 
-            val scale = Vec3(1f)
-            val uvScale = Vec3(1f)
-            val center = Vec3()
-            createInfo?.also {
-                scale(it.scale)
-                uvScale(it.uvScale)
-                center(it.center)
-            }
+        val scale = Vec3(1f)
+        val uvScale = Vec3(1f)
+        val center = Vec3()
+        createInfo?.also {
+            scale(it.scale)
+            uvScale(it.uvScale)
+            center(it.center)
+        }
 
-            val vertexBuffer = ArrayList<Float>()
-            val indexBuffer = ArrayList<Int>()
+        val vertexBuffer = ArrayList<Float>()
+        val indexBuffer = ArrayList<Int>()
 
-            vertexCount = 0
-            indexCount = 0
+        vertexCount = 0
+        indexCount = 0
 
-            // Load meshes
-            for (i in 0 until scene.numMeshes) {
+        // Load meshes
+        for (i in 0 until scene.numMeshes) {
 
-                val mesh = scene.meshes[i]
+            val mesh = scene.meshes[i]
 
-                parts[i].vertexBase = vertexCount
-                parts[i].indexBase = indexCount
+            parts[i].vertexBase = vertexCount
+            parts[i].indexBase = indexCount
 
-                vertexCount += scene.meshes[i].numVertices
+            vertexCount += scene.meshes[i].numVertices
 
-                val color = scene.materials[mesh.materialIndex].color?.diffuse ?: Vec3()
+            val color = scene.materials[mesh.materialIndex].color?.diffuse ?: Vec3()
 
-                for (j in 0 until mesh.numVertices) {
+            for (j in 0 until mesh.numVertices) {
 
-                    val pos = mesh.vertices[j]
-                    val normal = mesh.normals[j]
-                    val texCoord = mesh.textureCoords.getOrNull(0)?.getOrNull(j)?.let {
-                        Vec3(it[0], it[1], it.getOrElse(2) { 0f })
-                    } ?: Vec3()
-                    val tangent = mesh.tangents.getOrNull(j) ?: Vec3()
-                    val biTangent = mesh.bitangents.getOrNull(j) ?: Vec3()
+                val pos = mesh.vertices[j]
+                val normal = mesh.normals[j]
+                val texCoord = mesh.textureCoords.getOrNull(0)?.getOrNull(j)?.let {
+                    Vec3(it[0], it[1], it.getOrElse(2) { 0f })
+                } ?: Vec3()
+                val tangent = mesh.tangents.getOrNull(j) ?: Vec3()
+                val biTangent = mesh.bitangents.getOrNull(j) ?: Vec3()
 
-                    for (component in layout.components) {
-                        with(vertexBuffer) {
-                            when (component) {
-                                VertexComponent.POSITION -> {
-                                    add(pos.x * scale.x + center.x)
-                                    add(-pos.y * scale.y + center.y)
-                                    add(pos.z * scale.z + center.z)
-                                }
-                                VertexComponent.NORMAL -> {
-                                    add(normal.x)
-                                    add(-normal.y)
-                                    add(normal.z)
-                                }
-                                VertexComponent.UV -> {
-                                    add(texCoord.x * uvScale.s)
-                                    add(texCoord.y * uvScale.t)
-                                }
-                                VertexComponent.COLOR -> {
-                                    add(color.r)
-                                    add(color.g)
-                                    add(color.b)
-                                }
-                                VertexComponent.TANGENT -> {
-                                    add(tangent.x)
-                                    add(tangent.y)
-                                    add(tangent.z)
-                                }
-                                VertexComponent.BITANGENT -> {
-                                    add(biTangent.x)
-                                    add(biTangent.y)
-                                    add(biTangent.z)
-                                }
-                            // Dummy components for padding
-                                VertexComponent.DUMMY_FLOAT -> add(0f)
-                                VertexComponent.DUMMY_VEC4 -> {
-                                    add(0f)
-                                    add(0f)
-                                    add(0f)
-                                    add(0f)
-                                }
+                for (component in layout.components) {
+                    with(vertexBuffer) {
+                        when (component) {
+                            VertexComponent.POSITION -> {
+                                add(pos.x * scale.x + center.x)
+                                add(-pos.y * scale.y + center.y)
+                                add(pos.z * scale.z + center.z)
+                            }
+                            VertexComponent.NORMAL -> {
+                                add(normal.x)
+                                add(-normal.y)
+                                add(normal.z)
+                            }
+                            VertexComponent.UV -> {
+                                add(texCoord.x * uvScale.s)
+                                add(texCoord.y * uvScale.t)
+                            }
+                            VertexComponent.COLOR -> {
+                                add(color.r)
+                                add(color.g)
+                                add(color.b)
+                            }
+                            VertexComponent.TANGENT -> {
+                                add(tangent.x)
+                                add(tangent.y)
+                                add(tangent.z)
+                            }
+                            VertexComponent.BITANGENT -> {
+                                add(biTangent.x)
+                                add(biTangent.y)
+                                add(biTangent.z)
+                            }
+                        // Dummy components for padding
+                            VertexComponent.DUMMY_FLOAT -> add(0f)
+                            VertexComponent.DUMMY_VEC4 -> {
+                                add(0f)
+                                add(0f)
+                                add(0f)
+                                add(0f)
                             }
                         }
                     }
-
-                    dim.max.x = pos.x max dim.max.x
-                    dim.max.y = pos.y max dim.max.y
-                    dim.max.z = pos.z max dim.max.z
-
-                    dim.min.x = pos.x min dim.min.x
-                    dim.min.y = pos.y min dim.min.y
-                    dim.min.z = pos.z min dim.min.z
                 }
 
-                dim.size(dim.max - dim.min)
+                dim.max.x = pos.x max dim.max.x
+                dim.max.y = pos.y max dim.max.y
+                dim.max.z = pos.z max dim.max.z
 
-                parts[i].vertexCount = mesh.numVertices
-
-                val indexBase = indexBuffer.size
-                for (j in 0 until mesh.numFaces) {
-                    val face = mesh.faces[j]
-                    if (face.size != 3) continue
-                    for (k in 0..2)
-                        indexBuffer += indexBase + face[k]
-                    parts[i].indexCount += 3
-                    indexCount += 3
-                }
+                dim.min.x = pos.x min dim.min.x
+                dim.min.y = pos.y min dim.min.y
+                dim.min.z = pos.z min dim.min.z
             }
 
+            dim.size(dim.max - dim.min)
 
-            val vBufferSize = vertexBuffer.size * Float.BYTES
-            val iBufferSize = indexBuffer.size * Int.BYTES
+            parts[i].vertexCount = mesh.numVertices
 
-            // Use staging buffer to move vertex and index buffer to device local memory
-            // Create staging buffers
-            val vertexStaging = Buffer()
-            val indexStaging = Buffer()
-
-            val memoryProps = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
-            // Vertex buffer
-            device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, vertexStaging, vertexBuffer)
-            // Index buffer
-            device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, indexStaging, indexBuffer)
-
-            // Create device local target buffers
-            // Vertex buffer
-            device.createBuffer(
-                    VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
-                    VkMemoryProperty.DEVICE_LOCAL_BIT.i,
-                    vertices,
-                    vBufferSize.L)
-
-            // Index buffer
-            device.createBuffer(
-                    VkBufferUsage.INDEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
-                    VkMemoryProperty.DEVICE_LOCAL_BIT.i,
-                    indices,
-                    iBufferSize.L)
-
-            // Copy from staging buffers
-            val copyCmd = device.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
-
-            vk.BufferCopy {
-
-                size = vertices.size
-                copyCmd.copyBuffer(vertexStaging.buffer, vertices.buffer, this)
-
-                size = indices.size
-                copyCmd.copyBuffer(indexStaging.buffer, indices.buffer, this)
+            val indexBase = indexBuffer.size
+            for (j in 0 until mesh.numFaces) {
+                val face = mesh.faces[j]
+                if (face.size != 3) continue
+                for (k in 0..2)
+                    indexBuffer += indexBase + face[k]
+                parts[i].indexCount += 3
+                indexCount += 3
             }
-
-            device.flushCommandBuffer(copyCmd, copyQueue)
-
-            // Destroy staging resources
-            device.logicalDevice!!.apply {
-                destroyBuffer(vertexStaging.buffer)
-                freeMemory(vertexStaging.memory)
-                destroyBuffer(indexStaging.buffer)
-                freeMemory(indexStaging.memory)
-            }
-            return true
-        } else {
-            System.err.println("Error parsing '$filename': '${importer.errorString}'")
-            return false
         }
+
+
+        val vBufferSize = vertexBuffer.size * Float.BYTES
+        val iBufferSize = indexBuffer.size * Int.BYTES
+
+        // Use staging buffer to move vertex and index buffer to device local memory
+        // Create staging buffers
+        val vertexStaging = Buffer()
+        val indexStaging = Buffer()
+
+        val memoryProps = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
+        // Vertex buffer
+        device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, vertexStaging, vertexBuffer)
+        // Index buffer
+        device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, indexStaging, indexBuffer)
+
+        // Create device local target buffers
+        // Vertex buffer
+        device.createBuffer(
+                VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
+                VkMemoryProperty.DEVICE_LOCAL_BIT.i,
+                vertices,
+                vBufferSize.L)
+
+        // Index buffer
+        device.createBuffer(
+                VkBufferUsage.INDEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
+                VkMemoryProperty.DEVICE_LOCAL_BIT.i,
+                indices,
+                iBufferSize.L)
+
+        // Copy from staging buffers
+        val copyCmd = device.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
+
+        vk.BufferCopy {
+
+            size = vertices.size
+            copyCmd.copyBuffer(vertexStaging.buffer, vertices.buffer, this)
+
+            size = indices.size
+            copyCmd.copyBuffer(indexStaging.buffer, indices.buffer, this)
+        }
+
+        device.flushCommandBuffer(copyCmd, copyQueue)
+
+        // Destroy staging resources
+        device.logicalDevice!!.apply {
+            destroyBuffer(vertexStaging.buffer)
+            freeMemory(vertexStaging.memory)
+            destroyBuffer(indexStaging.buffer)
+            freeMemory(indexStaging.memory)
+        }
+        return true
     }
 
     /**
@@ -292,7 +287,7 @@ class Model {
      * @param copyQueue Queue used for the memory staging copy commands (must support transfer)
      * @param (Optional) flags ASSIMP model loading flags
      */
-    fun loadFromFile(filename: URL, layout: VertexLayout, scale: Float, device: VulkanDevice, copyQueue: VkQueue,
+    fun loadFromFile(filename: String, layout: VertexLayout, scale: Float, device: VulkanDevice, copyQueue: VkQueue,
                      flags: Int = defaultFlags): Boolean {
         val modelCreateInfo = ModelCreateInfo(scale, 1f, 0f)
         return loadFromFile(filename, layout, modelCreateInfo, device, copyQueue, flags)

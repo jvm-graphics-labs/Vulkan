@@ -225,7 +225,7 @@ object tools {
      *  This function loads such a shader from a binary file and returns a shader module structure  */
     infix fun VkDevice.loadShader(filename: String): VkShaderModule {
 
-        val file = File(ClassLoader.getSystemResource(filename).toURI())
+        val file = File(filename)
 
         var shaderModule = MemoryUtil.NULL
 

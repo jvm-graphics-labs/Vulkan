@@ -17,6 +17,7 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkDescriptorImageInfo
 import org.lwjgl.vulkan.VkQueue
 import vkn.*
+import java.io.File
 import java.net.URI
 import java.net.URL
 
@@ -73,7 +74,7 @@ class Texture2D : Texture() {
      *
      */
     fun loadFromFile(
-            filename: URL,
+            filename: String,
             format: VkFormat,
             device: VulkanDevice,
             copyQueue: VkQueue,
@@ -81,11 +82,13 @@ class Texture2D : Texture() {
             imageLayout: VkImageLayout = VkImageLayout.SHADER_READ_ONLY_OPTIMAL,
             forceLinear: Boolean = false) {
 
-        if (!filename.exists())
+        val file = File(filename)
+
+        if (!file.exists())
             tools.exitFatal("Could not load texture from $filename\n\nThe file may be part of the additional asset pack.\n\n" +
                     "Run \"download_assets.py\" in the repository root to download the latest version.", -1)
 
-        val tex2D = gli_.Texture2d(gli.load(filename.toURI()))
+        val tex2D = gli_.Texture2d(gli.load(file.toPath()))
 
         assert(tex2D.notEmpty())
 

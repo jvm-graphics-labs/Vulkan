@@ -1,5 +1,8 @@
 package vulkan
 
+import java.nio.file.Path
+import java.nio.file.Paths
+
 
 /** Set to "true" to enable Vulkan's validation layers (see vulkandebug.cpp for details)    */
 const val ENABLE_VALIDATION = true
@@ -9,3 +12,5 @@ var USE_STAGING = false
 
 
 const val VERTEX_BUFFER_BIND_ID = 0
+
+val assetPath = Paths.get("").toAbsolutePath().toString() + "/src/main/resources"

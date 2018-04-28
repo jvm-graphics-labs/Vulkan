@@ -829,8 +829,7 @@ abstract class VulkanExampleBase {
         module = when {
             isSpirV -> device loadShader fileName
             else -> {
-                val uri = ClassLoader.getSystemResource(fileName).toURI()
-                val bytes = glslToSpirv(Paths.get(uri))
+                val bytes = glslToSpirv(Paths.get(fileName))
                 device loadShader bytes
             }
         }

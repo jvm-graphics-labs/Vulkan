@@ -11,6 +11,7 @@ import org.lwjgl.system.MemoryUtil.*
 import uno.buffer.bufferBig
 import vkn.*
 import vulkan.VERTEX_BUFFER_BIND_ID
+import vulkan.assetPath
 import vulkan.base.*
 
 /*
@@ -181,7 +182,7 @@ private class Pipelines : VulkanExampleBase() {
     }
 
     fun loadAssets() {
-        models.cube.loadFromFile(getResource("models/treasure_smooth.dae"), vertexLayout, 1f, vulkanDevice, queue)
+        models.cube.loadFromFile("$assetPath/models/treasure_smooth.dae", vertexLayout, 1f, vulkanDevice, queue)
     }
 
     fun setupDescriptorPool() {
@@ -288,8 +289,8 @@ private class Pipelines : VulkanExampleBase() {
 
         // Textured pipeline
         // Phong shading pipeline
-        shaderStages[0].loadShader("shaders/pipelines/phong.vert.spv", VkShaderStage.VERTEX_BIT)
-        shaderStages[1].loadShader("shaders/pipelines/phong.frag.spv", VkShaderStage.FRAGMENT_BIT)
+        shaderStages[0].loadShader("$assetPath/shaders/pipelines/phong.vert.spv", VkShaderStage.VERTEX_BIT)
+        shaderStages[1].loadShader("$assetPath/shaders/pipelines/phong.frag.spv", VkShaderStage.FRAGMENT_BIT)
         pipelines.phong = device.createPipeline(pipelineCache, pipelineCreateInfo)
 
         // All pipelines created after the base pipeline will be derivatives
@@ -301,16 +302,16 @@ private class Pipelines : VulkanExampleBase() {
         pipelineCreateInfo.basePipelineIndex = -1
 
         // Toon shading pipeline
-        shaderStages[0].loadShader("shaders/pipelines/toon.vert.spv", VkShaderStage.VERTEX_BIT)
-        shaderStages[1].loadShader("shaders/pipelines/toon.frag.spv", VkShaderStage.FRAGMENT_BIT)
+        shaderStages[0].loadShader("$assetPath/shaders/pipelines/toon.vert.spv", VkShaderStage.VERTEX_BIT)
+        shaderStages[1].loadShader("$assetPath/shaders/pipelines/toon.frag.spv", VkShaderStage.FRAGMENT_BIT)
         pipelines.toon = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 
         // Pipeline for wire frame rendering
         // Non solid rendering is not a mandatory Vulkan feature
         if (deviceFeatures.fillModeNonSolid) {
             rasterizationState.polygonMode = VkPolygonMode.LINE
-            shaderStages[0].loadShader("shaders/pipelines/wireframe.vert.spv", VkShaderStage.VERTEX_BIT)
-            shaderStages[1].loadShader("shaders/pipelines/wireframe.frag.spv", VkShaderStage.FRAGMENT_BIT)
+            shaderStages[0].loadShader("$assetPath/shaders/pipelines/wireframe.vert.spv", VkShaderStage.VERTEX_BIT)
+            shaderStages[1].loadShader("$assetPath/shaders/pipelines/wireframe.frag.spv", VkShaderStage.FRAGMENT_BIT)
             pipelines.wireframe = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
         }
     }

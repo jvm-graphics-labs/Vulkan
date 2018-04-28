@@ -19,6 +19,7 @@ import glm_.vec3.Vec3
 import org.lwjgl.system.MemoryUtil.*
 import uno.buffer.bufferBig
 import vkn.*
+import vulkan.assetPath
 import vulkan.base.*
 
 fun main(args: Array<String>) {
@@ -151,9 +152,9 @@ private class DescriptorSets : VulkanExampleBase() {
     }
 
     fun loadAssets() {
-        models.cube.loadFromFile(getResource("models/cube.dae"), vertexLayout, 1f, vulkanDevice, queue)
-        cubes[0].texture.loadFromFile(getResource("textures/crate01_color_height_rgba.ktx"), VkFormat.R8G8B8A8_UNORM, vulkanDevice, queue)
-        cubes[1].texture.loadFromFile(getResource("textures/crate02_color_height_rgba.ktx"), VkFormat.R8G8B8A8_UNORM, vulkanDevice, queue)
+        models.cube.loadFromFile("$assetPath/models/cube.dae", vertexLayout, 1f, vulkanDevice, queue)
+        cubes[0].texture.loadFromFile("$assetPath/textures/crate01_color_height_rgba.ktx", VkFormat.R8G8B8A8_UNORM, vulkanDevice, queue)
+        cubes[1].texture.loadFromFile("$assetPath/textures/crate02_color_height_rgba.ktx", VkFormat.R8G8B8A8_UNORM, vulkanDevice, queue)
     }
 
     /** [POI] Set up descriptor sets and set layout */
