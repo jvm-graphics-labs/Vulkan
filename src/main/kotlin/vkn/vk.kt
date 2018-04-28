@@ -337,6 +337,7 @@ object vk {
     inline fun SamplerCreateInfo(block: VkSamplerCreateInfo.() -> Unit): VkSamplerCreateInfo {
         val res = VkSamplerCreateInfo.create(ptr.advance(VkSamplerCreateInfo.SIZEOF))
         res.type = VkStructureType.SAMPLER_CREATE_INFO
+        res.maxAnisotropy = 1f
         res.block()
         return res
     }

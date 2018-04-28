@@ -200,10 +200,8 @@ object tools {
 //                1, &imageMemoryBarrier);
 //    }
 
-    fun exitFatal(message: String, exitCode: Int) {
-        System.err.println(message)
-        System.exit(exitCode)
-    }
+    fun exitFatal(message: String, exitCode: VkResult): Nothing = exitFatal(message, exitCode.i)
+    fun exitFatal(message: String, exitCode: Int): Nothing = throw Error("$message, exitCode $exitCode")
 
 //    std::string readTextFile(const char *fileName)
 //    {

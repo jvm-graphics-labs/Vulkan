@@ -10,12 +10,14 @@
 //
 //import gli_.gli
 //import glm_.L
+//import glm_.f
 //import glm_.mat4x4.Mat4
 //import org.lwjgl.system.MemoryUtil.NULL
 //import org.lwjgl.system.MemoryUtil.memCopy
 //import vkn.*
 //import vulkan.base.*
 //import java.net.URI
+//import java.net.URL
 //
 //fun main(args: Array<String>) {
 //    TextureCubemap().apply {
@@ -120,9 +122,9 @@
 //        }
 //    }
 //
-//    fun loadCubemap(filename: URI, format: VkFormat, forceLinearTiling: Boolean) {
+//    fun loadCubemap(filename: URL, format: VkFormat, forceLinearTiling: Boolean) {
 //
-//        val texCube = gli_.TextureCube(gli.load(filename))
+//        val texCube = gli_.TextureCube(gli.load(filename.toURI()))
 //
 //        assert(texCube.notEmpty())
 //
@@ -188,140 +190,129 @@
 //        var offset = 0L
 //
 //        for (face in 0..5)
-//            for (level in 0 until cubeMap.mipLevels)            {
+//            for (level in 0 until cubeMap.mipLevels) {
 //
-//                bufferCopyRegions[] = {}
-//                bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//                bufferCopyRegion.imageSubresource.mipLevel = level
-//                bufferCopyRegion.imageSubresource.baseArrayLayer = face
-//                bufferCopyRegion.imageSubresource.layerCount = 1
-//                bufferCopyRegion.imageExtent.width = texCube[face][level].extent().x
-//                bufferCopyRegion.imageExtent.height = texCube[face][level].extent().y
-//                bufferCopyRegion.imageExtent.depth = 1
-//                bufferCopyRegion.bufferOffset = offset
-//
-//                bufferCopyRegions.push_back(bufferCopyRegion)
-//
+//                bufferCopyRegions[face * 6 + level].apply {
+//                    imageSubresource.apply {
+//                        aspectMask = VkImageAspect.COLOR_BIT.i
+//                        mipLevel = level
+//                        baseArrayLayer = face
+//                        layerCount = 1
+//                    }
+//                    val extent = texCube[face][level].extent()
+//                    imageExtent.set(extent.x, extent.y, 1)
+//                    bufferOffset = offset
+//                }
 //                // Increase offset into staging buffer for next level / face
-//                offset += texCube[face][level].size()
+//                offset += texCube[face][level].size
 //            }
 //
 //        // Image barrier for optimal image (target)
 //        // Set initial layout for all array layers (faces) of the optimal (target) tiled texture
-//        VkImageSubresourceRange subresourceRange = {}
-//        subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//        subresourceRange.baseMipLevel = 0
-//        subresourceRange.levelCount = cubeMap.mipLevels
-//        subresourceRange.layerCount = 6
-//
-//        vks::tools::setImageLayout(
+//        val subresourceRange = vk.ImageSubresourceRange {
+//            aspectMask = VkImageAspect.COLOR_BIT.i
+//            baseMipLevel = 0
+//            levelCount = cubeMap.mipLevels
+//            layerCount = 6
+//        }
+//        tools.setImageLayout(
 //                copyCmd,
 //                cubeMap.image,
-//                VK_IMAGE_LAYOUT_UNDEFINED,
-//                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+//                VkImageLayout.UNDEFINED,
+//                VkImageLayout.TRANSFER_DST_OPTIMAL,
 //                subresourceRange)
 //
 //        // Copy the cube map faces from the staging buffer to the optimal tiled image
-//        vkCmdCopyBufferToImage(
-//                copyCmd,
+//        copyCmd.copyBufferToImage(
 //                stagingBuffer,
 //                cubeMap.image,
-//                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-//                static_cast<uint32_t>(bufferCopyRegions.size()),
-//                bufferCopyRegions.data()
-//        )
+//                VkImageLayout.TRANSFER_DST_OPTIMAL,
+//                bufferCopyRegions)
 //
 //        // Change texture image layout to shader read after all faces have been copied
-//        cubeMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-//        vks::tools::setImageLayout(
+//        cubeMap.imageLayout = VkImageLayout.SHADER_READ_ONLY_OPTIMAL
+//        tools.setImageLayout(
 //                copyCmd,
 //                cubeMap.image,
-//                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+//                VkImageLayout.TRANSFER_DST_OPTIMAL,
 //                cubeMap.imageLayout,
 //                subresourceRange)
 //
-//        VulkanExampleBase::flushCommandBuffer(copyCmd, queue, true)
+//        super.flushCommandBuffer(copyCmd, queue, true)
 //
 //        // Create sampler
-//        VkSamplerCreateInfo sampler = vks ::initializers::samplerCreateInfo()
-//        sampler.magFilter = VK_FILTER_LINEAR
-//        sampler.minFilter = VK_FILTER_LINEAR
-//        sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR
-//        sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
-//        sampler.addressModeV = sampler.addressModeU
-//        sampler.addressModeW = sampler.addressModeU
-//        sampler.mipLodBias = 0.0f
-//        sampler.compareOp = VK_COMPARE_OP_NEVER
-//        sampler.minLod = 0.0f
-//        sampler.maxLod = cubeMap.mipLevels
-//        sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE
-//        sampler.maxAnisotropy = 1.0f
-//        if (vulkanDevice->features.samplerAnisotropy)
-//        {
-//            sampler.maxAnisotropy = vulkanDevice->properties.limits.maxSamplerAnisotropy
-//            sampler.anisotropyEnable = VK_TRUE
+//        val sampler = vk.SamplerCreateInfo {
+//            magFilter = VkFilter.LINEAR
+//            minFilter = VkFilter.LINEAR
+//            mipmapMode = VkSamplerMipmapMode.LINEAR
+//            addressModeU = VkSamplerAddressMode.CLAMP_TO_EDGE
+//            addressModeV = addressModeU
+//            addressModeW = addressModeU
+//            mipLodBias = 0f
+//            compareOp = VkCompareOp.NEVER
+//            minLod = 0f
+//            maxLod = cubeMap.mipLevels.f
+//            borderColor = VkBorderColor.FLOAT_OPAQUE_WHITE
+//            maxAnisotropy = 1f
 //        }
-//        VK_CHECK_RESULT(vkCreateSampler(device, & sampler, nullptr, & cubeMap . sampler))
+//        if (vulkanDevice.features.samplerAnisotropy) {
+//            sampler.maxAnisotropy = vulkanDevice.properties.limits.maxSamplerAnisotropy
+//            sampler.anisotropyEnable = true
+//        }
+//        cubeMap.sampler = device createSampler sampler
 //
 //        // Create image view
-//        VkImageViewCreateInfo view = vks ::initializers::imageViewCreateInfo()
-//        // Cube map view type
-//        view.viewType = VK_IMAGE_VIEW_TYPE_CUBE
-//        view.format = format
-//        view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A }
-//        view.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }
-//        // 6 array layers (faces)
-//        view.subresourceRange.layerCount = 6
-//        // Set number of mip levels
-//        view.subresourceRange.levelCount = cubeMap.mipLevels
-//        view.image = cubeMap.image
-//        VK_CHECK_RESULT(vkCreateImageView(device, & view, nullptr, & cubeMap . view))
+//        val view = vk.ImageViewCreateInfo {
+//            // Cube map view type
+//            viewType = VkImageViewType.CUBE
+//            this.format = format
+//            components(VkComponentSwizzle.R, VkComponentSwizzle.G, VkComponentSwizzle.B, VkComponentSwizzle.A)
+//            subresourceRange.set(VkImageAspect.COLOR_BIT.i, 0, 1, 0, 1)
+//            // 6 array layers (faces)
+//            subresourceRange.layerCount = 6
+//            // Set number of mip levels
+//            subresourceRange.levelCount = cubeMap.mipLevels
+//            image = cubeMap.image
+//        }
+//        cubeMap.view = device createImageView view
 //
 //        // Clean up staging resources
-//        vkFreeMemory(device, stagingMemory, nullptr)
-//        vkDestroyBuffer(device, stagingBuffer, nullptr)
+//        device freeMemory stagingMemory
+//        device destroyBuffer stagingBuffer
 //    }
 //
-//    void loadTextures()
-//    {
+//    fun loadTextures() {
 //        // Vulkan core supports three different compressed texture formats
 //        // As the support differs between implemementations we need to check device features and select a proper format and file
-//        std::string filename
-//                VkFormat format
-//                if (deviceFeatures.textureCompressionBC) {
-//                    filename = "cubemap_yokohama_bc3_unorm.ktx"
-//                    format = VK_FORMAT_BC2_UNORM_BLOCK
-//                } else if (deviceFeatures.textureCompressionASTC_LDR) {
-//                    filename = "cubemap_yokohama_astc_8x8_unorm.ktx"
-//                    format = VK_FORMAT_ASTC_8x8_UNORM_BLOCK
-//                } else if (deviceFeatures.textureCompressionETC2) {
-//                    filename = "cubemap_yokohama_etc2_unorm.ktx"
-//                    format = VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK
-//                } else {
-//                    vks::tools::exitFatal("Device does not support any compressed texture format!", VK_ERROR_FEATURE_NOT_PRESENT)
-//                }
+//        val (filename, format) = when {
 //
-//        loadCubemap(getAssetPath() + "textures/" + filename, format, false)
+//            deviceFeatures.textureCompressionBC -> "cubemap_yokohama_bc3_unorm.ktx" to VkFormat.BC2_UNORM_BLOCK
+//
+//            deviceFeatures.textureCompressionASTC_LDR -> "cubemap_yokohama_astc_8x8_unorm.ktx" to VkFormat.ASTC_8x8_UNORM_BLOCK
+//
+//            deviceFeatures.textureCompressionETC2 -> "cubemap_yokohama_etc2_unorm.ktx" to VkFormat.ETC2_R8G8B8_UNORM_BLOCK
+//
+//            else -> tools.exitFatal("Device does not support any compressed texture format!", VkResult.ERROR_FEATURE_NOT_PRESENT)
+//        }
+//
+//        loadCubemap(getResource("textures/$filename"), format, false)
 //    }
 //
-//    void buildCommandBuffers()
-//    {
-//        VkCommandBufferBeginInfo cmdBufInfo = vks ::initializers::commandBufferBeginInfo()
+//    fun buildCommandBuffers() {
 //
-//        VkClearValue clearValues [2]
-//        clearValues[0].color = defaultClearColor
-//        clearValues[1].depthStencil = { 1.0f, 0 }
+//        val cmdBufInfo = vk.CommandBufferBeginInfo()
 //
-//        VkRenderPassBeginInfo renderPassBeginInfo = vks ::initializers::renderPassBeginInfo()
-//        renderPassBeginInfo.renderPass = renderPass
-//        renderPassBeginInfo.renderArea.offset.x = 0
-//        renderPassBeginInfo.renderArea.offset.y = 0
-//        renderPassBeginInfo.renderArea.extent.width = width
-//        renderPassBeginInfo.renderArea.extent.height = height
-//        renderPassBeginInfo.clearValueCount = 2
-//        renderPassBeginInfo.pClearValues = clearValues
+//        val clearValues = vk.ClearValue(2)
+//        clearValues[0].color(defaultClearColor)
+//        clearValues[1].depthStencil.set(1f, 0)
 //
-//        for (int32_t i = 0; i < drawCmdBuffers.size(); ++i)
+//        val renderPassBeginInfo = vk.RenderPassBeginInfo {
+//            renderPass = this@TextureCubemap.renderPass
+//            renderArea.offset.set(0,0)
+//            renderArea.extent.set(size.x, size.y)
+//            this.clearValues = clearValues
+//        }
+//        for (i = 0; i < drawCmdBuffers.size(); ++i)
 //        {
 //            // Set target frame buffer
 //            renderPassBeginInfo.framebuffer = frameBuffers[i]

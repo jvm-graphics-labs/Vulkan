@@ -22,6 +22,7 @@ import vulkan.USE_STAGING
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import vulkan.base.tools.loadShader
+import java.nio.file.Paths
 
 
 fun main(args: Array<String>) {
@@ -894,6 +895,8 @@ private class Triangle : VulkanExampleBase() {
 
         // Shaders
         val shaderStages = vk.PipelineShaderStageCreateInfo(2)
+
+        println(Paths.get(""))
 
         // Vertex shader
         shaderStages[0].apply {
