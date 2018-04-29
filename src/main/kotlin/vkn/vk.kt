@@ -36,6 +36,13 @@ object vk {
         return res
     }
 
+    inline fun BufferMemoryBarrier(block: VkBufferMemoryBarrier.() -> Unit): VkBufferMemoryBarrier {
+        val res = VkBufferMemoryBarrier.create(ptr.advance(VkBufferMemoryBarrier.SIZEOF))
+        res.type = VkStructureType.BUFFER_MEMORY_BARRIER
+        res.block()
+        return res
+    }
+
     inline fun CommandBufferAllocateInfo(commandPool: VkCommandPool, level: VkCommandBufferLevel, bufferCount: Int): VkCommandBufferAllocateInfo {
         return CommandBufferAllocateInfo {
             this.commandPool = commandPool
@@ -612,7 +619,7 @@ object vk {
         }
     }
 
-    inline fun FenceCreateInfo( flags: VkFenceCreateFlags = 0): VkFenceCreateInfo {
+    inline fun FenceCreateInfo(flags: VkFenceCreateFlags = 0): VkFenceCreateInfo {
         return FenceCreateInfo {
             this.flags = flags
         }

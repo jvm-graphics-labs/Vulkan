@@ -2212,18 +2212,35 @@ inline fun VkClearValue.depthStencil(depth: Float, stencil: Int) {
 //    VkAccessFlags      srcAccessMask;
 //    VkAccessFlags      dstAccessMask;
 //} VkMemoryBarrier;
-//
-//typedef struct VkBufferMemoryBarrier {
-//    VkStructureType    sType;
-//    const void*        pNext;
-//    VkAccessFlags      srcAccessMask;
-//    VkAccessFlags      dstAccessMask;
-//    uint32_t           srcQueueFamilyIndex;
-//    uint32_t           dstQueueFamilyIndex;
-//    VkBuffer           buffer;
-//    VkDeviceSize       offset;
-//    VkDeviceSize       size;
-//} VkBufferMemoryBarrier;
+
+inline var VkBufferMemoryBarrier.type: VkStructureType
+    get() = VkStructureType of VkBufferMemoryBarrier.nsType(adr)
+    set(value) = VkBufferMemoryBarrier.nsType(adr, value.i)
+inline var VkBufferMemoryBarrier.next: Long
+    get() = VkBufferMemoryBarrier.npNext(adr)
+    set(value) = VkBufferMemoryBarrier.npNext(adr, value)
+inline var VkBufferMemoryBarrier.srcAccessMask: VkAccessFlags
+    get() = VkBufferMemoryBarrier.nsrcAccessMask(adr)
+    set(value) = VkBufferMemoryBarrier.nsrcAccessMask(adr, value)
+inline var VkBufferMemoryBarrier.dstAccessMask: VkAccessFlags
+    get() = VkBufferMemoryBarrier.ndstAccessMask(adr)
+    set(value) = VkBufferMemoryBarrier.ndstAccessMask(adr, value)
+inline var VkBufferMemoryBarrier.srcQueueFamilyIndex: Int
+    get() = VkBufferMemoryBarrier.nsrcQueueFamilyIndex(adr)
+    set(value) = VkBufferMemoryBarrier.nsrcQueueFamilyIndex(adr, value)
+inline var VkBufferMemoryBarrier.dstQueueFamilyIndex: Int
+    get() = VkBufferMemoryBarrier.ndstQueueFamilyIndex(adr)
+    set(value) = VkBufferMemoryBarrier.ndstQueueFamilyIndex(adr, value)
+inline var VkBufferMemoryBarrier.buffer: VkBuffer
+    get() = VkBufferMemoryBarrier.nbuffer(adr)
+    set(value) = VkBufferMemoryBarrier.nbuffer(adr, value)
+inline var VkBufferMemoryBarrier.offset: VkDeviceSize
+    get() = VkBufferMemoryBarrier.noffset(adr)
+    set(value) = VkBufferMemoryBarrier.noffset(adr, value)
+inline var VkBufferMemoryBarrier.size: VkDeviceSize
+    get() = VkBufferMemoryBarrier.nsize(adr)
+    set(value) = VkBufferMemoryBarrier.nsize(adr, value)
+
 
 inline var VkImageMemoryBarrier.type: VkStructureType
     get() = VkStructureType of VkImageMemoryBarrier.nsType(adr)

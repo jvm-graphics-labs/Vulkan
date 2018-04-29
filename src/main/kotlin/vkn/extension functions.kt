@@ -77,6 +77,18 @@ inline fun VkCommandBuffer.copyImage(srcImage: VkImage, srcImageLayout: VkImageL
     VK10.nvkCmdCopyImage(this, srcImage, srcImageLayout.i, dstImage, dstImageLayout.i, 1, region.adr)
 }
 
+inline fun VkCommandBuffer.dispatch(groupCountXY: Vec2i, groupCountZ: Int) {
+    dispatch(groupCountXY.x, groupCountXY.y, groupCountZ)
+}
+
+inline fun VkCommandBuffer.dispatch(groupCountX: Int, groupCountY: Int, groupCountZ: Int) {
+    VK10.vkCmdDispatch(this, groupCountX, groupCountY, groupCountZ)
+}
+
+inline fun VkCommandBuffer.draw(vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int) {
+    VK10.vkCmdDraw(this, vertexCount, instanceCount, firstVertex, firstInstance)
+}
+
 inline fun VkCommandBuffer.drawIndexed(indexCount: Int, instanceCount: Int, firstIndex: Int, vertexOffset: Int, firstInstance: Int) {
     VK10.vkCmdDrawIndexed(this, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)
 }

@@ -315,7 +315,7 @@ private class ImageProcessing : VulkanExampleBase() {
             bindPipeline(VkPipelineBindPoint.COMPUTE, compute.pipelines[compute.pipelineIndex])
             bindDescriptorSets(VkPipelineBindPoint.COMPUTE, compute.pipelineLayout, compute.descriptorSet)
 
-            VK10.vkCmdDispatch(compute.commandBuffer, textureComputeTarget.size.x / 16, textureComputeTarget.size.y / 16, 1)
+            compute.commandBuffer.dispatch(textureComputeTarget.size / 16, 1)
 
             end()
         }

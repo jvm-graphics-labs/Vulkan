@@ -13,4 +13,6 @@ var USE_STAGING = false
 
 const val VERTEX_BUFFER_BIND_ID = 0
 
+const val PARTICLE_COUNT = 256 * 1024
+
 val assetPath = Paths.get("").toAbsolutePath().toString() + "/src/main/resources"
