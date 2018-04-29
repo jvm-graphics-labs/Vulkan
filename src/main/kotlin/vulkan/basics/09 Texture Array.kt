@@ -8,6 +8,7 @@
 
 package vulkan.basics
 
+import glfw_.appBuffer
 import gli_.Texture2dArray
 import gli_.gli
 import glm_.L
@@ -60,9 +61,9 @@ class TextureArray : VulkanExampleBase() {
     val textureArray = Texture()
 
     private var vertices = object {
-        val inputState = cVkPipelineVertexInputStateCreateInfo()
-        val bindingDescription = VkVertexInputBindingDescription.calloc()
-        val attributeDescriptions = VkVertexInputAttributeDescription.calloc(2)
+        lateinit var inputState: VkPipelineVertexInputStateCreateInfo
+        lateinit var bindingDescription: VkVertexInputBindingDescription
+        lateinit var attributeDescriptions: VkVertexInputAttributeDescription.Buffer
     }
 
     val vertexBuffer = Buffer()
@@ -365,14 +366,14 @@ class TextureArray : VulkanExampleBase() {
 
     fun generateQuad() {
         // Setup vertices for a single uv-mapped quad made from two triangles
-        val vertices = floatBufferOf(
+        val vertices = appBuffer.floatBufferOf(
                 +2.5f, +2.5f, 0f, 1f, 1f,
                 -2.5f, +2.5f, 0f, 0f, 1f,
                 -2.5f, -2.5f, 0f, 0f, 0f,
                 +2.5f, -2.5f, 0f, 1f, 0f)
 
         // Setup indices
-        val indices = intBufferOf(0, 1, 2, 2, 3, 0)
+        val indices = appBuffer.intBufferOf(0, 1, 2, 2, 3, 0)
         indexCount = indices.capacity
 
         // Create buffers
@@ -393,16 +394,17 @@ class TextureArray : VulkanExampleBase() {
 
     fun setupVertexDescriptions() {
         // Binding description
-        vertices.bindingDescription(VERTEX_BUFFER_BIND_ID, Vertex.size, VkVertexInputRate.VERTEX)
+        vertices.bindingDescription = vk.VertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, Vertex.size, VkVertexInputRate.VERTEX)
 
         // Attribute descriptions
         // Describes memory layout and shader positions
-        // Location 0 : Position
-        vertices.attributeDescriptions[0](0, VERTEX_BUFFER_BIND_ID, VkFormat.R32G32B32_SFLOAT, 0)
-        // Location 1 : Texture coordinates
-        vertices.attributeDescriptions[1](1, VERTEX_BUFFER_BIND_ID, VkFormat.R32G32_SFLOAT, Vec3.size)
+        vertices.attributeDescriptions = vk.VertexInputAttributeDescription(
+                // Location 0 : Position
+                VERTEX_BUFFER_BIND_ID, 0, VkFormat.R32G32B32_SFLOAT, 0,
+                // Location 1 : Texture coordinates
+                VERTEX_BUFFER_BIND_ID, 1, VkFormat.R32G32_SFLOAT, Vec3.size)
 
-        vertices.inputState.apply {
+        vertices.inputState = vk.PipelineVertexInputStateCreateInfo {
             vertexBindingDescription = vertices.bindingDescription
             vertexAttributeDescriptions = vertices.attributeDescriptions
         }
@@ -445,12 +447,11 @@ class TextureArray : VulkanExampleBase() {
         // Image descriptor for the texture array
         val textureDescriptor = vk.DescriptorImageInfo(textureArray.sampler, textureArray.view, textureArray.imageLayout)
 
-        val writeDescriptorSets = vk.WriteDescriptorSet(2).also {
+        val writeDescriptorSets = vk.WriteDescriptorSet(
             // Binding 0 : Vertex shader uniform buffer
-            it[0](descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBufferVS.descriptor)
+            descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBufferVS.descriptor,
             // Binding 1 : Fragment shader cubemap sampler
-            it[1](descriptorSet, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1, textureDescriptor)
-        }
+            descriptorSet, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1, textureDescriptor)
 
         device updateDescriptorSets writeDescriptorSets
     }
@@ -551,17 +552,17 @@ class TextureArray : VulkanExampleBase() {
         memCopy(uboVS.address, uniformBufferVS.mapped[0], uboVS.matrices.size.L)
     }
 
-    fun draw()    {
+    fun draw() {
 
         super.prepareFrame()
 
-        submitInfo.commandBuffer = drawCmdBuffers [currentBuffer]
+        submitInfo.commandBuffer = drawCmdBuffers[currentBuffer]
         queue submit submitInfo
 
         super.submitFrame()
     }
 
-    override fun prepare()    {
+    override fun prepare() {
 
         super.prepare()
         loadTextures()
@@ -577,8 +578,7 @@ class TextureArray : VulkanExampleBase() {
         window.show()
     }
 
-    override fun render()
-    {
+    override fun render() {
         if (!prepared)
             return
         draw()

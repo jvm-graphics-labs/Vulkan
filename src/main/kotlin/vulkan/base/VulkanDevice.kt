@@ -186,27 +186,29 @@ constructor(
 
         queueFamilyIndices.compute =
                 if (requestedQueueTypes has VkQueueFlag.COMPUTE_BIT) {   // Dedicated compute queue
-                    if (queueFamilyIndices.compute != queueFamilyIndices.graphics) {
+                    val compute = getQueueFamilyIndex(VkQueueFlag.COMPUTE_BIT)
+                    if (compute != queueFamilyIndices.graphics) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
                         queueCreateInfos += vk.DeviceQueueCreateInfo {
-                            queueFamilyIndex = queueFamilyIndices.compute
+                            queueFamilyIndex = compute
                             queuePriorities = defaultQueuePriority
                         }
                     }
-                    getQueueFamilyIndex(VkQueueFlag.COMPUTE_BIT)
+                    compute
                 } else queueFamilyIndices.graphics  // Else we use the same queue
 
 
         queueFamilyIndices.transfer =
                 if (requestedQueueTypes has VkQueueFlag.TRANSFER_BIT) { // Dedicated transfer queue
-                    if (queueFamilyIndices.transfer != queueFamilyIndices.graphics && queueFamilyIndices.transfer != queueFamilyIndices.compute) {
+                    val transfer = getQueueFamilyIndex(VkQueueFlag.TRANSFER_BIT)
+                    if (transfer != queueFamilyIndices.graphics && transfer != queueFamilyIndices.compute) {
                         // If compute family index differs, we need an additional queue create info for the compute queue
                         queueCreateInfos += vk.DeviceQueueCreateInfo {
-                            queueFamilyIndex = queueFamilyIndices.transfer
+                            queueFamilyIndex = transfer
                             queuePriorities = defaultQueuePriority
                         }
                     }
-                    getQueueFamilyIndex(VkQueueFlag.TRANSFER_BIT)
+                    transfer
                 } else queueFamilyIndices.graphics  // Else we use the same queue
 
         // Create the logical device representation

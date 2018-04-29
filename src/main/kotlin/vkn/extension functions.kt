@@ -137,9 +137,13 @@ inline infix fun VkCommandBuffer.setViewport(size: Vec2i) {
 }
 
 inline fun VkCommandBuffer.setViewport(size: Vec2i, minDepth: Float, maxDepth: Float) {
+    setViewport(size.x.f, size.y.f, minDepth, maxDepth)
+}
+
+inline fun VkCommandBuffer.setViewport(width: Float, height: Float, minDepth: Float = 0f, maxDepth: Float = 1f) {
     setViewport(vk.Viewport {
-        width = size.x.f
-        height = size.y.f
+        this.width = width
+        this.height = height
         this.minDepth = minDepth
         this.maxDepth = maxDepth
     })
@@ -224,6 +228,12 @@ inline infix fun VkDevice.createCommandPool(createInfo: VkCommandPoolCreateInfo)
     val pCommandPool = appBuffer.long
     VK_CHECK_RESULT(VK10.nvkCreateCommandPool(this, createInfo.adr, NULL, pCommandPool))
     return memGetLong(pCommandPool)
+}
+
+inline fun VkDevice.createComputePipelines(pipelineCache: VkPipelineCache, createInfo: VkComputePipelineCreateInfo): VkPipeline {
+    val pPipeline = appBuffer.long
+    VK_CHECK_RESULT(VK10.nvkCreateComputePipelines(this, pipelineCache, 1, createInfo.adr, NULL, pPipeline))
+    return memGetLong(pPipeline)
 }
 
 inline infix fun VkDevice.createDescriptorPool(createInfo: VkDescriptorPoolCreateInfo): VkDescriptorPool {

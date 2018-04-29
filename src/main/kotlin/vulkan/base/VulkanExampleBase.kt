@@ -715,9 +715,10 @@ abstract class VulkanExampleBase {
 
     /** Create swap chain images    */
     fun setupSwapChain() = swapChain.create(size, settings.vsync)
-//
-//    // Check if command buffers are valid (!= VK_NULL_HANDLE)
-//    bool checkCommandBuffers();
+
+    /** Check if command buffers are valid (!= NULL) */
+    fun checkCommandBuffers() = drawCmdBuffers.all { it.adr != NULL }
+
     /** Create command buffers for drawing commands */
     fun createCommandBuffers() {
         // Create one command buffer for each swap chain image and reuse for rendering
@@ -824,7 +825,7 @@ abstract class VulkanExampleBase {
                 throw RuntimeException("glslang failed to initialize.")
             spirvCrossLoaded = true
         }
-
+        type = VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO
         this.stage = stage
         module = when {
             isSpirV -> device loadShader fileName

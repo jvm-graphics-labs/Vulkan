@@ -8,6 +8,7 @@ import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
+import org.lwjgl.system.Struct
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
 import vkn.VkPhysicalDeviceArrayList.resize
@@ -65,6 +66,13 @@ object vk {
     inline fun CommandPoolCreateInfo(block: VkCommandPoolCreateInfo.() -> Unit): VkCommandPoolCreateInfo {
         val res = VkCommandPoolCreateInfo.create(ptr.advance(VkCommandPoolCreateInfo.SIZEOF))
         res.type = VkStructureType.COMMAND_POOL_CREATE_INFO
+        res.block()
+        return res
+    }
+
+    inline fun ComputePipelineCreateInfo(block: VkComputePipelineCreateInfo.() -> Unit): VkComputePipelineCreateInfo {
+        val res = VkComputePipelineCreateInfo.create(ptr.advance(VkComputePipelineCreateInfo.SIZEOF))
+        res.type = VkStructureType.COMPUTE_PIPELINE_CREATE_INFO
         res.block()
         return res
     }
@@ -477,6 +485,13 @@ object vk {
         Function Constructors
      */
 
+    inline fun ComputePipelineCreateInfo(layout: VkPipelineLayout, flags: VkPipelineCreateFlags = 0): VkComputePipelineCreateInfo {
+        return ComputePipelineCreateInfo {
+            this.layout = layout
+            this.flags = flags
+        }
+    }
+
     inline fun DescriptorImageInfo(sampler: VkSampler, imageView: VkImageView, imageLayout: VkImageLayout): VkDescriptorImageInfo {
         return DescriptorImageInfo {
             this.sampler = sampler
@@ -517,6 +532,26 @@ object vk {
             this[1].apply {
                 type = type1
                 descriptorCount = descriptorCount1
+            }
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(3) {
+            this[0].apply {
+                type = type0
+                descriptorCount = descriptorCount0
+            }
+            this[1].apply {
+                type = type1
+                descriptorCount = descriptorCount1
+            }
+            this[2].apply {
+                type = type2
+                descriptorCount = descriptorCount2
             }
         }
     }
@@ -574,6 +609,12 @@ object vk {
     inline fun DescriptorSetLayoutCreateInfo(bindings: VkDescriptorSetLayoutBinding.Buffer): VkDescriptorSetLayoutCreateInfo {
         return DescriptorSetLayoutCreateInfo {
             this.bindings = bindings
+        }
+    }
+
+    inline fun FenceCreateInfo( flags: VkFenceCreateFlags = 0): VkFenceCreateInfo {
+        return FenceCreateInfo {
+            this.flags = flags
         }
     }
 
@@ -635,7 +676,7 @@ object vk {
 
     inline fun PipelineLayoutCreateInfo(setLayout: VkDescriptorSetLayout): VkPipelineLayoutCreateInfo {
         return PipelineLayoutCreateInfo {
-            setLayouts = appBuffer longBufferOf setLayout
+            this.setLayout = setLayout
         }
     }
 
@@ -690,9 +731,13 @@ object vk {
     }
 
     inline fun Viewport(size: Vec2i, minDepth: Float = 0f, maxDepth: Float = 1f): VkViewport {
+        return Viewport(size.x.f, size.y.f, minDepth, maxDepth)
+    }
+
+    inline fun Viewport(width: Float, height: Float, minDepth: Float = 0f, maxDepth: Float = 1f): VkViewport {
         return Viewport {
-            width = size.x.f
-            height = size.y.f
+            this.width = width
+            this.height = height
             this.minDepth = minDepth
             this.maxDepth = maxDepth
         }
@@ -708,20 +753,26 @@ object vk {
     }
 
     inline fun WriteDescriptorSet(
-            dstSet0: VkDescriptorSet, type0: VkDescriptorType, binding0: Int, bufferInfo0: VkDescriptorBufferInfo,
-            dstSet1: VkDescriptorSet, type1: VkDescriptorType, binding1: Int, imageInfo1: VkDescriptorImageInfo): VkWriteDescriptorSet.Buffer {
+            dstSet0: VkDescriptorSet, type0: VkDescriptorType, binding0: Int, info0: Struct,
+            dstSet1: VkDescriptorSet, type1: VkDescriptorType, binding1: Int, info1: Struct): VkWriteDescriptorSet.Buffer {
         return WriteDescriptorSet(2) {
             this[0].apply {
                 this.dstSet = dstSet0
                 descriptorType = type0
                 dstBinding = binding0
-                bufferInfo_ = bufferInfo0
+                if (info0 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info0
+                else
+                    imageInfo_ = info0 as VkDescriptorImageInfo
             }
             this[1].apply {
                 this.dstSet = dstSet1
                 descriptorType = type1
                 dstBinding = binding1
-                imageInfo_ = imageInfo1
+                if (info1 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info1
+                else
+                    imageInfo_ = info1 as VkDescriptorImageInfo
             }
         }
     }

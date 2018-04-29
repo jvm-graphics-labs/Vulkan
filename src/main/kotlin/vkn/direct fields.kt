@@ -1550,16 +1550,29 @@ inline var VkGraphicsPipelineCreateInfo.basePipelineIndex
     get() = VkGraphicsPipelineCreateInfo.nbasePipelineIndex(adr)
     set(value) = VkGraphicsPipelineCreateInfo.nbasePipelineIndex(adr, value)
 
-//
-//typedef struct VkComputePipelineCreateInfo {
-//    VkStructureType                    sType;
-//    const void*                        pNext;
-//    VkPipelineCreateFlags              flags;
-//    VkPipelineShaderStageCreateInfo    stage;
-//    VkPipelineLayout                   layout;
-//    VkPipeline                         basePipelineHandle;
-//    int32_t                            basePipelineIndex;
-//} VkComputePipelineCreateInfo;
+
+inline var VkComputePipelineCreateInfo.type: VkStructureType
+    get() = VkStructureType of VkComputePipelineCreateInfo.nsType(adr)
+    set(value) = VkComputePipelineCreateInfo.nsType(adr, value.i)
+inline var VkComputePipelineCreateInfo.next: Long
+    get() = VkComputePipelineCreateInfo.npNext(adr)
+    set(value) = VkComputePipelineCreateInfo.npNext(adr, value)
+inline var VkComputePipelineCreateInfo.flags: VkPipelineCreateFlags
+    get() = VkComputePipelineCreateInfo.nflags(adr)
+    set(value) = VkComputePipelineCreateInfo.nflags(adr, value)
+inline var VkComputePipelineCreateInfo.stage: VkPipelineShaderStageCreateInfo
+    get() = VkComputePipelineCreateInfo.nstage(adr)
+    set(value) = VkComputePipelineCreateInfo.nstage(adr, value)
+inline var VkComputePipelineCreateInfo.layout: VkPipelineLayout
+    get() = VkComputePipelineCreateInfo.nlayout(adr)
+    set(value) = VkComputePipelineCreateInfo.nlayout(adr, value)
+inline var VkComputePipelineCreateInfo.basePipelineHandle: VkPipeline
+    get() = VkComputePipelineCreateInfo.nbasePipelineHandle(adr)
+    set(value) = VkComputePipelineCreateInfo.nbasePipelineHandle(adr, value)
+inline var VkComputePipelineCreateInfo.basePipelineIndex: Int
+    get() = VkComputePipelineCreateInfo.nbasePipelineIndex(adr)
+    set(value) = VkComputePipelineCreateInfo.nbasePipelineIndex(adr, value)
+
 
 inline var VkPushConstantRange.stageFlags: VkShaderStageFlags
     get() = VkPushConstantRange.nstageFlags(adr)
