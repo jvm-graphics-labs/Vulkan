@@ -245,12 +245,12 @@
 //
 //        val stagingBuffer = Buffer()
 //
-//        vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &stagingBuffer,
-//        storageBufferSize,
-//        particleBuffer.data())
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.TRANSFER_SRC_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                stagingBuffer,
+//                storageBufferSize,
+//                particleBuffer)
 //
 //        vulkanDevice->createBuffer(
 //        // The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline
