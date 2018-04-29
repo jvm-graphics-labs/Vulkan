@@ -73,11 +73,13 @@ inline fun cVkPipelineShaderStageCreateInfo(block: VkPipelineShaderStageCreateIn
     return res
 }
 
+inline fun cVkPipelineVertexInputStateCreateInfo(): VkPipelineVertexInputStateCreateInfo {
+    return VkPipelineVertexInputStateCreateInfo.calloc().apply {
+        type = VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+    }
+}
 inline fun cVkPipelineVertexInputStateCreateInfo(block: VkPipelineVertexInputStateCreateInfo.() -> Unit): VkPipelineVertexInputStateCreateInfo {
-    val res = VkPipelineVertexInputStateCreateInfo.calloc()
-    res.type = VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
-    res.block()
-    return res
+    return cVkPipelineVertexInputStateCreateInfo().also(block)
 }
 inline fun cVkPipelineViewportStateCreateInfo(block: VkPipelineViewportStateCreateInfo.() -> Unit): VkPipelineViewportStateCreateInfo {
     val res = VkPipelineViewportStateCreateInfo.calloc()

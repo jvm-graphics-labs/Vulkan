@@ -106,12 +106,8 @@ class Model {
         this.device = device.logicalDevice
 
         val importer = Importer()
-        val scene = importer.readFile(filename, flags)
-        if (scene == null) {
-            val error = importer.errorString
-            tools.exitFatal("$error\n\nThe file may be part of the additional asset pack.\n\nRun \"download_assets.py\" " +
-                    "in the repository root to download the latest version.", -1)
-        }
+        val scene = importer.readFile(filename, flags) ?: tools.exitFatal("${importer.errorString}\n\n" +
+                "The file may be part of the additional asset pack.\n\nRun \"download_assets.py\" in the repository root to download the latest version.", -1)
 
 
         parts.clear()

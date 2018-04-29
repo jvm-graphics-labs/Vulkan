@@ -360,9 +360,7 @@ constructor(
         }
         // If a pointer to the buffer data has been passed, map the buffer and copy over the data
         if (data != NULL)
-            buffer.mapping {
-                memCopy(data, buffer.mapped[0], size)
-            }
+            buffer.mapping { dst -> memCopy(data, dst, size) }
 
         // Initialize a default descriptor that covers the whole buffer size
         buffer.setupDescriptor()

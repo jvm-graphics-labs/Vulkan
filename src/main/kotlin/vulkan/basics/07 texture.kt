@@ -527,10 +527,10 @@ private class Texture : VulkanExampleBase() {
 
             it setScissor vk.Rect2D(size)
 
-            it.bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
+            it.bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
             it.bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.solid)
 
-            it.bindVertexBuffer(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
+            it.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
             it.bindIndexBuffer(indexBuffer.buffer, 0, VkIndexType.UINT32)
 
             it.drawIndexed(indexCount, 1, 0, 0, 0)
@@ -776,10 +776,10 @@ private class Texture : VulkanExampleBase() {
         updateUniformBuffers()
     }
 
+    val viewMatrix = Mat4(1f).translateAssign(0f, 0f, zoom)
     fun updateUniformBuffers() {
         // Vertex shader
         glm.perspective(uboVS.projection, 60f.rad, size.aspect, 0.001f, 256f)
-        val viewMatrix = Mat4(1f).translateAssign(0f, 0f, zoom)
 
         uboVS.model.apply {
             put(viewMatrix * Mat4(1f).translateAssign(cameraPos))
@@ -791,9 +791,9 @@ private class Texture : VulkanExampleBase() {
         uboVS.viewPos put Vec4(0f, 0f, -zoom, 0f)
 
         uboVS.pack()
-        uniformBufferVS.map()
-        memCopy(uboVS.address, uniformBufferVS.mapped[0], uboVS.size.L)
-        uniformBufferVS.unmap()
+        uniformBufferVS.mapping { dst ->
+            memCopy(uboVS.address, dst, uboVS.size.L)
+        }
     }
 
     override fun prepare() {

@@ -294,7 +294,7 @@ private class Triangle : VulkanExampleBase() {
             drawCmdBuffers[i] setScissor scissor
 
             // Bind descriptor sets describing shader binding points
-            drawCmdBuffers[i].bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
+            drawCmdBuffers[i].bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
 
             /*  Bind the rendering pipeline
                 The pipeline (state object) contains all states of the rendering pipeline, binding it will set all
@@ -302,7 +302,7 @@ private class Triangle : VulkanExampleBase() {
             drawCmdBuffers[i].bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)
 
             // Bind triangle vertex buffer (contains position and colors)
-            drawCmdBuffers[i].bindVertexBuffer(0, vertices.buffer)
+            drawCmdBuffers[i].bindVertexBuffers(0, vertices.buffer)
 
             // Bind triangle index buffer
             drawCmdBuffers[i].bindIndexBuffer(indices.buffer, 0, VkIndexType.UINT32)
@@ -533,7 +533,7 @@ private class Triangle : VulkanExampleBase() {
 
     fun setupDescriptorPool() = withStack {
         // We need to tell the API the number of max. requested descriptors per type
-        val typeCounts = vk.DescriptorPoolSize(1) {
+        val typeCounts = vk.DescriptorPoolSize {
             // This example only uses one descriptor type (uniform buffer) and only requests one descriptor of this type
             type = VkDescriptorType.UNIFORM_BUFFER
             descriptorCount = 1
@@ -546,7 +546,7 @@ private class Triangle : VulkanExampleBase() {
         // Create the global descriptor pool
         // All descriptors used in this example are allocated from this pool
         val descriptorPoolInfo = vk.DescriptorPoolCreateInfo {
-            poolSizes = typeCounts
+            poolSize = typeCounts
             // Set the max. number of descriptor sets that can be requested from this pool (requesting beyond this limit will result in an error)
             maxSets = 1
         }
@@ -559,14 +559,14 @@ private class Triangle : VulkanExampleBase() {
             So every shader binding should map to one descriptor set layout binding */
 
         // Binding 0: Uniform buffer (Vertex shader)
-        val layoutBinding = vk.DescriptorSetLayoutBinding(1) {
+        val layoutBinding = vk.DescriptorSetLayoutBinding {
             descriptorType = VkDescriptorType.UNIFORM_BUFFER
             descriptorCount = 1
             stageFlags = VkShaderStage.VERTEX_BIT.i
             immutableSamplers = null
         }
 
-        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo { bindings = layoutBinding }
+        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo { binding = layoutBinding }
 
         descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
 
@@ -600,7 +600,7 @@ private class Triangle : VulkanExampleBase() {
             dstBinding = 0
         }
 
-        device updateDescriptorSet writeDescriptorSet
+        device updateDescriptorSets writeDescriptorSet
     }
 
     /** Create the depth (and stencil) buffer attachments used by our framebuffers

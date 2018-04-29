@@ -55,6 +55,7 @@ object vk {
         res.type = VkStructureType.COMMAND_BUFFER_BEGIN_INFO
         return res
     }
+
     inline fun CommandBufferBeginInfo(block: VkCommandBufferBeginInfo.() -> Unit): VkCommandBufferBeginInfo {
         val res = CommandBufferBeginInfo()
         res.block()
@@ -383,10 +384,14 @@ object vk {
         return res
     }
 
-    inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.() -> Unit): VkWriteDescriptorSet.Buffer = WriteDescriptorSet(capacity).also { it[0].block() }
+    inline fun WriteDescriptorSet(capacity: Int, block: VkWriteDescriptorSet.Buffer.() -> Unit): VkWriteDescriptorSet.Buffer = WriteDescriptorSet(capacity).also(block)
 
     inline fun DescriptorImageInfo(capacity: Int): VkDescriptorImageInfo.Buffer {
         return VkDescriptorImageInfo.create(ptr.advance(VkDescriptorImageInfo.SIZEOF * capacity), capacity)
+    }
+
+    inline fun DescriptorImageInfo(block: VkDescriptorImageInfo.() -> Unit): VkDescriptorImageInfo {
+        return VkDescriptorImageInfo.create(ptr.advance(VkDescriptorImageInfo.SIZEOF)).also(block)
     }
 
     inline fun DescriptorImageInfo(capacity: Int, block: VkDescriptorImageInfo.() -> Unit): VkDescriptorImageInfo.Buffer = DescriptorImageInfo(capacity).also { it[0].block() }
@@ -413,10 +418,10 @@ object vk {
 
     inline fun DescriptorPoolSize(block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF)).also(block)
     inline fun DescriptorPoolSize(capacity: Int): VkDescriptorPoolSize.Buffer = VkDescriptorPoolSize.create(ptr.advance(VkDescriptorPoolSize.SIZEOF * capacity), capacity)
-    inline fun DescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.() -> Unit): VkDescriptorPoolSize.Buffer = DescriptorPoolSize(capacity).also { it[0].block() }
+    inline fun DescriptorPoolSize(capacity: Int, block: VkDescriptorPoolSize.Buffer.() -> Unit): VkDescriptorPoolSize.Buffer = DescriptorPoolSize(capacity).also(block)
 
     inline fun DescriptorSetLayoutBinding(capacity: Int): VkDescriptorSetLayoutBinding.Buffer = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF * capacity), capacity)
-    inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = DescriptorSetLayoutBinding(capacity).also { it[0].block() }
+    inline fun DescriptorSetLayoutBinding(capacity: Int, block: VkDescriptorSetLayoutBinding.Buffer.() -> Unit): VkDescriptorSetLayoutBinding.Buffer = DescriptorSetLayoutBinding(capacity).also(block)
     inline fun DescriptorSetLayoutBinding(block: VkDescriptorSetLayoutBinding.() -> Unit): VkDescriptorSetLayoutBinding = VkDescriptorSetLayoutBinding.create(ptr.advance(VkDescriptorSetLayoutBinding.SIZEOF)).also(block)
 
     inline fun ExtensionProperties(capacity: Int): VkExtensionProperties.Buffer = VkExtensionProperties.create(ptr.advance(VkExtensionProperties.SIZEOF * capacity), capacity)
@@ -450,7 +455,7 @@ object vk {
 
     inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
 
-    inline fun SubresourceLayout(): VkSubresourceLayout = VkSubresourceLayout.create(ptr.advance(VkSubresourceLayout.SIZEOF ))
+    inline fun SubresourceLayout(): VkSubresourceLayout = VkSubresourceLayout.create(ptr.advance(VkSubresourceLayout.SIZEOF))
     inline fun SubresourceLayout(capacity: Int, block: VkSubresourceLayout.() -> Unit): VkSubresourceLayout.Buffer = VkSubresourceLayout.create(ptr.advance(VkSubresourceLayout.SIZEOF * capacity), capacity).also { it[0].block() }
 
     inline fun SurfaceCapabilitiesKHR(block: VkSurfaceCapabilitiesKHR.() -> Unit): VkSurfaceCapabilitiesKHR = VkSurfaceCapabilitiesKHR.create(ptr.advance(VkSurfaceCapabilitiesKHR.SIZEOF)).also(block)
@@ -472,9 +477,24 @@ object vk {
         Function Constructors
      */
 
+    inline fun DescriptorImageInfo(sampler: VkSampler, imageView: VkImageView, imageLayout: VkImageLayout): VkDescriptorImageInfo {
+        return DescriptorImageInfo {
+            this.sampler = sampler
+            this.imageView = imageView
+            this.imageLayout = imageLayout
+        }
+    }
+
     inline fun DescriptorPoolCreateInfo(poolSize: VkDescriptorPoolSize, maxSets: Int): VkDescriptorPoolCreateInfo {
         return DescriptorPoolCreateInfo {
             this.poolSize = poolSize
+            this.maxSets = maxSets
+        }
+    }
+
+    inline fun DescriptorPoolCreateInfo(poolSizes: VkDescriptorPoolSize.Buffer, maxSets: Int): VkDescriptorPoolCreateInfo {
+        return DescriptorPoolCreateInfo {
+            this.poolSizes = poolSizes
             this.maxSets = maxSets
         }
     }
@@ -486,23 +506,74 @@ object vk {
         }
     }
 
-    inline fun DescriptorSetAllocateInfo(descriptorPool: VkDescriptorPool, setLayout: VkDescriptorSetLayout): VkDescriptorSetAllocateInfo {
-        return DescriptorSetAllocateInfo {
-            this.descriptorPool = descriptorPool
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(2) {
+            this[0].apply {
+                type = type0
+                descriptorCount = descriptorCount0
+            }
+            this[1].apply {
+                type = type1
+                descriptorCount = descriptorCount1
+            }
         }
     }
 
-    inline fun DescriptorSetLayoutBinding(type: VkDescriptorType, stageFlags: VkShaderStageFlags, binding: Int): VkDescriptorSetLayoutBinding {
+    inline fun DescriptorSetAllocateInfo(descriptorPool: VkDescriptorPool, setLayout: VkDescriptorSetLayout): VkDescriptorSetAllocateInfo {
+        return DescriptorSetAllocateInfo {
+            this.descriptorPool = descriptorPool
+            this.setLayout = setLayout
+        }
+    }
+
+    inline fun DescriptorSetLayoutBinding(type: VkDescriptorType, stageFlags: VkShaderStageFlags, binding: Int, descriptorCount: Int = 1): VkDescriptorSetLayoutBinding {
         return DescriptorSetLayoutBinding {
             descriptorType = type
             this.stageFlags = stageFlags
             this.binding = binding
+            this.descriptorCount = descriptorCount
+        }
+    }
+
+    inline fun DescriptorSetLayoutBinding(
+            type0: VkDescriptorType, stageFlags0: VkShaderStageFlags, binding0: Int,
+            type1: VkDescriptorType, stageFlags1: VkShaderStageFlags, binding1: Int): VkDescriptorSetLayoutBinding.Buffer {
+
+        return DescriptorSetLayoutBinding(
+                type0, stageFlags0, binding0, 1,
+                type1, stageFlags1, binding1, 1)
+    }
+
+    inline fun DescriptorSetLayoutBinding(
+            type0: VkDescriptorType, stageFlags0: VkShaderStageFlags, binding0: Int, descriptorCount0: Int,
+            type1: VkDescriptorType, stageFlags1: VkShaderStageFlags, binding1: Int, descriptorCount1: Int): VkDescriptorSetLayoutBinding.Buffer {
+        return DescriptorSetLayoutBinding(2) {
+            this[0].apply {
+                descriptorType = type0
+                stageFlags = stageFlags0
+                binding = binding0
+                descriptorCount = descriptorCount0
+            }
+            this[1].apply {
+                descriptorType = type1
+                stageFlags = stageFlags1
+                binding = binding1
+                descriptorCount = descriptorCount1
+            }
         }
     }
 
     inline fun DescriptorSetLayoutCreateInfo(binding: VkDescriptorSetLayoutBinding): VkDescriptorSetLayoutCreateInfo {
         return DescriptorSetLayoutCreateInfo {
             this.binding = binding
+        }
+    }
+
+    inline fun DescriptorSetLayoutCreateInfo(bindings: VkDescriptorSetLayoutBinding.Buffer): VkDescriptorSetLayoutCreateInfo {
+        return DescriptorSetLayoutCreateInfo {
+            this.bindings = bindings
         }
     }
 
@@ -543,12 +614,10 @@ object vk {
 
     inline fun PipelineDynamicStateCreateInfo(dynamicStates: Collection<VkDynamicState>, flags: VkPipelineDynamicStateCreateFlags = 0): VkPipelineDynamicStateCreateInfo {
         return PipelineDynamicStateCreateInfo {
-            this.dynamicStates = dynamicStates.run {
-                appBuffer.intBuffer(size).also {
-                    for (i in indices)
-                        it[i] = elementAt(i).i
-                }
-            }
+            val buf = appBuffer.intBuffer(dynamicStates.size)
+            for (i in dynamicStates.indices)
+                buf[i] = dynamicStates.elementAt(i).i
+            this.dynamicStates = buf
             this.flags = flags
         }
     }
@@ -635,6 +704,25 @@ object vk {
             descriptorType = type
             dstBinding = binding
             bufferInfo_ = bufferInfo
+        }
+    }
+
+    inline fun WriteDescriptorSet(
+            dstSet0: VkDescriptorSet, type0: VkDescriptorType, binding0: Int, bufferInfo0: VkDescriptorBufferInfo,
+            dstSet1: VkDescriptorSet, type1: VkDescriptorType, binding1: Int, imageInfo1: VkDescriptorImageInfo): VkWriteDescriptorSet.Buffer {
+        return WriteDescriptorSet(2) {
+            this[0].apply {
+                this.dstSet = dstSet0
+                descriptorType = type0
+                dstBinding = binding0
+                bufferInfo_ = bufferInfo0
+            }
+            this[1].apply {
+                this.dstSet = dstSet1
+                descriptorType = type1
+                dstBinding = binding1
+                imageInfo_ = imageInfo1
+            }
         }
     }
 
@@ -835,8 +923,8 @@ object vk {
         VK10.nvkCmdBeginRenderPass(commandBuffer, renderPassBegin.adr, contents.i)
     }
 
-    inline fun cmdBindDescriptorSet(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
-                                    descriptorSet: VkDescriptorSet, dynamicOffsets: Int? = null) {
+    inline fun cmdBindDescriptorSets(commandBuffer: VkCommandBuffer, pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
+                                     descriptorSet: VkDescriptorSet, dynamicOffsets: Int? = null) {
         val pDescriptorSets = appBuffer.long
         memPutLong(pDescriptorSets, descriptorSet)
         val dynamicOffsetCount: Int

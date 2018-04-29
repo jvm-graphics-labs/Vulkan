@@ -162,7 +162,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
             cmd.bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)
 
-            cmd.bindVertexBuffer(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
+            cmd.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
             cmd.bindIndexBuffer(indexBuffer.buffer, 0, VkIndexType.UINT32)
 
             // Render multiple objects using different model matrices by dynamically offsetting into one uniform buffer
@@ -170,7 +170,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
                 // One dynamic offset per dynamic descriptor to offset into the ubo containing all model matrices
                 val dynamicOffset = it * dynamicAlignment
                 // Bind the descriptor set for rendering a mesh using the dynamic offset
-                cmd.bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet, dynamicOffset.i)
+                cmd.bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet, dynamicOffset.i)
 
                 cmd.drawIndexed(indexCount, 1, 0, 0, 0)
             }
@@ -280,11 +280,10 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
         val writeDescriptorSets = vk.WriteDescriptorSet(2).also {
             // Binding 0 : Projection/View matrix uniform buffer
-            it[0](descriptorSet, 0, VkDescriptorType.UNIFORM_BUFFER, uniformBuffers.view.descriptor)
+            it[0](descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBuffers.view.descriptor)
             // Binding 1 : Instance matrix as dynamic uniform buffer
-            it[1](descriptorSet, 1, VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, uniformBuffers.dynamic.descriptor)
+            it[0](descriptorSet, VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, 1, uniformBuffers.dynamic.descriptor)
         }
-
         device updateDescriptorSets writeDescriptorSets
     }
 

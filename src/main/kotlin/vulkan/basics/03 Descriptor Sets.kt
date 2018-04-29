@@ -134,13 +134,13 @@ private class DescriptorSets : VulkanExampleBase() {
                 setViewport(size)
                 setScissor(size)
 
-                bindVertexBuffer(0, models.cube.vertices.buffer)
+                bindVertexBuffers(0, models.cube.vertices.buffer)
                 bindIndexBuffer(models.cube.indices.buffer, 0, VkIndexType.UINT32)
 
                 // [POI] Render cubes with separate descriptor sets
                 for (cube in cubes) {
                     // Bind the cube's descriptor set. This tells the command buffer to use the uniform buffer and image set for this cube
-                    bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, cube.descriptorSet)
+                    bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, cube.descriptorSet)
                     drawIndexed(models.cube.indexCount, 1, 0, 0, 0)
                 }
 
@@ -327,8 +327,8 @@ private class DescriptorSets : VulkanExampleBase() {
             it.dynamicState = dynamicStateCI
 
             it.stages = vk.PipelineShaderStageCreateInfo(2).also {
-                it[0].loadShader("shaders/descriptorsets/cube.vert.spv", VkShaderStage.VERTEX_BIT)
-                it[1].loadShader("shaders/descriptorsets/cube.frag.spv", VkShaderStage.FRAGMENT_BIT)
+                it[0].loadShader("$assetPath/shaders/descriptorsets/cube.vert.spv", VkShaderStage.VERTEX_BIT)
+                it[1].loadShader("$assetPath/shaders/descriptorsets/cube.frag.spv", VkShaderStage.FRAGMENT_BIT)
             }
         }
 

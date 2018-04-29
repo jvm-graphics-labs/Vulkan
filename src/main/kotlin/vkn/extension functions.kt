@@ -26,9 +26,9 @@ inline fun VkCommandBuffer.beginRenderPass(renderPassBegin: VkRenderPassBeginInf
     VK10.nvkCmdBeginRenderPass(this, renderPassBegin.adr, contents.i)
 }
 
-inline fun VkCommandBuffer.bindDescriptorSet(pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
-                                             descriptorSet: VkDescriptorSet, dynamicOffsets: Int? = null) {
-    vk.cmdBindDescriptorSet(this, pipelineBindPoint, layout, descriptorSet, dynamicOffsets)
+inline fun VkCommandBuffer.bindDescriptorSets(pipelineBindPoint: VkPipelineBindPoint, layout: VkPipelineLayout,
+                                              descriptorSet: VkDescriptorSet, dynamicOffsets: Int? = null) {
+    vk.cmdBindDescriptorSets(this, pipelineBindPoint, layout, descriptorSet, dynamicOffsets)
 }
 
 inline fun VkCommandBuffer.bindIndexBuffer(buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
@@ -39,7 +39,11 @@ inline fun VkCommandBuffer.bindPipeline(pipelineBindPoint: VkPipelineBindPoint, 
     VK10.vkCmdBindPipeline(this, pipelineBindPoint.i, pipeline)
 }
 
-inline fun VkCommandBuffer.bindVertexBuffer(firstBinding: Int, buffer: VkBuffer) {
+inline infix fun VkCommandBuffer.bindVertexBuffers(buffer: VkBuffer) {
+    bindVertexBuffers(0, buffer)
+}
+
+inline fun VkCommandBuffer.bindVertexBuffers(firstBinding: Int, buffer: VkBuffer) {
     val pBuffer = appBuffer.long
     memPutLong(pBuffer, buffer)
     val pOffset = appBuffer.long
@@ -518,7 +522,7 @@ inline infix fun VkDevice.unmapMemory(memory: VkDeviceMemory) {
     VK10.vkUnmapMemory(this, memory)
 }
 
-inline infix fun VkDevice.updateDescriptorSet(descriptorWrites: VkWriteDescriptorSet) {
+inline infix fun VkDevice.updateDescriptorSets(descriptorWrites: VkWriteDescriptorSet) {
     VK10.nvkUpdateDescriptorSets(this, 1, descriptorWrites.adr, 0, NULL)
 }
 
@@ -696,20 +700,20 @@ inline operator fun VkVertexInputBindingDescription.invoke(binding: Int, stride:
 }
 
 
-inline operator fun VkWriteDescriptorSet.invoke(dstSet: VkDescriptorSet, dstBinding: Int, descriptorType: VkDescriptorType,
-                                                bufferInfo: VkDescriptorBufferInfo.Buffer): VkWriteDescriptorSet {
-    this.dstSet = dstSet
-    this.dstBinding = dstBinding
-    this.descriptorType = descriptorType
-    this.bufferInfo = bufferInfo
-    return this
-}
-
-inline operator fun VkWriteDescriptorSet.invoke(dstSet: VkDescriptorSet, dstBinding: Int, descriptorType: VkDescriptorType,
+inline operator fun VkWriteDescriptorSet.invoke(dstSet: VkDescriptorSet, descriptorType: VkDescriptorType, dstBinding: Int,
                                                 bufferInfo: VkDescriptorBufferInfo): VkWriteDescriptorSet {
     this.dstSet = dstSet
     this.dstBinding = dstBinding
     this.descriptorType = descriptorType
     this.bufferInfo_ = bufferInfo
+    return this
+}
+
+inline operator fun VkWriteDescriptorSet.invoke(dstSet: VkDescriptorSet, descriptorType: VkDescriptorType, dstBinding: Int,
+                                                imageInfo: VkDescriptorImageInfo): VkWriteDescriptorSet {
+    this.dstSet = dstSet
+    this.dstBinding = dstBinding
+    this.descriptorType = descriptorType
+    this.imageInfo_ = imageInfo
     return this
 }

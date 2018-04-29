@@ -26,7 +26,7 @@ class Buffer {
     lateinit var device: VkDevice
     var buffer: VkBuffer = NULL
     var memory: VkDeviceMemory = NULL
-    val descriptor = VkDescriptorBufferInfo.calloc()
+    val descriptor: VkDescriptorBufferInfo = VkDescriptorBufferInfo.calloc()
     var size: VkDeviceSize = 0
     var alignment: VkDeviceSize = 0
     var mapped: PointerBuffer = memCallocPointer(1)
@@ -48,9 +48,9 @@ class Buffer {
         device.mapMemory(memory, offset, size, 0, mapped.adr)
     }
 
-    fun mapping(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0, block: () -> Unit) {
+    fun mapping(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0, block: (Long) -> Unit) {
         map(size, offset)
-        block()
+        block(mapped[0])
         unmap()
     }
 

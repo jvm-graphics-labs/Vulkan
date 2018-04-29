@@ -144,9 +144,9 @@ private class Pipelines : VulkanExampleBase() {
 
                 setScissor(size)
 
-                bindDescriptorSet(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
+                bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
 
-                bindVertexBuffer(VERTEX_BUFFER_BIND_ID, models.cube.vertices.buffer)
+                bindVertexBuffers(VERTEX_BUFFER_BIND_ID, models.cube.vertices.buffer)
                 bindIndexBuffer(models.cube.indices.buffer, 0, VkIndexType.UINT32)
 
                 // Left : Solid colored
@@ -219,7 +219,7 @@ private class Pipelines : VulkanExampleBase() {
                 0,  // Binding 0 : Vertex shader uniform buffer
                 uniformBuffer.descriptor)
 
-        device updateDescriptorSet writeDescriptorSet
+        device updateDescriptorSets writeDescriptorSet
     }
 
     fun preparePipelines() {
