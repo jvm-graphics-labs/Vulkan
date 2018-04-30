@@ -6,17 +6,20 @@ import glfw_.appBuffer.ptr
 import gli_.extension
 import glm_.BYTES
 import glm_.i
+import glm_.mat4x4.Mat4
 import glm_.set
 import graphics.scenery.spirvcrossj.*
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.memPutFloat
 import org.lwjgl.system.Pointer
 import org.lwjgl.system.Struct
 import org.lwjgl.system.StructBuffer
-import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkPhysicalDevice
 import uno.kotlin.buffers.indices
-import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
@@ -223,11 +226,37 @@ private fun IntVec.toByteBuffer(): ByteBuffer {
     val ints = bytes.asIntBuffer()
     for (i in ints.indices)
         ints[i] = get(i).i
+    withLong { }
     return bytes
 }
 
 
-
 operator fun <T : Struct, SELF : StructBuffer<T, SELF>> StructBuffer<T, SELF>.set(index: Int, value: T) {
     put(index, value)
+}
+
+interface Bufferizable {
+
+    infix fun to(address: Long): Unit = TODO()
+    infix fun from(address: Long): Unit = TODO()
+}
+
+inline fun <R> withAddress(address: Long, block: WithAddress.() -> R): R {
+    WithAddress.address = address
+    WithAddress.offset = 0
+    return WithAddress.block()
+}
+
+object WithAddress {
+
+    var address = NULL
+    var offset = 0
+
+    fun add(mat4: Mat4) {
+        for (i in 0..3)
+            for (j in 0..3) {
+                memPutFloat(address + offset, mat4[i, j])
+                offset += Float.BYTES
+            }
+    }
 }

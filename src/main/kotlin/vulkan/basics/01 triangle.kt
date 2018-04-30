@@ -9,7 +9,6 @@ import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.size
 import glm_.vec3.Vec3
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkCommandBuffer
@@ -48,7 +47,7 @@ private class Triangle : VulkanExampleBase() {
 
     /** Vertex layout used in this example  */
     object Vertex {
-//        float position [3];
+        //        float position [3];
 //        float color [3];
         val size = Vec3.size * 2
         val offsetPosition = 0
@@ -88,11 +87,19 @@ private class Triangle : VulkanExampleBase() {
 
         This way we can just memcopy the ubo data to the ubo
         Note: You should use data types that align with the GPU in order to avoid manual padding (vec4, mat4)   */
-    private val uboVS = object {
+    object uboVS : Bufferizable {
+
         var projectionMatrix = Mat4()
         var modelMatrix = Mat4()
         var viewMatrix = Mat4()
-        val size = Mat4.size * 3L
+
+        val size = Mat4.size * 3
+
+        override infix fun to(address: Long) {
+            withAddress(address) {
+                add(projectionMatrix); add(modelMatrix); add(viewMatrix)
+            }
+        }
     }
 
     /** The pipeline layout is used by a pipline to access the descriptor sets
@@ -897,8 +904,6 @@ private class Triangle : VulkanExampleBase() {
         // Shaders
         val shaderStages = vk.PipelineShaderStageCreateInfo(2)
 
-        println(Paths.get("").toAbsolutePath())
-
         // Vertex shader
         shaderStages[0].apply {
             // Set pipeline stage for this shader
@@ -957,7 +962,7 @@ private class Triangle : VulkanExampleBase() {
         }
 
         val bufferInfo = vk.BufferCreateInfo {
-            size = uboVS.size
+            size = uboVS.size.L
             // This buffer will be used as a uniform buffer
             usage = VkBufferUsage.UNIFORM_BUFFER_BIT.i
         }
@@ -982,7 +987,7 @@ private class Triangle : VulkanExampleBase() {
         uniformBufferVS.descriptor[0].apply {
             buffer = uniformBufferVS.buffer
             offset = 0
-            range = uboVS.size
+            range = uboVS.size.L
         }
         updateUniformBuffers()
     }
@@ -1000,17 +1005,10 @@ private class Triangle : VulkanExampleBase() {
                 .rotate(rotation.z.rad, 0f, 0f, 1f)
 
         // Map uniform buffer and update it
-        val pData = appBuffer.pointer
-        device.mapMemory(uniformBufferVS.memory, 0, uboVS.size, 0, pData)
-        val buffer = MemoryUtil.memByteBuffer(memGetAddress(pData), Mat4.size * 3)
-        uboVS.apply {
-            projectionMatrix to buffer
-            modelMatrix.to(buffer, Mat4.size)
-            viewMatrix.to(buffer, Mat4.size * 2)
-        }
-        /*  Unmap after data has been copied
-            Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU         */
-        device unmapMemory uniformBufferVS.memory
+        device.mappingMemory(uniformBufferVS.memory, 0, uboVS.size.L, 0) { data ->
+            uboVS to data
+        }/* Unmap after data has been copied
+            Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU */
     }
 
     override fun prepare() {

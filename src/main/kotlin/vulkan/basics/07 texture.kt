@@ -191,7 +191,7 @@ private class Texture : VulkanExampleBase() {
         val destStageFlags: VkPipelineStageFlags = VkPipelineStage.TOP_OF_PIPE_BIT.i
 
         // Put barrier inside setup command buffer
-        pipelineBarrier(srcStageFlags, destStageFlags, tools.VK_FLAGS_NONE, imageMemoryBarriers = imageMemoryBarrier)
+        pipelineBarrier(srcStageFlags, destStageFlags, tools.VK_FLAGS_NONE, imageMemoryBarrier = imageMemoryBarrier)
     }
 
     fun loadTexture() {

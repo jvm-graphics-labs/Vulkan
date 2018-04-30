@@ -103,13 +103,13 @@ inline fun VkCommandBuffer.endRenderPass() {
 
 inline fun VkCommandBuffer.pipelineBarrier(srcStageMask: VkPipelineStageFlags, dstStageMask: VkPipelineStageFlags,
                                            dependencyFlags: VkDependencyFlags,
-                                           memoryBarriers: VkMemoryBarrier? = null,
-                                           bufferMemoryBarriers: VkBufferMemoryBarrier? = null,
-                                           imageMemoryBarriers: VkImageMemoryBarrier? = null) {
+                                           memoryBarrier: VkMemoryBarrier? = null,
+                                           bufferMemoryBarrier: VkBufferMemoryBarrier? = null,
+                                           imageMemoryBarrier: VkImageMemoryBarrier? = null) {
     VK10.nvkCmdPipelineBarrier(this, srcStageMask, dstStageMask, dependencyFlags,
-            if (memoryBarriers != null) 1 else 0, memoryBarriers?.adr ?: NULL,
-            if (bufferMemoryBarriers != null) 1 else 0, bufferMemoryBarriers?.adr ?: NULL,
-            if (imageMemoryBarriers != null) 1 else 0, imageMemoryBarriers?.adr ?: NULL)
+            if (memoryBarrier != null) 1 else 0, memoryBarrier?.adr ?: NULL,
+            if (bufferMemoryBarrier != null) 1 else 0, bufferMemoryBarrier?.adr ?: NULL,
+            if (imageMemoryBarrier != null) 1 else 0, imageMemoryBarrier?.adr ?: NULL)
 }
 
 inline fun VkCommandBuffer.reset(flags: VkCommandBufferResetFlags) {

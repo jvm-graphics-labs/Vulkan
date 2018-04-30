@@ -1011,12 +1011,27 @@ inline var VkPipelineCacheCreateInfo.initialData
     set(value) = VkPipelineCacheCreateInfo.npInitialData(adr, value)
 
 
-//typedef struct VkSpecializationMapEntry {
-//    uint32_t    constantID;
-//    uint32_t    offset;
-//    size_t      size;
-//} VkSpecializationMapEntry;
-//
+inline var VkSpecializationMapEntry.constantId: Int
+    get() = VkSpecializationMapEntry.nconstantID(adr)
+    set(value) = VkSpecializationMapEntry.nconstantID(adr, value)
+inline var VkSpecializationMapEntry.offset: Int
+    get() = VkSpecializationMapEntry.noffset(adr)
+    set(value) = VkSpecializationMapEntry.noffset(adr, value)
+inline var VkSpecializationMapEntry.size: Long
+    get() = VkSpecializationMapEntry.nsize(adr)
+    set(value) = VkSpecializationMapEntry.nsize(adr, value)
+
+
+//inline val VkSpecializationInfo.mapEntryCount: Int get() = VkSpecializationInfo.nmapEntryCount(adr)
+inline var VkSpecializationInfo.mapEntries: VkSpecializationMapEntry.Buffer?
+    get() = VkSpecializationInfo.npMapEntries(adr)
+    set(value) = VkSpecializationInfo.npMapEntries(adr, value)
+//inline val VkSpecializationInfo.dataSize: Long get() = VkSpecializationInfo.ndataSize(adr)
+inline var VkSpecializationInfo.data: ByteBuffer?
+    get() = VkSpecializationInfo.npData(adr)
+    set(value) = VkSpecializationInfo.npData(adr, value)
+
+
 //typedef struct VkSpecializationInfo {
 //    uint32_t                           mapEntryCount;
 //    const VkSpecializationMapEntry*    pMapEntries;

@@ -12,6 +12,7 @@ import org.lwjgl.system.Struct
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
 import vkn.VkPhysicalDeviceArrayList.resize
+import java.nio.ByteBuffer
 import java.nio.LongBuffer
 import kotlin.reflect.KMutableProperty0
 
@@ -461,13 +462,18 @@ object vk {
     inline fun PipelineColorBlendAttachmentState(block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF)).also(block)
     inline fun PipelineColorBlendAttachmentState(capacity: Int, block: VkPipelineColorBlendAttachmentState.() -> Unit): VkPipelineColorBlendAttachmentState.Buffer = VkPipelineColorBlendAttachmentState.create(ptr.advance(VkPipelineColorBlendAttachmentState.SIZEOF * capacity), capacity).also { it[0].block() }
 
-    inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
-
     inline fun Rect2D(block: VkRect2D.() -> Unit): VkRect2D = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF)).also(block)
     inline fun Rect2D(capacity: Int, block: VkRect2D.() -> Unit): VkRect2D.Buffer = VkRect2D.create(ptr.advance(VkRect2D.SIZEOF * capacity), capacity).also { it[0].block() }
 
-    inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
+    inline fun SpecializationMapEntry(): VkSpecializationMapEntry = VkSpecializationMapEntry.create(ptr.advance(VkSpecializationMapEntry.SIZEOF))
+    inline fun SpecializationMapEntry(capacity: Int): VkSpecializationMapEntry.Buffer = VkSpecializationMapEntry.create(ptr.advance(VkSpecializationMapEntry.SIZEOF * capacity), capacity)
 
+    inline fun SpecializationInfo(): VkSpecializationInfo = VkSpecializationInfo.create(ptr.advance(VkSpecializationInfo.SIZEOF))
+    inline fun SpecializationInfo(capacity: Int): VkSpecializationInfo.Buffer = VkSpecializationInfo.create(ptr.advance(VkSpecializationInfo.SIZEOF * capacity), capacity)
+
+    inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
+
+    inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
     inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
 
     inline fun SubresourceLayout(): VkSubresourceLayout = VkSubresourceLayout.create(ptr.advance(VkSubresourceLayout.SIZEOF))
@@ -589,6 +595,17 @@ object vk {
     }
 
     inline fun DescriptorSetLayoutBinding(
+            type0: VkDescriptorType, stageFlags0: VkShaderStageFlags, binding0: Int,
+            type1: VkDescriptorType, stageFlags1: VkShaderStageFlags, binding1: Int,
+            type2: VkDescriptorType, stageFlags2: VkShaderStageFlags, binding2: Int): VkDescriptorSetLayoutBinding.Buffer {
+
+        return DescriptorSetLayoutBinding(
+                type0, stageFlags0, binding0, 1,
+                type1, stageFlags1, binding1, 1,
+                type2, stageFlags2, binding2, 1)
+    }
+
+    inline fun DescriptorSetLayoutBinding(
             type0: VkDescriptorType, stageFlags0: VkShaderStageFlags, binding0: Int, descriptorCount0: Int,
             type1: VkDescriptorType, stageFlags1: VkShaderStageFlags, binding1: Int, descriptorCount1: Int): VkDescriptorSetLayoutBinding.Buffer {
         return DescriptorSetLayoutBinding(2) {
@@ -603,6 +620,32 @@ object vk {
                 stageFlags = stageFlags1
                 binding = binding1
                 descriptorCount = descriptorCount1
+            }
+        }
+    }
+
+    inline fun DescriptorSetLayoutBinding(
+            type0: VkDescriptorType, stageFlags0: VkShaderStageFlags, binding0: Int, descriptorCount0: Int,
+            type1: VkDescriptorType, stageFlags1: VkShaderStageFlags, binding1: Int, descriptorCount1: Int,
+            type2: VkDescriptorType, stageFlags2: VkShaderStageFlags, binding2: Int, descriptorCount2: Int): VkDescriptorSetLayoutBinding.Buffer {
+        return DescriptorSetLayoutBinding(3) {
+            this[0].apply {
+                descriptorType = type0
+                stageFlags = stageFlags0
+                binding = binding0
+                descriptorCount = descriptorCount0
+            }
+            this[1].apply {
+                descriptorType = type1
+                stageFlags = stageFlags1
+                binding = binding1
+                descriptorCount = descriptorCount1
+            }
+            this[2].apply {
+                descriptorType = type2
+                stageFlags = stageFlags2
+                binding = binding2
+                descriptorCount = descriptorCount2
             }
         }
     }
@@ -729,6 +772,105 @@ object vk {
         }
     }
 
+    inline fun SpecializationInfo(mapEntries: VkSpecializationMapEntry.Buffer, data: ByteBuffer): VkSpecializationInfo {
+        return SpecializationInfo().also {
+            it.mapEntries = mapEntries
+            it.data = data
+        }
+    }
+
+    inline fun SpecializationInfo(
+            mapEntries0: VkSpecializationMapEntry.Buffer, data0: ByteBuffer,
+            mapEntries1: VkSpecializationMapEntry.Buffer, data1: ByteBuffer): VkSpecializationInfo.Buffer {
+        return SpecializationInfo(2).also {
+            it[0].apply {
+                mapEntries = mapEntries0
+                data = data0
+            }
+            it[1].apply {
+                mapEntries = mapEntries1
+                data = data1
+            }
+        }
+    }
+
+    inline fun SpecializationMapEntry(constantId: Int, offset: Int, size: Int): VkSpecializationMapEntry {
+        return SpecializationMapEntry().also {
+            it.constantId = constantId
+            it.offset = offset
+            it.size = size.L
+        }
+    }
+
+    inline fun SpecializationMapEntry(
+            constantId0: Int, offset0: Int, size0: Int,
+            constantId1: Int, offset1: Int, size1: Int): VkSpecializationMapEntry.Buffer {
+        return SpecializationMapEntry(2).also {
+            it[0].also {
+                it.constantId = constantId0
+                it.offset = offset0
+                it.size = size0.L
+            }
+            it[1].also {
+                it.constantId = constantId1
+                it.offset = offset1
+                it.size = size1.L
+            }
+        }
+    }
+
+    inline fun SpecializationMapEntry(
+            constantId0: Int, offset0: Int, size0: Int,
+            constantId1: Int, offset1: Int, size1: Int,
+            constantId2: Int, offset2: Int, size2: Int): VkSpecializationMapEntry.Buffer {
+        return SpecializationMapEntry(3).also {
+            it[0].also {
+                it.constantId = constantId0
+                it.offset = offset0
+                it.size = size0.L
+            }
+            it[1].also {
+                it.constantId = constantId1
+                it.offset = offset1
+                it.size = size1.L
+            }
+            it[2].also {
+                it.constantId = constantId2
+                it.offset = offset2
+                it.size = size2.L
+            }
+        }
+    }
+
+    inline fun SpecializationMapEntry(
+            constantId0: Int, offset0: Int, size0: Int,
+            constantId1: Int, offset1: Int, size1: Int,
+            constantId2: Int, offset2: Int, size2: Int,
+            constantId3: Int, offset3: Int, size3: Int): VkSpecializationMapEntry.Buffer {
+        return SpecializationMapEntry(4).also {
+            it[0].also {
+                it.constantId = constantId0
+                it.offset = offset0
+                it.size = size0.L
+            }
+            it[1].also {
+                it.constantId = constantId1
+                it.offset = offset1
+                it.size = size1.L
+            }
+            it[2].also {
+                it.constantId = constantId2
+                it.offset = offset2
+                it.size = size2.L
+            }
+            it[3].also {
+                it.constantId = constantId3
+                it.offset = offset3
+                it.size = size3.L
+            }
+        }
+    }
+
     inline fun VertexInputBindingDescription(binding: Int, stride: Int, inputRate: VkVertexInputRate): VkVertexInputBindingDescription {
         return VertexInputBindingDescription {
             this.binding = binding
@@ -764,7 +906,7 @@ object vk {
             dstSet1: VkDescriptorSet, type1: VkDescriptorType, binding1: Int, info1: Struct): VkWriteDescriptorSet.Buffer {
         return WriteDescriptorSet(2) {
             this[0].apply {
-                this.dstSet = dstSet0
+                dstSet = dstSet0
                 descriptorType = type0
                 dstBinding = binding0
                 if (info0 is VkDescriptorBufferInfo)
@@ -773,13 +915,48 @@ object vk {
                     imageInfo_ = info0 as VkDescriptorImageInfo
             }
             this[1].apply {
-                this.dstSet = dstSet1
+                dstSet = dstSet1
                 descriptorType = type1
                 dstBinding = binding1
                 if (info1 is VkDescriptorBufferInfo)
                     bufferInfo_ = info1
                 else
                     imageInfo_ = info1 as VkDescriptorImageInfo
+            }
+        }
+    }
+
+    inline fun WriteDescriptorSet(
+            dstSet0: VkDescriptorSet, type0: VkDescriptorType, binding0: Int, info0: Struct,
+            dstSet1: VkDescriptorSet, type1: VkDescriptorType, binding1: Int, info1: Struct,
+            dstSet2: VkDescriptorSet, type2: VkDescriptorType, binding2: Int, info2: Struct): VkWriteDescriptorSet.Buffer {
+        return WriteDescriptorSet(3) {
+            this[0].apply {
+                dstSet = dstSet0
+                descriptorType = type0
+                dstBinding = binding0
+                if (info0 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info0
+                else
+                    imageInfo_ = info0 as VkDescriptorImageInfo
+            }
+            this[1].apply {
+                dstSet = dstSet1
+                descriptorType = type1
+                dstBinding = binding1
+                if (info1 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info1
+                else
+                    imageInfo_ = info1 as VkDescriptorImageInfo
+            }
+            this[2].apply {
+                dstSet = dstSet2
+                descriptorType = type2
+                dstBinding = binding2
+                if (info2 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info2
+                else
+                    imageInfo_ = info2 as VkDescriptorImageInfo
             }
         }
     }

@@ -270,7 +270,7 @@ private class ImageProcessing : VulkanExampleBase() {
                         VkPipelineStage.COMPUTE_SHADER_BIT.i,
                         VkPipelineStage.FRAGMENT_SHADER_BIT.i,
                         VK_FLAGS_NONE,
-                        imageMemoryBarriers = imageMemoryBarrier)
+                        imageMemoryBarrier = imageMemoryBarrier)
                 beginRenderPass(renderPassBeginInfo, VkSubpassContents.INLINE)
 
                 val viewport = vk.Viewport(size.x * 0.5f, size.y.f)
