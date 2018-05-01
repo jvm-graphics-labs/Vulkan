@@ -3,6 +3,7 @@ package vkn
 import glfw_.appBuffer
 import glm_.BYTES
 import glm_.bool
+import glm_.f
 import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
@@ -1167,6 +1168,17 @@ inline var VkViewport.maxDepth
     get() = VkViewport.nmaxDepth(adr)
     set(value) = VkViewport.nmaxDepth(adr, value)
 
+/** JVM custom */
+inline fun VkViewport.size(size: Vec2i) {
+    width = size.x.f
+    height = size.y.f
+}
+
+/** JVM custom */
+inline fun VkViewport.depth(minDepth: Float, maxDepth: Float) {
+    this.minDepth = minDepth
+    this.maxDepth = maxDepth
+}
 //inline var VkViewport.pos
 //    get() = Vec2(x, y)
 //    set(value) {
@@ -1197,15 +1209,21 @@ inline var VkViewport.maxDepth
 
 
 inline var VkOffset2D.x
-    get() = x()
-    set(value) {
-        x(value)
-    }
+    get() = VkOffset2D.nx(adr)
+    set(value) = VkOffset2D.nx(adr, value)
 inline var VkOffset2D.y
-    get() = y()
-    set(value) {
-        y(value)
-    }
+    get() = VkOffset2D.ny(adr)
+    set(value) = VkOffset2D.ny(adr, value)
+//inline operator fun VkOffset2D.invoke(size: Vec2i) {
+//    x = size.x
+//    y = size.y
+//}
+//inline operator fun VkOffset2D.invoke(x: Int, y: Int) {
+//    this.x = x
+//    this.y = y
+//}
+
+
 inline var VkExtent2D.width
     get() = VkExtent2D.nwidth(adr)
     set(value) = VkExtent2D.nwidth(adr, value)
@@ -1266,6 +1284,24 @@ inline var VkRect2D.offset: VkOffset2D
 inline var VkRect2D.extent: VkExtent2D
     get() = VkRect2D.nextent(adr)
     set(value) = VkRect2D.nextent(adr, value)
+
+/** JVM custom */
+inline fun VkRect2D.offset(offset: Int) = offset(offset, offset)
+
+/** JVM custom */
+inline fun VkRect2D.offset(x: Int, y: Int) {
+    offset.x = x
+    offset.y = y
+}
+
+/** JVM custom */
+inline fun VkRect2D.extent(size: Vec2i) = extent(size.x, size.y)
+
+/** JVM custom */
+inline fun VkRect2D.extent(width: Int, height: Int) {
+    extent.width = width
+    extent.height = height
+}
 
 
 inline var VkPipelineViewportStateCreateInfo.type: VkStructureType
@@ -1614,13 +1650,21 @@ inline var VkPipelineLayoutCreateInfo.setLayouts: LongBuffer?
     get() = VkPipelineLayoutCreateInfo.npSetLayouts(adr)
     set(value) = VkPipelineLayoutCreateInfo.npSetLayouts(adr, value)
 //inline var VkPipelineLayoutCreateInfo.setLayout: VkDescriptorSetLayout? TODO BUG, inline it back
+/** JVM custom */
 var VkPipelineLayoutCreateInfo.setLayout: VkDescriptorSetLayout?
     get() = VkPipelineLayoutCreateInfo.npSetLayouts(adr)?.get(0)
-    set(value) = VkPipelineLayoutCreateInfo.npSetLayouts(adr, value?.let(appBuffer::longBufferOf))
+    set(value) = VkPipelineLayoutCreateInfo.npSetLayouts(adr, value?.let { appBuffer longBufferOf it })
 //inline val VkPipelineLayoutCreateInfo.pushConstantRangeCount get() = VkPipelineLayoutCreateInfo.npushConstantRangeCount(adr)
 inline var VkPipelineLayoutCreateInfo.pushConstantRanges
     get() = VkPipelineLayoutCreateInfo.npPushConstantRanges(adr)
     set(value) = VkPipelineLayoutCreateInfo.npPushConstantRanges(adr, value)
+/** JVM Custom */
+inline var VkPipelineLayoutCreateInfo.pushConstantRange: VkPushConstantRange?
+    get() = VkPushConstantRange.createSafe(memGetAddress(adr + VkPipelineLayoutCreateInfo.PPUSHCONSTANTRANGES))
+    set(value) {
+        memPutAddress(adr + VkPipelineLayoutCreateInfo.PPUSHCONSTANTRANGES, memAddressSafe(value))
+        VkPipelineLayoutCreateInfo.npushConstantRangeCount(adr, if (value != null) 1 else 0)
+    }
 
 //typedef struct VkPipelineLayoutCreateInfo {
 //    VkStructureType                 sType;

@@ -3,11 +3,13 @@ package vkn
 import glfw_.appBuffer
 import glm_.f
 import glm_.i
+import glm_.size
 import glm_.vec2.Vec2i
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
+import java.nio.ByteBuffer
 
 
 /*
@@ -110,6 +112,10 @@ inline fun VkCommandBuffer.pipelineBarrier(srcStageMask: VkPipelineStageFlags, d
             if (memoryBarrier != null) 1 else 0, memoryBarrier?.adr ?: NULL,
             if (bufferMemoryBarrier != null) 1 else 0, bufferMemoryBarrier?.adr ?: NULL,
             if (imageMemoryBarrier != null) 1 else 0, imageMemoryBarrier?.adr ?: NULL)
+}
+
+inline fun VkCommandBuffer.pushConstants(layout: VkPipelineLayout, stageFlags: VkShaderStageFlags, offset: Int, values: ByteBuffer) {
+    VK10.nvkCmdPushConstants(this, layout, stageFlags, offset, values.size, memAddress(values))
 }
 
 inline fun VkCommandBuffer.reset(flags: VkCommandBufferResetFlags) {

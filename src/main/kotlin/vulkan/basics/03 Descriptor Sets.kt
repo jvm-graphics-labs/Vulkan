@@ -68,7 +68,7 @@ private class DescriptorSets : VulkanExampleBase() {
 
     val cubes = Array(2) { Cube() }
 
-    private val models = object {
+    object models {
         val cube = Model()
     }
 

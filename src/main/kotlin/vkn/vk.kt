@@ -359,11 +359,14 @@ object vk {
         return res
     }
 
+    inline fun SemaphoreCreateInfo(): VkSemaphoreCreateInfo {
+        return VkSemaphoreCreateInfo.create(ptr.advance(VkSemaphoreCreateInfo.SIZEOF)).apply {
+            type = VkStructureType.SEMAPHORE_CREATE_INFO
+        }
+    }
+
     inline fun SemaphoreCreateInfo(block: VkSemaphoreCreateInfo.() -> Unit): VkSemaphoreCreateInfo {
-        val res = VkSemaphoreCreateInfo.create(ptr.advance(VkSemaphoreCreateInfo.SIZEOF))
-        res.type = VkStructureType.SEMAPHORE_CREATE_INFO
-        res.block()
-        return res
+        return SemaphoreCreateInfo().also(block)
     }
 
     inline fun ShaderModuleCreateInfo(block: VkShaderModuleCreateInfo.() -> Unit): VkShaderModuleCreateInfo {
@@ -758,6 +761,14 @@ object vk {
             this.viewportCount = viewportCount
             this.scissorCount = scissorCount
             this.flags = flags
+        }
+    }
+
+    inline fun PushConstantRange(stageFlags: VkShaderStageFlags, size: Int, offset: Int): VkPushConstantRange {
+        return PushConstantRange {
+            this.stageFlags = stageFlags
+            this.size = size
+            this.offset = offset
         }
     }
 

@@ -44,18 +44,18 @@ fun main(args: Array<String>) {
     }
 }
 
-/** Vertex layout for this example */
-private val Vertex = object {
-    //    float pos[3];
+private class Texture : VulkanExampleBase() {
+
+    /** Vertex layout for this example */
+    object Vertex {
+//    float pos[3];
 //    float uv[2];
 //    float normal[3];
-    val size = Vec3.size * 2 + Vec2.size
-    val posOffset = 0
-    val uvOffset = Vec3.size
-    val normalOffset = Vec3.size + Vec2.size
-}
-
-private class Texture : VulkanExampleBase() {
+        val size = Vec3.size * 2 + Vec2.size
+        val posOffset = 0
+        val uvOffset = Vec3.size
+        val normalOffset = Vec3.size + Vec2.size
+    }
 
     /** Contains all Vulkan objects that are required to store and use a texture
      *  Note that this repository contains a texture class (VulkanTexture.hpp) that encapsulates texture loading functionality

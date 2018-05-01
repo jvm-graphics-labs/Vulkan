@@ -6,13 +6,15 @@ import glfw_.appBuffer.ptr
 import gli_.extension
 import glm_.BYTES
 import glm_.i
+import glm_.mat3x3.Mat3
 import glm_.mat4x4.Mat4
 import glm_.set
+import glm_.vec3.Vec3
+import glm_.vec4.Vec4
 import graphics.scenery.spirvcrossj.*
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.system.MemoryUtil.memPutFloat
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.system.Struct
 import org.lwjgl.system.StructBuffer
@@ -26,6 +28,9 @@ import java.nio.IntBuffer
 import java.nio.LongBuffer
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.reflect.KProperty1
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.defaultType
 
 
 //fun pointerBufferOf(vararg strings: String): PointerBuffer {
@@ -235,12 +240,6 @@ operator fun <T : Struct, SELF : StructBuffer<T, SELF>> StructBuffer<T, SELF>.se
     put(index, value)
 }
 
-interface Bufferizable {
-
-    infix fun to(address: Long): Unit = TODO()
-    infix fun from(address: Long): Unit = TODO()
-}
-
 inline fun <R> withAddress(address: Long, block: WithAddress.() -> R): R {
     WithAddress.address = address
     WithAddress.offset = 0
@@ -252,11 +251,119 @@ object WithAddress {
     var address = NULL
     var offset = 0
 
-    fun add(mat4: Mat4) {
+    fun addMat4(mat4: Mat4) {
         for (i in 0..3)
             for (j in 0..3) {
                 memPutFloat(address + offset, mat4[i, j])
                 offset += Float.BYTES
             }
     }
+
+    fun addMat3(mat3: Mat3) {
+        for (i in 0..2)
+            for (j in 0..2) {
+                memPutFloat(address + offset, mat3[i, j])
+                offset += Float.BYTES
+            }
+    }
+
+    fun addVec4(vec4: Vec4) {
+        for (i in 0..3) {
+            memPutFloat(address + offset, vec4[i])
+            offset += Float.BYTES
+        }
+    }
+
+    fun addVec3(vec3: Vec3) {
+        for (i in 0..2) {
+            memPutFloat(address + offset, vec3[i])
+            offset += Float.BYTES
+        }
+    }
+
+    fun addFloat(float: Float) {
+        memPutFloat(address + offset, float)
+        offset += Float.BYTES
+    }
+
+    fun addInt(int: Int) {
+        memPutInt(address + offset, int)
+        offset += Int.BYTES
+    }
 }
+
+abstract class Bufferizable {
+
+    abstract val fieldOrder: Array<String>
+
+    open val size: Int by lazy {
+
+        fieldOrder.sumBy { field ->
+            val member = this::class.declaredMemberProperties.find { it.name == field }!!
+            when (member.returnType) {
+                Mat4::class.defaultType -> Mat4.size
+                Mat3::class.defaultType -> Mat3.size
+                Vec4::class.defaultType -> Vec4.size
+                Vec3::class.defaultType -> Vec3.size
+                Float::class.defaultType -> Float.BYTES
+                Int::class.defaultType -> Int.BYTES
+                else -> throw Error(member.returnType.toString())
+            }
+        }
+    }
+
+    open infix fun to(address: Long) {
+
+        WithAddress.address = address
+        WithAddress.offset = 0
+
+        for (i in data.indices)
+            data[i].first(data[i].second.getter.call(this)!!)
+    }
+
+    infix fun from(address: Long): Unit = TODO()
+
+    val data: Array<BufferizableData> by lazy {
+
+        Array(fieldOrder.size) {
+            val field = fieldOrder[it]
+            val member = this::class.declaredMemberProperties.find { it.name == field }!!
+            val func = when (member.returnType) {
+                Mat4::class.defaultType -> WithAddress::addMat4
+                Mat3::class.defaultType -> WithAddress::addMat3
+                Vec4::class.defaultType -> WithAddress::addVec4
+                Vec3::class.defaultType -> WithAddress::addVec3
+                Float::class.defaultType -> WithAddress::addFloat
+                Int::class.defaultType -> WithAddress::addInt
+                else -> throw Error(member.returnType.toString())
+            } as BufferizableAddFunctionType
+            func to member
+        }
+    }
+}
+
+typealias BufferizableAddFunctionType = (Any) -> Unit
+typealias BufferizableData = Pair<BufferizableAddFunctionType, KProperty1<out Bufferizable, Any?>>
+
+//object uboVS : Bufferizable() {
+//
+//    var projectionMatrix = Mat4()
+//    var modelMatrix = Mat4()
+//    var viewMatrix = Mat4()
+//
+//    override val fieldOrder = arrayOf("projectionMatrix", "modelMatrix", "viewMatrix")
+//
+//    override infix fun to(address: Long) {
+//        withAddress(address) {
+//            //            add(projectionMatrix); add(modelMatrix); add(viewMatrix)
+//        }
+//    }
+//}
+//
+//fun main(args: Array<String>) {
+//    println(uboVS::class.declaredMemberProperties)
+//    val member = uboVS::class.declaredMemberProperties.find { it.name == "projectionMatrix" }!!
+//    println(member.returnType)
+//    println(member.get(uboVS) as Mat4)
+//    println(member.returnType == Mat4::class.defaultType)
+//}

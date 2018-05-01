@@ -26,13 +26,17 @@ import glm_.i
 import glm_.mat4x4.Mat4
 import glm_.pow
 import glm_.vec3.Vec3
+import glm_.vec3.operators.times
 import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
+import uno.buffer.bufferBig
 import uno.buffer.destroy
 import uno.kotlin.buffers.capacity
 import vkn.*
 import vulkan.VERTEX_BUFFER_BIND_ID
+import vulkan.assetPath
 import vulkan.base.Buffer
 import vulkan.base.Camera
 import vulkan.base.VulkanExampleBase
@@ -41,12 +45,6 @@ import java.nio.ByteBuffer
 
 private const val OBJECT_INSTANCES = 125
 
-/** Vertex layout for this example */
-private object Vertex {
-    val size = Vec3.size * 2
-    val posOffset = 0
-    val colOffset = Vec3.size
-}
 
 fun main(args: Array<String>) {
     DynamicUniformBuffers().apply {
@@ -60,9 +58,18 @@ fun main(args: Array<String>) {
 
 private class DynamicUniformBuffers : VulkanExampleBase() {
 
-    private val vertices = object {
-        val inputState = cVkPipelineVertexInputStateCreateInfo { }
-        lateinit var bindingDescriptions: VkVertexInputBindingDescription.Buffer
+    /** Vertex layout for this example */
+    object Vertex {
+        //        float pos[3];
+//        float color[3];
+        val size = Vec3.size * 2
+        val offsetPos = 0
+        val offsetColor = Vec3.size
+    }
+
+    object vertices {
+        lateinit var inputState: VkPipelineVertexInputStateCreateInfo
+        lateinit var bindingDescriptions: VkVertexInputBindingDescription
         lateinit var attributeDescriptions: VkVertexInputAttributeDescription.Buffer
     }
 
@@ -70,15 +77,17 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
     val indexBuffer = Buffer()
     var indexCount = 0
 
-    private val uniformBuffers = object {
+    object uniformBuffers {
         val view = Buffer()
         val dynamic = Buffer()
     }
 
-    private val uboVS = object {
+    object uboVS : Bufferizable() {
+
         val projection = Mat4()
         val view = Mat4()
-        val size = Mat4.size * 2L
+
+        override val fieldOrder = arrayOf("projection", "view")
     }
 
     // Store random per-object rotations
@@ -87,8 +96,9 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
     /** One big uniform buffer that contains all matrices
      *  Note that we need to manually allocate the data to cope for GPU-specific uniform buffer offset alignments */
-    private val uboDataDynamic = object {
+    object uboDataDynamic {
         lateinit var model: ByteBuffer
+        var address = NULL
     }
 
     var pipeline: VkPipeline = NULL
@@ -131,7 +141,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
     override fun buildCommandBuffers() {
 
-        val cmdBufInfo = vk.CommandBufferBeginInfo { }
+        val cmdBufInfo = vk.CommandBufferBeginInfo()
 
         val clearValues = vk.ClearValue(2)
         clearValues[0].color(defaultClearColor)
@@ -140,8 +150,8 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
         val renderPassBeginInfo = vk.RenderPassBeginInfo {
             renderPass = this@DynamicUniformBuffers.renderPass
             renderArea.apply {
-                offset.set(0, 0)
-                extent.set(size.x, size.y)
+                offset(0)
+                extent(size)
             }
             this.clearValues = clearValues
         }
@@ -150,34 +160,34 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
             renderPassBeginInfo.framebuffer(frameBuffers[i])
 
-            val cmd = drawCmdBuffers[i]
+            drawCmdBuffers[i].apply {
 
-            cmd begin cmdBufInfo
+                begin(cmdBufInfo)
 
-            cmd.beginRenderPass(renderPassBeginInfo, VkSubpassContents.INLINE)
+                beginRenderPass(renderPassBeginInfo, VkSubpassContents.INLINE)
 
-            cmd setViewport initializers.viewport(size, 0f, 1f)
+                setViewport(size)
+                setScissor(size)
 
-            cmd setScissor vk.Rect2D(size)
+                bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)
 
-            cmd.bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)
+                bindVertexBuffers(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
+                bindIndexBuffer(indexBuffer.buffer, 0, VkIndexType.UINT32)
 
-            cmd.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
-            cmd.bindIndexBuffer(indexBuffer.buffer, 0, VkIndexType.UINT32)
+                // Render multiple objects using different model matrices by dynamically offsetting into one uniform buffer
+                repeat(OBJECT_INSTANCES) {
+                    // One dynamic offset per dynamic descriptor to offset into the ubo containing all model matrices
+                    val dynamicOffset = it * dynamicAlignment
+                    // Bind the descriptor set for rendering a mesh using the dynamic offset
+                    bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet, dynamicOffset.i)
 
-            // Render multiple objects using different model matrices by dynamically offsetting into one uniform buffer
-            repeat(OBJECT_INSTANCES) {
-                // One dynamic offset per dynamic descriptor to offset into the ubo containing all model matrices
-                val dynamicOffset = it * dynamicAlignment
-                // Bind the descriptor set for rendering a mesh using the dynamic offset
-                cmd.bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet, dynamicOffset.i)
+                    drawIndexed(indexCount, 1, 0, 0, 0)
+                }
 
-                cmd.drawIndexed(indexCount, 1, 0, 0, 0)
+                endRenderPass()
+
+                end()
             }
-
-            cmd.endRenderPass()
-
-            cmd.end()
         }
     }
 
@@ -221,126 +231,98 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
     fun setupVertexDescriptions() {
         // Binding description
-        vertices.bindingDescriptions = VkVertexInputBindingDescription.calloc(1).also {
-            it[0](VERTEX_BUFFER_BIND_ID, Vertex.size, VkVertexInputRate.VERTEX)
-        }
+        vertices.bindingDescriptions = vk.VertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, Vertex.size, VkVertexInputRate.VERTEX)
 
         // Attribute descriptions
-        vertices.attributeDescriptions = VkVertexInputAttributeDescription.calloc(2).also {
-            // Location 0 : Position
-            it[0](0, VERTEX_BUFFER_BIND_ID, VkFormat.R32G32B32_SFLOAT, Vertex.posOffset)
-            // Location 1 : Color
-            it[1](1, VERTEX_BUFFER_BIND_ID, VkFormat.R32G32B32_SFLOAT, Vertex.colOffset)
-        }
+        vertices.attributeDescriptions = vk.VertexInputAttributeDescription(
+                // Location 0 : Position
+                VERTEX_BUFFER_BIND_ID, 0, VkFormat.R32G32B32_SFLOAT, Vertex.offsetPos,
+                // Location 1 : Color
+                VERTEX_BUFFER_BIND_ID, 1, VkFormat.R32G32B32_SFLOAT, Vertex.offsetColor)
 
-        vertices.apply {
-            inputState.vertexBindingDescriptions = bindingDescriptions
-            inputState.vertexAttributeDescriptions = attributeDescriptions
+        vertices.inputState = vk.PipelineVertexInputStateCreateInfo {
+            vertexBindingDescription = vertices.bindingDescriptions
+            vertexAttributeDescriptions = vertices.attributeDescriptions
         }
     }
 
     fun setupDescriptorPool() {
         // Example uses one ubo and one image sampler
-        val poolSizes = vk.DescriptorPoolSize(3).also {
-            it[0](VkDescriptorType.UNIFORM_BUFFER, 1)
-            it[1](VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, 1)
-            it[2](VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1)
-        }
+        val poolSizes = vk.DescriptorPoolSize(
+                VkDescriptorType.UNIFORM_BUFFER, 1,
+                VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, 1,
+                VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1)
 
         descriptorPool = device createDescriptorPool initializers.descriptorPoolCreateInfo(poolSizes, 2)
     }
 
     fun setupDescriptorSetLayout() {
 
-        val setLayoutBindings = vk.DescriptorSetLayoutBinding(3).also {
-            it[0](0, VkDescriptorType.UNIFORM_BUFFER, 1, VkShaderStage.VERTEX_BIT.i)
-            it[1](1, VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, 1, VkShaderStage.VERTEX_BIT.i)
-            it[2](2, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1, VkShaderStage.FRAGMENT_BIT.i)
-        }
+        val setLayoutBindings = vk.DescriptorSetLayoutBinding(
+                VkDescriptorType.UNIFORM_BUFFER, VkShaderStage.VERTEX_BIT.i, 0,
+                VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, VkShaderStage.VERTEX_BIT.i, 1,
+                VkDescriptorType.COMBINED_IMAGE_SAMPLER, VkShaderStage.FRAGMENT_BIT.i, 2)
 
         val descriptorLayout = vk.DescriptorSetLayoutCreateInfo { bindings = setLayoutBindings }
+
         descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
 
-        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo {
-            setLayouts = appBuffer.longBufferOf(descriptorSetLayout)
-        }
+        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo { setLayout = descriptorSetLayout }
 
         pipelineLayout = device createPipelineLayout pipelineLayoutCreateInfo
     }
 
     fun setupDescriptorSet() {
 
-        val allocInfo = vk.DescriptorSetAllocateInfo {
-            descriptorPool = this@DynamicUniformBuffers.descriptorPool
-            setLayouts = appBuffer.longBufferOf(descriptorSetLayout)
-            descriptorSetCount = 1
-        }
+        val allocInfo = vk.DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayout)
 
         descriptorSet = device allocateDescriptorSets allocInfo
 
-        val writeDescriptorSets = vk.WriteDescriptorSet(2).also {
-            // Binding 0 : Projection/View matrix uniform buffer
-            it[0](descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBuffers.view.descriptor)
-            // Binding 1 : Instance matrix as dynamic uniform buffer
-            it[0](descriptorSet, VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, 1, uniformBuffers.dynamic.descriptor)
-        }
+        val writeDescriptorSets = vk.WriteDescriptorSet(
+                // Binding 0 : Projection/View matrix uniform buffer
+                descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBuffers.view.descriptor,
+                // Binding 1 : Instance matrix as dynamic uniform buffer
+                descriptorSet, VkDescriptorType.UNIFORM_BUFFER_DYNAMIC, 1, uniformBuffers.dynamic.descriptor)
+
         device updateDescriptorSets writeDescriptorSets
     }
 
     fun preparePipelines() {
 
-        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo {
-            topology = VkPrimitiveTopology.TRIANGLE_LIST
-            flags = 0
-            primitiveRestartEnable = false
-        }
+        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology.TRIANGLE_LIST, 0, false)
 
-        val rasterizationState = initializers.pipelineRasterizationStateCreateInfo(
-                polygonMode = VkPolygonMode.FILL,
-                cullMode = VkCullMode.NONE.i,
-                frontFace = VkFrontFace.COUNTER_CLOCKWISE)
+        val rasterizationState = vk.PipelineRasterizationStateCreateInfo(VkPolygonMode.FILL, VkCullMode.NONE.i, VkFrontFace.COUNTER_CLOCKWISE)
 
-        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(1) {
-            colorWriteMask = 0xf
-            blendEnable = false
-        }
+        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(0xf, false)
 
-        val colorBlendState = vk.PipelineColorBlendStateCreateInfo { attachments = blendAttachmentState }
+        val colorBlendState = vk.PipelineColorBlendStateCreateInfo(blendAttachmentState)
 
-        val depthStencilState = initializers.pipelineDepthStencilStateCreateInfo(
-                depthTestEnable = true,
-                depthWriteEnable = true,
-                depthCompareOp = VkCompareOp.LESS_OR_EQUAL)
+        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo(true, true, VkCompareOp.LESS_OR_EQUAL)
 
-        val viewportState = vk.PipelineViewportStateCreateInfo {
-            viewportCount = 1
-            scissorCount = 1
-        }
+        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 
-        val multisampleState = vk.PipelineMultisampleStateCreateInfo { rasterizationSamples = VkSampleCount.`1_BIT` }
+        val multisampleState = vk.PipelineMultisampleStateCreateInfo(rasterizationSamples = VkSampleCount.`1_BIT`)
 
-        val dynamicStateEnables = appBuffer.intBufferOf(VkDynamicState.VIEWPORT.i, VkDynamicState.SCISSOR.i)
+        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
 
-        val dynamicState = vk.PipelineDynamicStateCreateInfo { dynamicStates = dynamicStateEnables }
+        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
 
         // Load shaders
         val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
-            it[0].loadShader("shaders/dynamicuniformbuffer/base.vert.spv", VkShaderStage.VERTEX_BIT)
-            it[1].loadShader("shaders/dynamicuniformbuffer/base.frag.spv", VkShaderStage.FRAGMENT_BIT)
+            it[0].loadShader("$assetPath/shaders/dynamicuniformbuffer/base.vert.spv", VkShaderStage.VERTEX_BIT)
+            it[1].loadShader("$assetPath/shaders/dynamicuniformbuffer/base.frag.spv", VkShaderStage.FRAGMENT_BIT)
         }
 
-        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo {
-            layout = pipelineLayout
-            renderPass = this@DynamicUniformBuffers.renderPass
-            vertexInputState = vertices.inputState
-            this.inputAssemblyState = inputAssemblyState
-            this.rasterizationState = rasterizationState
-            this.colorBlendState = colorBlendState
-            this.multisampleState = multisampleState
-            this.viewportState = viewportState
-            this.depthStencilState = depthStencilState
-            this.dynamicState = dynamicState
-            stages = shaderStages
+        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(pipelineLayout, renderPass).also {
+            it.vertexInputState = vertices.inputState
+            it.inputAssemblyState = inputAssemblyState
+            it.rasterizationState = rasterizationState
+            it.colorBlendState = colorBlendState
+            it.multisampleState = multisampleState
+            it.viewportState = viewportState
+            it.depthStencilState = depthStencilState
+            it.dynamicState = dynamicState
+            it.stages = shaderStages
         }
 
         pipeline = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
@@ -359,8 +341,9 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
         val bufferSize = OBJECT_INSTANCES * dynamicAlignment
 
-        uboDataDynamic.model = memCalloc(bufferSize.i)
-//        assert(uboDataDynamic.model)
+        uboDataDynamic.model = bufferBig(bufferSize.i).also {
+            uboDataDynamic.address = memAddress(it)
+        }
 
         println("minUniformBufferOffsetAlignment = $minUboAlignment")
         println("dynamicAlignment = $dynamicAlignment")
@@ -372,7 +355,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
                 VkBufferUsage.UNIFORM_BUFFER_BIT.i,
                 VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
                 uniformBuffers.view,
-                uboVS.size)
+                uboVS.size.L)
 
         // Uniform buffer object with per-object matrices
         vulkanDevice.createBuffer(
@@ -386,9 +369,9 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
         uniformBuffers.dynamic.map()
 
         // Prepare per-object matrices with offsets and random rotations
-        repeat(OBJECT_INSTANCES) { i ->
-            rotations[i] put Vec3(Random[-1f, 1f], Random[-1f, 1f], Random[-1f, 1f]) * 2f * glm.PIf
-            rotationSpeeds[i](Random[-1f, 1f], Random[-1f, 1f], Random[-1f, 1f])
+        repeat(OBJECT_INSTANCES) {
+            rotations[it] = Vec3 { glm.linearRand(-1f, 1f) } * 2f * glm.PIf
+            rotationSpeeds[it] = Vec3 { glm.linearRand(-1f, 1f) }
         }
 
         updateUniformBuffers()
@@ -399,9 +382,8 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
         // Fixed ubo with projection and view matrices
         uboVS.projection put camera.matrices.perspective
         uboVS.view put camera.matrices.view
-        val mapped = memByteBuffer(uniformBuffers.view.mapped[0], uboVS.size.i)
-        uboVS.view to mapped
-        uboVS.projection.to(mapped, Mat4.size)
+
+        uboVS to uniformBuffers.view.mapped[0]
     }
 
     fun updateDynamicUniformBuffer(force: Boolean = false) {
@@ -418,29 +400,25 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
                 for (z in 0 until dim) {
                     val index = x * dim * dim + y * dim + z
 
-                    // Aligned offset
-                    val modelMat = Mat4(uboDataDynamic.model, index * dynamicAlignment.i)
-
-                    Mat4(1f).to(uboDataDynamic.model, index * dynamicAlignment.i)
-
                     // Update rotations
-//                    rotations[index] plusAssign animationTimer * rotationSpeeds[index]
-//
-//                    // Update matrices
-//                    val pos = -((dim * offset) / 2f) + offset / 2f + x * offset
-//                    modelMat.apply {
-//                        translateAssign(pos)
-//                        rotateAssign(rotations[index].x, 1f, 1f, 0f)
-//                        rotateAssign(rotations[index].y, 0f, 1f, 0f)
-//                        rotateAssign(rotations[index].z, 0f, 0f, 1f)
-//                    }
+                    rotations[index] plusAssign animationTimer * rotationSpeeds[index]
+
+                    // Update matrices
+                    val pos = -((dim * offset) / 2f) + offset / 2f
+                    pos.x += x * offset.x
+                    pos.y += y * offset.y
+                    pos.z += z * offset.z
+                    val modelMat = glm.translate(Mat4(1f), pos)
+                            .rotateAssign(rotations[index].x, 1f, 1f, 0f)
+                            .rotateAssign(rotations[index].y, 0f, 1f, 0f)
+                            .rotateAssign(rotations[index].z, 0f, 0f, 1f)
+                    // Aligned offset
+                    modelMat.to(uboDataDynamic.model, index * dynamicAlignment.i)
                 }
 
         animationTimer = 0f
-        println(uniformBuffers.dynamic.size)
-        memCopy(memAddress(uboDataDynamic.model), uniformBuffers.dynamic.mapped[0], uniformBuffers.dynamic.size)
-//        println(memGetFloat(uniformBuffers.dynamic.mapped[0]))
-//        println(memGetFloat(uniformBuffers.dynamic.mapped[0] + Float.BYTES))
+
+        memCopy(uboDataDynamic.address, uniformBuffers.dynamic.mapped[0], uniformBuffers.dynamic.size)
         // Flush to make changes visible to the host
         val memoryRange = vk.MappedMemoryRange {
             memory = uniformBuffers.dynamic.memory
@@ -459,10 +437,8 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
         setupDescriptorPool()
         setupDescriptorSet()
         buildCommandBuffers()
-
-        window.show()
-
         prepared = true
+        window.show()
     }
 
     override fun render() {

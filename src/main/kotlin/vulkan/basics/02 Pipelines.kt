@@ -42,14 +42,14 @@ private class Pipelines : VulkanExampleBase() {
             VertexComponent.UV,
             VertexComponent.COLOR)
 
-    private val models = object {
+    object models {
         val cube = Model()
     }
 
     val uniformBuffer = Buffer()
 
     /** Same uniform buffer layout as shader */
-    private val uboVS = object {
+    object uboVS {
         var projection = Mat4()
         var modelView = Mat4()
         val lightPos = Vec4(0f, 2f, 1f, 0f)
@@ -69,7 +69,7 @@ private class Pipelines : VulkanExampleBase() {
     var descriptorSet: VkDescriptorSet = NULL
     var descriptorSetLayout: VkDescriptorSetLayout = NULL
 
-    private val pipelines = object {
+    object pipelines {
         var phong: VkPipeline = NULL
         var wireframe: VkPipeline = NULL
         var toon: VkPipeline = NULL

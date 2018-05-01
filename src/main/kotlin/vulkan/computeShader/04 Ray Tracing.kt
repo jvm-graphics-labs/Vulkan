@@ -24,7 +24,6 @@
 //import java.nio.file.Paths
 //
 //
-//
 //fun main(args: Array<String>) {
 //    RayTracing().apply {
 //        setupWindow()
@@ -80,13 +79,15 @@
 //    }
 //
 //    // SSBO sphere declaration
-//    object Sphere {                                    // Shader uses std140 layout (so we only use vec4 instead of vec3)
-//        glm::vec3 pos
-//        float radius
-//        glm::vec3 diffuse
-//        float specular
-//        uint32_t id                                // Id used to identify sphere for raytracing
-//        glm::ivec3 _pad
+//    class Sphere : Bufferizable {                                    // Shader uses std140 layout (so we only use vec4 instead of vec3)
+//        lateinit var pos: Vec3
+//        var radius = 0f
+//        lateinit var diffuse: Vec3
+//        var specular = 0f
+//        var id = 0                                // Id used to identify sphere for raytracing
+//        lateinit var _pad: Vec3
+//
+//        override val size: Int = Vec4.size * 3
 //    }
 //
 //    // SSBO plane declaration
@@ -285,7 +286,7 @@
 //            begin(cmdBufInfo)
 //
 //            bindPipeline(VkPipelineBindPoint.COMPUTE, compute.pipeline)
-//            bindDescriptorSets(VkPipelineBindPoint.COMPUTE, compute.pipelineLayout, compute . descriptorSet)
+//            bindDescriptorSets(VkPipelineBindPoint.COMPUTE, compute.pipelineLayout, compute.descriptorSet)
 //
 //            dispatch(textureComputeTarget.size / 16, 1)
 //
@@ -295,15 +296,14 @@
 //
 //    var currentId = 0    // Id used to identify objects by the ray tracing shader
 //
-//    Sphere newSphere(glm::vec3 pos, float radius, glm::vec3 diffuse, float specular)
-//    {
-//        Sphere sphere
-//                sphere.id = currentId++
-//        sphere.pos = pos
-//        sphere.radius = radius
-//        sphere.diffuse = diffuse
-//        sphere.specular = specular
-//        return sphere
+//    fun newSphere(pos: Vec3, radius: Float, diffuse: Vec3, specular: Float): Sphere {
+//        return Sphere().also {
+//            it.id = currentId++
+//            it.pos = pos
+//            it.radius = radius
+//            it.diffuse = diffuse
+//            it.specular = specular
+//        }
 //    }
 //
 //    Plane newPlane(glm::vec3 normal, float distance, glm::vec3 diffuse, float specular)
@@ -318,30 +318,14 @@
 //    }
 //
 //    /** Setup and fill the compute shader storage buffers containing primitives for the raytraced scene */
-//    fun prepareStorageBuffers()    {
-//
-//        val logPath = Paths.get("D:/Appservers/apache-tomcat-7.0.37/logs/catalina.out")
-//        val buffer = ByteBuffer.allocate(1024)
-//
-//        try {
-//            // Creates FileChannel and open the file channel for read access.
-//            val channel = FileChannel.open(logPath, StandardOpenOption.READ)
-//
-//            // Read a sequence of bytes from the channel into the buffer starting
-//            // at given file position, which is the channel size - 1000. Because
-//            // we are going to read the last 1000 characters from the file.
-//            channel.read(buffer, channel.size() - 1000)
-//            println("Characters = " + String(buffer.array()))
-//        } catch (e: IOException) {
-//            e.printStackTrace()
-//        }
+//    fun prepareStorageBuffers() {
 //
 //        // Spheres
-//        std::vector<Sphere> spheres
-//                spheres.push_back(newSphere(glm::vec3(1.75f, -0.5f, 0.0f), 1.0f, glm::vec3(0.0f, 1.0f, 0.0f), 32.0f))
-//        spheres.push_back(newSphere(glm::vec3(0.0f, 1.0f, -0.5f), 1.0f, glm::vec3(0.65f, 0.77f, 0.97f), 32.0f))
-//        spheres.push_back(newSphere(glm::vec3(-1.75f, -0.75f, -0.5f), 1.25f, glm::vec3(0.9f, 0.76f, 0.46f), 32.0f))
-//        VkDeviceSize storageBufferSize = spheres . size () * sizeof(Sphere)
+//        val spheres = listOf(
+//                newSphere(Vec3(1.75f, -0.5f, 0.0f), 1f, Vec3(0f, 1f, 0f), 32f),
+//                newSphere(Vec3(0f, 1f, -0.5f), 1f, Vec3(0.65f, 0.77f, 0.97f), 32f),
+//                newSphere(Vec3(-1.75f, -0.75f, -0.5f), 1.25f, Vec3(0.9f, 0.76f, 0.46f), 32f))
+//        val storageBufferSize: VkDeviceSize = spheres.size * Sphere.size.L
 //
 //        // Stage
 //        vks::Buffer stagingBuffer
