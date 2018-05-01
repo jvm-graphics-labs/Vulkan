@@ -16,7 +16,7 @@ The expressiveness of Kotlin meets the power of Vulkan.
 
 ### Basics
 
-#### [01 - Triangle](src/main/kotlin/vulkan/basics/01%20triangle.kt)
+#### [01 - Triangle](src/main/kotlin/vulkan/basics/01%20Triangle.kt)
 Basic and verbose example for getting a colored triangle rendered to the screen using Vulkan. This is meant as a starting point for learning Vulkan from the ground up. A huge part of the code is boilerplate that is abstracted away in later examples.
 
 #### [02 - Pipelines](examples/pipelines/) TODO
@@ -27,7 +27,7 @@ Using pipeline state objects (pso) that bake state information (rasterization st
 
 Descriptors are used to pass data to shader binding points. Sets up descriptor sets, layouts, pools, creates a single pipeline based on the set layout and renders multiple objects with different descriptor sets.
 
-#### [04 - Dynamic uniform buffers](examples/dynamicuniformbuffer/) TODO
+#### [04 - Dynamic uniform buffers](src/main/kotlin/vulkan/basics/04%20Dynamic%20Uniform%20Buffers.kt)
 
 Dynamic uniform buffers are used for rendering multiple objects with multiple matrices stored in a single uniform buffer object. Individual matrices are dynamically addressed upon descriptor binding time, minimizing the number of required descriptor sets.
 
@@ -39,7 +39,7 @@ Uses push constants, small blocks of uniform data stored within a command buffer
 
 Uses SPIR-V specialization constants to create multiple pipelines with different lighting paths from a single "uber" shader.
 
-#### [07 - Texture mapping](src/main/kotlin/vulkan/basics/07%20texture.kt)
+#### [07 - Texture mapping](src/main/kotlin/vulkan/basics/07%20Texture.kt)
 
 Loads a 2D texture from disk (including all mip levels), uses staging to upload it into video memory and samples from it using combined image samplers.
 
@@ -47,7 +47,7 @@ Loads a 2D texture from disk (including all mip levels), uses staging to upload 
 
 Loads a cube map texture from disk containing six different faces. All faces and mip levels are uploaded into video memory and the cubemap is sampled once as a skybox (for the background) and as a source for reflections (for a 3D model).
 
-#### [09 - Texture arrays](src/main/kotlin/vulkan/basics/09%20Texture%20Array.kt)
+#### [09 - Texture arrays](src/main/kotlin/vulkan/basics/09%20Texture%20Arra.kt)
 
 Loads a 2D texture array containing multiple 2D texture slices (each with it's own mip chain) and renders multiple meshes each sampling from a different layer of the texture. 2D texture arrays don't do any interpolation between the slices.
 
@@ -74,6 +74,41 @@ Implements a simple CPU based particle system. Particle data is stored in host m
 #### [15 - Stencil buffer](examples/stencilbuffer/) TODO
 
 Uses the stencil buffer and it's compare functionality for rendering a 3D model with dynamic outlines.
+
+
+### Advanced TODO
+
+### Performance TODO
+
+### Deferred TODO
+
+### Compute shader
+
+#### [01 - Image processing](src/main/kotlin/vulkan/computeShader/01%20Image%20Processing.kt)
+
+Uses a compute shader along with a separate compute queue to apply different convolution kernels (and effects) on an input image in realtime.
+
+#### [02 - GPU particle system](examples/computeparticles/) TOFIX
+
+Attraction based 2D GPU particle system using compute shaders. Particle data is stored in a shader storage buffer and only modified on the GPU using memory barriers for synchronizing compute particle updates with graphics pipeline vertex access.
+
+#### [03 - N-body simulation](examples/computenbody/) TOFIX
+
+N-body simulation based particle system with multiple attractors and particle-to-particle interaction using two passes separating particle movement calculation and final integration. Shared compute shader memory is used to speed up compute calculations.
+
+#### [04 - Ray tracing](examples/raytracing/) TODO
+
+Simple GPU ray tracer with shadows and reflections using a compute shader. No scene geometry is rendered in the graphics pass.
+
+#### [05 - Cloth simulation](examples/computecloth/) TODO
+
+Mass-spring based cloth system on the GPU using a compute shader to calculate and integrate spring forces, also implementing basic collision with a fixed scene object.
+
+#### [06 - Cull and LOD](examples/computecullandlod/) TODO
+
+Purely GPU based frustum visibility culling and level-of-detail system. A compute shader is used to modify draw commands stored in an indirect draw commands buffer to toggle model visibility and select it's level-of-detail based on camera distance, no calculations have to be done on and synced with the CPU.
+
+
 
 ##### Credits:
 
