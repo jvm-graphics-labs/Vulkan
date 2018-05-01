@@ -77,7 +77,7 @@ Uses the stencil buffer and it's compare functionality for rendering a 3D model 
 
 ##### Credits:
 
-- [Sasha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
+- [Sascha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
 - [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :), also the tip about the buffer came from him 
 - [Kai](https://github.com/httpdigest), for his first Hello Triangle in java
 - [Urlick](https://github.com/skalarproduktraum), for some tips and the glsl -> spir-v converter
