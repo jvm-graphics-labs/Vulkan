@@ -973,7 +973,7 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         if (shaderCode != null) {
             // Create a new shader module that will be used for pipeline creation
-            val moduleCreateInfo= VkShaderModuleCreateInfo.calloc()
+            val moduleCreateInfo = VkShaderModuleCreateInfo.calloc()
                     .sType(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO)
                     .pNext(NULL)
                     .pCode(shaderCode)
@@ -999,164 +999,194 @@ private class TriangleVerbose : VulkanExampleBase() {
             A pipeline is then stored and hashed on the GPU making pipeline changes very fast
             Note: There are still a few dynamic states that are not directly part of the pipeline (but the info that they are used is)  */
 
-        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo {
-            // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
-            layout = pipelineLayout
-            // Renderpass this pipeline is attached to
-            renderPass = this@TriangleVerbose.renderPass
-        }
+        val pipelineCreateInfo = VkGraphicsPipelineCreateInfo.calloc(1)
+                .sType(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO)
+                .pNext(NULL)
+                // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
+                .layout(pipelineLayout)
+                // Renderpass this pipeline is attached to
+                .renderPass(renderPass)
 
         /*  Construct the different states making up the pipeline
 
             Input assembly state describes how primitives are assembled
             This pipeline will assemble vertex data as a triangle lists (though we only use one triangle)   */
-        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo {
-            topology = VkPrimitiveTopology.TRIANGLE_LIST
-        }
+        val inputAssemblyState = VkPipelineInputAssemblyStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 
         // Rasterization state
-        val rasterizationState = vk.PipelineRasterizationStateCreateInfo {
-            polygonMode = VkPolygonMode.FILL
-            cullMode = VkCullMode.NONE.i
-            frontFace = VkFrontFace.COUNTER_CLOCKWISE
-            depthClampEnable = false
-            rasterizerDiscardEnable = false
-            depthBiasEnable = false
-            lineWidth = 1f
-        }
+        val rasterizationState = VkPipelineRasterizationStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .polygonMode(VK_POLYGON_MODE_FILL)
+                .cullMode(VK_CULL_MODE_NONE)
+                .frontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE)
+                .depthClampEnable(false)
+                .rasterizerDiscardEnable(false)
+                .depthBiasEnable(false)
+                .lineWidth(1f)
 
         /*  Color blend state describes how blend factors are calculated (if used)
             We need one blend attachment state per color attachment (even if blending is not used         */
-        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(1) {
-            colorWriteMask = 0xf
-            blendEnable = false
-        }
-        val colorBlendState = vk.PipelineColorBlendStateCreateInfo { attachments = blendAttachmentState }
+        val blendAttachmentState = VkPipelineColorBlendAttachmentState.calloc(1)
+                .colorWriteMask(0xf)
+                .blendEnable(false)
+
+        val colorBlendState = VkPipelineColorBlendStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .pAttachments(blendAttachmentState)
 
         /*  Viewport state sets the number of viewports and scissor used in this pipeline
             Note: This is actually overriden by the dynamic states (see below)         */
-        val viewportState = vk.PipelineViewportStateCreateInfo {
-            viewportCount = 1
-            scissorCount = 1
-        }
+        val viewportState = VkPipelineViewportStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .viewportCount(1)
+                .scissorCount(1)
 
         /** Enable dynamic states
          *  Most states are baked into the pipeline, but there are still a few dynamic states that can be changed within a command buffer
          *  To be able to change these we need do specify which dynamic states will be changed using this pipeline.
          *  Their actual states are set later on in the command buffer.
          *  For this example we will set the viewport and scissor using dynamic states  */
-        val dynamicStateEnables = appBuffer.intBufferOf(VkDynamicState.VIEWPORT.i, VkDynamicState.SCISSOR.i)
-        val dynamicState = vk.PipelineDynamicStateCreateInfo { dynamicStates = dynamicStateEnables }
+        val dynamicStateEnables = MemoryUtil.memAllocInt(2)
+        dynamicStateEnables[0] = VK_DYNAMIC_STATE_VIEWPORT
+        dynamicStateEnables[1] = VK_DYNAMIC_STATE_SCISSOR
+        val dynamicState = VkPipelineDynamicStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .pDynamicStates(dynamicStateEnables)
 
         /*  Depth and stencil state containing depth and stencil compare and test operations
             We only use depth tests and want depth tests and writes to be enabled and compare with less or equal         */
-        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo {
-            depthTestEnable = true
-            depthWriteEnable = true
-            depthCompareOp = VkCompareOp.LESS_OR_EQUAL
-            depthBoundsTestEnable = false
-            back.apply {
-                failOp = VkStencilOp.KEEP
-                passOp = VkStencilOp.KEEP
-                compareOp = VkCompareOp.ALWAYS
-            }
-            stencilTestEnable = false
-            front = back
-        }
+        val depthStencilState = VkPipelineDepthStencilStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .depthTestEnable(true)
+                .depthWriteEnable(true)
+                .depthCompareOp(VK_COMPARE_OP_LESS_OR_EQUAL)
+                .depthBoundsTestEnable(false)
+        depthStencilState.back()
+                .failOp(VK_STENCIL_OP_KEEP)
+                .passOp(VK_STENCIL_OP_KEEP)
+                .compareOp(VK_COMPARE_OP_ALWAYS)
+        depthStencilState
+                .stencilTestEnable(false)
+                .front(depthStencilState.back())
 
         /*  Multi sampling state
             This example does not make use fo multi sampling (for anti-aliasing), the state must still be set and passed to the pipeline         */
-        val multisampleState = vk.PipelineMultisampleStateCreateInfo {
-            rasterizationSamples = VkSampleCount.`1_BIT`
-            sampleMask = null
-        }
+        val multisampleState = VkPipelineMultisampleStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .rasterizationSamples(VK_SAMPLE_COUNT_1_BIT)
+                .pSampleMask(null)
 
         /*  Vertex input descriptions
             Specifies the vertex input parameters for a pipeline
 
             Vertex input binding
             This example uses a single vertex input binding at binding point 0 (see vkCmdBindVertexBuffers) */
-        val vertexInputBinding = vk.VertexInputBindingDescription(1) {
-            binding = 0
-            stride = Vertex.size
-            inputRate = VkVertexInputRate.VERTEX
-        }
+        val vertexInputBinding = VkVertexInputBindingDescription.calloc(1)
+                .binding(0)
+                .stride(Vertex.size)
+                .inputRate(VK_VERTEX_INPUT_RATE_VERTEX)
 
         // Inpute attribute bindings describe shader attribute locations and memory layouts
-        val vertexInputAttributs = vk.VertexInputAttributeDescription(2)
+        val vertexInputAttributs = VkVertexInputAttributeDescription.calloc(2)
         /*  These match the following shader layout (see triangle.vert):
             layout (location = 0) in vec3 inPos;
             layout (location = 1) in vec3 inColor;  */
-
-        vertexInputAttributs[0].apply {
-            // Attribute location 0: Position
-            binding = 0
-            location = 0
-            // Position attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
-            format = VkFormat.R32G32B32_SFLOAT
-            offset = Vertex.offsetPosition
-        }
-        vertexInputAttributs[1].apply {
-            // Attribute location 1: Color
-            binding = 0
-            location = 1
-            // Color attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
-            format = VkFormat.R32G32B32_SFLOAT
-            offset = Vertex.offsetColor
-        }
+        // Attribute location 0: Position
+        vertexInputAttributs[0]
+                .binding(0)
+                .location(0)
+                // Position attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
+                .format(VK_FORMAT_R32G32B32_SFLOAT)
+                .offset(Vertex.offsetPosition)
+        // Attribute location 1: Color
+        vertexInputAttributs[1]
+                .binding(0)
+                .location(1)
+                // Color attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
+                .format(VK_FORMAT_R32G32B32_SFLOAT)
+                .offset(Vertex.offsetColor)
 
         // Vertex input state used for pipeline creation
-        val vertexInputState = vk.PipelineVertexInputStateCreateInfo {
-            vertexBindingDescriptions = vertexInputBinding
-            vertexAttributeDescriptions = vertexInputAttributs
-        }
+        val vertexInputState = VkPipelineVertexInputStateCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO)
+                .pNext(NULL)
+                .pVertexBindingDescriptions(vertexInputBinding)
+                .pVertexAttributeDescriptions(vertexInputAttributs)
 
         // Shaders
-        val shaderStages = vk.PipelineShaderStageCreateInfo(2)
+        val shaderStages = VkPipelineShaderStageCreateInfo.calloc(2)
 
         // Vertex shader
-        shaderStages[0].apply {
-            // Set pipeline stage for this shader
-            stage = VkShaderStage.VERTEX_BIT
-            // Load binary SPIR-V shader
-            module = loadSPIRVShader("$assetPath/shaders/triangle/triangle.vert.spv")
-            // Main entry point for the shader
-            name = "main"
-            assert(module != NULL)
-        }
+        val pName = MemoryUtil.memUTF8("main")
+        shaderStages[0]
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
+                .pNext(NULL)
+                // Set pipeline stage for this shader
+                .stage(VK_SHADER_STAGE_VERTEX_BIT)
+                // Load binary SPIR-V shader
+                .module(loadSPIRVShader("$assetPath/shaders/triangle/triangle.vert.spv"))
+                // Main entry point for the shader
+                .pName(pName)
+        assert(shaderStages[0].module() != NULL)
 
         // Fragment shader
-        shaderStages[1].apply {
-            // Set pipeline stage for this shader
-            stage = VkShaderStage.FRAGMENT_BIT
-            // Load binary SPIR-V shader
-            module = loadSPIRVShader("$assetPath/shaders/triangle/triangle.frag.spv")
-            // Main entry point for the shader
-            name = "main"
-            assert(module != NULL)
-        }
+        shaderStages[1]
+                .sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
+                .pNext(NULL)
+                // Set pipeline stage for this shader
+                .stage(VK_SHADER_STAGE_FRAGMENT_BIT)
+                // Load binary SPIR-V shader
+                .module(loadSPIRVShader("$assetPath/shaders/triangle/triangle.frag.spv"))
+                // Main entry point for the shader
+                .pName(pName)
+        assert(shaderStages[1].module() != NULL)
 
         // Set pipeline shader stage info
-        pipelineCreateInfo.also {
-            it.stages = shaderStages
+        pipelineCreateInfo
+                .pStages(shaderStages)
+                // Assign the pipeline states to the pipeline creation info structure
+                .pVertexInputState(vertexInputState)
+                .pInputAssemblyState(inputAssemblyState)
+                .pRasterizationState(rasterizationState)
+                .pColorBlendState(colorBlendState)
+                .pMultisampleState(multisampleState)
+                .pViewportState(viewportState)
+                .pDepthStencilState(depthStencilState)
+                .renderPass(renderPass)
+                .pDynamicState(dynamicState)
 
-            // Assign the pipeline states to the pipeline creation info structure
-            it.vertexInputState = vertexInputState
-            it.inputAssemblyState = inputAssemblyState
-            it.rasterizationState = rasterizationState
-            it.colorBlendState = colorBlendState
-            it.multisampleState = multisampleState
-            it.viewportState = viewportState
-            it.depthStencilState = depthStencilState
-            it.renderPass = renderPass
-            it.dynamicState = dynamicState
-            it.tessellationState = null
-        }
         // Create rendering pipeline using the specified states
-        pipeline = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
+        val pPipeline = MemoryUtil.memAllocLong(1)
+        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, pipelineCreateInfo, null, pPipeline))
+        pipeline = pPipeline[0]
 
         // Shader modules are no longer needed once the graphics pipeline has been created
         device destroyShaderModules shaderStages
+
+        pipelineCreateInfo.free()
+        inputAssemblyState.free()
+        rasterizationState.free()
+        blendAttachmentState.free()
+        colorBlendState.free()
+        viewportState.free()
+        dynamicStateEnables.destroy()
+        dynamicState.free()
+        depthStencilState.free()
+        multisampleState.free()
+        vertexInputBinding.free()
+        vertexInputAttributs.free()
+        vertexInputState.free()
+        shaderStages.free()
+        pPipeline.destroy()
     }
 
     fun prepareUniformBuffers() {
