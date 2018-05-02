@@ -1193,35 +1193,41 @@ private class TriangleVerbose : VulkanExampleBase() {
         /*  Prepare and initialize a uniform buffer block containing shader uniforms
             Single uniforms like in OpenGL are no longer present in Vulkan. All Shader uniforms are passed
             via uniform buffer blocks         */
-        val memReqs = vk.MemoryRequirements {}
+        val memReqs = VkMemoryRequirements.calloc()
 
         // Vertex shader uniform buffer block
-        val allocInfo = vk.MemoryAllocateInfo {
-            allocationSize = 0
-            memoryTypeIndex = 0
-        }
+        val allocInfo = VkMemoryAllocateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
+                .pNext(NULL)
+                .allocationSize(0)
+                .memoryTypeIndex(0)
 
-        val bufferInfo = vk.BufferCreateInfo {
-            size = uboVS.size.L
-            // This buffer will be used as a uniform buffer
-            usage = VkBufferUsage.UNIFORM_BUFFER_BIT.i
-        }
+        val bufferInfo = VkBufferCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+                .pNext(NULL)
+                .size(uboVS.size.L)
+                // This buffer will be used as a uniform buffer
+                .usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
 
         // Create a new buffer
-        uniformBufferVS.buffer = device createBuffer bufferInfo
+        val pBuffer = MemoryUtil.memAllocLong(1)
+        VK_CHECK_RESULT(vkCreateBuffer(device, bufferInfo, null, pBuffer))
+        uniformBufferVS.buffer = pBuffer[0]
         // Get memory requirements including size, alignment and memory type
-        device.getBufferMemoryRequirements(uniformBufferVS.buffer, memReqs)
-        allocInfo.allocationSize = memReqs.size
+        vkGetBufferMemoryRequirements(device, uniformBufferVS.buffer, memReqs)
+        allocInfo.allocationSize(memReqs.size())
         /*  Get the memory type index that supports host visibile memory access
             Most implementations offer multiple memory types and selecting the correct one to allocate memory from is crucial
             We also want the buffer to be host coherent so we don't have to flush (or sync after every update.
             Note: This may affect performance so you might not want to do this in a real world application that updates
             buffers on a regular base   */
-        allocInfo.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+        allocInfo.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
         // Allocate memory for the uniform buffer
-        uniformBufferVS.memory = device allocateMemory allocInfo
+        val pMemory = MemoryUtil.memAllocLong(1)
+        VK_CHECK_RESULT(vkAllocateMemory(device, allocInfo, null, pMemory))
+        uniformBufferVS.memory = pMemory[0]
         // Bind memory to buffer
-        device.bindBufferMemory(uniformBufferVS.buffer, uniformBufferVS.memory, 0)
+        VK_CHECK_RESULT(vkBindBufferMemory(device, uniformBufferVS.buffer, uniformBufferVS.memory, 0))
 
         // Store information in the uniform's descriptor that is used by the descriptor set
         uniformBufferVS.descriptor = VkDescriptorBufferInfo.calloc(1)
@@ -1230,6 +1236,12 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .range(uboVS.size.L)
 
         updateUniformBuffers()
+
+        memReqs.free()
+        allocInfo.free()
+        bufferInfo.free()
+        pBuffer.destroy()
+        pMemory.destroy()
     }
 
     fun updateUniformBuffers() {
