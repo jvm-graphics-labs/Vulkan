@@ -8,8 +8,10 @@
 //
 //package vulkan.computeShader
 //
+//import glm_.L
 //import glm_.vec2.Vec2i
 //import glm_.vec3.Vec3
+//import glm_.vec3.Vec3i
 //import glm_.vec4.Vec4
 //import org.lwjgl.system.MemoryUtil.NULL
 //import org.lwjgl.vulkan.VkCommandBuffer
@@ -17,11 +19,6 @@
 //import vkn.*
 //import vulkan.base.*
 //import vulkan.base.tools.VK_FLAGS_NONE
-//import java.io.IOException
-//import java.io.Serializable
-//import java.nio.file.StandardOpenOption
-//import java.nio.channels.FileChannel
-//import java.nio.file.Paths
 //
 //
 //fun main(args: Array<String>) {
@@ -79,25 +76,32 @@
 //    }
 //
 //    // SSBO sphere declaration
-//    class Sphere : Bufferizable {                                    // Shader uses std140 layout (so we only use vec4 instead of vec3)
-//        lateinit var pos: Vec3
-//        var radius = 0f
-//        lateinit var diffuse: Vec3
-//        var specular = 0f
-//        var id = 0                                // Id used to identify sphere for raytracing
-//        lateinit var _pad: Vec3
+//    class Sphere( // Shader uses std140 layout (so we only use vec4 instead of vec3)
+//            val pos: Vec3,
+//            val radius: Float,
+//            val diffuse: Vec3,
+//            val specular: Float,
+//            /** Id used to identify sphere for raytracing */
+//            val id: Int) : Bufferizable() {
 //
-//        override val size: Int = Vec4.size * 3
+//        lateinit var _pad: Vec3i
+//
+//        override val fieldOrder = arrayOf("pos", "radius", "diffuse", "specular", "id")
+//
+//        companion object {
+//            val size = Vec4.size * 3
+//        }
 //    }
 //
 //    // SSBO plane declaration
-//    object Plane {
-//        glm::vec3 normal
-//        float distance
-//        glm::vec3 diffuse
-//        float specular
-//        uint32_t id
-//        glm::ivec3 _pad
+//    class Plane (
+//        val normal: Vec3,
+//        var distance: Float,
+//        val diffuse: Vec3,
+//        val specular: Float,
+//        val id: Int) : Bufferizable() {
+//
+//        lateinit var _pad: Vec3i
 //    }
 //
 //    init {
@@ -294,48 +298,28 @@
 //        }
 //    }
 //
-//    var currentId = 0    // Id used to identify objects by the ray tracing shader
-//
-//    fun newSphere(pos: Vec3, radius: Float, diffuse: Vec3, specular: Float): Sphere {
-//        return Sphere().also {
-//            it.id = currentId++
-//            it.pos = pos
-//            it.radius = radius
-//            it.diffuse = diffuse
-//            it.specular = specular
-//        }
-//    }
-//
-//    Plane newPlane(glm::vec3 normal, float distance, glm::vec3 diffuse, float specular)
-//    {
-//        Plane plane
-//                plane.id = currentId++
-//        plane.normal = normal
-//        plane.distance = distance
-//        plane.diffuse = diffuse
-//        plane.specular = specular
-//        return plane
-//    }
+//    /** Id used to identify objects by the ray tracing shader */
+//    var currentId = 0
 //
 //    /** Setup and fill the compute shader storage buffers containing primitives for the raytraced scene */
 //    fun prepareStorageBuffers() {
 //
 //        // Spheres
-//        val spheres = listOf(
-//                newSphere(Vec3(1.75f, -0.5f, 0.0f), 1f, Vec3(0f, 1f, 0f), 32f),
-//                newSphere(Vec3(0f, 1f, -0.5f), 1f, Vec3(0.65f, 0.77f, 0.97f), 32f),
-//                newSphere(Vec3(-1.75f, -0.75f, -0.5f), 1.25f, Vec3(0.9f, 0.76f, 0.46f), 32f))
+//        val spheres = bufferOf(
+//                Sphere(Vec3(1.75f, -0.5f, 0.0f), 1f, Vec3(0f, 1f, 0f), 32f, currentId++),
+//                Sphere(Vec3(0f, 1f, -0.5f), 1f, Vec3(0.65f, 0.77f, 0.97f), 32f, currentId++),
+//                Sphere(Vec3(-1.75f, -0.75f, -0.5f), 1.25f, Vec3(0.9f, 0.76f, 0.46f), 32f, currentId++))
 //        val storageBufferSize: VkDeviceSize = spheres.size * Sphere.size.L
 //
 //        // Stage
-//        vks::Buffer stagingBuffer
+//        val stagingBuffer = Buffer()
 //
-//                vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &stagingBuffer,
-//        storageBufferSize,
-//        spheres.data())
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.TRANSFER_SRC_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                stagingBuffer,
+//                storageBufferSize,
+//                spheres)
 //
 //        vulkanDevice->createBuffer(
 //        // The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline

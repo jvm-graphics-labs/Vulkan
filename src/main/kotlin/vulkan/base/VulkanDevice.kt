@@ -242,35 +242,6 @@ constructor(
         return result
     }
 
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer,
-                     numbers: Collection<Number>) {
-        when (numbers.elementAt(0)) {
-            is Float -> floatBufferBig(numbers.size).use {
-                for (i in numbers.indices)
-                    it[i] = numbers.elementAt(0) as Float
-                createBuffer(usageFlags, memoryPropertyFlags, buffer, it)
-            }
-            is Int -> intBufferBig(numbers.size).use {
-                for (i in numbers.indices)
-                    it[i] = numbers.elementAt(0) as Int
-                createBuffer(usageFlags, memoryPropertyFlags, buffer, it)
-            }
-            else -> throw Error()
-        }
-    }
-
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: ByteBuffer) {
-        createBuffer(usageFlags, memoryPropertyFlags, buffer, bytes.size.L, memAddress(bytes))
-    }
-
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, floats: FloatBuffer) {
-        createBuffer(usageFlags, memoryPropertyFlags, buffer, floats.size.L, memAddress(floats))
-    }
-
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, ints: IntBuffer) {
-        createBuffer(usageFlags, memoryPropertyFlags, buffer, ints.size.L, memAddress(ints))
-    }
-
 
     /**
      * Create a buffer on the device
@@ -325,6 +296,20 @@ constructor(
 //
 //        return VK_SUCCESS;
 //    }
+
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: ByteBuffer) {
+        createBuffer(usageFlags, memoryPropertyFlags, buffer, bytes.size.L, memAddress(bytes))
+    }
+
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, floats: FloatBuffer) {
+        createBuffer(usageFlags, memoryPropertyFlags, buffer, floats.size.L, memAddress(floats))
+    }
+
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, ints: IntBuffer) {
+        createBuffer(usageFlags, memoryPropertyFlags, buffer, ints.size.L, memAddress(ints))
+    }
+
+
 
     /**
      * Create a buffer on the device

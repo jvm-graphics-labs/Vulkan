@@ -292,6 +292,7 @@ object WithAddress {
     }
 }
 
+
 abstract class Bufferizable {
 
     abstract val fieldOrder: Array<String>

@@ -22,8 +22,10 @@ import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkQueue
+import uno.buffer.*
 import vkn.*
-import java.net.URL
+import java.nio.FloatBuffer
+import java.nio.IntBuffer
 
 
 /** @brief Vertex layout components */
@@ -55,11 +57,15 @@ class ModelCreateInfo(
 }
 
 class Model {
+
     var device: VkDevice? = null
     val vertices = Buffer()
     val indices = Buffer()
     var indexCount = 0
     var vertexCount = 0
+
+    lateinit var vertexBuffer: FloatBuffer
+    lateinit var indexBuffer: IntBuffer
 
     /** @brief Stores vertex and index base and counts for each part of a model */
     class ModelPart {
@@ -89,6 +95,10 @@ class Model {
             vk.destroyBuffer(dev, indices.buffer)
             vk.freeMemory(dev, indices.memory)
         }
+        if(::vertexBuffer.isInitialized)
+            vertexBuffer.destroy()
+        if(::vertexBuffer.isInitialized)
+            vertexBuffer.destroy()
     }
 
     /**
@@ -103,6 +113,7 @@ class Model {
      */
     fun loadFromFile(filename: String, layout: VertexLayout, createInfo: ModelCreateInfo?, device: VulkanDevice, copyQueue: VkQueue,
                      flags: AiPostProcessStepsFlags = defaultFlags): Boolean {
+
         this.device = device.logicalDevice
 
         val importer = Importer()
@@ -123,8 +134,8 @@ class Model {
             center(it.center)
         }
 
-        val vertexBuffer = ArrayList<Float>()
-        val indexBuffer = ArrayList<Int>()
+        val vertices = ArrayList<Float>()
+        val indices = ArrayList<Int>()
 
         vertexCount = 0
         indexCount = 0
@@ -152,7 +163,7 @@ class Model {
                 val biTangent = mesh.bitangents.getOrNull(j) ?: Vec3()
 
                 for (component in layout.components) {
-                    with(vertexBuffer) {
+                    with(vertices) {
                         when (component) {
                             VertexComponent.POSITION -> {
                                 add(pos.x * scale.x + center.x)
@@ -208,20 +219,20 @@ class Model {
 
             parts[i].vertexCount = mesh.numVertices
 
-            val indexBase = indexBuffer.size
+            val indexBase = indices.size
             for (j in 0 until mesh.numFaces) {
                 val face = mesh.faces[j]
                 if (face.size != 3) continue
                 for (k in 0..2)
-                    indexBuffer += indexBase + face[k]
+                    indices += indexBase + face[k]
                 parts[i].indexCount += 3
                 indexCount += 3
             }
         }
 
 
-        val vBufferSize = vertexBuffer.size * Float.BYTES
-        val iBufferSize = indexBuffer.size * Int.BYTES
+        val vBufferSize = vertices.size * Float.BYTES
+        val iBufferSize = indices.size * Int.BYTES
 
         // Use staging buffer to move vertex and index buffer to device local memory
         // Create staging buffers
@@ -229,6 +240,9 @@ class Model {
         val indexStaging = Buffer()
 
         val memoryProps = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
+
+        vertexBuffer = floatBufferOf(vertices)
+//        indexBuffer = intBufferOf(indices)
         // Vertex buffer
         device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, vertexStaging, vertexBuffer)
         // Index buffer
@@ -239,14 +253,14 @@ class Model {
         device.createBuffer(
                 VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
                 VkMemoryProperty.DEVICE_LOCAL_BIT.i,
-                vertices,
+                this.vertices,
                 vBufferSize.L)
 
         // Index buffer
         device.createBuffer(
                 VkBufferUsage.INDEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
                 VkMemoryProperty.DEVICE_LOCAL_BIT.i,
-                indices,
+                this.indices,
                 iBufferSize.L)
 
         // Copy from staging buffers
@@ -254,11 +268,11 @@ class Model {
 
         vk.BufferCopy {
 
-            size = vertices.size
-            copyCmd.copyBuffer(vertexStaging.buffer, vertices.buffer, this)
+            size = this@Model.vertices.size
+            copyCmd.copyBuffer(vertexStaging.buffer, this@Model.vertices.buffer, this)
 
-            size = indices.size
-            copyCmd.copyBuffer(indexStaging.buffer, indices.buffer, this)
+            size = this@Model.indices.size
+            copyCmd.copyBuffer(indexStaging.buffer, this@Model.indices.buffer, this)
         }
 
         device.flushCommandBuffer(copyCmd, copyQueue)

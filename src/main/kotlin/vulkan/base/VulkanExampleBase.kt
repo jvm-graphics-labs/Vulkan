@@ -157,7 +157,7 @@ abstract class VulkanExampleBase {
 
     val rotation = Vec3()
     val cameraPos = Vec3()
-    val mousePos = Vec2i()
+    val mousePos = Vec2()
 //
 //    std::string title = "Vulkan Example";
 //    std::string name = "vulkanExample";
@@ -1091,7 +1091,7 @@ abstract class VulkanExampleBase {
 
     fun mouseMoved(newPos: Vec2) {
         val deltaPos = mousePos - newPos
-        if (deltaPos.x == 0 && deltaPos.y == 0) return
+        if (deltaPos.x == 0f && deltaPos.y == 0f) return
         if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT)) {
             zoom += deltaPos.y * .005f * zoomSpeed
             camera translate Vec3(0f, 0f, deltaPos.y * .005f * zoomSpeed)
@@ -1112,6 +1112,7 @@ abstract class VulkanExampleBase {
             mousePos put newPos
             viewChanged()
         }
+        mousePos(newPos)
     }
 
     fun mouseScrolled(wheelDelta: Float) {

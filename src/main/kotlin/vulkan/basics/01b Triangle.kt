@@ -370,7 +370,7 @@ private class Triangle : VulkanExampleBase() {
         val vertexBufferSize = vertexBuffer.size.L
 
         // Setup indices
-        val indexBuffer = intBufferOf(0, 1, 2)
+        val indexBuffer = appBuffer.intBufferOf(0, 1, 2)
         indices.count = indexBuffer.capacity
         val indexBufferSize = indexBuffer.size.L
 
@@ -381,6 +381,7 @@ private class Triangle : VulkanExampleBase() {
         val data = appBuffer.pointer
 
         if (USE_STAGING) {
+
             /*  Static data like vertex and index buffer should be stored on the device memory for optimal (and fastest)
                 access by the GPU
 
@@ -468,6 +469,7 @@ private class Triangle : VulkanExampleBase() {
 
             // Put buffer region copies into command buffer
             val copyRegion = vk.BufferCopy(1)
+
             // Vertex buffer
             copyRegion.size = vertexBufferSize
             copyCmd.copyBuffer(stagingBuffers.vertices.buffer, vertices.buffer, copyRegion)
@@ -489,6 +491,7 @@ private class Triangle : VulkanExampleBase() {
             }
 
         } else {
+
             /*  Don't use staging
                 Create host-visible buffers only and use these for rendering. This is not advised and will usually
                 result in lower rendering performance             */

@@ -44,7 +44,6 @@ fun main(args: Array<String>) {
 
 class GpuParticleSystem : VulkanExampleBase() {
 
-    var _timer = 0f
     var animStart = 20f
     var animate = true // TODO fix mouse animation
 
@@ -160,14 +159,12 @@ class GpuParticleSystem : VulkanExampleBase() {
 
         val clearValues = vk.ClearValue(2)
         clearValues[0].color(defaultClearColor)
-        clearValues[1].depthStencil.set(1f, 0)
+        clearValues[1].depthStencil(1f, 0)
 
         val renderPassBeginInfo = vk.RenderPassBeginInfo {
             renderPass = this@GpuParticleSystem.renderPass
-            renderArea.apply {
-                offset.set(0, 0)
-                renderArea.extent.set(size.x, size.y)
-            }
+            renderArea.offset(0)
+            renderArea.extent(size)
             this.clearValues = clearValues
         }
         for (i in drawCmdBuffers.indices) {
@@ -493,7 +490,7 @@ class GpuParticleSystem : VulkanExampleBase() {
 
         compute.ubo.deltaT = frameTimer * 2.5f
         if (animate)
-            compute.ubo.dest(sin((_timer * 360f).rad) * 0.75f, 0f)
+            compute.ubo.dest(sin((timer * 360f).rad) * 0.75f, 0f)
         else {
             val normalizedM = (mousePos - (size / 2)) / (size / 2)
             compute.ubo.dest(normalizedM)
@@ -545,9 +542,9 @@ class GpuParticleSystem : VulkanExampleBase() {
             if (animStart > 0f)
                 animStart -= frameTimer * 5f
             else if (animStart <= 0f) {
-                _timer += frameTimer * 0.04f
-                if (_timer > 1f)
-                    _timer = 0f
+                timer += frameTimer * 0.04f
+                if (timer > 1f)
+                    timer = 0f
             }
 
         updateUniformBuffers()
