@@ -9,6 +9,7 @@
 //package vulkan.computeShader
 //
 //import glm_.L
+//import glm_.size
 //import glm_.vec2.Vec2i
 //import glm_.vec3.Vec3
 //import glm_.vec3.Vec3i
@@ -17,6 +18,7 @@
 //import org.lwjgl.vulkan.VkCommandBuffer
 //import org.lwjgl.vulkan.VkQueue
 //import vkn.*
+//import vulkan.assetPath
 //import vulkan.base.*
 //import vulkan.base.tools.VK_FLAGS_NONE
 //
@@ -94,14 +96,16 @@
 //    }
 //
 //    // SSBO plane declaration
-//    class Plane (
-//        val normal: Vec3,
-//        var distance: Float,
-//        val diffuse: Vec3,
-//        val specular: Float,
-//        val id: Int) : Bufferizable() {
+//    class Plane(
+//            val normal: Vec3,
+//            var distance: Float,
+//            val diffuse: Vec3,
+//            val specular: Float,
+//            val id: Int) : Bufferizable() {
 //
 //        lateinit var _pad: Vec3i
+//
+//        override val fieldOrder = arrayOf("normal", "distance", "diffuse", "specular", "id")
 //    }
 //
 //    init {
@@ -309,7 +313,7 @@
 //                Sphere(Vec3(1.75f, -0.5f, 0.0f), 1f, Vec3(0f, 1f, 0f), 32f, currentId++),
 //                Sphere(Vec3(0f, 1f, -0.5f), 1f, Vec3(0.65f, 0.77f, 0.97f), 32f, currentId++),
 //                Sphere(Vec3(-1.75f, -0.75f, -0.5f), 1.25f, Vec3(0.9f, 0.76f, 0.46f), 32f, currentId++))
-//        val storageBufferSize: VkDeviceSize = spheres.size * Sphere.size.L
+//        var storageBufferSize: VkDeviceSize = spheres.size.L
 //
 //        // Stage
 //        val stagingBuffer = Buffer()
@@ -318,341 +322,221 @@
 //                VkBufferUsage.TRANSFER_SRC_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                stagingBuffer,
-//                storageBufferSize,
 //                spheres)
 //
-//        vulkanDevice->createBuffer(
-//        // The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline
-//        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-//        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-//        &compute.storageBuffers.spheres,
-//        storageBufferSize)
+//        vulkanDevice.createBuffer(
+//                // The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline
+//                VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.STORAGE_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
+//                VkMemoryProperty.DEVICE_LOCAL_BIT.i,
+//                compute.storageBuffers.spheres,
+//                storageBufferSize)
 //
 //        // Copy to staging buffer
-//        VkCommandBuffer copyCmd = VulkanExampleBase ::createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true)
-//        VkBufferCopy copyRegion = {}
-//        copyRegion.size = storageBufferSize
-//        vkCmdCopyBuffer(copyCmd, stagingBuffer.buffer, compute.storageBuffers.spheres.buffer, 1, & copyRegion)
-//        VulkanExampleBase::flushCommandBuffer(copyCmd, queue, true)
+//        var copyCmd = super.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
+//        val copyRegion = vk.BufferCopy { size = storageBufferSize }
+//        copyCmd.copyBuffer(stagingBuffer.buffer, compute.storageBuffers.spheres.buffer, copyRegion)
+//        super.flushCommandBuffer(copyCmd, queue, true)
 //
 //        stagingBuffer.destroy()
 //
 //        // Planes
-//        std::vector<Plane> planes
-//                const float roomDim = 4.0f
-//        planes.push_back(newPlane(glm::vec3(0.0f, 1.0f, 0.0f), roomDim, glm::vec3(1.0f), 32.0f))
-//        planes.push_back(newPlane(glm::vec3(0.0f, -1.0f, 0.0f), roomDim, glm::vec3(1.0f), 32.0f))
-//        planes.push_back(newPlane(glm::vec3(0.0f, 0.0f, 1.0f), roomDim, glm::vec3(1.0f), 32.0f))
-//        planes.push_back(newPlane(glm::vec3(0.0f, 0.0f, -1.0f), roomDim, glm::vec3(0.0f), 32.0f))
-//        planes.push_back(newPlane(glm::vec3(-1.0f, 0.0f, 0.0f), roomDim, glm::vec3(1.0f, 0.0f, 0.0f), 32.0f))
-//        planes.push_back(newPlane(glm::vec3(1.0f, 0.0f, 0.0f), roomDim, glm::vec3(0.0f, 1.0f, 0.0f), 32.0f))
-//        storageBufferSize = planes.size() * sizeof(Plane)
+//        val roomDim = 4f
+//        val planes = bufferOf(
+//                Plane(Vec3(0f, 1f, 0f), roomDim, Vec3(1f), 32f, currentId++),
+//                Plane(Vec3(0f, -1f, 0f), roomDim, Vec3(1f), 32f, currentId++),
+//                Plane(Vec3(0f, 0f, 1f), roomDim, Vec3(1f), 32f, currentId++),
+//                Plane(Vec3(0f, 0f, -1f), roomDim, Vec3(0f), 32f, currentId++),
+//                Plane(Vec3(-1f, 0f, 0f), roomDim, Vec3(1f, 0f, 0f), 32f, currentId++),
+//                Plane(Vec3(1f, 0f, 0f), roomDim, Vec3(0f, 1f, 0f), 32f, currentId++))
+//        storageBufferSize = planes.size.L
 //
 //        // Stage
-//        vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &stagingBuffer,
-//        storageBufferSize,
-//        planes.data())
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.TRANSFER_SRC_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                stagingBuffer,
+//                planes)
 //
-//        vulkanDevice->createBuffer(
-//        // The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline
-//        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-//        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-//        &compute.storageBuffers.planes,
-//        storageBufferSize)
+//        vulkanDevice.createBuffer(
+//                // The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline
+//                VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.STORAGE_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
+//                VkMemoryProperty.DEVICE_LOCAL_BIT.i,
+//                compute.storageBuffers.planes,
+//                storageBufferSize)
 //
 //        // Copy to staging buffer
-//        copyCmd = VulkanExampleBase::createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true)
+//        copyCmd = super.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
 //        copyRegion.size = storageBufferSize
-//        vkCmdCopyBuffer(copyCmd, stagingBuffer.buffer, compute.storageBuffers.planes.buffer, 1, & copyRegion)
-//        VulkanExampleBase::flushCommandBuffer(copyCmd, queue, true)
+//        copyCmd.copyBuffer(stagingBuffer.buffer, compute.storageBuffers.planes.buffer, copyRegion)
+//        super.flushCommandBuffer(copyCmd, queue, true)
 //
 //        stagingBuffer.destroy()
 //    }
 //
-//    void setupDescriptorPool()
-//    {
-//        std::vector<VkDescriptorPoolSize> poolSizes =
-//        {
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2),            // Compute UBO
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4),    // Graphics image samplers
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1),                // Storage image for ray traced image output
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2),            // Storage buffer for the scene primitives
-//        }
+//    fun setupDescriptorPool() {
 //
-//        VkDescriptorPoolCreateInfo descriptorPoolInfo =
-//        vks::initializers::descriptorPoolCreateInfo(
-//                poolSizes.size(),
-//                poolSizes.data(),
-//                3)
+//        val poolSizes = vk.DescriptorPoolSize(
+//                VkDescriptorType.UNIFORM_BUFFER, 2,             // Compute UBO
+//                VkDescriptorType.COMBINED_IMAGE_SAMPLER, 4,     // Graphics image samplers
+//                VkDescriptorType.STORAGE_IMAGE, 1,              // Storage image for ray traced image output
+//                VkDescriptorType.STORAGE_BUFFER, 2)             // Storage buffer for the scene primitives
 //
-//        VK_CHECK_RESULT(vkCreateDescriptorPool(device, & descriptorPoolInfo, nullptr, & descriptorPool))
+//        val descriptorPoolInfo = vk.DescriptorPoolCreateInfo(poolSizes, 3)
+//
+//        descriptorPool = device createDescriptorPool descriptorPoolInfo
 //    }
 //
-//    void setupDescriptorSetLayout()
-//    {
-//        std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
-//        {
-//            // Binding 0 : Fragment shader image sampler
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                    VK_SHADER_STAGE_FRAGMENT_BIT,
-//                    0)
-//        }
+//    fun setupDescriptorSetLayout() {
 //
-//        VkDescriptorSetLayoutCreateInfo descriptorLayout =
-//        vks::initializers::descriptorSetLayoutCreateInfo(
-//                setLayoutBindings.data(),
-//                setLayoutBindings.size())
+//        val setLayoutBindings = vk.DescriptorSetLayoutBinding(
+//                // Binding 0 : Fragment shader image sampler
+//                VkDescriptorType.COMBINED_IMAGE_SAMPLER, VkShaderStage.FRAGMENT_BIT.i, 0)
 //
-//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, & descriptorLayout, nullptr, & graphics . descriptorSetLayout))
+//        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo(setLayoutBindings)
 //
-//        VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-//        vks::initializers::pipelineLayoutCreateInfo(
-//                & graphics . descriptorSetLayout,
-//        1)
+//        graphics.descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
 //
-//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, & pPipelineLayoutCreateInfo, nullptr, & graphics . pipelineLayout))
+//        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo(graphics.descriptorSetLayout)
+//
+//        graphics.pipelineLayout = device createPipelineLayout pipelineLayoutCreateInfo
 //    }
 //
-//    void setupDescriptorSet()
-//    {
-//        VkDescriptorSetAllocateInfo allocInfo =
-//        vks::initializers::descriptorSetAllocateInfo(
-//                descriptorPool,
-//                & graphics . descriptorSetLayout,
-//        1)
+//    fun setupDescriptorSet() {
 //
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & graphics . descriptorSet))
+//        val allocInfo = vk.DescriptorSetAllocateInfo(descriptorPool, graphics.descriptorSetLayout)
 //
-//        std::vector<VkWriteDescriptorSet> writeDescriptorSets =
-//        {
-//            // Binding 0 : Fragment shader texture sampler
-//            vks::initializers::writeDescriptorSet(
-//                    graphics.descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                    0,
-//                    & textureComputeTarget . descriptor)
-//        }
+//        graphics.descriptorSet = device allocateDescriptorSets allocInfo
 //
-//        vkUpdateDescriptorSets(device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, NULL)
+//        val writeDescriptorSets = vk.WriteDescriptorSet(
+//                // Binding 0 : Fragment shader texture sampler
+//                graphics.descriptorSet, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 0, textureComputeTarget.descriptor)
+//
+//        device updateDescriptorSets writeDescriptorSets
 //    }
 //
-//    void preparePipelines()
-//    {
-//        VkPipelineInputAssemblyStateCreateInfo inputAssemblyState =
-//        vks::initializers::pipelineInputAssemblyStateCreateInfo(
-//                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-//                0,
-//                VK_FALSE)
+//    fun preparePipelines() {
 //
-//        VkPipelineRasterizationStateCreateInfo rasterizationState =
-//        vks::initializers::pipelineRasterizationStateCreateInfo(
-//                VK_POLYGON_MODE_FILL,
-//                VK_CULL_MODE_FRONT_BIT,
-//                VK_FRONT_FACE_COUNTER_CLOCKWISE,
-//                0)
+//        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology.TRIANGLE_LIST, 0, false)
 //
-//        VkPipelineColorBlendAttachmentState blendAttachmentState =
-//        vks::initializers::pipelineColorBlendAttachmentState(
-//                0xf,
-//                VK_FALSE)
+//        val rasterizationState = vk.PipelineRasterizationStateCreateInfo(VkPolygonMode.FILL, VkCullMode.FRONT_BIT.i, VkFrontFace.COUNTER_CLOCKWISE)
 //
-//        VkPipelineColorBlendStateCreateInfo colorBlendState =
-//        vks::initializers::pipelineColorBlendStateCreateInfo(
-//                1,
-//                & blendAttachmentState)
+//        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(0xf, false)
 //
-//        VkPipelineDepthStencilStateCreateInfo depthStencilState =
-//        vks::initializers::pipelineDepthStencilStateCreateInfo(
-//                VK_FALSE,
-//                VK_FALSE,
-//                VK_COMPARE_OP_LESS_OR_EQUAL)
+//        val colorBlendState = vk.PipelineColorBlendStateCreateInfo(blendAttachmentState)
 //
-//        VkPipelineViewportStateCreateInfo viewportState =
-//        vks::initializers::pipelineViewportStateCreateInfo(1, 1, 0)
+//        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo(false, false, VkCompareOp.LESS_OR_EQUAL)
 //
-//        VkPipelineMultisampleStateCreateInfo multisampleState =
-//        vks::initializers::pipelineMultisampleStateCreateInfo(
-//                VK_SAMPLE_COUNT_1_BIT,
-//                0)
+//        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT,
-//                                                            VK_DYNAMIC_STATE_SCISSOR
-//        }
-//        VkPipelineDynamicStateCreateInfo dynamicState =
-//        vks::initializers::pipelineDynamicStateCreateInfo(
-//                dynamicStateEnables.data(),
-//                dynamicStateEnables.size(),
-//                0)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//
+//        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
+//        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
 //
 //        // Display pipeline
-//        std::array < VkPipelineShaderStageCreateInfo, 2> shaderStages
+//        val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
+//            it[0].loadShader("$assetPath/shaders/raytracing/texture.vert.spv", VkShaderStage.VERTEX_BIT)
+//            it[1].loadShader("$assetPath/shaders/raytracing/texture.frag.spv", VkShaderStage.FRAGMENT_BIT)
+//        }
+//        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(graphics.pipelineLayout, renderPass)
 //
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/raytracing/texture.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//        shaderStages[1] = loadShader(getAssetPath() + "shaders/raytracing/texture.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//
-//        VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-//        vks::initializers::pipelineCreateInfo(
-//                graphics.pipelineLayout,
-//                renderPass,
-//                0)
-//
-//        VkPipelineVertexInputStateCreateInfo emptyInputState {}
-//        emptyInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
-//        emptyInputState.vertexAttributeDescriptionCount = 0
-//        emptyInputState.pVertexAttributeDescriptions = nullptr
-//        emptyInputState.vertexBindingDescriptionCount = 0
-//        emptyInputState.pVertexBindingDescriptions = nullptr
-//        pipelineCreateInfo.pVertexInputState = & emptyInputState
-//
-//                pipelineCreateInfo.pInputAssemblyState = & inputAssemblyState
-//                pipelineCreateInfo.pRasterizationState = & rasterizationState
-//                pipelineCreateInfo.pColorBlendState = & colorBlendState
-//                pipelineCreateInfo.pMultisampleState = & multisampleState
-//                pipelineCreateInfo.pViewportState = & viewportState
-//                pipelineCreateInfo.pDepthStencilState = & depthStencilState
-//                pipelineCreateInfo.pDynamicState = & dynamicState
-//                pipelineCreateInfo.stageCount = shaderStages.size()
-//        pipelineCreateInfo.pStages = shaderStages.data()
-//        pipelineCreateInfo.renderPass = renderPass
-//
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & graphics . pipeline))
+//        val emptyInputState = vk.PipelineVertexInputStateCreateInfo {
+//            vertexAttributeDescriptions = null
+//            vertexBindingDescriptions = null
+//        }
+//        pipelineCreateInfo.also {
+//            it.vertexInputState = emptyInputState
+//            it.inputAssemblyState = inputAssemblyState
+//            it.rasterizationState = rasterizationState
+//            it.colorBlendState = colorBlendState
+//            it.multisampleState = multisampleState
+//            it.viewportState = viewportState
+//            it.depthStencilState = depthStencilState
+//            it.dynamicState = dynamicState
+//            it.stages = shaderStages
+//            it.renderPass = renderPass
+//        }
+//        graphics.pipeline = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 //    }
 //
-//    // Prepare the compute pipeline that generates the ray traced image
-//    void prepareCompute()
-//    {
-//        // Create a compute capable device queue
-//        // The VulkanDevice::createLogicalDevice functions finds a compute capable queue and prefers queue families that only support compute
-//        // Depending on the implementation this may result in different queue family indices for graphics and computes,
-//        // requiring proper synchronization (see the memory barriers in buildComputeCommandBuffer)
-//        VkDeviceQueueCreateInfo queueCreateInfo = {}
-//        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
-//        queueCreateInfo.pNext = NULL
-//        queueCreateInfo.queueFamilyIndex = vulkanDevice->queueFamilyIndices.compute
-//        queueCreateInfo.queueCount = 1
-//        vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.compute, 0, &compute.queue)
+//    /** Prepare the compute pipeline that generates the ray traced image */
+//    fun prepareCompute() {
+//        /*  Create a compute capable device queue
+//            The VulkanDevice::createLogicalDevice functions finds a compute capable queue and prefers queue families
+//            that only support compute
+//            Depending on the implementation this may result in different queue family indices for graphics and computes,
+//            requiring proper synchronization (see the memory barriers in buildComputeCommandBuffer) */
+//        val queueCreateInfo = vk.DeviceQueueCreateInfo { queueFamilyIndex = vulkanDevice.queueFamilyIndices.compute }
+//        compute.queue = device getQueue vulkanDevice.queueFamilyIndices.compute
 //
-//        std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = {
-//            // Binding 0: Storage image (raytraced output)
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-//                    VK_SHADER_STAGE_COMPUTE_BIT,
-//                    0),
-//            // Binding 1: Uniform buffer block
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    VK_SHADER_STAGE_COMPUTE_BIT,
-//                    1),
-//            // Binding 1: Shader storage buffer for the spheres
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-//                    VK_SHADER_STAGE_COMPUTE_BIT,
-//                    2),
-//            // Binding 1: Shader storage buffer for the planes
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-//                    VK_SHADER_STAGE_COMPUTE_BIT,
-//                    3)
-//        }
+//        val setLayoutBindings = vk.DescriptorSetLayoutBinding(
+//                // Binding 0: Storage image (raytraced output)
+//                VkDescriptorType.STORAGE_IMAGE, VkShaderStage.COMPUTE_BIT.i, 0,
+//                // Binding 1: Uniform buffer block
+//                VkDescriptorType.UNIFORM_BUFFER, VkShaderStage.COMPUTE_BIT.i, 1,
+//                // Binding 1: Shader storage buffer for the spheres
+//                VkDescriptorType.STORAGE_BUFFER, VkShaderStage.COMPUTE_BIT.i, 2,
+//                // Binding 1: Shader storage buffer for the planes
+//                VkDescriptorType.STORAGE_BUFFER, VkShaderStage.COMPUTE_BIT.i, 3)
 //
-//        VkDescriptorSetLayoutCreateInfo descriptorLayout =
-//        vks::initializers::descriptorSetLayoutCreateInfo(
-//                setLayoutBindings.data(),
-//                setLayoutBindings.size())
+//        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo(setLayoutBindings)
 //
-//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, & descriptorLayout, nullptr, & compute . descriptorSetLayout))
+//        compute.descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
 //
-//        VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-//        vks::initializers::pipelineLayoutCreateInfo(
-//                & compute . descriptorSetLayout,
-//        1)
+//        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo(compute.descriptorSetLayout)
 //
-//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, & pPipelineLayoutCreateInfo, nullptr, & compute . pipelineLayout))
+//        compute.pipelineLayout = device createPipelineLayout pipelineLayoutCreateInfo
 //
-//        VkDescriptorSetAllocateInfo allocInfo =
-//        vks::initializers::descriptorSetAllocateInfo(
-//                descriptorPool,
-//                & compute . descriptorSetLayout,
-//        1)
+//        val allocInfo = vk.DescriptorSetAllocateInfo(descriptorPool, compute.descriptorSetLayout)
 //
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & compute . descriptorSet))
+//        compute.descriptorSet = device allocateDescriptorSets allocInfo
 //
-//        std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets =
-//        {
-//            // Binding 0: Output storage image
-//            vks::initializers::writeDescriptorSet(
-//                    compute.descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-//                    0,
-//                    & textureComputeTarget . descriptor),
-//            // Binding 1: Uniform buffer block
-//            vks::initializers::writeDescriptorSet(
-//                    compute.descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    1,
-//                    & compute . uniformBuffer . descriptor),
-//            // Binding 2: Shader storage buffer for the spheres
-//            vks::initializers::writeDescriptorSet(
-//                    compute.descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-//                    2,
-//                    & compute . storageBuffers . spheres . descriptor),
-//            // Binding 2: Shader storage buffer for the planes
-//            vks::initializers::writeDescriptorSet(
-//                    compute.descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-//                    3,
-//                    & compute . storageBuffers . planes . descriptor)
-//        }
+//        val computeWriteDescriptorSets = vk.WriteDescriptorSet(
+//                // Binding 0: Output storage image
+//                compute.descriptorSet, VkDescriptorType.STORAGE_IMAGE, 0, textureComputeTarget.descriptor,
+//                // Binding 1: Uniform buffer block
+//                compute.descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 1, compute.uniformBuffer.descriptor,
+//                // Binding 2: Shader storage buffer for the spheres
+//                compute.descriptorSet, VkDescriptorType.STORAGE_BUFFER, 2, compute.storageBuffers.spheres.descriptor,
+//                // Binding 2: Shader storage buffer for the planes
+//                compute.descriptorSet, VkDescriptorType.STORAGE_BUFFER, 3, compute.storageBuffers.planes.descriptor)
 //
-//        vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL)
+//        device updateDescriptorSets computeWriteDescriptorSets
 //
 //        // Create compute shader pipelines
-//        VkComputePipelineCreateInfo computePipelineCreateInfo =
-//        vks::initializers::computePipelineCreateInfo(
-//                compute.pipelineLayout,
-//                0)
-//
-//        computePipelineCreateInfo.stage = loadShader(getAssetPath() + "shaders/raytracing/raytracing.comp.spv", VK_SHADER_STAGE_COMPUTE_BIT)
-//        VK_CHECK_RESULT(vkCreateComputePipelines(device, pipelineCache, 1, & computePipelineCreateInfo, nullptr, & compute . pipeline))
+//        val computePipelineCreateInfo = vk.ComputePipelineCreateInfo(compute.pipelineLayout).apply {
+//            stage.loadShader("$assetPath/shaders/raytracing/raytracing.comp.spv", VkShaderStage.COMPUTE_BIT)
+//        }
+//        compute.pipeline = device.createComputePipelines(pipelineCache, computePipelineCreateInfo)
 //
 //        // Separate command pool as queue family for compute may be different than graphics
-//        VkCommandPoolCreateInfo cmdPoolInfo = {}
-//        cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO
-//        cmdPoolInfo.queueFamilyIndex = vulkanDevice->queueFamilyIndices.compute
-//        cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
-//        VK_CHECK_RESULT(vkCreateCommandPool(device, & cmdPoolInfo, nullptr, & compute . commandPool))
+//        val cmdPoolInfo = vk.CommandPoolCreateInfo {
+//            queueFamilyIndex = vulkanDevice.queueFamilyIndices.compute
+//            flags = VkCommandPoolCreate.RESET_COMMAND_BUFFER_BIT.i
+//        }
+//        compute . commandPool = device createCommandPool cmdPoolInfo
 //
 //        // Create a command buffer for compute operations
-//        VkCommandBufferAllocateInfo cmdBufAllocateInfo =
-//        vks::initializers::commandBufferAllocateInfo(
-//                compute.commandPool,
-//                VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-//                1)
+//        val cmdBufAllocateInfo = vk.CommandBufferAllocateInfo(compute.commandPool, VkCommandBufferLevel.PRIMARY, 1)
 //
-//        VK_CHECK_RESULT(vkAllocateCommandBuffers(device, & cmdBufAllocateInfo, & compute . commandBuffer))
+//        compute . commandBuffer = device allocateCommandBuffer cmdBufAllocateInfo
 //
 //        // Fence for compute CB sync
-//        VkFenceCreateInfo fenceCreateInfo = vks ::initializers::fenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT)
-//        VK_CHECK_RESULT(vkCreateFence(device, & fenceCreateInfo, nullptr, & compute . fence))
+//        val fenceCreateInfo = vk.FenceCreateInfo (VkFenceCreate.SIGNALED_BIT.i)
+//        compute . fence = device createFence fenceCreateInfo
 //
 //        // Build a single command buffer containing the compute dispatch commands
 //        buildComputeCommandBuffer()
 //    }
 //
-//    // Prepare and initialize uniform buffer containing shader uniforms
-//    void prepareUniformBuffers()
-//    {
+//    /** Prepare and initialize uniform buffer containing shader uniforms */
+//    fun prepareUniformBuffers()    {
 //        // Compute shader parameter uniform buffer block
-//        vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &compute.uniformBuffer,
-//        sizeof(compute.ubo))
+//        vulkanDevice.createBuffer(
+//        VkBufferUsage.UNIFORM_BUFFER_BIT.i,
+//        VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//        compute.uniformBuffer,
+//        compute.ubo.size)
 //
 //        updateUniformBuffers()
 //    }

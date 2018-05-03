@@ -573,6 +573,31 @@ object vk {
         }
     }
 
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(4) {
+            this[0].apply {
+                type = type0
+                descriptorCount = descriptorCount0
+            }
+            this[1].apply {
+                type = type1
+                descriptorCount = descriptorCount1
+            }
+            this[2].apply {
+                type = type2
+                descriptorCount = descriptorCount2
+            }
+            this[3].apply {
+                type = type3
+                descriptorCount = descriptorCount3
+            }
+        }
+    }
+
     inline fun DescriptorSetAllocateInfo(descriptorPool: VkDescriptorPool, setLayout: VkDescriptorSetLayout): VkDescriptorSetAllocateInfo {
         return DescriptorSetAllocateInfo {
             this.descriptorPool = descriptorPool
@@ -607,6 +632,19 @@ object vk {
                 type0, stageFlags0, binding0, 1,
                 type1, stageFlags1, binding1, 1,
                 type2, stageFlags2, binding2, 1)
+    }
+
+    inline fun DescriptorSetLayoutBinding(
+            type0: VkDescriptorType, stageFlags0: VkShaderStageFlags, binding0: Int,
+            type1: VkDescriptorType, stageFlags1: VkShaderStageFlags, binding1: Int,
+            type2: VkDescriptorType, stageFlags2: VkShaderStageFlags, binding2: Int,
+            type3: VkDescriptorType, stageFlags3: VkShaderStageFlags, binding3: Int): VkDescriptorSetLayoutBinding.Buffer {
+
+        return DescriptorSetLayoutBinding(
+                type0, stageFlags0, binding0, 1,
+                type1, stageFlags1, binding1, 1,
+                type2, stageFlags2, binding2, 1,
+                type3, stageFlags3, binding3, 1)
     }
 
     inline fun DescriptorSetLayoutBinding(
@@ -650,6 +688,39 @@ object vk {
                 stageFlags = stageFlags2
                 binding = binding2
                 descriptorCount = descriptorCount2
+            }
+        }
+    }
+
+    inline fun DescriptorSetLayoutBinding(
+            type0: VkDescriptorType, stageFlags0: VkShaderStageFlags, binding0: Int, descriptorCount0: Int,
+            type1: VkDescriptorType, stageFlags1: VkShaderStageFlags, binding1: Int, descriptorCount1: Int,
+            type2: VkDescriptorType, stageFlags2: VkShaderStageFlags, binding2: Int, descriptorCount2: Int,
+            type3: VkDescriptorType, stageFlags3: VkShaderStageFlags, binding3: Int, descriptorCount3: Int): VkDescriptorSetLayoutBinding.Buffer {
+        return DescriptorSetLayoutBinding(4) {
+            this[0].apply {
+                descriptorType = type0
+                stageFlags = stageFlags0
+                binding = binding0
+                descriptorCount = descriptorCount0
+            }
+            this[1].apply {
+                descriptorType = type1
+                stageFlags = stageFlags1
+                binding = binding1
+                descriptorCount = descriptorCount1
+            }
+            this[2].apply {
+                descriptorType = type2
+                stageFlags = stageFlags2
+                binding = binding2
+                descriptorCount = descriptorCount2
+            }
+            this[3].apply {
+                descriptorType = type3
+                stageFlags = stageFlags3
+                binding = binding3
+                descriptorCount = descriptorCount3
             }
         }
     }
@@ -904,6 +975,15 @@ object vk {
         }
     }
 
+    inline fun WriteDescriptorSet(dstSet: VkDescriptorSet, type: VkDescriptorType, binding: Int, imageInfo: VkDescriptorImageInfo): VkWriteDescriptorSet {
+        return WriteDescriptorSet {
+            this.dstSet = dstSet
+            descriptorType = type
+            dstBinding = binding
+            imageInfo_ = imageInfo
+        }
+    }
+
     inline fun WriteDescriptorSet(dstSet: VkDescriptorSet, type: VkDescriptorType, binding: Int, bufferInfo: VkDescriptorBufferInfo): VkWriteDescriptorSet {
         return WriteDescriptorSet {
             this.dstSet = dstSet
@@ -969,6 +1049,51 @@ object vk {
                     bufferInfo_ = info2
                 else
                     imageInfo_ = info2 as VkDescriptorImageInfo
+            }
+        }
+    }
+
+    inline fun WriteDescriptorSet(
+            dstSet0: VkDescriptorSet, type0: VkDescriptorType, binding0: Int, info0: Struct,
+            dstSet1: VkDescriptorSet, type1: VkDescriptorType, binding1: Int, info1: Struct,
+            dstSet2: VkDescriptorSet, type2: VkDescriptorType, binding2: Int, info2: Struct,
+            dstSet3: VkDescriptorSet, type3: VkDescriptorType, binding3: Int, info3: Struct): VkWriteDescriptorSet.Buffer {
+        return WriteDescriptorSet(4) {
+            this[0].apply {
+                dstSet = dstSet0
+                descriptorType = type0
+                dstBinding = binding0
+                if (info0 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info0
+                else
+                    imageInfo_ = info0 as VkDescriptorImageInfo
+            }
+            this[1].apply {
+                dstSet = dstSet1
+                descriptorType = type1
+                dstBinding = binding1
+                if (info1 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info1
+                else
+                    imageInfo_ = info1 as VkDescriptorImageInfo
+            }
+            this[2].apply {
+                dstSet = dstSet2
+                descriptorType = type2
+                dstBinding = binding2
+                if (info2 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info2
+                else
+                    imageInfo_ = info2 as VkDescriptorImageInfo
+            }
+            this[3].apply {
+                dstSet = dstSet3
+                descriptorType = type3
+                dstBinding = binding3
+                if (info3 is VkDescriptorBufferInfo)
+                    bufferInfo_ = info3
+                else
+                    imageInfo_ = info3 as VkDescriptorImageInfo
             }
         }
     }

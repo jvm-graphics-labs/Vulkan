@@ -21,6 +21,7 @@ import org.lwjgl.system.StructBuffer
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkPhysicalDevice
+import uno.buffer.bufferBig
 import uno.kotlin.buffers.indices
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -345,6 +346,18 @@ abstract class Bufferizable {
 
 typealias BufferizableAddFunctionType = (Any) -> Unit
 typealias BufferizableData = Pair<BufferizableAddFunctionType, KProperty1<out Bufferizable, Any?>>
+
+fun bufferOf(vararg data: Bufferizable): ByteBuffer {
+    val size = data.sumBy { it.size }
+    val res = bufferBig(size)
+    val address = memAddress(res)
+    var offset = 0
+    for(i in data.indices) {
+        data[i] to address + offset
+        offset += data[i].size
+    }
+    return res
+}
 
 //object uboVS : Bufferizable() {
 //
