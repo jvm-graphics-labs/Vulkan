@@ -3,27 +3,23 @@ package vulkan.basics
 import glfw_.appBuffer
 import glfw_.glfw
 import glm_.L
-import glm_.f
 import glm_.func.rad
 import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.size
 import glm_.vec3.Vec3
-import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.memCopy
+import org.lwjgl.vulkan.VK10.VK_SUBPASS_EXTERNAL
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
-import uno.buffer.intBufferOf
 import uno.kotlin.buffers.capacity
 import vkn.*
 import vkn.LongArrayList.resize
-import vkn.VkMemoryStack.Companion.withStack
 import vulkan.USE_STAGING
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
-import vulkan.base.tools.loadShader
-import java.nio.file.Paths
 
 
 fun main(args: Array<String>) {
@@ -184,7 +180,7 @@ private class Triangle : VulkanExampleBase() {
     /** Create the Vulkan synchronization primitives used in this example   */
     fun prepareSynchronizationPrimitives() {
         // Semaphores (Used for correct command ordering)
-        val semaphoreCreateInfo = vk.SemaphoreCreateInfo {}
+        val semaphoreCreateInfo = vk.SemaphoreCreateInfo()
 
         // Semaphore used to ensures that image presentation is complete before starting to submit again
         presentCompleteSemaphore = device createSemaphore semaphoreCreateInfo
@@ -193,10 +189,9 @@ private class Triangle : VulkanExampleBase() {
         renderCompleteSemaphore = device createSemaphore semaphoreCreateInfo
 
         // Fences (Used to check draw command buffer completion)
-        val fenceCreateInfo = vk.FenceCreateInfo {
-            // Create in signaled state so we don't wait on first render of each command buffer
-            flags = VkFenceCreate.SIGNALED_BIT.i
-        }
+        val fenceCreateInfo = vk.FenceCreateInfo(
+                // Create in signaled state so we don't wait on first render of each command buffer
+                VkFenceCreate.SIGNALED_BIT.i)
         for (i in drawCmdBuffers.indices)
             waitFences += device createFence fenceCreateInfo
     }
@@ -205,16 +200,13 @@ private class Triangle : VulkanExampleBase() {
      *  If begin is true, the command buffer is also started so we can start adding commands    */
     fun getCommandBuffer(begin: Boolean): VkCommandBuffer {
 
-        val cmdBufAllocateInfo = vk.CommandBufferAllocateInfo {
-            commandPool = cmdPool
-            level = VkCommandBufferLevel.PRIMARY
-            commandBufferCount = 1
-        }
+        val cmdBufAllocateInfo = vk.CommandBufferAllocateInfo(cmdPool, VkCommandBufferLevel.PRIMARY, 1)
+
         val cmdBuffer = device allocateCommandBuffer cmdBufAllocateInfo
 
         // If requested, also start the new command buffer
         if (begin)
-            cmdBuffer begin vk.CommandBufferBeginInfo {}
+            cmdBuffer begin vk.CommandBufferBeginInfo()
 
         return cmdBuffer
     }
@@ -278,18 +270,10 @@ private class Triangle : VulkanExampleBase() {
                 beginRenderPass(renderPassBeginInfo, VkSubpassContents.INLINE)
 
                 // Update dynamic viewport state
-                val viewport = vk.Viewport {
-                    size(size)
-                    depth(0f, 1f)
-                }
-                setViewport(viewport)
+                setViewport(size)
 
                 // Update dynamic scissor state
-                val scissor = vk.Rect2D {
-                    extent.set(size.x, size.y)
-                    offset.set(0, 0)
-                }
-                setScissor(scissor)
+                setScissor(size)
 
                 // Bind descriptor sets describing shader binding points
                 bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
@@ -332,13 +316,13 @@ private class Triangle : VulkanExampleBase() {
             // Pointer to the list of pipeline stages that the semaphore waits will occur at
             waitDstStageMask = waitStageMask
             // Semaphore(s) to wait upon before the submitted command buffer starts executing
-            waitSemaphores = appBuffer.longBufferOf(presentCompleteSemaphore)
+            waitSemaphore = presentCompleteSemaphore
             // One wait semaphore
             waitSemaphoreCount = 1
             // Semaphore(s) to be signaled when command buffers have completed
-            signalSemaphores = appBuffer.longBufferOf(renderCompleteSemaphore)
+            signalSemaphore = renderCompleteSemaphore
             // One signal semaphore + Command buffers(s) to execute in this batch (submission)
-            commandBuffers = appBuffer.pointerBufferOf(drawCmdBuffers[currentBuffer])
+            commandBuffer = drawCmdBuffers[currentBuffer]
         }
 
         // Submit to the graphics queue passing a wait fence
@@ -374,11 +358,7 @@ private class Triangle : VulkanExampleBase() {
         indices.count = indexBuffer.capacity
         val indexBufferSize = indexBuffer.size.L
 
-        val memAlloc = vk.MemoryAllocateInfo {}
-        val memReqs = vk.MemoryRequirements {}
-
         val memoryPropertiesFlags = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
-        val data = appBuffer.pointer
 
         if (USE_STAGING) {
 
@@ -411,17 +391,19 @@ private class Triangle : VulkanExampleBase() {
             }
             // Create a host-visible buffer to copy the vertex data to (staging buffer)
             stagingBuffers.vertices.buffer = device createBuffer vertexBufferInfo
-            device.getBufferMemoryRequirements(stagingBuffers.vertices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
-            // Request a host visible memory type that can be used to copy our data do
-            // Also request it to be coherent, so that writes are visible to the GPU right after unmapping the buffer
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
+            val memReqs = device getBufferMemoryRequirements stagingBuffers.vertices.buffer
+            val memAlloc = vk.MemoryAllocateInfo {
+                allocationSize = memReqs.size
+                // Request a host visible memory type that can be used to copy our data do
+                // Also request it to be coherent, so that writes are visible to the GPU right after unmapping the buffer
+                memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
+            }
             stagingBuffers.vertices.memory = device allocateMemory memAlloc
             // Map and copy
-            device.mapMemory(stagingBuffers.vertices.memory, 0, memAlloc.allocationSize, 0, data)
-            memCopy(vertexBuffer.adr, memGetAddress(data), vertexBufferSize)
-            device unmapMemory stagingBuffers.vertices.memory
-            device.bindBufferMemory(stagingBuffers.vertices.buffer, stagingBuffers.vertices.memory, 0)
+            device.mappingMemory(stagingBuffers.vertices.memory, 0, memAlloc.allocationSize) { data ->
+                memCopy(vertexBuffer.adr, data, vertexBufferSize)
+            }
+            device.bindBufferMemory(stagingBuffers.vertices.buffer, stagingBuffers.vertices.memory)
 
             // Create a device local buffer to which the (host local) vertex data will be copied and which will be used for rendering
             vertexBufferInfo.usage = VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT
@@ -430,7 +412,7 @@ private class Triangle : VulkanExampleBase() {
             memAlloc.allocationSize = memReqs.size
             memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
             vertices.memory = device allocateMemory memAlloc
-            device.bindBufferMemory(vertices.buffer, vertices.memory, 0)
+            device.bindBufferMemory(vertices.buffer, vertices.memory)
 
             // Index buffer
             val indexbufferInfo = vk.BufferCreateInfo {
@@ -443,10 +425,10 @@ private class Triangle : VulkanExampleBase() {
             memAlloc.allocationSize = memReqs.size
             memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
             stagingBuffers.indices.memory = device allocateMemory memAlloc
-            device.mapMemory(stagingBuffers.indices.memory, 0, indexBufferSize, 0, data)
-            memCopy(indexBuffer.adr, memGetAddress(data), indexBufferSize)
-            device unmapMemory stagingBuffers.indices.memory
-            device.bindBufferMemory(stagingBuffers.indices.buffer, stagingBuffers.indices.memory, 0)
+            device.mappingMemory(stagingBuffers.indices.memory, 0, indexBufferSize) { data ->
+                memCopy(indexBuffer.adr, data, indexBufferSize)
+            }
+            device.bindBufferMemory(stagingBuffers.indices.buffer, stagingBuffers.indices.memory)
 
             // Create destination buffer with device only visibility
             indexbufferInfo.usage = VkBufferUsage.INDEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT
@@ -455,7 +437,7 @@ private class Triangle : VulkanExampleBase() {
             memAlloc.allocationSize = memReqs.size
             memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
             indices.memory = device allocateMemory memAlloc
-            device.bindBufferMemory(indices.buffer, indices.memory, 0)
+            device.bindBufferMemory(indices.buffer, indices.memory)
 
 //            val cmdBufferBeginInfo = VkCommandBufferBeginInfo.calloc().apply {
 //                sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
@@ -468,7 +450,7 @@ private class Triangle : VulkanExampleBase() {
             val copyCmd = getCommandBuffer(true)
 
             // Put buffer region copies into command buffer
-            val copyRegion = vk.BufferCopy(1)
+            val copyRegion = vk.BufferCopy()
 
             // Vertex buffer
             copyRegion.size = vertexBufferSize
@@ -504,15 +486,17 @@ private class Triangle : VulkanExampleBase() {
 
             // Copy vertex data to a buffer visible to the host
             vertices.buffer = device createBuffer vertexBufferInfo
-            device.getBufferMemoryRequirements(vertices.buffer, memReqs)
-            memAlloc.allocationSize = memReqs.size
-            // VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT is host visible memory, and VK_MEMORY_PROPERTY_HOST_COHERENT_BIT makes sure writes are directly visible
-            memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
+            val memReqs = device getBufferMemoryRequirements vertices.buffer
+            val memAlloc = vk.MemoryAllocateInfo {
+                allocationSize = memReqs.size
+                // VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT is host visible memory, and VK_MEMORY_PROPERTY_HOST_COHERENT_BIT makes sure writes are directly visible
+                memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
+            }
             vertices.memory = device allocateMemory memAlloc
-            device.mapMemory(vertices.memory, 0, memAlloc.allocationSize, 0, data)
-            memCopy(vertexBuffer.adr, memGetAddress(data), vertexBufferSize)
-            device unmapMemory vertices.memory
-            device.bindBufferMemory(vertices.buffer, vertices.memory, 0)
+            device.mappingMemory(vertices.memory, 0, memAlloc.allocationSize) { data ->
+                memCopy(vertexBuffer.adr, data, vertexBufferSize)
+            }
+            device.bindBufferMemory(vertices.buffer, vertices.memory)
 
             // Index buffer
             val indexbufferInfo = vk.BufferCreateInfo {
@@ -526,20 +510,18 @@ private class Triangle : VulkanExampleBase() {
             memAlloc.allocationSize = memReqs.size
             memAlloc.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, memoryPropertiesFlags)
             indices.memory = device allocateMemory memAlloc
-            device.mapMemory(indices.memory, 0, indexBufferSize, 0, data)
-            memCopy(indexBuffer.adr, memGetAddress(data), indexBufferSize)
-            device unmapMemory indices.memory
-            device.bindBufferMemory(indices.buffer, indices.memory, 0)
+            device.mappingMemory(indices.memory, 0, indexBufferSize) { data ->
+                memCopy(indexBuffer.adr, data, indexBufferSize)
+            }
+            device.bindBufferMemory(indices.buffer, indices.memory)
         }
     }
 
-    fun setupDescriptorPool() = withStack {
+    fun setupDescriptorPool() {
         // We need to tell the API the number of max. requested descriptors per type
-        val typeCounts = vk.DescriptorPoolSize {
-            // This example only uses one descriptor type (uniform buffer) and only requests one descriptor of this type
-            type = VkDescriptorType.UNIFORM_BUFFER
-            descriptorCount = 1
-        }
+        // This example only uses one descriptor type (uniform buffer) and only requests one descriptor of this type
+        val typeCounts = vk.DescriptorPoolSize(VkDescriptorType.UNIFORM_BUFFER, 1)
+
         // For additional types you need to add new entries in the type count list
         // E.g. for two combined image samplers :
         // typeCounts[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -547,11 +529,10 @@ private class Triangle : VulkanExampleBase() {
 
         // Create the global descriptor pool
         // All descriptors used in this example are allocated from this pool
-        val descriptorPoolInfo = vk.DescriptorPoolCreateInfo {
-            poolSize = typeCounts
-            // Set the max. number of descriptor sets that can be requested from this pool (requesting beyond this limit will result in an error)
-            maxSets = 1
-        }
+        val descriptorPoolInfo = vk.DescriptorPoolCreateInfo(typeCounts,
+                // Set the max. number of descriptor sets that can be requested from this pool (requesting beyond this limit will result in an error)
+                maxSets = 1)
+
         descriptorPool = device createDescriptorPool descriptorPoolInfo
     }
 
@@ -565,42 +546,29 @@ private class Triangle : VulkanExampleBase() {
             descriptorType = VkDescriptorType.UNIFORM_BUFFER
             descriptorCount = 1
             stageFlags = VkShaderStage.VERTEX_BIT.i
-            immutableSamplers = null
         }
 
-        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo { binding = layoutBinding }
+        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo(layoutBinding)
 
         descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
 
         // Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
         // In a more complex scenario you would have different pipeline layouts for different descriptor set layouts that could be reused
-        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo {
-            setLayouts = appBuffer.longBufferOf(descriptorSetLayout)
-        }
+        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo(descriptorSetLayout)
 
         pipelineLayout = device createPipelineLayout pipelineLayoutCreateInfo
     }
 
     fun setupDescriptorSet() {
         // Allocate a new descriptor set from the global descriptor pool
-        val allocInfo = vk.DescriptorSetAllocateInfo {
-            descriptorPool = this@Triangle.descriptorPool
-            setLayouts = appBuffer.longBufferOf(descriptorSetLayout)
-        }
+        val allocInfo = vk.DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayout)
+
         descriptorSet = device allocateDescriptorSets allocInfo
 
         /*  Update the descriptor set determining the shader binding points
             For every binding point used in a shader there needs to be one descriptor set matching that binding point   */
 
-        val writeDescriptorSet = vk.WriteDescriptorSet {
-            // Binding 0 : Uniform buffer
-            type = VkStructureType.WRITE_DESCRIPTOR_SET
-            dstSet = descriptorSet
-            descriptorType = VkDescriptorType.UNIFORM_BUFFER
-            bufferInfo_ = uniformBufferVS.descriptor
-            // Binds this uniform buffer to binding point 0
-            dstBinding = 0
-        }
+        val writeDescriptorSet = vk.WriteDescriptorSet(descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBufferVS.descriptor)
 
         device updateDescriptorSets writeDescriptorSet
     }
@@ -625,7 +593,7 @@ private class Triangle : VulkanExampleBase() {
 
         // Allocate memory for the image (device local) and bind it to our image
         val memAlloc = vk.MemoryAllocateInfo {
-            val memReqs = vk.MemoryRequirements { vkGetImageMemoryRequirements(device, depthStencil.image, this) }
+            val memReqs = device getImageMemoryRequirements depthStencil.image
             allocationSize = memReqs.size
             memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT.i)
         }
@@ -688,32 +656,31 @@ private class Triangle : VulkanExampleBase() {
         // This example will use a single render pass with one subpass
 
         // Descriptors for the attachments used by this renderpass
-        val attachments = vk.AttachmentDescription(2)
-
-        // Color attachment
-        attachments[0].apply {
-            format = swapChain.colorFormat                  // Use the color format selected by the swapchain
-            samples = VkSampleCount.`1_BIT`                 // We don't use multi sampling in this example
-            loadOp = VkAttachmentLoadOp.CLEAR               // Clear this attachment at the start of the render pass
-            storeOp = VkAttachmentStoreOp.STORE             // Keep it's contents after the render pass is finished (for displaying it)
-            stencilLoadOp = VkAttachmentLoadOp.DONT_CARE    // We don't use stencil, so don't care for load
-            stencilStoreOp = VkAttachmentStoreOp.DONT_CARE  // Same for store
-            initialLayout = VkImageLayout.UNDEFINED         // Layout at render pass start. Initial doesn't matter, so we use undefined
-            finalLayout = VkImageLayout.PRESENT_SRC_KHR     // Layout to which the attachment is transitioned when the render pass is finished
+        val attachments = vk.AttachmentDescription(2).also {
+            // Color attachment
+            it[0].apply {
+                format = swapChain.colorFormat                  // Use the color format selected by the swapchain
+                samples = VkSampleCount.`1_BIT`                 // We don't use multi sampling in this example
+                loadOp = VkAttachmentLoadOp.CLEAR               // Clear this attachment at the start of the render pass
+                storeOp = VkAttachmentStoreOp.STORE             // Keep it's contents after the render pass is finished (for displaying it)
+                stencilLoadOp = VkAttachmentLoadOp.DONT_CARE    // We don't use stencil, so don't care for load
+                stencilStoreOp = VkAttachmentStoreOp.DONT_CARE  // Same for store
+                initialLayout = VkImageLayout.UNDEFINED         // Layout at render pass start. Initial doesn't matter, so we use undefined
+                finalLayout = VkImageLayout.PRESENT_SRC_KHR     // Layout to which the attachment is transitioned when the render pass is finished
+            }
+            // As we want to present the color buffer to the swapchain, we transition to PRESENT_KHR
+            // Depth attachment
+            it[1].apply {
+                format = depthFormat                                            // A proper depth format is selected in the example base
+                samples = VkSampleCount.`1_BIT`
+                loadOp = VkAttachmentLoadOp.CLEAR                               // Clear depth at start of first subpass
+                storeOp = VkAttachmentStoreOp.DONT_CARE                         // We don't need depth after render pass has finished (DONT_CARE may result in better performance)
+                stencilLoadOp = VkAttachmentLoadOp.DONT_CARE                    // No stencil
+                stencilStoreOp = VkAttachmentStoreOp.DONT_CARE                  // No Stencil
+                initialLayout = VkImageLayout.UNDEFINED                         // Layout at render pass start. Initial doesn't matter, so we use undefined
+                finalLayout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL    // Transition to depth/stencil attachment
+            }
         }
-        // As we want to present the color buffer to the swapchain, we transition to PRESENT_KHR
-        // Depth attachment
-        attachments[1].apply {
-            format = depthFormat                                            // A proper depth format is selected in the example base
-            samples = VkSampleCount.`1_BIT`
-            loadOp = VkAttachmentLoadOp.CLEAR                               // Clear depth at start of first subpass
-            storeOp = VkAttachmentStoreOp.DONT_CARE                         // We don't need depth after render pass has finished (DONT_CARE may result in better performance)
-            stencilLoadOp = VkAttachmentLoadOp.DONT_CARE                    // No stencil
-            stencilStoreOp = VkAttachmentStoreOp.DONT_CARE                  // No Stencil
-            initialLayout = VkImageLayout.UNDEFINED                         // Layout at render pass start. Initial doesn't matter, so we use undefined
-            finalLayout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL    // Transition to depth/stencil attachment
-        }
-
         // Setup attachment references
         val colorReference = vk.AttachmentReference(1) {
             attachment = 0                                      // Attachment 0 is color
@@ -742,32 +709,30 @@ private class Triangle : VulkanExampleBase() {
             Each subpass dependency will introduce a memory and execution dependency between the source and dest subpass described by
             srcStageMask, dstStageMask, srcAccessMask, dstAccessMask (and dependencyFlags is set)
             Note: VK_SUBPASS_EXTERNAL is a special constant that refers to all commands executed outside of the actual renderpass)  */
-        val dependencies = vk.SubpassDependency(2)
-
-        /*  First dependency at the start of the renderpass
-            Does the transition from final to initial layout         */
-        dependencies[0].apply {
-            srcSubpass = VK_SUBPASS_EXTERNAL     // Producer of the dependency
-            dstSubpass = 0                      // Consumer is our single subpass that will wait for the execution depdendency
-            srcStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
-            dstStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
-            srcAccessMask = VkAccess.MEMORY_READ_BIT.i
-            dstAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
-            dependencyFlags = VkDependency.BY_REGION_BIT.i
+        val dependencies = vk.SubpassDependency(2).also {
+            /*  First dependency at the start of the renderpass
+                Does the transition from final to initial layout         */
+            it[0].apply {
+                srcSubpass = VK_SUBPASS_EXTERNAL     // Producer of the dependency
+                dstSubpass = 0                      // Consumer is our single subpass that will wait for the execution depdendency
+                srcStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
+                dstStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
+                srcAccessMask = VkAccess.MEMORY_READ_BIT.i
+                dstAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
+                dependencyFlags = VkDependency.BY_REGION_BIT.i
+            }
+            /*  Second dependency at the end the renderpass
+                Does the transition from the initial to the final layout         */
+            it[1].apply {
+                srcSubpass = 0                      // Producer of the dependency is our single subpass
+                dstSubpass = VK_SUBPASS_EXTERNAL    // Consumer are all commands outside of the renderpass
+                srcStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
+                dstStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
+                srcAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
+                dstAccessMask = VkAccess.MEMORY_READ_BIT.i
+                dependencyFlags = VkDependency.BY_REGION_BIT.i
+            }
         }
-
-        /*  Second dependency at the end the renderpass
-            Does the transition from the initial to the final layout         */
-        dependencies[1].apply {
-            srcSubpass = 0                      // Producer of the dependency is our single subpass
-            dstSubpass = VK_SUBPASS_EXTERNAL    // Consumer are all commands outside of the renderpass
-            srcStageMask = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
-            dstStageMask = VkPipelineStage.BOTTOM_OF_PIPE_BIT.i
-            srcAccessMask = VkAccess.COLOR_ATTACHMENT_READ_BIT or VkAccess.COLOR_ATTACHMENT_WRITE_BIT
-            dstAccessMask = VkAccess.MEMORY_READ_BIT.i
-            dependencyFlags = VkDependency.BY_REGION_BIT.i
-        }
-
         // Create the actual renderpass
         val renderPassInfo = vk.RenderPassCreateInfo {
             this.attachments = attachments      // Descriptions of the attachments used by the render pass
@@ -784,147 +749,91 @@ private class Triangle : VulkanExampleBase() {
             A pipeline is then stored and hashed on the GPU making pipeline changes very fast
             Note: There are still a few dynamic states that are not directly part of the pipeline (but the info that they are used is)  */
 
-        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo {
-            // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
-            layout = pipelineLayout
-            // Renderpass this pipeline is attached to
-            renderPass = this@Triangle.renderPass
-        }
+        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(
+                // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
+                pipelineLayout,
+                // Renderpass this pipeline is attached to
+                renderPass)
 
         /*  Construct the different states making up the pipeline
 
             Input assembly state describes how primitives are assembled
             This pipeline will assemble vertex data as a triangle lists (though we only use one triangle)   */
-        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo {
-            topology = VkPrimitiveTopology.TRIANGLE_LIST
-        }
+        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology.TRIANGLE_LIST)
 
         // Rasterization state
-        val rasterizationState = vk.PipelineRasterizationStateCreateInfo {
-            polygonMode = VkPolygonMode.FILL
-            cullMode = VkCullMode.NONE.i
-            frontFace = VkFrontFace.COUNTER_CLOCKWISE
-            depthClampEnable = false
-            rasterizerDiscardEnable = false
-            depthBiasEnable = false
-            lineWidth = 1f
-        }
+        val rasterizationState = vk.PipelineRasterizationStateCreateInfo(VkPolygonMode.FILL, VkCullMode.NONE.i, VkFrontFace.COUNTER_CLOCKWISE)
 
         /*  Color blend state describes how blend factors are calculated (if used)
             We need one blend attachment state per color attachment (even if blending is not used         */
-        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(1) {
-            colorWriteMask = 0xf
-            blendEnable = false
-        }
-        val colorBlendState = vk.PipelineColorBlendStateCreateInfo { attachments = blendAttachmentState }
+        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(0xf, false)
+        val colorBlendState = vk.PipelineColorBlendStateCreateInfo(blendAttachmentState)
 
         /*  Viewport state sets the number of viewports and scissor used in this pipeline
             Note: This is actually overriden by the dynamic states (see below)         */
-        val viewportState = vk.PipelineViewportStateCreateInfo {
-            viewportCount = 1
-            scissorCount = 1
-        }
+        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 
         /** Enable dynamic states
          *  Most states are baked into the pipeline, but there are still a few dynamic states that can be changed within a command buffer
          *  To be able to change these we need do specify which dynamic states will be changed using this pipeline.
          *  Their actual states are set later on in the command buffer.
          *  For this example we will set the viewport and scissor using dynamic states  */
-        val dynamicStateEnables = appBuffer.intBufferOf(VkDynamicState.VIEWPORT.i, VkDynamicState.SCISSOR.i)
-        val dynamicState = vk.PipelineDynamicStateCreateInfo { dynamicStates = dynamicStateEnables }
+        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
+        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
 
         /*  Depth and stencil state containing depth and stencil compare and test operations
             We only use depth tests and want depth tests and writes to be enabled and compare with less or equal         */
-        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo {
-            depthTestEnable = true
-            depthWriteEnable = true
-            depthCompareOp = VkCompareOp.LESS_OR_EQUAL
-            depthBoundsTestEnable = false
-            back.apply {
-                failOp = VkStencilOp.KEEP
-                passOp = VkStencilOp.KEEP
-                compareOp = VkCompareOp.ALWAYS
-            }
-            stencilTestEnable = false
-            front = back
-        }
+        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo(true, true, VkCompareOp.LESS_OR_EQUAL)
 
         /*  Multi sampling state
             This example does not make use fo multi sampling (for anti-aliasing), the state must still be set and passed to the pipeline         */
-        val multisampleState = vk.PipelineMultisampleStateCreateInfo {
-            rasterizationSamples = VkSampleCount.`1_BIT`
-            sampleMask = null
-        }
+        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
 
         /*  Vertex input descriptions
             Specifies the vertex input parameters for a pipeline
 
             Vertex input binding
             This example uses a single vertex input binding at binding point 0 (see vkCmdBindVertexBuffers) */
-        val vertexInputBinding = vk.VertexInputBindingDescription(1) {
-            binding = 0
-            stride = Vertex.size
-            inputRate = VkVertexInputRate.VERTEX
-        }
+        val vertexInputBinding = vk.VertexInputBindingDescription(0, Vertex.size, VkVertexInputRate.VERTEX)
 
         // Inpute attribute bindings describe shader attribute locations and memory layouts
-        val vertexInputAttributs = vk.VertexInputAttributeDescription(2)
-        /*  These match the following shader layout (see triangle.vert):
-            layout (location = 0) in vec3 inPos;
-            layout (location = 1) in vec3 inColor;  */
-
-        vertexInputAttributs[0].apply {
-            // Attribute location 0: Position
-            binding = 0
-            location = 0
-            // Position attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
-            format = VkFormat.R32G32B32_SFLOAT
-            offset = Vertex.offsetPosition
+        val vertexInputAttributs = vk.VertexInputAttributeDescription(2).also {
+            /*  These match the following shader layout (see triangle.vert):
+                layout (location = 0) in vec3 inPos;
+                layout (location = 1) in vec3 inColor;  */
+            it[0].apply {
+                // Attribute location 0: Position
+                binding = 0
+                location = 0
+                // Position attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
+                format = VkFormat.R32G32B32_SFLOAT
+                offset = Vertex.offsetPosition
+            }
+            it[1].apply {
+                // Attribute location 1: Color
+                binding = 0
+                location = 1
+                // Color attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
+                format = VkFormat.R32G32B32_SFLOAT
+                offset = Vertex.offsetColor
+            }
         }
-        vertexInputAttributs[1].apply {
-            // Attribute location 1: Color
-            binding = 0
-            location = 1
-            // Color attribute is three 32 bit signed (SFLOAT) floats (R32 G32 B32)
-            format = VkFormat.R32G32B32_SFLOAT
-            offset = Vertex.offsetColor
-        }
-
         // Vertex input state used for pipeline creation
         val vertexInputState = vk.PipelineVertexInputStateCreateInfo {
-            vertexBindingDescriptions = vertexInputBinding
+            vertexBindingDescription = vertexInputBinding
             vertexAttributeDescriptions = vertexInputAttributs
         }
 
         // Shaders
-        val shaderStages = vk.PipelineShaderStageCreateInfo(2)
-
-        // Vertex shader
-        shaderStages[0].apply {
-            // Set pipeline stage for this shader
-            stage = VkShaderStage.VERTEX_BIT
-            // Load binary SPIR-V shader
-            module = device loadShader "$assetPath/shaders/triangle/triangle.vert.spv"
-            // Main entry point for the shader
-            name = "main"
-            assert(module != NULL)
+        val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
+            // Vertex shader
+            it[0].loadShader("$assetPath/shaders/triangle/triangle.vert.spv", VkShaderStage.VERTEX_BIT)
+            // Fragment shader
+            it[1].loadShader("$assetPath/shaders/triangle/triangle.frag.spv", VkShaderStage.FRAGMENT_BIT)
         }
-
-        // Fragment shader
-        shaderStages[1].apply {
-            // Set pipeline stage for this shader
-            stage = VkShaderStage.FRAGMENT_BIT
-            // Load binary SPIR-V shader
-            module = device loadShader "$assetPath/shaders/triangle/triangle.frag.spv"
-            // Main entry point for the shader
-            name = "main"
-            assert(module != NULL)
-        }
-
         // Set pipeline shader stage info
         pipelineCreateInfo.also {
             it.stages = shaderStages
-
             // Assign the pipeline states to the pipeline creation info structure
             it.vertexInputState = vertexInputState
             it.inputAssemblyState = inputAssemblyState
@@ -948,13 +857,6 @@ private class Triangle : VulkanExampleBase() {
         /*  Prepare and initialize a uniform buffer block containing shader uniforms
             Single uniforms like in OpenGL are no longer present in Vulkan. All Shader uniforms are passed
             via uniform buffer blocks         */
-        val memReqs = vk.MemoryRequirements {}
-
-        // Vertex shader uniform buffer block
-        val allocInfo = vk.MemoryAllocateInfo {
-            allocationSize = 0
-            memoryTypeIndex = 0
-        }
 
         val bufferInfo = vk.BufferCreateInfo {
             size = uboVS.size.L
@@ -965,23 +867,25 @@ private class Triangle : VulkanExampleBase() {
         // Create a new buffer
         uniformBufferVS.buffer = device createBuffer bufferInfo
         // Get memory requirements including size, alignment and memory type
-        device.getBufferMemoryRequirements(uniformBufferVS.buffer, memReqs)
-        allocInfo.allocationSize = memReqs.size
-        /*  Get the memory type index that supports host visibile memory access
+        val memReqs = device getBufferMemoryRequirements uniformBufferVS.buffer
+        // Vertex shader uniform buffer block
+        val allocInfo = vk.MemoryAllocateInfo {
+            allocationSize = memReqs.size
+            /*  Get the memory type index that supports host visibile memory access
             Most implementations offer multiple memory types and selecting the correct one to allocate memory from is crucial
             We also want the buffer to be host coherent so we don't have to flush (or sync after every update.
             Note: This may affect performance so you might not want to do this in a real world application that updates
             buffers on a regular base   */
-        allocInfo.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+            memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+        }
         // Allocate memory for the uniform buffer
         uniformBufferVS.memory = device allocateMemory allocInfo
         // Bind memory to buffer
-        device.bindBufferMemory(uniformBufferVS.buffer, uniformBufferVS.memory, 0)
+        device.bindBufferMemory(uniformBufferVS.buffer, uniformBufferVS.memory)
 
         // Store information in the uniform's descriptor that is used by the descriptor set
         uniformBufferVS.descriptor = vk.DescriptorBufferInfo {
             buffer = uniformBufferVS.buffer
-            offset = 0
             range = uboVS.size.L
         }
         updateUniformBuffers()
@@ -1027,8 +931,6 @@ private class Triangle : VulkanExampleBase() {
         draw()
     }
 
-    override fun viewChanged() {
-        // This function is called by the base example class each time the view is changed by user input
-        updateUniformBuffers()
-    }
+    /** This function is called by the base example class each time the view is changed by user input */
+    override fun viewChanged() = updateUniformBuffers()
 }

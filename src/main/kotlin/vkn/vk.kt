@@ -426,6 +426,7 @@ object vk {
     inline fun AttachmentReference(capacity: Int): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity)
     inline fun AttachmentReference(capacity: Int, block: VkAttachmentReference.() -> Unit): VkAttachmentReference.Buffer = AttachmentReference(capacity).also { it[0].block() }
 
+    inline fun BufferCopy(): VkBufferCopy = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF))
     inline fun BufferCopy(capacity: Int): VkBufferCopy.Buffer = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF * capacity), capacity)
     inline fun BufferCopy(block: VkBufferCopy.() -> Unit): VkBufferCopy = VkBufferCopy.create(ptr.advance(VkBufferCopy.SIZEOF)).also(block)
 
@@ -717,8 +718,8 @@ object vk {
     }
 
     inline fun PipelineInputAssemblyStateCreateInfo(topology: VkPrimitiveTopology,
-                                                    flags: VkPipelineInputAssemblyStateCreateFlags,
-                                                    primitiveRestartEnable: Boolean): VkPipelineInputAssemblyStateCreateInfo {
+                                                    flags: VkPipelineInputAssemblyStateCreateFlags = 0,
+                                                    primitiveRestartEnable: Boolean = false): VkPipelineInputAssemblyStateCreateInfo {
         return PipelineInputAssemblyStateCreateInfo {
             this.topology = topology
             this.flags = flags

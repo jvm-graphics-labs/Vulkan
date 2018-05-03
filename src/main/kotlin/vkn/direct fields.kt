@@ -626,6 +626,14 @@ inline var VkSubmitInfo.waitSemaphoreCount
 inline var VkSubmitInfo.waitSemaphores
     get() = VkSubmitInfo.npWaitSemaphores(adr)
     set(value) = VkSubmitInfo.npWaitSemaphores(adr, value)
+/** JVM custom */
+inline var VkSubmitInfo.waitSemaphore: VkSemaphore
+    get() = VkSubmitInfo.npWaitSemaphores(adr)?.get(0) ?: NULL
+    set(value) {
+        val pSemaphore = appBuffer.long
+        memPutLong(pSemaphore, value)
+        memPutAddress(adr + VkSubmitInfo.PWAITSEMAPHORES, pSemaphore)
+    }
 inline var VkSubmitInfo.waitDstStageMask: IntBuffer?
     get() = VkSubmitInfo.npWaitDstStageMask(adr)
     set(value) = VkSubmitInfo.npWaitDstStageMask(adr, value)
@@ -643,9 +651,18 @@ inline var VkSubmitInfo.commandBuffer: VkCommandBuffer?
         VkSubmitInfo.ncommandBufferCount(adr, if (value == null) 0 else 1)
     }
 //inline val VkSubmitInfo.signalSemaphoreCount get() = VkSubmitInfo.nsignalSemaphoreCount(address)
-inline var VkSubmitInfo.signalSemaphores
+inline var VkSubmitInfo.signalSemaphores: LongBuffer?
     get() = VkSubmitInfo.npSignalSemaphores(adr)
     set(value) = VkSubmitInfo.npSignalSemaphores(adr, value)
+/** JVM custom */
+inline var VkSubmitInfo.signalSemaphore: VkSemaphore
+    get() = VkSubmitInfo.npSignalSemaphores(adr)?.get(0) ?: NULL
+    set(value) {
+        val pSemaphore = appBuffer.long
+        memPutLong(pSemaphore, value)
+        memPutAddress(adr + VkSubmitInfo.PSIGNALSEMAPHORES, pSemaphore)
+        VkSubmitInfo.nsignalSemaphoreCount(adr, if (value == NULL) 0 else 1)
+    }
 
 //typedef struct VkSubmitInfo {
 //    VkStructureType                sType;

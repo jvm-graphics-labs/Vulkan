@@ -1,6 +1,5 @@
 package vulkan.basics
 
-import glfw_.appBuffer
 import glfw_.glfw
 import glm_.*
 import glm_.func.rad
@@ -19,7 +18,6 @@ import vulkan.USE_STAGING
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
-import vulkan.base.tools.loadShader
 import java.io.File
 import java.nio.ByteBuffer
 
@@ -1170,7 +1168,8 @@ private class TriangleVerbose : VulkanExampleBase() {
         pipeline = pPipeline[0]
 
         // Shader modules are no longer needed once the graphics pipeline has been created
-        device destroyShaderModules shaderStages
+        vkDestroyShaderModule(device, shaderStages[0].module, null)
+        vkDestroyShaderModule(device, shaderStages[1].module, null)
 
         pipelineCreateInfo.free()
         inputAssemblyState.free()
@@ -1257,11 +1256,13 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .rotate(rotation.z.rad, 0f, 0f, 1f)
 
         // Map uniform buffer and update it
-        device.mappingMemory(uniformBufferVS.memory, 0, uboVS.size.L, 0) { data ->
-            uboVS.pack()
-            MemoryUtil.memCopy(uboVS.address, data, uboVS.size.L)
-        }/* Unmap after data has been copied
+        val pData = MemoryUtil.memAllocPointer(1)
+        VK_CHECK_RESULT(vkMapMemory(device, uniformBufferVS.memory, 0, uboVS.size.L, 0, pData))
+        uboVS.pack()
+        MemoryUtil.memCopy(uboVS.address, pData[0], uboVS.size.L)
+        /* Unmap after data has been copied
             Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU */
+        vkUnmapMemory(device, uniformBufferVS.memory)
     }
 
     override fun prepare() {
@@ -1274,10 +1275,8 @@ private class TriangleVerbose : VulkanExampleBase() {
         setupDescriptorPool()
         setupDescriptorSet()
         buildCommandBuffers()
-
-        window.show()
-
         prepared = true
+        window.show()
     }
 
     override fun render() {
@@ -1285,8 +1284,6 @@ private class TriangleVerbose : VulkanExampleBase() {
         draw()
     }
 
-    override fun viewChanged() {
-        // This function is called by the base example class each time the view is changed by user input
-        updateUniformBuffers()
-    }
+    /** This function is called by the base example class each time the view is changed by user input */
+    override fun viewChanged() = updateUniformBuffers()
 }
