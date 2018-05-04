@@ -30,7 +30,7 @@ dependencies {
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
-    compile 'com.github.kotlin-graphics:uno-sdk:fc409fb08a40a21a30296459c00e9b3507206136'
+    compile 'com.github.kotlin-graphics:uno-sdk:fc67ccf36c7da5baffa41efab4c5911be41c9c77'
     compile 'com.github.kotlin-graphics:assimp:2ba2dbbd3782c51a1349ac1a050b20e5b992b1dc'
 
     ext.spirvCrossVersion = "0.4.0"

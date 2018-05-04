@@ -97,8 +97,8 @@ class Model {
         }
         if(::vertexBuffer.isInitialized)
             vertexBuffer.destroy()
-        if(::vertexBuffer.isInitialized)
-            vertexBuffer.destroy()
+        if(::indexBuffer.isInitialized)
+            indexBuffer.destroy()
     }
 
     /**
@@ -242,7 +242,7 @@ class Model {
         val memoryProps = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
 
         vertexBuffer = floatBufferOf(vertices)
-//        indexBuffer = intBufferOf(indices)
+        indexBuffer = intBufferOf(indices)
         // Vertex buffer
         device.createBuffer(VkBufferUsage.TRANSFER_SRC_BIT.i, memoryProps, vertexStaging, vertexBuffer)
         // Index buffer
