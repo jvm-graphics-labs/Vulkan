@@ -26,7 +26,7 @@ Boilerplate code gone.
 
 Using pipeline state objects (pso) that bake state information (rasterization states, culling modes, etc.) along with the shaders into a single object, making it easy for an implementation to optimize usage (compared to OpenGL's dynamic state machine). Also demonstrates the use of pipeline derivatives.
 
-#### [03 - Descriptor sets](examples/descriptorsets) TODO
+#### [03 - Descriptor sets](examples/descriptorsets) TODO (original broken as well)
 
 Descriptors are used to pass data to shader binding points. Sets up descriptor sets, layouts, pools, creates a single pipeline based on the set layout and renders multiple objects with different descriptor sets.
 
