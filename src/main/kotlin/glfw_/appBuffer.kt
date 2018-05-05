@@ -65,7 +65,7 @@ object appBuffer {
         return res
     }
 
-    inline fun floatBufferOf(float: Float): FloatBuffer {
+    inline infix fun floatBufferOf(float: Float): FloatBuffer {
         val res = floatBuffer(1)
         res[0] = float
         return res

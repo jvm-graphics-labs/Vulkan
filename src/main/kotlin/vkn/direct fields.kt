@@ -562,12 +562,12 @@ inline var VkDeviceQueueCreateInfo.queuePriorities: FloatBuffer
     get() = VkDeviceQueueCreateInfo.npQueuePriorities(adr)
     set(value) = VkDeviceQueueCreateInfo.npQueuePriorities(adr, value)
 /** JVM custom */
-//inline var VkDeviceQueueCreateInfo.queuePriority: Float? TODO BUG
-//    get() = 0f
-//    set(value) {
-//        val buf = appBuffer.floatBufferOf(value!!)
-//        VkDeviceQueueCreateInfo.npQueuePriorities(adr, buf)
-//    }
+inline var VkDeviceQueueCreateInfo.queuePriority: Float
+    get() = VkDeviceQueueCreateInfo.npQueuePriorities(adr)[0]
+    set(value) {
+        val buf = appBuffer floatBufferOf value
+        VkDeviceQueueCreateInfo.npQueuePriorities(adr, buf)
+    }
 
 //typedef struct VkDeviceQueueCreateInfo {
 //    VkStructureType             sType;
@@ -591,10 +591,17 @@ inline var VkDeviceCreateInfo.flags: VkDeviceQueueCreateFlags
 inline var VkDeviceCreateInfo.queueCreateInfos: VkDeviceQueueCreateInfo.Buffer
     get() = VkDeviceCreateInfo.npQueueCreateInfos(adr)
     set(value) = VkDeviceCreateInfo.npQueueCreateInfos(adr, value)
+/** JVM custom */
+inline var VkDeviceCreateInfo.queueCreateInfo: VkDeviceQueueCreateInfo
+    get() = VkDeviceCreateInfo.npQueueCreateInfos(adr)[0]
+    set(value) {
+        memPutAddress(adr + VkDeviceCreateInfo.PQUEUECREATEINFOS, value.adr)
+        VkDeviceCreateInfo.nqueueCreateInfoCount(adr, 1)
+    }
 inline var VkDeviceCreateInfo.enabledLayerNames: Collection<String>
     get() = VkDeviceCreateInfo.nppEnabledLayerNames(adr).toArrayList()
     set(value) = VkDeviceCreateInfo.nppEnabledLayerNames(adr, value.toPointerBuffer())
-inline var VkDeviceCreateInfo.enabledExtensionNames: ArrayList<String>
+inline var VkDeviceCreateInfo.enabledExtensionNames: Collection<String>
     get() = VkDeviceCreateInfo.nppEnabledExtensionNames(adr).toArrayList()
     set(value) = VkDeviceCreateInfo.nppEnabledExtensionNames(adr, value.toPointerBuffer())
 inline var VkDeviceCreateInfo.enabledFeatures: VkPhysicalDeviceFeatures?
@@ -3385,8 +3392,16 @@ inline val VkSurfaceCapabilitiesKHR.supportedUsageFlags: VkImageUsageFlags get()
 //    VkImageUsageFlags                supportedUsageFlags;
 //} VkSurfaceCapabilitiesKHR;
 
-inline val VkSurfaceFormatKHR.format: VkFormat get() = VkFormat of VkSurfaceFormatKHR.nformat(adr)
-inline val VkSurfaceFormatKHR.colorSpace: VkColorSpace get() = VkColorSpace of VkSurfaceFormatKHR.ncolorSpace(adr)
+inline var VkSurfaceFormatKHR.format: VkFormat
+    get() = VkFormat of VkSurfaceFormatKHR.nformat(adr)
+    set(value) = memPutInt(adr + VkSurfaceFormatKHR.FORMAT, value.i)
+inline var VkSurfaceFormatKHR.colorSpace: VkColorSpace
+    get() = VkColorSpace of VkSurfaceFormatKHR.ncolorSpace(adr)
+    set(value) = memPutInt(adr + VkSurfaceFormatKHR.COLORSPACE, value.i)
+inline operator fun VkSurfaceFormatKHR.invoke(surfaceFormatKHR: VkSurfaceFormatKHR) {
+    format = surfaceFormatKHR.format
+    colorSpace = surfaceFormatKHR.colorSpace
+}
 //
 //typedef void (VKAPI_PTR *PFN_vkDestroySurfaceKHR)(VkInstance instance, VkSurfaceKHR surface, const VkAllocationCallbacks* pAllocator);
 //typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceSurfaceSupportKHR)(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkSurfaceKHR surface, VkBool32* pSupported);

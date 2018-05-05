@@ -815,7 +815,7 @@ abstract class VulkanExampleBase {
     }
 
     /** Load a SPIR-V shader    */
-    fun VkPipelineShaderStageCreateInfo.loadShader(fileName: String, stage: VkShaderStage) {
+    fun VkPipelineShaderStageCreateInfo.loadShader(fileName: String, stage: VkShaderStage, add: Boolean = true) {
 
         val isSpirV = fileName.substringAfterLast('.') == "spv"
         if (!isSpirV && !spirvCrossLoaded) {
@@ -836,7 +836,8 @@ abstract class VulkanExampleBase {
         }
         name = "main" // todo : make param
         assert(module != NULL)
-        shaderModules += module
+        if (add)
+            shaderModules += module
     }
 
     /** Start the main render loop  */
@@ -1116,8 +1117,8 @@ abstract class VulkanExampleBase {
     }
 
     fun mouseScrolled(wheelDelta: Float) {
-        zoom += wheelDelta * 0.005f * zoomSpeed
-        camera translate Vec3(0f, 0f, wheelDelta * 0.005f * zoomSpeed)
+        zoom += wheelDelta * zoomSpeed
+        camera translate Vec3(0f, 0f, wheelDelta * zoomSpeed)
         viewChanged()
     }
 }

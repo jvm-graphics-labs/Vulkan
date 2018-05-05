@@ -827,9 +827,9 @@ private class Triangle : VulkanExampleBase() {
         // Shaders
         val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
             // Vertex shader
-            it[0].loadShader("$assetPath/shaders/triangle/triangle.vert.spv", VkShaderStage.VERTEX_BIT)
+            it[0].loadShader("$assetPath/shaders/triangle/triangle.vert.spv", VkShaderStage.VERTEX_BIT, false)
             // Fragment shader
-            it[1].loadShader("$assetPath/shaders/triangle/triangle.frag.spv", VkShaderStage.FRAGMENT_BIT)
+            it[1].loadShader("$assetPath/shaders/triangle/triangle.frag.spv", VkShaderStage.FRAGMENT_BIT, false)
         }
         // Set pipeline shader stage info
         pipelineCreateInfo.also {
@@ -849,7 +849,8 @@ private class Triangle : VulkanExampleBase() {
         // Create rendering pipeline using the specified states
         pipeline = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 
-        // Shader modules are no longer needed once the graphics pipeline has been created
+        // Shader modules are no longer needed once the graphics pipeline has been created,
+        // normally they will be destroyed in ::destroy, but we pass false at creation above to delete them now
         device destroyShaderModules shaderStages
     }
 

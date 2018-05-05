@@ -132,11 +132,13 @@ object vk {
         return res
     }
 
+    inline fun DeviceQueueCreateInfo(): VkDeviceQueueCreateInfo {
+        return VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF)).apply {
+            type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
+        }
+    }
     inline fun DeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo {
-        val res = VkDeviceQueueCreateInfo.create(ptr.advance(VkDeviceQueueCreateInfo.SIZEOF))
-        res.type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
-        res.block()
-        return res
+        return DeviceQueueCreateInfo().also(block)
     }
 
     inline fun DeviceQueueCreateInfo(capacity: Int, block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo.Buffer {
@@ -206,11 +208,14 @@ object vk {
         return res
     }
 
+    inline fun InstanceCreateInfo(): VkInstanceCreateInfo {
+        return VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF)).apply {
+            type = VkStructureType.INSTANCE_CREATE_INFO
+        }
+    }
+
     inline fun InstanceCreateInfo(block: VkInstanceCreateInfo.() -> Unit): VkInstanceCreateInfo {
-        val res = VkInstanceCreateInfo.create(ptr.advance(VkInstanceCreateInfo.SIZEOF))
-        res.type = VkStructureType.INSTANCE_CREATE_INFO
-        res.block()
-        return res
+        return InstanceCreateInfo().also(block)
     }
 
     inline fun MappedMemoryRange(block: VkMappedMemoryRange.() -> Unit): VkMappedMemoryRange {
@@ -460,6 +465,11 @@ object vk {
 
     inline fun ImageSubresourceLayers(block: VkImageSubresourceLayers.() -> Unit): VkImageSubresourceLayers = VkImageSubresourceLayers.create(ptr.advance(VkImageSubresourceLayers.SIZEOF)).also(block)
 
+//    inline fun InstanceCreateInfo(extensions: ArrayList<String>): VkInstanceCreateInfo {
+//        return InstanceCreateInfo {
+//
+//        }
+//    }
 
     inline fun MemoryRequirements(block: VkMemoryRequirements.() -> Unit): VkMemoryRequirements = VkMemoryRequirements.create(ptr.advance(VkMemoryRequirements.SIZEOF)).also(block)
 
@@ -737,6 +747,10 @@ object vk {
             this.bindings = bindings
         }
     }
+
+//    inline fun DeviceCreateInfo(queueCreateInfo: VkDeviceQueueCreateInfo, ): VkDeviceCreateInfo {
+//
+//    }
 
     inline fun FenceCreateInfo(flags: VkFenceCreateFlags = 0): VkFenceCreateInfo {
         return FenceCreateInfo {
@@ -1652,6 +1666,14 @@ object vk {
         val pQueueFamilyProperties = VkQueueFamilyProperties.calloc(count)
         VK10.nvkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pCount, pQueueFamilyProperties.adr)
         return pQueueFamilyProperties.toCollection(arrayListOf())
+    }
+
+    inline fun getPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice,
+                                                  queueFamily: Int,
+                                                  surface: VkSurfaceKHR): Boolean {
+        val supported = appBuffer.int
+        KHRSurface.nvkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamily, surface, supported)
+        return memGetBoolean(supported)
     }
 
     inline fun getPhysicalDeviceSurfaceSupportKHR(physicalDevice: VkPhysicalDevice,

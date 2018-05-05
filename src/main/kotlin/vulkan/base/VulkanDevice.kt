@@ -172,13 +172,13 @@ constructor(
         /*  Get queue family indices for the requested queue family types
             Note that the indices may overlap depending on the implementation         */
 
-        val defaultQueuePriority = appBuffer.floatBufferOf(0f)
+        val defaultQueuePriority = 0f
 
         queueFamilyIndices.graphics =
                 if (requestedQueueTypes has VkQueueFlag.GRAPHICS_BIT) { // Graphics queue
                     queueCreateInfos += vk.DeviceQueueCreateInfo {
                         queueFamilyIndex = queueFamilyIndices.graphics
-                        queuePriorities = defaultQueuePriority
+                        queuePriority = defaultQueuePriority
                     }
                     getQueueFamilyIndex(VkQueueFlag.GRAPHICS_BIT)
                 } else NULL.i
@@ -191,7 +191,7 @@ constructor(
                         // If compute family index differs, we need an additional queue create info for the compute queue
                         queueCreateInfos += vk.DeviceQueueCreateInfo {
                             queueFamilyIndex = compute
-                            queuePriorities = defaultQueuePriority
+                            queuePriority = defaultQueuePriority
                         }
                     }
                     compute
@@ -205,7 +205,7 @@ constructor(
                         // If compute family index differs, we need an additional queue create info for the compute queue
                         queueCreateInfos += vk.DeviceQueueCreateInfo {
                             queueFamilyIndex = transfer
-                            queuePriorities = defaultQueuePriority
+                            queuePriority = defaultQueuePriority
                         }
                     }
                     transfer

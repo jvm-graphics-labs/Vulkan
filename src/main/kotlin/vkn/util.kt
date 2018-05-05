@@ -91,7 +91,10 @@ typealias VkShaderModule = Long
 typealias VkSurfaceKHR = Long
 typealias VkSwapchainKHR = Long
 
+typealias VkBufferBuffer = LongBuffer
 typealias VkDescriptorSetBuffer = LongBuffer
+typealias VkDeviceMemoryBuffer = LongBuffer
+typealias VkDeviceSizeBuffer = LongBuffer
 typealias VkSemaphoreBuffer = LongBuffer
 typealias VkSwapchainKhrBuffer = LongBuffer
 typealias VkResultBuffer = IntBuffer

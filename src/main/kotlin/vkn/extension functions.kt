@@ -656,7 +656,9 @@ inline infix fun VkPhysicalDevice.getSurfaceCapabilitiesKHR(surface: VkSurfaceKH
 inline infix fun VkPhysicalDevice.getSurfaceFormatsKHR(surface: VkSurfaceKHR): ArrayList<VkSurfaceFormatKHR> {
     return vk.getPhysicalDeviceSurfaceFormatsKHR(this, surface)
 }
-
+inline fun VkPhysicalDevice.getSurfaceSupportKHR(queueFamily: Int, surface: VkSurfaceKHR): Boolean {
+    return vk.getPhysicalDeviceSurfaceSupportKHR(this, queueFamily, surface)
+}
 inline fun VkPhysicalDevice.getSurfaceSupportKHR(queueFamilyProperties: ArrayList<VkQueueFamilyProperties>,
                                                  surface: VkSurfaceKHR): BooleanArray {
     return vk.getPhysicalDeviceSurfaceSupportKHR(this, queueFamilyProperties, surface)

@@ -8,7 +8,7 @@
 
 package vulkan.base
 
-import assimp.AiPostProcessStep
+import assimp.AiPostProcessStep as Pp
 import assimp.AiPostProcessStepsFlags
 import assimp.Importer
 import assimp.or
@@ -77,8 +77,7 @@ class Model {
 
     val parts = ArrayList<ModelPart>()
 
-    val defaultFlags = AiPostProcessStep.FlipWindingOrder or AiPostProcessStep.Triangulate or
-            AiPostProcessStep.PreTransformVertices or AiPostProcessStep.CalcTangentSpace or AiPostProcessStep.GenSmoothNormals
+    val defaultFlags = Pp.FlipWindingOrder or Pp.Triangulate or Pp.PreTransformVertices //or Pp.CalcTangentSpace or Pp.GenSmoothNormals
 
     private val dim = object {
         val min = Vec3(Float.MAX_VALUE)
