@@ -370,8 +370,8 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
         // Prepare per-object matrices with offsets and random rotations
         repeat(OBJECT_INSTANCES) {
-            rotations[it] = Vec3 { glm.linearRand(-1f, 1f) } * 2f * glm.PIf
-            rotationSpeeds[it] = Vec3 { glm.linearRand(-1f, 1f) }
+            rotations[it] = Vec3 { glm.gaussRand(-1f, 1f) } * 2f * glm.PIf
+            rotationSpeeds[it] = Vec3 { glm.gaussRand(-1f, 1f) }
         }
 
         updateUniformBuffers()
