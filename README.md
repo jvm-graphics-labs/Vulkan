@@ -34,7 +34,7 @@ Descriptors are used to pass data to shader binding points. Sets up descriptor s
 
 Dynamic uniform buffers are used for rendering multiple objects with multiple matrices stored in a single uniform buffer object. Individual matrices are dynamically addressed upon descriptor binding time, minimizing the number of required descriptor sets.
 
-#### [05 - Push constants](src/main/kotlin/vulkan/basics/05%20Push%20Constants)
+#### [05 - Push constants](src/main/kotlin/vulkan/basics/05%20Push%20Constants.kt)
 
 Uses push constants, small blocks of uniform data stored within a command buffer, to pass data to a shader without the need for uniform buffers.
 
