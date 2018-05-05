@@ -16,10 +16,10 @@ The expressiveness of Kotlin meets the power of Vulkan.
 
 ### Basics
 
-#### [01a - Triangle Verbose](src/main/kotlin/vulkan/basics/01%20Triangle%20Verbose.kt)
+#### [01a - Triangle Verbose](src/main/kotlin/vulkan/basics/01a%20Triangle%20Verbose.kt)
 Basic and verbose example for getting a colored triangle rendered to the screen using Vulkan. This is meant as a starting point for learning Vulkan from the ground up. A huge part of the code is boilerplate that is abstracted away in later examples.
 
-#### [01b - Triangle](src/main/kotlin/vulkan/basics/01%20Triangle.kt)
+#### [01b - Triangle](src/main/kotlin/vulkan/basics/01b%20Triangle.kt)
 Boilerplate code gone.
 
 #### [02 - Pipelines](src/main/kotlin/vulkan/basics/02%20Pipelines.kt)
