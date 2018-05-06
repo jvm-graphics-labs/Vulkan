@@ -49,20 +49,12 @@ private class Pipelines : VulkanExampleBase() {
     val uniformBuffer = Buffer()
 
     /** Same uniform buffer layout as shader */
-    object uboVS {
+    object uboVS : Bufferizable() {
         var projection = Mat4()
         var modelView = Mat4()
         val lightPos = Vec4(0f, 2f, 1f, 0f)
 
-        fun pack() {
-            projection to buffer
-            modelView.to(buffer, Mat4.size)
-            lightPos.to(buffer, Mat4.size * 2)
-        }
-
-        val size = Mat4.size * 2 + Vec4.size
-        val buffer = bufferBig(size)
-        val address = memAddress(buffer)
+        override val fieldOrder = arrayOf("projection", "modelView", "lightPos")
     }
 
     var pipelineLayout: VkPipelineLayout = NULL
@@ -343,8 +335,7 @@ private class Pipelines : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        uboVS.pack()
-        memCopy(uboVS.address, uniformBuffer.mapped[0], uboVS.size.L)
+        uboVS to uniformBuffer.mapped[0]
     }
 
     fun draw()    {
