@@ -60,7 +60,7 @@ private class Texture : VulkanExampleBase() {
     /** Contains all Vulkan objects that are required to store and use a texture
      *  Note that this repository contains a texture class (VulkanTexture.hpp) that encapsulates texture loading functionality
      *  in a class that is used in subsequent demos */
-    private val texture = object {
+    object texture {
         var sampler: VkSampler = NULL
         var image: VkImage = NULL
         var imageLayout = VkImageLayout.UNDEFINED
@@ -70,7 +70,7 @@ private class Texture : VulkanExampleBase() {
         var mipLevels = 0
     }
 
-    private val vertices = object {
+    object vertices {
         val inputState = cVkPipelineVertexInputStateCreateInfo { }
         lateinit var bindingDescriptions: VkVertexInputBindingDescription.Buffer
         lateinit var attributeDescriptions: VkVertexInputAttributeDescription.Buffer
@@ -82,24 +82,17 @@ private class Texture : VulkanExampleBase() {
 
     val uniformBufferVS = Buffer()
 
-    private val uboVS = object {
+    object uboVS : Bufferizable(){
+
         val projection = Mat4()
         val model = Mat4()
         val viewPos = Vec4()
         var lodBias = 0f
 
-        val size = Mat4.size * 2 + Vec4.size + Float.BYTES
-        val buffer = bufferBig(size)
-        val address = memAddress(buffer)
-        fun pack() {
-            projection to buffer
-            model.to(buffer, Mat4.size)
-            viewPos.to(buffer, Mat4.size * 2)
-            buffer.putFloat(Mat4.size * 2 + Vec4.size, lodBias)
-        }
+        override val fieldOrder = arrayOf("projection", "model", "viewPos", "lodBias")
     }
 
-    private val pipelines = object {
+    object pipelines {
         var solid: VkPipelineLayout = NULL
     }
 
@@ -771,7 +764,7 @@ private class Texture : VulkanExampleBase() {
                 VkBufferUsage.UNIFORM_BUFFER_BIT.i,
                 VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
                 uniformBufferVS,
-                uboVS.buffer)
+                uboVS.size.L)
 
         updateUniformBuffers()
     }
@@ -790,10 +783,7 @@ private class Texture : VulkanExampleBase() {
 
         uboVS.viewPos put Vec4(0f, 0f, -zoom, 0f)
 
-        uboVS.pack()
-        uniformBufferVS.mapping { dst ->
-            memCopy(uboVS.address, dst, uboVS.size.L)
-        }
+        uniformBufferVS.mapping { dst -> uboVS to dst }
     }
 
     override fun prepare() {

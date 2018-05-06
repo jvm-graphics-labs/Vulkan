@@ -45,38 +45,31 @@ private class TextureCubemap : VulkanExampleBase() {
             VertexComponent.NORMAL,
             VertexComponent.UV)
 
-    private val models = object {
+    object models {
         val skybox = Model()
         val objects = ArrayList<Model>()
         var objectIndex = 0
     }
 
-    private val uniformBuffers = object {
+    object uniformBuffers {
         val `object` = Buffer()
         val skybox = Buffer()
     }
 
-    private val uboVS = object {
+    object uboVS : Bufferizable() {
         var projection = Mat4()
         var model = Mat4()
         var lodBias = 0f
 
-        val size = Mat4.size * 2 + Float.BYTES
-        val buffer = bufferBig(size)
-        val address = memAddress(buffer)
-        fun pack() {
-            projection to buffer
-            model.to(buffer, Mat4.size)
-            buffer.putFloat(Mat4.size * 2, lodBias)
-        }
+        override val fieldOrder = arrayOf("projection", "model", "lodBias")
     }
 
-    private val pipelines = object {
+    object pipelines {
         var skybox: VkPipeline = NULL
         var reflect: VkPipeline = NULL
     }
 
-    private val descriptorSets = object {
+    object descriptorSets {
         var `object`: VkDescriptorSet = NULL
         var skybox: VkDescriptorSet = NULL
     }
@@ -368,7 +361,7 @@ private class TextureCubemap : VulkanExampleBase() {
         // Skybox
         models.skybox.loadFromFile("$assetPath/models/cube.obj", vertexLayout, 0.05f, vulkanDevice, queue)
         // Objects
-        val filenames = listOf("sphere.obj", "teapot.dae", "torusknot.obj", "venus.fbx")
+        val filenames = listOf("sphere.obj", "teapot.dae", "torusknot.obj")
         objectNames += listOf("Sphere", "Teapot", "Torusknot", "Venus")
         for (file in filenames) {
             val model = Model()
@@ -533,8 +526,7 @@ private class TextureCubemap : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        uboVS.pack()
-        memCopy(uboVS.address, uniformBuffers.`object`.mapped[0], uboVS.size.L)
+        uboVS to uniformBuffers.`object`.mapped[0]
 
         // Skybox
         viewMatrix put 1f
@@ -546,7 +538,7 @@ private class TextureCubemap : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        memCopy(uboVS.address, uniformBuffers.skybox.mapped[0], uboVS.size.L)
+        uboVS to uniformBuffers.skybox.mapped[0]
     }
 
     fun draw() {

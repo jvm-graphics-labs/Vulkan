@@ -65,9 +65,11 @@ class SpecializationConstants : VulkanExampleBase() {
 
     // Same uniform buffer layout as shader
     object uboVS : Bufferizable() {
+
         lateinit var projection: Mat4
         lateinit var modelView: Mat4
         val lightPos = Vec4(0f, -2f, 1f, 0f)
+
         override val fieldOrder = arrayOf("projection", "modelView", "lightPos")
     }
 

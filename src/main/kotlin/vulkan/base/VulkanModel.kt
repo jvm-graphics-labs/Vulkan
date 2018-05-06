@@ -79,7 +79,7 @@ class Model {
 
     val defaultFlags = Pp.FlipWindingOrder or Pp.Triangulate or Pp.PreTransformVertices or Pp.CalcTangentSpace or Pp.GenSmoothNormals
 
-    private val dim = object {
+    object dim {
         val min = Vec3(Float.MAX_VALUE)
         val max = Vec3(-Float.MAX_VALUE)
         val size = Vec3()

@@ -46,21 +46,21 @@ fun main(args: Array<String>) {
     }
 }
 
-/** Vertex layout for this example */
-private val Vertex = object {
-    //    float pos[3];
-//    float uv[2];
-    val size = Vec3.size + Vec2.size
-}
-
 class TextureArray : VulkanExampleBase() {
+
+    /** Vertex layout for this example */
+    object Vertex {
+        //    float pos[3];
+//    float uv[2];
+        val size = Vec3.size + Vec2.size
+    }
 
     // Number of array layers in texture array
     // Also used as instance count
     var layerCount = 0
     val textureArray = Texture()
 
-    private var vertices = object {
+    object vertices {
         lateinit var inputState: VkPipelineVertexInputStateCreateInfo
         lateinit var bindingDescription: VkVertexInputBindingDescription
         lateinit var attributeDescriptions: VkVertexInputAttributeDescription.Buffer
@@ -89,12 +89,12 @@ class TextureArray : VulkanExampleBase() {
         }
     }
 
-    private val uboVS = object {
+    object uboVS {
         // Global matrices
-        val matrices = object {
+        object matrices : Bufferizable() {
             var projection = Mat4()
             var view = Mat4()
-            val size = Mat4.size * 2
+            override val fieldOrder = arrayOf("projection", "view")
         }
         // Seperate data for each instance
         val instance = ArrayList<UboInstanceData>()
@@ -108,11 +108,6 @@ class TextureArray : VulkanExampleBase() {
 
         lateinit var buffer: ByteBuffer
         var address = NULL
-
-        fun pack() {
-            matrices.projection to buffer
-            matrices.view.to(buffer, Mat4.size)
-        }
     }
 
 
@@ -547,9 +542,8 @@ class TextureArray : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        uboVS.pack()
         // Only update the matrices part of the uniform buffer
-        memCopy(uboVS.address, uniformBufferVS.mapped[0], uboVS.matrices.size.L)
+        uboVS.matrices to uniformBufferVS.mapped[0]
     }
 
     fun draw() {

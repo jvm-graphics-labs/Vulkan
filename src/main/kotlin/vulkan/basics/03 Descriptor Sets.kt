@@ -43,20 +43,13 @@ private class DescriptorSets : VulkanExampleBase() {
             VertexComponent.COLOR)
 
     class Cube {
-        class Matrices {
+
+        class Matrices : Bufferizable() {
             var projection = Mat4()
             var view = Mat4()
             var model = Mat4()
 
-            fun pack() {
-                projection to buffer
-                view.to(buffer, Mat4.size)
-                model.to(buffer, Mat4.size * 2)
-            }
-
-            val size = Mat4.size * 3
-            val buffer = bufferBig(size)
-            val address = memAddress(buffer)
+            override val fieldOrder = arrayOf("projection", "view", "model")
         }
 
         val matrices = Matrices()
@@ -362,9 +355,8 @@ private class DescriptorSets : VulkanExampleBase() {
                         .rotateAssign(cube.rotation.x.rad, 1f, 0f, 0f)
                         .rotateAssign(cube.rotation.y.rad, 0f, 1f, 0f)
                         .rotateAssign(cube.rotation.z.rad, 0f, 0f, 1f)
-                pack()
             }
-            memCopy(cube.matrices.address, cube.uniformBuffer.mapped[0], cube.matrices.size.L)
+            cube.matrices to cube.uniformBuffer.mapped[0]
         }
     }
 

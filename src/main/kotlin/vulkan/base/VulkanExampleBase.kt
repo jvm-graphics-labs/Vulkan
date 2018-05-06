@@ -100,7 +100,7 @@ abstract class VulkanExampleBase {
     // Wraps the swap chain to present images (framebuffers) to the windowing system
     var swapChain = VulkanSwapChain()
     // Synchronization semaphores
-    private val semaphores = object {
+    object semaphores{
         // Swap chain image presentation
         var presentComplete: VkSemaphore = NULL
         // Command buffer submission and execution
