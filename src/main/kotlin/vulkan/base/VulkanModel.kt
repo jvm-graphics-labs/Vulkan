@@ -77,7 +77,7 @@ class Model {
 
     val parts = ArrayList<ModelPart>()
 
-    val defaultFlags = Pp.FlipWindingOrder or Pp.Triangulate or Pp.PreTransformVertices //or Pp.CalcTangentSpace or Pp.GenSmoothNormals
+    val defaultFlags = Pp.FlipWindingOrder or Pp.Triangulate or Pp.PreTransformVertices or Pp.CalcTangentSpace or Pp.GenSmoothNormals
 
     private val dim = object {
         val min = Vec3(Float.MAX_VALUE)
@@ -94,9 +94,9 @@ class Model {
             vk.destroyBuffer(dev, indices.buffer)
             vk.freeMemory(dev, indices.memory)
         }
-        if(::vertexBuffer.isInitialized)
+        if (::vertexBuffer.isInitialized)
             vertexBuffer.destroy()
-        if(::indexBuffer.isInitialized)
+        if (::indexBuffer.isInitialized)
             indexBuffer.destroy()
     }
 
@@ -158,49 +158,47 @@ class Model {
                 val texCoord = mesh.textureCoords.getOrNull(0)?.getOrNull(j)?.let {
                     Vec3(it[0], it[1], it.getOrElse(2) { 0f })
                 } ?: Vec3()
-                val tangent = mesh.tangents.getOrNull(j) ?: Vec3()
-                val biTangent = mesh.bitangents.getOrNull(j) ?: Vec3()
+                val tangent = mesh.tangents.getOrElse(j) { Vec3() }
+                val biTangent = mesh.bitangents.getOrElse(j) { Vec3() }
 
-                for (component in layout.components) {
-                    with(vertices) {
-                        when (component) {
-                            VertexComponent.POSITION -> {
-                                add(pos.x * scale.x + center.x)
-                                add(-pos.y * scale.y + center.y)
-                                add(pos.z * scale.z + center.z)
-                            }
-                            VertexComponent.NORMAL -> {
-                                add(normal.x)
-                                add(-normal.y)
-                                add(normal.z)
-                            }
-                            VertexComponent.UV -> {
-                                add(texCoord.x * uvScale.s)
-                                add(texCoord.y * uvScale.t)
-                            }
-                            VertexComponent.COLOR -> {
-                                add(color.r)
-                                add(color.g)
-                                add(color.b)
-                            }
-                            VertexComponent.TANGENT -> {
-                                add(tangent.x)
-                                add(tangent.y)
-                                add(tangent.z)
-                            }
-                            VertexComponent.BITANGENT -> {
-                                add(biTangent.x)
-                                add(biTangent.y)
-                                add(biTangent.z)
-                            }
-                        // Dummy components for padding
-                            VertexComponent.DUMMY_FLOAT -> add(0f)
-                            VertexComponent.DUMMY_VEC4 -> {
-                                add(0f)
-                                add(0f)
-                                add(0f)
-                                add(0f)
-                            }
+                for (component in layout.components) with(vertices) {
+                    when (component) {
+                        VertexComponent.POSITION -> {
+                            add(pos.x * scale.x + center.x)
+                            add(-pos.y * scale.y + center.y)
+                            add(pos.z * scale.z + center.z)
+                        }
+                        VertexComponent.NORMAL -> {
+                            add(normal.x)
+                            add(-normal.y)
+                            add(normal.z)
+                        }
+                        VertexComponent.UV -> {
+                            add(texCoord.x * uvScale.s)
+                            add(texCoord.y * uvScale.t)
+                        }
+                        VertexComponent.COLOR -> {
+                            add(color.r)
+                            add(color.g)
+                            add(color.b)
+                        }
+                        VertexComponent.TANGENT -> {
+                            add(tangent.x)
+                            add(tangent.y)
+                            add(tangent.z)
+                        }
+                        VertexComponent.BITANGENT -> {
+                            add(biTangent.x)
+                            add(biTangent.y)
+                            add(biTangent.z)
+                        }
+                    // Dummy components for padding
+                        VertexComponent.DUMMY_FLOAT -> add(0f)
+                        VertexComponent.DUMMY_VEC4 -> {
+                            add(0f)
+                            add(0f)
+                            add(0f)
+                            add(0f)
                         }
                     }
                 }
@@ -219,16 +217,13 @@ class Model {
             parts[i].vertexCount = mesh.numVertices
 
             val indexBase = indices.size
-            for (j in 0 until mesh.numFaces) {
-                val face = mesh.faces[j]
-                if (face.size != 3) continue
+            mesh.faces.filter { it.size == 3 }.forEach {
                 for (k in 0..2)
-                    indices += indexBase + face[k]
+                    indices += indexBase + it[k]
                 parts[i].indexCount += 3
                 indexCount += 3
             }
         }
-
 
         val vBufferSize = vertices.size * Float.BYTES
         val iBufferSize = indices.size * Int.BYTES

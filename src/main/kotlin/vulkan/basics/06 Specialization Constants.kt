@@ -87,7 +87,7 @@ class SpecializationConstants : VulkanExampleBase() {
         camera.setPerspective(60f, (size.x / 3f) / size.y, 0.1f, 512f)
         camera.setRotation(Vec3(-40f, -90f, 0f))
         camera.setTranslation(Vec3(0f, 0f, -2f))
-//        settings.overlay = true
+        settings.overlay = false // TODO
     }
 
     override fun destroy() {
@@ -265,7 +265,9 @@ class SpecializationConstants : VulkanExampleBase() {
         // Prepare specialization data
 
         // Host data to take specialization constants from
-        val specializationData = appBuffer.buffer(Int.BYTES + Float.BYTES)
+        val specializationData = appBuffer.buffer(Int.BYTES + Float.BYTES).apply {
+            putFloat(Int.BYTES, 0.5f)
+        }
 //        {
 //            // Sets the lighting model used in the fragment "uber" shader
 //            uint32_t lightingModel

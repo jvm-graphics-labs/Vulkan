@@ -1,6 +1,8 @@
 package vulkan.base
 
 import glfw_.*
+import glm_.detail.GLM_DEPTH_CLIP_SPACE
+import glm_.detail.GLM_DEPTH_ZERO_TO_ONE
 import glm_.f
 import glm_.i
 import glm_.set
@@ -185,6 +187,8 @@ abstract class VulkanExampleBase {
     var spirvCrossLoaded = false
 
     init {
+
+        GLM_DEPTH_CLIP_SPACE = GLM_DEPTH_ZERO_TO_ONE
 
         settings.validation = ENABLE_VALIDATION
 

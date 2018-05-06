@@ -20,7 +20,7 @@ The expressiveness of Kotlin meets the power of Vulkan.
 Basic and verbose example for getting a colored triangle rendered to the screen using Vulkan. This is meant as a starting point for learning Vulkan from the ground up. A huge part of the code is boilerplate that is abstracted away in later examples.
 
 #### [01b - Triangle](src/main/kotlin/vulkan/basics/01b%20Triangle.kt)
-Boilerplate code gone.
+Boilerplate code gone, 1/3 of code less.
 
 #### [02 - Pipelines](src/main/kotlin/vulkan/basics/02%20Pipelines.kt)
 

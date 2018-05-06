@@ -1173,22 +1173,22 @@ inline var VkPipelineInputAssemblyStateCreateInfo.primitiveRestartEnable
 //} VkPipelineTessellationStateCreateInfo;
 
 
-inline var VkViewport.x
+inline var VkViewport.x: Float
     get() = VkViewport.nx(adr)
     set(value) = VkViewport.nx(adr, value)
-inline var VkViewport.y
+inline var VkViewport.y: Float
     get() = VkViewport.ny(adr)
     set(value) = VkViewport.ny(adr, value)
-inline var VkViewport.width
+inline var VkViewport.width: Float
     get() = VkViewport.nwidth(adr)
     set(value) = VkViewport.nwidth(adr, value)
-inline var VkViewport.height
+inline var VkViewport.height: Float
     get() = VkViewport.nheight(adr)
     set(value) = VkViewport.nheight(adr, value)
-inline var VkViewport.minDepth
+inline var VkViewport.minDepth: Float
     get() = VkViewport.nminDepth(adr)
     set(value) = VkViewport.nminDepth(adr, value)
-inline var VkViewport.maxDepth
+inline var VkViewport.maxDepth: Float
     get() = VkViewport.nmaxDepth(adr)
     set(value) = VkViewport.nmaxDepth(adr, value)
 
@@ -3398,6 +3398,7 @@ inline var VkSurfaceFormatKHR.format: VkFormat
 inline var VkSurfaceFormatKHR.colorSpace: VkColorSpace
     get() = VkColorSpace of VkSurfaceFormatKHR.ncolorSpace(adr)
     set(value) = memPutInt(adr + VkSurfaceFormatKHR.COLORSPACE, value.i)
+
 inline operator fun VkSurfaceFormatKHR.invoke(surfaceFormatKHR: VkSurfaceFormatKHR) {
     format = surfaceFormatKHR.format
     colorSpace = surfaceFormatKHR.colorSpace

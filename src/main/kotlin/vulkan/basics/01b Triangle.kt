@@ -439,11 +439,6 @@ private class Triangle : VulkanExampleBase() {
             indices.memory = device allocateMemory memAlloc
             device.bindBufferMemory(indices.buffer, indices.memory)
 
-//            val cmdBufferBeginInfo = VkCommandBufferBeginInfo.calloc().apply {
-//                sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
-//                pNext(NULL)
-//            }
-
             /*  Buffer copies have to be submitted to a queue, so we need a command buffer for them
                 Note: Some devices offer a dedicated transfer queue (with only the transfer bit set) that may be faster
                 when doing lots of copies             */
