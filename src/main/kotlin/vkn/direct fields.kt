@@ -924,6 +924,12 @@ inline var VkImageCreateInfo.format: VkFormat
 inline var VkImageCreateInfo.extent: VkExtent3D
     get() = VkImageCreateInfo.nextent(adr)
     set(value) = VkImageCreateInfo.nextent(adr, value)
+
+/** JVM custom */
+inline fun VkImageCreateInfo.extent(extent: Vec3i) {
+    extent.set(extent.x, extent.y, extent.z)
+}
+
 inline var VkImageCreateInfo.mipLevels
     get() = VkImageCreateInfo.nmipLevels(adr)
     set(value) = VkImageCreateInfo.nmipLevels(adr, value)
