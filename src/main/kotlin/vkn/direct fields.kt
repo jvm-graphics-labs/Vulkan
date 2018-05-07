@@ -927,7 +927,7 @@ inline var VkImageCreateInfo.extent: VkExtent3D
 
 /** JVM custom */
 inline fun VkImageCreateInfo.extent(extent: Vec3i) {
-    extent.set(extent.x, extent.y, extent.z)
+    this.extent.set(extent.x, extent.y, extent.z)
 }
 
 inline var VkImageCreateInfo.mipLevels
@@ -2231,7 +2231,10 @@ inline var VkBufferImageCopy.imageOffset: VkOffset3D
 inline var VkBufferImageCopy.imageExtent: VkExtent3D
     get() = VkBufferImageCopy.nimageExtent(adr)
     set(value) = VkBufferImageCopy.nimageExtent(adr, value)
-
+/** JVM custom */
+inline fun VkBufferImageCopy.imageExtent(extent: Vec3i) {
+    this.imageExtent.set(extent.x, extent.y, extent.z)
+}
 
 //typedef union VkClearColorValue {
 //    float       float32[4];

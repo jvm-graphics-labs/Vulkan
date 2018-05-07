@@ -85,10 +85,9 @@ private class Triangle : VulkanExampleBase() {
     object uboVS : Bufferizable() {
 
         var projectionMatrix = Mat4()
+        @Order(1)
         var modelMatrix = Mat4()
         var viewMatrix = Mat4()
-
-        override val fieldOrder = arrayOf("projectionMatrix", "modelMatrix", "viewMatrix")
     }
 
     /** The pipeline layout is used by a pipline to access the descriptor sets

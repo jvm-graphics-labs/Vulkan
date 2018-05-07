@@ -49,7 +49,7 @@ private class DescriptorSets : VulkanExampleBase() {
             var view = Mat4()
             var model = Mat4()
 
-            override val fieldOrder = arrayOf("projection", "view", "model")
+            override var fieldOrder = arrayOf("projection", "view", "model")
         }
 
         val matrices = Matrices()

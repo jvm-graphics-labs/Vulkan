@@ -107,7 +107,7 @@ class RayTracing : VulkanExampleBase() {
 
         lateinit var _pad: Vec3i
 
-        override val fieldOrder = arrayOf("pos", "radius", "diffuse", "specular", "id")
+        override var fieldOrder = arrayOf("pos", "radius", "diffuse", "specular", "id")
 
         companion object {
             val size = Vec4.size * 3
@@ -124,7 +124,7 @@ class RayTracing : VulkanExampleBase() {
 
         lateinit var _pad: Vec3i
 
-        override val fieldOrder = arrayOf("normal", "distance", "diffuse", "specular", "id")
+        override var fieldOrder = arrayOf("normal", "distance", "diffuse", "specular", "id")
     }
 
     init {

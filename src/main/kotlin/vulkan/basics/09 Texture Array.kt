@@ -94,7 +94,6 @@ class TextureArray : VulkanExampleBase() {
         object matrices : Bufferizable() {
             var projection = Mat4()
             var view = Mat4()
-            override val fieldOrder = arrayOf("projection", "view")
         }
         // Seperate data for each instance
         val instance = ArrayList<UboInstanceData>()

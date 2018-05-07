@@ -8,21 +8,34 @@
 //
 //package vulkan.basics
 //
+//import glfw_.appBuffer
+//import glm_.L
+//import glm_.b
+//import glm_.glm
 //import glm_.mat4x4.Mat4
+//import glm_.set
+//import glm_.vec2.Vec2
 //import glm_.vec2.Vec2i
 //import glm_.vec3.Vec3
 //import glm_.vec3.Vec3i
 //import glm_.vec4.Vec4
-//import org.lwjgl.system.MemoryUtil.NULL
+//import org.lwjgl.system.MemoryUtil.*
 //import org.lwjgl.vulkan.VkDescriptorImageInfo
 //import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 //import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 //import org.lwjgl.vulkan.VkVertexInputBindingDescription
 //import uno.buffer.bufferBig
+//import uno.buffer.destroy
+//import uno.kotlin.buffers.capacity
 //import vkn.*
+//import vulkan.VERTEX_BUFFER_BIND_ID
+//import vulkan.assetPath
 //import vulkan.base.Buffer
 //import vulkan.base.Model
 //import vulkan.base.VulkanExampleBase
+//import vulkan.base.tools
+//import java.util.concurrent.ThreadLocalRandom
+//import kotlin.system.measureTimeMillis
 //
 //
 //fun main(args: Array<String>) {
@@ -39,45 +52,37 @@
 //
 //    /** Vertex layout for this example */
 //    object Vertex {
-////    float pos[3];
+//        //    float pos[3];
 ////    float uv[2];
 ////    float normal[3];
+//        val offsetPos = 0
+//        val offsetUv = Vec3.size
+//        val offsetNor = offsetUv + Vec2.size
+//        val size = Vec3.size * 2 + Vec2.size
 //    }
 //
 //    /** Fractal noise generator based on perlin noise above */
-//    class FractalNoise {
+//    object fractalNoise {
 //
-//        private :
-//        PerlinNoise<float> perlinNoise
-//        uint32_t octaves
-//        T frequency
-//        T amplitude
-//        T persistence
-//        public :
+//        val octaves = 6
+//        var frequency = 0f
+//        var amplitude = 0f
+//        var persistence = 0.5f
 //
-//        FractalNoise(const PerlinNoise<T> &perlinNoise)
-//        {
-//            this->perlinNoise = perlinNoise
-//            octaves = 6
-//            persistence = (T)0.5
-//        }
-//
-//        T noise(T x, T y, T z)
-//        {
-//            T sum = 0
-//            T frequency =(T)1
-//            T amplitude =(T)1
-//            T max =(T)0
-//            for (int32_t i = 0; i < octaves; i++)
-//            {
-//                sum += perlinNoise.noise(x * frequency, y * frequency, z * frequency) * amplitude
+//        fun noise(v: Vec3): Float {
+//            var sum = 0f
+//            var frequency = 1f
+//            var amplitude = 1f
+//            var max = 0f
+//            for (i in 0 until octaves) {
+//                sum += glm.perlin(v * frequency) * amplitude
 //                max += amplitude
 //                amplitude *= persistence
-//                frequency *= (T)2
+//                frequency *= 2f
 //            }
 //
-//            sum = sum / max
-//            return (sum + (T)1.0) / (T)2.0
+//            sum /= max
+//            return (sum + 1f) / 2f
 //        }
 //    }
 //
@@ -114,10 +119,11 @@
 //
 //    object uboVS : Bufferizable() {
 //        lateinit var projection: Mat4
+//        @Order(1)
 //        lateinit var model: Mat4
 //        lateinit var viewPos: Vec4
+//        @Order(3)
 //        val depth = 0f
-//        override val fieldOrder = arrayOf("projection", "model", "viewPos", "depth")
 //    }
 //
 //    object pipelines {
@@ -254,427 +260,316 @@
 //        // Generate perlin based noise
 //        println("Generating ${ext.x} x ${ext.y} x ${ext.z} noise texture...")
 //
-//        auto tStart = std ::chrono::high_resolution_clock::now()
+////        auto tStart = std ::chrono::high_resolution_clock::now()
 //
-//        PerlinNoise<float> perlinNoise
-//                FractalNoise<float> fractalNoise (perlinNoise)
+//        /*  Maximum value that can be returned by the rand function:
+//            define RAND_MAX 0x7fff
+//            0111 1111 1111 1111
+//         */
+//        fun rand() = ThreadLocalRandom.current().nextInt() ushr 1
 //
-//        const int32_t noiseType = rand() % 2
-//        const float noiseScale = static_cast<float>(rand() % 10) + 4.0f
+//        val time = measureTimeMillis {
 //
-//        #pragma omp parallel for
-//            for (int32_t z = 0; z < texture.depth; z++)
-//        {
-//            for (uint32_t y = 0; y < texture.height; y++)
-//            {
-//                for (int32_t x = 0; x < texture.width; x++)
-//                {
-//                    float nx =(float) x /(float) texture . width
-//                            float ny =(float) y /(float) texture . height
-//                            float nz =(float) z /(float) texture . depth
-//                    #define FRACTAL
-//                    #ifdef FRACTAL
-//                        float n = fractalNoise . noise (nx * noiseScale, ny * noiseScale, nz * noiseScale)
-//                    #else
-//                    float n = 20.0 * perlinNoise.noise(nx, ny, nz)
-//                    #endif
-//                    n = n - floor(n)
+//            val FRACTAL = true
+//            val noiseScale = rand() % 10 + 4f
 //
-//                    data[x + y * texture.width + z * texture.width * texture.height] = static_cast<uint8_t>(floor(n * 255))
-//                }
-//            }
+//            for (z in 0 until texture.extent.z)
+//                for (y in 0 until texture.extent.y)
+//                    for (x in 0 until texture.extent.x) {
+//
+//                        val v = Vec3(x, y, z) / texture.extent
+//                        var n = when {
+//                            FRACTAL -> fractalNoise.noise(v * noiseScale)
+//                            else -> 20f * glm.perlin(v)
+//                        }
+//                        n -= glm.floor(n)
+//
+//                        data[x + y * texture.extent.x + z * texture.extent.x * texture.extent.y] = glm.floor(n * 255).b
+//                    }
 //        }
-//
-//        auto tEnd = std ::chrono::high_resolution_clock::now()
-//        auto tDiff = std ::chrono::duration < double, std::milli>(tEnd-tStart).count()
-//
-//        std::cout < < "Done in " << tDiff << "ms" << std::endl
+//        println("Done in ${time}ms")
 //
 //        // Create a host-visible staging buffer that contains the raw image data
-//        VkBuffer stagingBuffer
-//                VkDeviceMemory stagingMemory
 //
-//                // Buffer object
-//                VkBufferCreateInfo bufferCreateInfo = vks ::initializers::bufferCreateInfo()
-//        bufferCreateInfo.size = texMemSize
-//        bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-//        bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-//        VK_CHECK_RESULT(vkCreateBuffer(device, & bufferCreateInfo, nullptr, & stagingBuffer))
+//        // Buffer object
+//        val bufferCreateInfo = vk.BufferCreateInfo {
+//            size = texMemSize.L
+//            usage = VkBufferUsage.TRANSFER_SRC_BIT.i
+//            sharingMode = VkSharingMode.EXCLUSIVE
+//        }
+//        val stagingBuffer: VkBuffer = device createBuffer bufferCreateInfo
 //
 //        // Allocate host visible memory for data upload
-//        VkMemoryAllocateInfo memAllocInfo = vks ::initializers::memoryAllocateInfo()
-//        VkMemoryRequirements memReqs = {}
-//        vkGetBufferMemoryRequirements(device, stagingBuffer, & memReqs)
-//        memAllocInfo.allocationSize = memReqs.size
-//        memAllocInfo.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-//        VK_CHECK_RESULT(vkAllocateMemory(device, & memAllocInfo, nullptr, & stagingMemory))
-//        VK_CHECK_RESULT(vkBindBufferMemory(device, stagingBuffer, stagingMemory, 0))
+//        val memReqs = device getBufferMemoryRequirements stagingBuffer
+//        val memAllocInfo = vk.MemoryAllocateInfo {
+//            allocationSize = memReqs.size
+//            memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+//        }
+//        val stagingMemory = device allocateMemory memAllocInfo
+//        device.bindBufferMemory(stagingBuffer, stagingMemory)
 //
 //        // Copy texture data into staging buffer
-//        uint8_t * mapped
-//        VK_CHECK_RESULT(vkMapMemory(device, stagingMemory, 0, memReqs.size, 0, (void * *)& mapped))
-//        memcpy(mapped, data, texMemSize)
-//        vkUnmapMemory(device, stagingMemory)
+//        device.mappingMemory(stagingMemory, 0, memReqs.size) { mapped ->
+//            memCopy(memAddress(data), mapped, texMemSize.L)
+//        }
 //
-//        VkCommandBuffer copyCmd = VulkanExampleBase ::createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true)
+//        val copyCmd = super.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
 //
 //        // Image barrier for optimal image
 //
 //        // The sub resource range describes the regions of the image we will be transition
-//        VkImageSubresourceRange subresourceRange = {}
-//        subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//        subresourceRange.baseMipLevel = 0
-//        subresourceRange.levelCount = 1
-//        subresourceRange.layerCount = 1
-//
+//        val subresourceRange = vk.ImageSubresourceRange {
+//            aspectMask = VkImageAspect.COLOR_BIT.i
+//            baseMipLevel = 0
+//            levelCount = 1
+//            layerCount = 1
+//        }
 //        // Optimal image will be used as destination for the copy, so we must transfer from our
 //        // initial undefined image layout to the transfer destination layout
-//        vks::tools::setImageLayout(
+//        tools.setImageLayout(
 //                copyCmd,
 //                texture.image,
-//                VK_IMAGE_LAYOUT_UNDEFINED,
-//                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+//                VkImageLayout.UNDEFINED,
+//                VkImageLayout.TRANSFER_DST_OPTIMAL,
 //                subresourceRange)
 //
 //        // Copy 3D noise data to texture
 //
 //        // Setup buffer copy regions
-//        VkBufferImageCopy bufferCopyRegion {}
-//        bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-//        bufferCopyRegion.imageSubresource.mipLevel = 0
-//        bufferCopyRegion.imageSubresource.baseArrayLayer = 0
-//        bufferCopyRegion.imageSubresource.layerCount = 1
-//        bufferCopyRegion.imageExtent.width = texture.width
-//        bufferCopyRegion.imageExtent.height = texture.height
-//        bufferCopyRegion.imageExtent.depth = texture.depth
-//
-//        vkCmdCopyBufferToImage(
-//                copyCmd,
+//        val bufferCopyRegion = vk.BufferImageCopy {
+//            imageSubresource.apply {
+//                aspectMask = VkImageAspect.COLOR_BIT.i
+//                mipLevel = 0
+//                baseArrayLayer = 0
+//                layerCount = 1
+//            }
+//            imageExtent(texture.extent)
+//        }
+//        copyCmd.copyBufferToImage(
 //                stagingBuffer,
 //                texture.image,
-//                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-//                1,
-//                & bufferCopyRegion)
+//                VkImageLayout.TRANSFER_DST_OPTIMAL,
+//                bufferCopyRegion)
 //
 //        // Change texture image layout to shader read after all mip levels have been copied
-//        texture.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-//        vks::tools::setImageLayout(
+//        texture.imageLayout = VkImageLayout.SHADER_READ_ONLY_OPTIMAL
+//        tools.setImageLayout(
 //                copyCmd,
 //                texture.image,
-//                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+//                VkImageLayout.TRANSFER_DST_OPTIMAL,
 //                texture.imageLayout,
 //                subresourceRange)
 //
-//        VulkanExampleBase::flushCommandBuffer(copyCmd, queue, true)
+//        super.flushCommandBuffer(copyCmd, queue, true)
 //
 //        // Clean up staging resources
-//        delete[] data
-//                vkFreeMemory(device, stagingMemory, nullptr)
-//        vkDestroyBuffer(device, stagingBuffer, nullptr)
+//        data.destroy()
+//        device freeMemory stagingMemory
+//        device destroyBuffer stagingBuffer
 //        regenerateNoise = false
 //    }
 //
-//    // Free all Vulkan resources used a texture object
-//    void destroyTextureImage(Texture texture)
-//    {
-//        if (texture.view != VK_NULL_HANDLE)
-//            vkDestroyImageView(device, texture.view, nullptr)
-//        if (texture.image != VK_NULL_HANDLE)
-//            vkDestroyImage(device, texture.image, nullptr)
-//        if (texture.sampler != VK_NULL_HANDLE)
-//            vkDestroySampler(device, texture.sampler, nullptr)
-//        if (texture.deviceMemory != VK_NULL_HANDLE)
-//            vkFreeMemory(device, texture.deviceMemory, nullptr)
-//    }
-//
-//    void buildCommandBuffers()
-//    {
-//        VkCommandBufferBeginInfo cmdBufInfo = vks ::initializers::commandBufferBeginInfo()
-//
-//        VkClearValue clearValues [2]
-//        clearValues[0].color = defaultClearColor
-//        clearValues[1].depthStencil = { 1.0f, 0 }
-//
-//        VkRenderPassBeginInfo renderPassBeginInfo = vks ::initializers::renderPassBeginInfo()
-//        renderPassBeginInfo.renderPass = renderPass
-//        renderPassBeginInfo.renderArea.offset.x = 0
-//        renderPassBeginInfo.renderArea.offset.y = 0
-//        renderPassBeginInfo.renderArea.extent.width = width
-//        renderPassBeginInfo.renderArea.extent.height = height
-//        renderPassBeginInfo.clearValueCount = 2
-//        renderPassBeginInfo.pClearValues = clearValues
-//
-//        for (int32_t i = 0; i < drawCmdBuffers.size(); ++i)
-//        {
-//            // Set target frame buffer
-//            renderPassBeginInfo.framebuffer = frameBuffers[i]
-//
-//            VK_CHECK_RESULT(vkBeginCommandBuffer(drawCmdBuffers[i], & cmdBufInfo))
-//
-//            vkCmdBeginRenderPass(drawCmdBuffers[i], & renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE)
-//
-//            VkViewport viewport = vks ::initializers::viewport((float) width, (float) height, 0.0f, 1.0f)
-//            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, & viewport)
-//
-//            VkRect2D scissor = vks ::initializers::rect2D(width, height, 0, 0)
-//            vkCmdSetScissor(drawCmdBuffers[i], 0, 1, & scissor)
-//
-//            vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, & descriptorSet, 0, NULL)
-//            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.solid)
-//
-//            VkDeviceSize offsets [1] = { 0 }
-//            vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, & vertexBuffer . buffer, offsets)
-//            vkCmdBindIndexBuffer(drawCmdBuffers[i], indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32)
-//            vkCmdDrawIndexed(drawCmdBuffers[i], indexCount, 1, 0, 0, 0)
-//
-//            vkCmdEndRenderPass(drawCmdBuffers[i])
-//
-//            VK_CHECK_RESULT(vkEndCommandBuffer(drawCmdBuffers[i]))
+//    /** Free all Vulkan resources used a texture object */
+//    fun destroyTextureImage() {
+//        device.apply {
+//            if (texture.view != NULL)
+//                destroyImageView(texture.view)
+//            if (texture.image != NULL)
+//                destroyImage(texture.image)
+//            if (texture.sampler != NULL)
+//                destroySampler(texture.sampler)
+//            if (texture.deviceMemory != NULL)
+//                freeMemory(texture.deviceMemory)
 //        }
 //    }
 //
-//    void draw()
-//    {
-//        VulkanExampleBase::prepareFrame()
+//    override fun buildCommandBuffers() {
+//
+//        val cmdBufInfo = vk.CommandBufferBeginInfo()
+//
+//        val clearValues = vk.ClearValue(2)
+//        clearValues[0].color(defaultClearColor)
+//        clearValues[1].depthStencil(1f, 0)
+//
+//        val renderPassBeginInfo = vk.RenderPassBeginInfo {
+//            renderPass = this@Texture3d.renderPass
+//            renderArea.apply {
+//                offset(0)
+//                extent(size)
+//            }
+//            this.clearValues = clearValues
+//        }
+//        for (i in drawCmdBuffers.indices) {
+//            // Set target frame buffer
+//            renderPassBeginInfo.framebuffer(frameBuffers[i])
+//
+//            drawCmdBuffers[i].apply {
+//
+//                begin(cmdBufInfo)
+//
+//                beginRenderPass(renderPassBeginInfo, VkSubpassContents.INLINE)
+//
+//                setViewport(size)
+//
+//                setScissor(size)
+//
+//                bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
+//                bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.solid)
+//
+//                bindVertexBuffers(VERTEX_BUFFER_BIND_ID, vertexBuffer.buffer)
+//                bindIndexBuffer(indexBuffer.buffer, 0, VkIndexType.UINT32)
+//                drawIndexed(indexCount, 1, 0, 0, 0)
+//
+//                endRenderPass()
+//
+//                end()
+//            }
+//        }
+//    }
+//
+//    fun draw() {
+//
+//        super.prepareFrame()
 //
 //        // Command buffer to be sumitted to the queue
-//        submitInfo.commandBufferCount = 1
-//        submitInfo.pCommandBuffers = & drawCmdBuffers [currentBuffer]
+//        submitInfo.commandBuffer = drawCmdBuffers[currentBuffer]
 //
 //        // Submit to queue
-//        VK_CHECK_RESULT(vkQueueSubmit(queue, 1, & submitInfo, VK_NULL_HANDLE))
+//        queue submit submitInfo
 //
-//        VulkanExampleBase::submitFrame()
+//        super.submitFrame()
 //    }
 //
-//    void generateQuad()
-//    {
+//    fun generateQuad() {
 //        // Setup vertices for a single uv-mapped quad made from two triangles
-//        std::vector<Vertex> vertices =
-//        {
-//            { { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f },{ 0.0f, 0.0f, 1.0f } },
-//            { { -1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f },{ 0.0f, 0.0f, 1.0f } },
-//            { { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f },{ 0.0f, 0.0f, 1.0f } },
-//            { { 1.0f, -1.0f, 0.0f }, { 1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f } }
-//        }
+//        val vertices = appBuffer.floatBufferOf(
+//                +1f, +1f, 0f, 1f, 1f, 0f, 0f, 1f,
+//                -1f, +1f, 0f, 0f, 1f, 0f, 0f, 1f,
+//                -1f, -1f, 0f, 0f, 0f, 0f, 0f, 1f,
+//                +1f, -1f, 0f, 1f, 0f, 0f, 0f, 1f)
 //
 //        // Setup indices
-//        std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 }
-//        indexCount = static_cast<uint32_t>(indices.size())
+//        val indices = appBuffer.intBufferOf(0, 1, 2, 2, 3, 0)
+//        indexCount = indices.capacity
 //
 //        // Create buffers
 //        // For the sake of simplicity we won't stage the vertex data to the gpu memory
 //        // Vertex buffer
-//        VK_CHECK_RESULT(vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &vertexBuffer,
-//        vertices.size() * sizeof(Vertex),
-//        vertices.data()))
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.VERTEX_BUFFER_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                vertexBuffer,
+//                vertices)
 //        // Index buffer
-//        VK_CHECK_RESULT(vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &indexBuffer,
-//        indices.size() * sizeof(uint32_t),
-//        indices.data()))
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.INDEX_BUFFER_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                indexBuffer,
+//                indices)
 //    }
 //
-//    void setupVertexDescriptions()
-//    {
+//    fun setupVertexDescriptions() {
 //        // Binding description
-//        vertices.inputBinding.resize(1)
-//        vertices.inputBinding[0] =
-//                vks::initializers::vertexInputBindingDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        sizeof(Vertex),
-//                        VK_VERTEX_INPUT_RATE_VERTEX)
+//        vertices.inputBinding = vk.VertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, Vertex.size, VkVertexInputRate.VERTEX)
 //
 //        // Attribute descriptions
 //        // Describes memory layout and shader positions
-//        vertices.inputAttributes.resize(3)
-//        // Location 0 : Position
-//        vertices.inputAttributes[0] =
-//                vks::initializers::vertexInputAttributeDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        0,
-//                        VK_FORMAT_R32G32B32_SFLOAT,
-//                        offsetof(Vertex, pos))
-//        // Location 1 : Texture coordinates
-//        vertices.inputAttributes[1] =
-//                vks::initializers::vertexInputAttributeDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        1,
-//                        VK_FORMAT_R32G32_SFLOAT,
-//                        offsetof(Vertex, uv))
-//        // Location 1 : Vertex normal
-//        vertices.inputAttributes[2] =
-//                vks::initializers::vertexInputAttributeDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        2,
-//                        VK_FORMAT_R32G32B32_SFLOAT,
-//                        offsetof(Vertex, normal))
+//        vertices.inputAttributes = vk.VertexInputAttributeDescription(
+//                // Location 0 : Position
+//                VERTEX_BUFFER_BIND_ID, 0, VkFormat.R32G32B32_SFLOAT, Vertex.offsetPos,
+//                // Location 1 : Texture coordinates
+//                VERTEX_BUFFER_BIND_ID, 1, VkFormat.R32G32_SFLOAT, Vertex.offsetUv,
+//                // Location 1 : Vertex normal
+//                VERTEX_BUFFER_BIND_ID, 2, VkFormat.R32G32B32_SFLOAT, Vertex.offsetNor)
 //
-//        vertices.inputState = vks::initializers::pipelineVertexInputStateCreateInfo()
-//        vertices.inputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertices.inputBinding.size())
-//        vertices.inputState.pVertexBindingDescriptions = vertices.inputBinding.data()
-//        vertices.inputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertices.inputAttributes.size())
-//        vertices.inputState.pVertexAttributeDescriptions = vertices.inputAttributes.data()
+//        vertices.inputState = vk.PipelineVertexInputStateCreateInfo {
+//            vertexBindingDescription = vertices.inputBinding
+//            vertexAttributeDescriptions = vertices.inputAttributes
+//        }
 //    }
 //
-//    void setupDescriptorPool()
-//    {
+//    fun setupDescriptorPool() {
 //        // Example uses one ubo and one image sampler
-//        std::vector<VkDescriptorPoolSize> poolSizes =
-//        {
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1),
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
-//        }
+//        val poolSizes = vk.DescriptorPoolSize(
+//                VkDescriptorType.UNIFORM_BUFFER, 1,
+//                VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1)
 //
-//        VkDescriptorPoolCreateInfo descriptorPoolInfo =
-//        vks::initializers::descriptorPoolCreateInfo(
-//                static_cast<uint32_t>(poolSizes.size()),
-//                poolSizes.data(),
-//                2)
+//        val descriptorPoolInfo = vk.DescriptorPoolCreateInfo(poolSizes, 2)
 //
-//        VK_CHECK_RESULT(vkCreateDescriptorPool(device, & descriptorPoolInfo, nullptr, & descriptorPool))
+//        descriptorPool = device createDescriptorPool descriptorPoolInfo
 //    }
 //
-//    void setupDescriptorSetLayout()
-//    {
-//        std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    VK_SHADER_STAGE_VERTEX_BIT,
-//                    0),
-//            // Binding 1 : Fragment shader image sampler
-//            vks::initializers::descriptorSetLayoutBinding(
-//                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                    VK_SHADER_STAGE_FRAGMENT_BIT,
-//                    1)
-//        }
+//    fun setupDescriptorSetLayout() {
 //
-//        VkDescriptorSetLayoutCreateInfo descriptorLayout =
-//        vks::initializers::descriptorSetLayoutCreateInfo(
-//                setLayoutBindings.data(),
-//                static_cast<uint32_t>(setLayoutBindings.size()))
+//        val setLayoutBindings = vk.DescriptorSetLayoutBinding(
+//                // Binding 0 : Vertex shader uniform buffer
+//                VkDescriptorType.UNIFORM_BUFFER, VkShaderStage.VERTEX_BIT.i, 0,
+//                // Binding 1 : Fragment shader image sampler
+//                VkDescriptorType.COMBINED_IMAGE_SAMPLER, VkShaderStage.FRAGMENT_BIT.i, 1)
 //
-//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, & descriptorLayout, nullptr, & descriptorSetLayout))
+//        val descriptorLayout = vk.DescriptorSetLayoutCreateInfo(setLayoutBindings)
 //
-//        VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-//        vks::initializers::pipelineLayoutCreateInfo(
-//                & descriptorSetLayout,
-//        1)
+//        descriptorSetLayout = device createDescriptorSetLayout descriptorLayout
 //
-//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, & pPipelineLayoutCreateInfo, nullptr, & pipelineLayout))
+//        val pipelineLayoutCreateInfo = vk.PipelineLayoutCreateInfo(descriptorSetLayout)
+//
+//        pipelineLayout = device createPipelineLayout pipelineLayoutCreateInfo
 //    }
 //
-//    void setupDescriptorSet()
-//    {
-//        VkDescriptorSetAllocateInfo allocInfo =
-//        vks::initializers::descriptorSetAllocateInfo(
-//                descriptorPool,
-//                & descriptorSetLayout,
-//        1)
+//    fun setupDescriptorSet() {
 //
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSet))
+//        val allocInfo = vk.DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayout)
 //
-//        std::vector<VkWriteDescriptorSet> writeDescriptorSets =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    0,
-//                    & uniformBufferVS . descriptor),
-//            // Binding 1 : Fragment shader texture sampler
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSet,
-//                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                    1,
-//                    & texture . descriptor)
-//        }
+//        descriptorSet = device allocateDescriptorSets allocInfo
 //
-//        vkUpdateDescriptorSets(device, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, NULL)
+//        val writeDescriptorSets = vk.WriteDescriptorSet(
+//                // Binding 0 : Vertex shader uniform buffer
+//                descriptorSet, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBufferVS.descriptor,
+//                // Binding 1 : Fragment shader texture sampler
+//                descriptorSet, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1, texture.descriptor)
+//
+//        device updateDescriptorSets writeDescriptorSets
 //    }
 //
-//    void preparePipelines()
-//    {
-//        VkPipelineInputAssemblyStateCreateInfo inputAssemblyState =
-//        vks::initializers::pipelineInputAssemblyStateCreateInfo(
-//                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-//                0,
-//                VK_FALSE)
+//    fun preparePipelines() {
 //
-//        VkPipelineRasterizationStateCreateInfo rasterizationState =
-//        vks::initializers::pipelineRasterizationStateCreateInfo(
-//                VK_POLYGON_MODE_FILL,
-//                VK_CULL_MODE_NONE,
-//                VK_FRONT_FACE_COUNTER_CLOCKWISE,
-//                0)
+//        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology.TRIANGLE_LIST, 0, false)
 //
-//        VkPipelineColorBlendAttachmentState blendAttachmentState =
-//        vks::initializers::pipelineColorBlendAttachmentState(
-//                0xf,
-//                VK_FALSE)
+//        val rasterizationState = vk.PipelineRasterizationStateCreateInfo(VkPolygonMode.FILL, VkCullMode.NONE.i, VkFrontFace.CLOCKWISE)
 //
-//        VkPipelineColorBlendStateCreateInfo colorBlendState =
-//        vks::initializers::pipelineColorBlendStateCreateInfo(
-//                1,
-//                & blendAttachmentState)
+//        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(0xf, false)
 //
-//        VkPipelineDepthStencilStateCreateInfo depthStencilState =
-//        vks::initializers::pipelineDepthStencilStateCreateInfo(
-//                VK_TRUE,
-//                VK_TRUE,
-//                VK_COMPARE_OP_LESS_OR_EQUAL)
+//        val colorBlendState = vk.PipelineColorBlendStateCreateInfo(blendAttachmentState)
 //
-//        VkPipelineViewportStateCreateInfo viewportState =
-//        vks::initializers::pipelineViewportStateCreateInfo(1, 1, 0)
+//        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo(true, true, VkCompareOp.LESS_OR_EQUAL)
 //
-//        VkPipelineMultisampleStateCreateInfo multisampleState =
-//        vks::initializers::pipelineMultisampleStateCreateInfo(
-//                VK_SAMPLE_COUNT_1_BIT,
-//                0)
+//        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT,
-//                                                            VK_DYNAMIC_STATE_SCISSOR
-//        }
-//        VkPipelineDynamicStateCreateInfo dynamicState =
-//        vks::initializers::pipelineDynamicStateCreateInfo(
-//                dynamicStateEnables.data(),
-//                static_cast<uint32_t>(dynamicStateEnables.size()),
-//                0)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//
+//        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
+//        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
 //
 //        // Load shaders
-//        std::array < VkPipelineShaderStageCreateInfo, 2> shaderStages
-//
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/texture3d/texture3d.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//        shaderStages[1] = loadShader(getAssetPath() + "shaders/texture3d/texture3d.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//
-//        VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-//        vks::initializers::pipelineCreateInfo(
-//                pipelineLayout,
-//                renderPass,
-//                0)
-//
-//        pipelineCreateInfo.pVertexInputState = & vertices . inputState
-//                pipelineCreateInfo.pInputAssemblyState = & inputAssemblyState
-//                pipelineCreateInfo.pRasterizationState = & rasterizationState
-//                pipelineCreateInfo.pColorBlendState = & colorBlendState
-//                pipelineCreateInfo.pMultisampleState = & multisampleState
-//                pipelineCreateInfo.pViewportState = & viewportState
-//                pipelineCreateInfo.pDepthStencilState = & depthStencilState
-//                pipelineCreateInfo.pDynamicState = & dynamicState
-//                pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size())
-//        pipelineCreateInfo.pStages = shaderStages.data()
-//
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . solid))
+//        val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
+//            it[0].loadShader("$assetPath/shaders/texture3d/texture3d.vert.spv", VkShaderStage.VERTEX_BIT)
+//            it[1].loadShader("$assetPath/shaders/texture3d/texture3d.frag.spv", VkShaderStage.FRAGMENT_BIT)
+//        }
+//        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(pipelineLayout, renderPass).also {
+//            it.vertexInputState = vertices.inputState
+//            it.inputAssemblyState = inputAssemblyState
+//            it.rasterizationState = rasterizationState
+//            it.colorBlendState = colorBlendState
+//            it.multisampleState = multisampleState
+//            it.viewportState = viewportState
+//            it.depthStencilState = depthStencilState
+//            it.dynamicState = dynamicState
+//            it.stages = shaderStages
+//        }
+//        pipelines . solid = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 //    }
 //
-//    // Prepare and initialize uniform buffer containing shader uniforms
+//    /** Prepare and initialize uniform buffer containing shader uniforms */
 //    void prepareUniformBuffers()
 //    {
 //        // Vertex shader uniform buffer block

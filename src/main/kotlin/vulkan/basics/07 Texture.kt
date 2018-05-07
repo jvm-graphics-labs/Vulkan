@@ -85,11 +85,11 @@ private class Texture : VulkanExampleBase() {
     object uboVS : Bufferizable(){
 
         val projection = Mat4()
+        @Order(1)
         val model = Mat4()
         val viewPos = Vec4()
+        @Order(3)
         var lodBias = 0f
-
-        override val fieldOrder = arrayOf("projection", "model", "viewPos", "lodBias")
     }
 
     object pipelines {

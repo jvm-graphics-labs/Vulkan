@@ -32,6 +32,7 @@ import java.nio.file.Path
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.defaultType
+import kotlin.reflect.full.findAnnotation
 
 
 //fun pointerBufferOf(vararg strings: String): PointerBuffer {
@@ -299,10 +300,25 @@ object WithAddress {
 
 abstract class Bufferizable {
 
-    abstract val fieldOrder: Array<String>
+    @Retention(AnnotationRetention.RUNTIME)
+    annotation class Order(val value: Int)
+
+    val fieldOrderDefault: Array<String> by lazy {
+        val properties = this::class.declaredMemberProperties
+        val parts = properties.partition { it.findAnnotation<Order>() == null }
+        val plain = parts.first.sortedBy { it.name }
+        val annotated = parts.second.associateBy { it.findAnnotation<Order>()!!.value }
+        val list = ArrayList<KProperty1<*, *>>()
+        var plainIdx = 0
+        for (i in properties.indices)
+            list += annotated[i] ?: plain[plainIdx++]
+        list.map { it.name }.toTypedArray()
+    }
+
+    open var fieldOrder = emptyArray<String>()
+        get() = if (field.isEmpty()) fieldOrderDefault else field
 
     open val size: Int by lazy {
-
         fieldOrder.sumBy { field ->
             val member = this::class.declaredMemberProperties.find { it.name == field }!!
             when (member.returnType) {
@@ -329,7 +345,6 @@ abstract class Bufferizable {
     infix fun from(address: Long): Unit = TODO()
 
     val data: Array<BufferizableData> by lazy {
-
         Array(fieldOrder.size) {
             val field = fieldOrder[it]
             val member = this::class.declaredMemberProperties.find { it.name == field }!!
@@ -355,7 +370,7 @@ fun bufferOf(vararg data: Bufferizable): ByteBuffer {
     val res = bufferBig(size)
     val address = memAddress(res)
     var offset = 0
-    for(i in data.indices) {
+    for (i in data.indices) {
         data[i] to address + offset
         offset += data[i].size
     }
@@ -384,3 +399,36 @@ fun bufferOf(vararg data: Bufferizable): ByteBuffer {
 //    println(member.get(uboVS) as Mat4)
 //    println(member.returnType == Mat4::class.defaultType)
 //}
+
+class FiledOrder {
+    @Retention(AnnotationRetention.RUNTIME)
+    annotation class Order(val value: Int)
+
+    @Order(3)
+    var field1: Int = 0
+    @Order(1)
+    var field2: Int = 0
+    // no annotation
+    var field4: Int = 0
+    var field3: Int = 0
+
+    @Order(1)
+    fun start() {
+    }
+
+    @Order(2)
+    fun end() {
+    }
+}
+
+fun main(args: Array<String>) {
+    val properties = FiledOrder::class.declaredMemberProperties
+    val parts = properties.partition { it.findAnnotation<FiledOrder.Order>() == null }
+    val plain = parts.first.sortedBy { it.name }
+    val annotated = parts.second.associateBy { it.findAnnotation<FiledOrder.Order>()!!.value }
+    val list = ArrayList<KProperty1<*, *>>()
+    var plainIdx = 0
+    for (i in properties.indices)
+        list += annotated[i] ?: plain[plainIdx++]
+    println(list)
+}

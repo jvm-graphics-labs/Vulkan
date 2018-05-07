@@ -83,11 +83,8 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
     }
 
     object uboVS : Bufferizable() {
-
         val projection = Mat4()
         val view = Mat4()
-
-        override val fieldOrder = arrayOf("projection", "view")
     }
 
     // Store random per-object rotations

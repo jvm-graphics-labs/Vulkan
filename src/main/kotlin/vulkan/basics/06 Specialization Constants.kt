@@ -67,10 +67,10 @@ class SpecializationConstants : VulkanExampleBase() {
     object uboVS : Bufferizable() {
 
         lateinit var projection: Mat4
+        @Order(1)
         lateinit var modelView: Mat4
+        @Order(2)
         val lightPos = Vec4(0f, -2f, 1f, 0f)
-
-        override val fieldOrder = arrayOf("projection", "modelView", "lightPos")
     }
 
     var pipelineLayout: VkPipelineLayout = NULL

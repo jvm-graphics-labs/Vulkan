@@ -65,10 +65,10 @@ private class PushConstants : VulkanExampleBase() {
     object uboVS: Bufferizable() {
 
         lateinit var projection: Mat4
+        @Order(1)
         lateinit var model: Mat4
+        @Order(2)
         val lightPos = Vec4(0f, 0, -2f, 1)
-
-        override val fieldOrder = arrayOf("projection", "model", "lightPos")
     }
 
     object pipelines {

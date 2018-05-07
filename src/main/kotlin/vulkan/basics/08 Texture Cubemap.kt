@@ -58,10 +58,10 @@ private class TextureCubemap : VulkanExampleBase() {
 
     object uboVS : Bufferizable() {
         var projection = Mat4()
+        @Order(1)
         var model = Mat4()
+        @Order(2)
         var lodBias = 0f
-
-        override val fieldOrder = arrayOf("projection", "model", "lodBias")
     }
 
     object pipelines {
