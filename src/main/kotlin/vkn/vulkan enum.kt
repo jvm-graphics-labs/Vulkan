@@ -1209,6 +1209,9 @@ enum class VkMemoryProperty(val i: Int) {
     inline infix fun or(b: VkMemoryProperty): VkMemoryPropertyFlags = i or b.i
 }
 
+inline infix fun Int.has(b: VkMemoryProperty) = and(b.i) != 0
+inline infix fun Int.hasnt(b: VkMemoryProperty) = and(b.i) == 0
+
 typealias VkMemoryPropertyFlags = VkFlags
 
 enum class VkMemoryHeapFlag(val i: Int) {

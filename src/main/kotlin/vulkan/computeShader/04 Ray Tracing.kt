@@ -155,12 +155,13 @@ class RayTracing : VulkanExampleBase() {
             destroyDescriptorSetLayout(compute.descriptorSetLayout)
             destroyFence(compute.fence)
             destroyCommandPool(compute.commandPool)
-            compute.uniformBuffer.destroy()
-            compute.storageBuffers.spheres.destroy()
-            compute.storageBuffers.planes.destroy()
-
-            textureComputeTarget.destroy()
         }
+        compute.uniformBuffer.destroy()
+        compute.storageBuffers.spheres.destroy()
+        compute.storageBuffers.planes.destroy()
+        textureComputeTarget.destroy()
+
+        super.destroy()
     }
 
     /** Prepare a texture target that is used to store compute shader calculations */

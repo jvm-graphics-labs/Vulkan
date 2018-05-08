@@ -16,11 +16,9 @@ import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.set
 import glm_.vec2.Vec2
-import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import glm_.vec3.Vec3i
 import glm_.vec4.Vec4
-import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkDescriptorImageInfo
@@ -38,6 +36,7 @@ import vulkan.base.Model
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools
 import java.util.concurrent.ThreadLocalRandom
+import java.util.stream.IntStream
 import kotlin.system.measureTimeMillis
 
 
@@ -65,7 +64,7 @@ private class Texture3d : VulkanExampleBase() {
     }
 
     /** Fractal noise generator based on perlin noise above */
-    object fractalNoise {
+    class FractalNoise {
 
         val octaves = 6
         var frequency = 0f
@@ -160,6 +159,8 @@ private class Texture3d : VulkanExampleBase() {
         vertexBuffer.destroy()
         indexBuffer.destroy()
         uniformBufferVS.destroy()
+
+        super.destroy()
     }
 
     /** Prepare all Vulkan resources for the 3D texture (including descriptors)
@@ -276,41 +277,60 @@ private class Texture3d : VulkanExampleBase() {
             val FRACTAL = true
             val noiseScale = rand() % 10 + 4f
 
-            if (true)
-                for (z in 0 until texture.extent.z) {
+            if (!true)
+                for (z in 0 until ext.z) {
                     println(z)
-                    for (y in 0 until texture.extent.y)
-                        for (x in 0 until texture.extent.x) {
+                    for (y in 0 until ext.y)
+                        for (x in 0 until ext.x) {
 
-                            val v = Vec3(x, y, z) / texture.extent
+                            val v = Vec3(x, y, z) / ext
                             var n = when {
-                                FRACTAL -> fractalNoise.noise(v * noiseScale)
+                                FRACTAL -> FractalNoise().noise(v * noiseScale)
                                 else -> 20f * glm.perlin(v)
                             }
                             n -= glm.floor(n)
 
-                            data[x + y * texture.extent.x + z * texture.extent.x * texture.extent.y] = glm.floor(n * 255).b
+                            data[x + y * ext.x + z * ext.x * ext.y] = glm.floor(n * 255).b
                         }
                 }
             else
                 runBlocking {
-
-                    for (z in 0 until texture.extent.z)
-                        for (y in 0 until texture.extent.y)
-                            for (x in 0 until texture.extent.x) {
-                                launch {
-                                    val v = Vec3(x, y, z) / texture.extent
-                                    var n = when {
-                                        FRACTAL -> fractalNoise.noise(v * noiseScale)
-                                        else -> 20f * glm.perlin(v)
-                                    }
-                                    n -= glm.floor(n)
-
-                                    data[x + y * texture.extent.x + z * texture.extent.x * texture.extent.y] = glm.floor(n * 255).b
-                                }
-                            }
+//                    async(CommonPool) {
+//                    for (z in 0 until texture.extent.z) {
+//                        println(z)
+////                    for (z in 0 until 1) {
+//                        for (y in 0 until texture.extent.y)
+//                            for (x in 0 until texture.extent.x) {
+//                                launch {
+//                                    val v = Vec3(x, y, z) / texture.extent
+//                                    var n = when {
+//                                        FRACTAL -> FractalNoise().noise(v * noiseScale)
+//                                        else -> 20f * glm.perlin(v)
+//                                    }
+//                                    n -= glm.floor(n)
+//
+//                                    data[x + y * texture.extent.x + z * texture.extent.x * texture.extent.y] = glm.floor(n * 255).b
+//                                }
+//                            }
+//                    }
+//                    jobs.forEach { it.join() }
                 }
-
+//                IntStream.range(0, ext.x).parallel().flatMap { x ->
+//                    IntStream.range(0, ext.y).flatMap { y ->
+//                        IntStream.range(0, ext.z).flatMap { z ->
+//                            Vec3(x, y, z)
+//                        }
+//                    }
+//                }
+//                        .forEach { vec ->
+//                            var n = when {
+//                                FRACTAL -> FractalNoise().noise(v * noiseScale)
+//                                else -> 20f * glm.perlin(v)
+//                            }
+//                            n -= glm.floor(n)
+//
+//                            data[x + y * ext.x + z * ext.x * ext.y] = glm.floor(n * 255).b
+//                        }
         }
         println("Done in ${time}ms")
 

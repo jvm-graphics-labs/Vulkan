@@ -218,11 +218,13 @@ object vk {
         return InstanceCreateInfo().also(block)
     }
 
+    inline fun MappedMemoryRange(): VkMappedMemoryRange {
+        return VkMappedMemoryRange.create(ptr.advance(VkMappedMemoryRange.SIZEOF)).apply {
+            type = VkStructureType.MAPPED_MEMORY_RANGE
+        }
+    }
     inline fun MappedMemoryRange(block: VkMappedMemoryRange.() -> Unit): VkMappedMemoryRange {
-        val res = VkMappedMemoryRange.create(ptr.advance(VkMappedMemoryRange.SIZEOF))
-        res.type = VkStructureType.MAPPED_MEMORY_RANGE
-        res.block()
-        return res
+        return MappedMemoryRange().also(block)
     }
 
     inline fun MemoryAllocateInfo(block: VkMemoryAllocateInfo.() -> Unit): VkMemoryAllocateInfo {

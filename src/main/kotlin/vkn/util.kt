@@ -11,7 +11,9 @@ import glm_.mat4x4.Mat4
 import glm_.set
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
+import gln.buf
 import graphics.scenery.spirvcrossj.*
+import imgui.Col
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
@@ -22,6 +24,7 @@ import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkPhysicalDevice
 import uno.buffer.bufferBig
+import uno.buffer.intBufferBig
 import uno.kotlin.buffers.indices
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -375,6 +378,25 @@ fun bufferOf(vararg data: Bufferizable): ByteBuffer {
         offset += data[i].size
     }
     return res
+}
+
+fun bufferOf(data: Collection<Bufferizable>): ByteBuffer {
+    val size = data.sumBy { it.size }
+    val res = bufferBig(size)
+    val address = memAddress(res)
+    var offset = 0
+    for (i in data.indices) {
+        data.elementAt(i) to address + offset
+        offset += data.elementAt(i).size
+    }
+    return res
+}
+
+fun intArrayOf(ints: Collection<Int>): IntBuffer {
+    val buffer = intBufferBig(ints.size)
+    for(i in ints.indices)
+        buffer[i] = ints.elementAt(i)
+    return buffer
 }
 
 //object uboVS : Bufferizable() {

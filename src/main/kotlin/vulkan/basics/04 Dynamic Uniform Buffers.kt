@@ -134,6 +134,8 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
         uniformBuffers.view.destroy()
         uniformBuffers.dynamic.destroy()
+
+        super.destroy()
     }
 
     override fun buildCommandBuffers() {

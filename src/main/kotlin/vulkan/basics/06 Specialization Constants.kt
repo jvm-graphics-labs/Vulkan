@@ -104,6 +104,8 @@ class SpecializationConstants : VulkanExampleBase() {
         models.cube.destroy()
         textures.colormap.destroy()
         uniformBuffer.destroy()
+
+        super.destroy()
     }
 
     override fun buildCommandBuffers() {

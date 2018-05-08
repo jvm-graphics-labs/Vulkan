@@ -757,7 +757,7 @@ abstract class VulkanExampleBase {
 
     /** End the command buffer, submit it to the queue and free (if requested)
      *  Note : Waits for the queue to become idle   */
-    fun flushCommandBuffer(commandBuffer: VkCommandBuffer?, queue: VkQueue, free: Boolean) {
+    fun flushCommandBuffer(commandBuffer: VkCommandBuffer, queue: VkQueue, free: Boolean) {
 
         if (commandBuffer == null) return
 

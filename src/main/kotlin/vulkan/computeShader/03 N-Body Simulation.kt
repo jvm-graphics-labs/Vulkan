@@ -164,6 +164,8 @@ private class NBodySimulation : VulkanExampleBase() {
         }
         textures.particle.destroy()
         textures.gradient.destroy()
+
+        super.destroy()
     }
 
     fun loadAssets() {

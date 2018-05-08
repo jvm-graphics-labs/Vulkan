@@ -105,6 +105,8 @@ private class PushConstants : VulkanExampleBase() {
         models.scene.destroy()
 
         uniformBuffer.destroy()
+
+        super.destroy()
     }
 
     fun reBuildCommandBuffers() {

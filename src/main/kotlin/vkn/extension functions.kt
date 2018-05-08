@@ -10,6 +10,7 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
 import java.nio.ByteBuffer
+import kotlin.reflect.KMutableProperty0
 
 
 /*
@@ -221,6 +222,12 @@ inline infix fun VkDevice.allocateMemory(allocateInfo: VkMemoryAllocateInfo): Vk
     return memGetLong(pMemory)
 }
 
+inline fun VkDevice.allocateMemory(allocateInfo: VkMemoryAllocateInfo, memory: KMutableProperty0<VkDeviceMemory>) {
+    val pMemory = appBuffer.long
+    VK_CHECK_RESULT(VK10.nvkAllocateMemory(this, allocateInfo.adr, NULL, pMemory))
+    memory.set(memGetLong(pMemory))
+}
+
 inline fun VkDevice.bindBufferMemory(buffer: VkBuffer, memory: VkDeviceMemory, memoryOffset: VkDeviceSize = 0) { // TODO clean code?
     VK_CHECK_RESULT(VK10.vkBindBufferMemory(this, buffer, memory, memoryOffset))
 }
@@ -240,6 +247,12 @@ inline infix fun VkDevice.createBuffer(createInfo: VkBufferCreateInfo): VkBuffer
     val pBuffer = appBuffer.long
     VK_CHECK_RESULT(VK10.nvkCreateBuffer(this, createInfo.adr, NULL, pBuffer))
     return memGetLong(pBuffer)
+}
+
+inline fun VkDevice.createBuffer(createInfo: VkBufferCreateInfo, buffer: KMutableProperty0<VkBuffer>) {
+    val pBuffer = appBuffer.long
+    VK_CHECK_RESULT(VK10.nvkCreateBuffer(this, createInfo.adr, NULL, pBuffer))
+    buffer.set(memGetLong(pBuffer))
 }
 
 inline infix fun VkDevice.createCommandPool(createInfo: VkCommandPoolCreateInfo): VkCommandPool {

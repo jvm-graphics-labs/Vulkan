@@ -3,16 +3,12 @@ package vulkan.base
 import glfw_.appBuffer
 import glm_.L
 import glm_.i
-import glm_.set
 import glm_.size
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
-import uno.buffer.floatBufferBig
-import uno.buffer.intBufferBig
-import uno.buffer.use
 import vkn.*
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import java.nio.ByteBuffer
@@ -255,47 +251,45 @@ constructor(
      *
      * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
      */
-//    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, size: VkDeviceSize,
-//                     memory: VkDeviceMemory, data: Long = NULL): VkBuffer {
-//        // Create the buffer handle
-//        val bufferCreateInfo = vk.BufferCreateInfo {
-//            usage = usageFlags
-//            this.size = size
-//            sharingMode = VkSharingMode.EXCLUSIVE
-//        }
-//        val buffer = logicalDevice!! createBuffer bufferCreateInfo
-//
-//        // Create the memory backing up the buffer handle
-//        val memReqs = logicalDevice!! getBufferMemoryRequirements buffer
-//        val memAlloc = vk.MemoryAllocateInfo {
-//            allocationSize = memReqs.size
-//            // Find a memory type index that fits the properties of the buffer
-//            memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags)
-//        }
-//        VK_CHECK_RESULT(vkAllocateMemory(logicalDevice, & memAlloc, nullptr, memory));
-//
-//        // If a pointer to the buffer data has been passed, map the buffer and copy over the data
-//        if (data != nullptr) {
-//            void * mapped;
-//            VK_CHECK_RESULT(vkMapMemory(logicalDevice, *memory, 0, size, 0, & mapped));
-//            memcpy(mapped, data, size);
-//            // If host coherency hasn't been requested, do a manual flush to make writes visible
-//            if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
-//            {
-//                VkMappedMemoryRange mappedRange = vks ::initializers::mappedMemoryRange();
-//                mappedRange.memory = * memory;
-//                mappedRange.offset = 0;
-//                mappedRange.size = size;
-//                vkFlushMappedMemoryRanges(logicalDevice, 1, & mappedRange);
-//            }
-//            vkUnmapMemory(logicalDevice, *memory);
-//        }
-//
-//        // Attach the memory to the buffer object
-//        VK_CHECK_RESULT(vkBindBufferMemory(logicalDevice, *buffer, *memory, 0));
-//
-//        return VK_SUCCESS;
-//    }
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, size: VkDeviceSize,
+                     buffer: KMutableProperty0<VkBuffer>, memory: KMutableProperty0<VkDeviceMemory>, data: Long = NULL) {
+
+        val dev = logicalDevice!!
+        // Create the buffer handle
+        val bufferCreateInfo = vk.BufferCreateInfo {
+            usage = usageFlags
+            this.size = size
+            sharingMode = VkSharingMode.EXCLUSIVE
+        }
+        dev.createBuffer(bufferCreateInfo, buffer)
+
+        // Create the memory backing up the buffer handle
+        val memReqs = dev getBufferMemoryRequirements buffer()
+        val memAlloc = vk.MemoryAllocateInfo {
+            allocationSize = memReqs.size
+            // Find a memory type index that fits the properties of the buffer
+            memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags)
+        }
+        dev.allocateMemory(memAlloc, memory)
+
+        // If a pointer to the buffer data has been passed, map the buffer and copy over the data
+        if (data != NULL)
+            dev.mappingMemory(memory(), 0, size) { mapped ->
+                memCopy(data, mapped, size)
+                // If host coherency hasn't been requested, do a manual flush to make writes visible
+                if (memoryPropertyFlags hasnt VkMemoryProperty.HOST_COHERENT_BIT) {
+                    val mappedRange = vk.MappedMemoryRange().also {
+                        it.memory = memory()
+                        it.offset = 0
+                        it.size = size
+                    }
+                    dev.flushMappedMemoryRanges(mappedRange)
+                }
+            }
+
+        // Attach the memory to the buffer object
+        dev.bindBufferMemory(buffer(), memory())
+    }
 
     fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: ByteBuffer) {
         createBuffer(usageFlags, memoryPropertyFlags, buffer, bytes.size.L, memAddress(bytes))
@@ -308,7 +302,6 @@ constructor(
     fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, ints: IntBuffer) {
         createBuffer(usageFlags, memoryPropertyFlags, buffer, ints.size.L, memAddress(ints))
     }
-
 
 
     /**
