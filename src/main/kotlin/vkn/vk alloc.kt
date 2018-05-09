@@ -20,6 +20,21 @@ inline fun cVkDescriptorSetLayoutCreateInfo(block: VkDescriptorSetLayoutCreateIn
     res.block()
     return res
 }
+
+inline fun cVkImageSubresourceRange(aspectMask: VkImageAspectFlags,
+                                    baseMipLevel: Int,
+                                    levelCount: Int,
+                                    baseArrayLayer: Int,
+                                    layerCount: Int): VkImageSubresourceRange {
+    return VkImageSubresourceRange.calloc().also {
+        it.aspectMask = aspectMask
+        it.baseMipLevel = baseMipLevel
+        it.levelCount = levelCount
+        it.baseArrayLayer = baseArrayLayer
+        it.layerCount = layerCount
+    }
+}
+
 inline fun cVkPipelineColorBlendAttachmentState(capacity: Int): VkPipelineColorBlendAttachmentState.Buffer {
     return VkPipelineColorBlendAttachmentState.calloc(capacity)
 }

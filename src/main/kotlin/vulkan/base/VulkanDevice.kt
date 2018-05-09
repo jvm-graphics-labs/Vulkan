@@ -278,12 +278,12 @@ constructor(
                 memCopy(data, mapped, size)
                 // If host coherency hasn't been requested, do a manual flush to make writes visible
                 if (memoryPropertyFlags hasnt VkMemoryProperty.HOST_COHERENT_BIT) {
-                    val mappedRange = vk.MappedMemoryRange().also {
-                        it.memory = memory()
-                        it.offset = 0
-                        it.size = size
-                    }
-                    dev.flushMappedMemoryRanges(mappedRange)
+//                    val mappedRange = vk.MappedMemoryRange{
+//                        this.memory = memory()
+//                        offset = 0
+//                        this.size = size
+//                    }
+//                    dev.flushMappedMemoryRanges(mappedRange)
                 }
             }
 

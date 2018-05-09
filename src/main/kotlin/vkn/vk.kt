@@ -137,6 +137,7 @@ object vk {
             type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
         }
     }
+
     inline fun DeviceQueueCreateInfo(block: VkDeviceQueueCreateInfo.() -> Unit): VkDeviceQueueCreateInfo {
         return DeviceQueueCreateInfo().also(block)
     }
@@ -223,6 +224,7 @@ object vk {
             type = VkStructureType.MAPPED_MEMORY_RANGE
         }
     }
+
     inline fun MappedMemoryRange(block: VkMappedMemoryRange.() -> Unit): VkMappedMemoryRange {
         return MappedMemoryRange().also(block)
     }
@@ -262,11 +264,14 @@ object vk {
         return res
     }
 
+    inline fun PipelineDepthStencilStateCreateInfo(): VkPipelineDepthStencilStateCreateInfo {
+        return VkPipelineDepthStencilStateCreateInfo.create(ptr.advance(VkPipelineDepthStencilStateCreateInfo.SIZEOF)).apply {
+            type = VkStructureType.PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
+        }
+    }
+
     inline fun PipelineDepthStencilStateCreateInfo(block: VkPipelineDepthStencilStateCreateInfo.() -> Unit): VkPipelineDepthStencilStateCreateInfo {
-        val res = VkPipelineDepthStencilStateCreateInfo.create(ptr.advance(VkPipelineDepthStencilStateCreateInfo.SIZEOF))
-        res.type = VkStructureType.PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
-        res.block()
-        return res
+        return PipelineDepthStencilStateCreateInfo().also(block)
     }
 
     inline fun PipelineDynamicStateCreateInfo(block: VkPipelineDynamicStateCreateInfo.() -> Unit): VkPipelineDynamicStateCreateInfo {
@@ -351,11 +356,13 @@ object vk {
         return res
     }
 
+    inline fun RenderPassCreateInfo(): VkRenderPassCreateInfo {
+        return VkRenderPassCreateInfo.create(ptr.advance(VkRenderPassCreateInfo.SIZEOF)).apply {
+            type = VkStructureType.RENDER_PASS_CREATE_INFO
+        }
+    }
     inline fun RenderPassCreateInfo(block: VkRenderPassCreateInfo.() -> Unit): VkRenderPassCreateInfo {
-        val res = VkRenderPassCreateInfo.create(ptr.advance(VkRenderPassCreateInfo.SIZEOF))
-        res.type = VkStructureType.RENDER_PASS_CREATE_INFO
-        res.block()
-        return res
+        return RenderPassCreateInfo().also(block)
     }
 
     inline fun SamplerCreateInfo(block: VkSamplerCreateInfo.() -> Unit): VkSamplerCreateInfo {
@@ -427,7 +434,9 @@ object vk {
         normal constructor functions
      */
 
+    inline fun AttachmentDescription(): VkAttachmentDescription = VkAttachmentDescription.create(ptr.advance(VkAttachmentDescription.SIZEOF))
     inline fun AttachmentDescription(capacity: Int): VkAttachmentDescription.Buffer = VkAttachmentDescription.create(ptr.advance(VkAttachmentDescription.SIZEOF * capacity), capacity)
+    inline fun AttachmentDescription(block: VkAttachmentDescription.() -> Unit): VkAttachmentDescription = AttachmentDescription().also(block)
 
     inline fun AttachmentReference(block: VkAttachmentReference.() -> Unit): VkAttachmentReference = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF)).also(block)
     inline fun AttachmentReference(capacity: Int): VkAttachmentReference.Buffer = VkAttachmentReference.create(ptr.advance(VkAttachmentReference.SIZEOF * capacity), capacity)
@@ -488,7 +497,9 @@ object vk {
     inline fun SpecializationInfo(capacity: Int): VkSpecializationInfo.Buffer = VkSpecializationInfo.create(ptr.advance(VkSpecializationInfo.SIZEOF * capacity), capacity)
     inline fun SpecializationInfo(block: VkSpecializationInfo.() -> Unit): VkSpecializationInfo = VkSpecializationInfo.create(ptr.advance(VkSpecializationInfo.SIZEOF)).also(block)
 
+    inline fun SubpassDependency(): VkSubpassDependency = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF))
     inline fun SubpassDependency(capacity: Int): VkSubpassDependency.Buffer = VkSubpassDependency.create(ptr.advance(VkSubpassDependency.SIZEOF * capacity), capacity)
+    inline fun SubpassDependency(block: VkSubpassDependency.() -> Unit): VkSubpassDependency = SubpassDependency().also(block)
 
     inline fun SubpassDescription(block: VkSubpassDescription.() -> Unit): VkSubpassDescription = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF)).also(block)
     inline fun SubpassDescription(capacity: Int, block: VkSubpassDescription.() -> Unit): VkSubpassDescription.Buffer = VkSubpassDescription.create(ptr.advance(VkSubpassDescription.SIZEOF * capacity), capacity).also { it[0].block() }
@@ -555,14 +566,8 @@ object vk {
             type0: VkDescriptorType, descriptorCount0: Int,
             type1: VkDescriptorType, descriptorCount1: Int): VkDescriptorPoolSize.Buffer {
         return DescriptorPoolSize(2) {
-            this[0].apply {
-                type = type0
-                descriptorCount = descriptorCount0
-            }
-            this[1].apply {
-                type = type1
-                descriptorCount = descriptorCount1
-            }
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
         }
     }
 
@@ -571,18 +576,9 @@ object vk {
             type1: VkDescriptorType, descriptorCount1: Int,
             type2: VkDescriptorType, descriptorCount2: Int): VkDescriptorPoolSize.Buffer {
         return DescriptorPoolSize(3) {
-            this[0].apply {
-                type = type0
-                descriptorCount = descriptorCount0
-            }
-            this[1].apply {
-                type = type1
-                descriptorCount = descriptorCount1
-            }
-            this[2].apply {
-                type = type2
-                descriptorCount = descriptorCount2
-            }
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
         }
     }
 
@@ -592,22 +588,157 @@ object vk {
             type2: VkDescriptorType, descriptorCount2: Int,
             type3: VkDescriptorType, descriptorCount3: Int): VkDescriptorPoolSize.Buffer {
         return DescriptorPoolSize(4) {
-            this[0].apply {
-                type = type0
-                descriptorCount = descriptorCount0
-            }
-            this[1].apply {
-                type = type1
-                descriptorCount = descriptorCount1
-            }
-            this[2].apply {
-                type = type2
-                descriptorCount = descriptorCount2
-            }
-            this[3].apply {
-                type = type3
-                descriptorCount = descriptorCount3
-            }
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int,
+            type4: VkDescriptorType, descriptorCount4: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(5) {
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+            this[4].type(type4.i).descriptorCount(descriptorCount4)
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int,
+            type4: VkDescriptorType, descriptorCount4: Int,
+            type5: VkDescriptorType, descriptorCount5: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(6) {
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+            this[4].type(type4.i).descriptorCount(descriptorCount4)
+            this[5].type(type5.i).descriptorCount(descriptorCount5)
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int,
+            type4: VkDescriptorType, descriptorCount4: Int,
+            type5: VkDescriptorType, descriptorCount5: Int,
+            type6: VkDescriptorType, descriptorCount6: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(7) {
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+            this[4].type(type4.i).descriptorCount(descriptorCount4)
+            this[5].type(type5.i).descriptorCount(descriptorCount5)
+            this[6].type(type6.i).descriptorCount(descriptorCount6)
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int,
+            type4: VkDescriptorType, descriptorCount4: Int,
+            type5: VkDescriptorType, descriptorCount5: Int,
+            type6: VkDescriptorType, descriptorCount6: Int,
+            type7: VkDescriptorType, descriptorCount7: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(8) {
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+            this[4].type(type4.i).descriptorCount(descriptorCount4)
+            this[5].type(type5.i).descriptorCount(descriptorCount5)
+            this[6].type(type6.i).descriptorCount(descriptorCount6)
+            this[7].type(type7.i).descriptorCount(descriptorCount7)
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int,
+            type4: VkDescriptorType, descriptorCount4: Int,
+            type5: VkDescriptorType, descriptorCount5: Int,
+            type6: VkDescriptorType, descriptorCount6: Int,
+            type7: VkDescriptorType, descriptorCount7: Int,
+            type8: VkDescriptorType, descriptorCount8: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(9) {
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+            this[4].type(type4.i).descriptorCount(descriptorCount4)
+            this[5].type(type5.i).descriptorCount(descriptorCount5)
+            this[6].type(type6.i).descriptorCount(descriptorCount6)
+            this[7].type(type7.i).descriptorCount(descriptorCount7)
+            this[8].type(type8.i).descriptorCount(descriptorCount8)
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int,
+            type4: VkDescriptorType, descriptorCount4: Int,
+            type5: VkDescriptorType, descriptorCount5: Int,
+            type6: VkDescriptorType, descriptorCount6: Int,
+            type7: VkDescriptorType, descriptorCount7: Int,
+            type8: VkDescriptorType, descriptorCount8: Int,
+            type9: VkDescriptorType, descriptorCount9: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(10) {
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+            this[4].type(type4.i).descriptorCount(descriptorCount4)
+            this[5].type(type5.i).descriptorCount(descriptorCount5)
+            this[6].type(type6.i).descriptorCount(descriptorCount6)
+            this[7].type(type7.i).descriptorCount(descriptorCount7)
+            this[8].type(type8.i).descriptorCount(descriptorCount8)
+            this[9].type(type9.i).descriptorCount(descriptorCount9)
+        }
+    }
+
+    inline fun DescriptorPoolSize(
+            type0: VkDescriptorType, descriptorCount0: Int,
+            type1: VkDescriptorType, descriptorCount1: Int,
+            type2: VkDescriptorType, descriptorCount2: Int,
+            type3: VkDescriptorType, descriptorCount3: Int,
+            type4: VkDescriptorType, descriptorCount4: Int,
+            type5: VkDescriptorType, descriptorCount5: Int,
+            type6: VkDescriptorType, descriptorCount6: Int,
+            type7: VkDescriptorType, descriptorCount7: Int,
+            type8: VkDescriptorType, descriptorCount8: Int,
+            type9: VkDescriptorType, descriptorCount9: Int,
+            type10: VkDescriptorType, descriptorCount10: Int): VkDescriptorPoolSize.Buffer {
+        return DescriptorPoolSize(11) {
+            this[0].type(type0.i).descriptorCount(descriptorCount0)
+            this[1].type(type1.i).descriptorCount(descriptorCount1)
+            this[2].type(type2.i).descriptorCount(descriptorCount2)
+            this[3].type(type3.i).descriptorCount(descriptorCount3)
+            this[4].type(type4.i).descriptorCount(descriptorCount4)
+            this[5].type(type5.i).descriptorCount(descriptorCount5)
+            this[6].type(type6.i).descriptorCount(descriptorCount6)
+            this[7].type(type7.i).descriptorCount(descriptorCount7)
+            this[8].type(type8.i).descriptorCount(descriptorCount8)
+            this[9].type(type9.i).descriptorCount(descriptorCount9)
+            this[10].type(type10.i).descriptorCount(descriptorCount10)
         }
     }
 
@@ -1716,15 +1847,13 @@ object vk {
         return res
     }
 
-    inline fun getSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR): ArrayList<VkImageView> {
+    inline fun getSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR): VkImageViewArray {
         val pCount = appBuffer.int
         VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, NULL))
         val count = memGetInt(pCount)
         val images = appBuffer.longArray(count)
         VK_CHECK_RESULT(KHRSwapchain.nvkGetSwapchainImagesKHR(device, swapchain, pCount, images))
-        val res = ArrayList<VkImageView>()
-        for (i in 0 until count) res += memGetLong(images + Long.BYTES * i)
-        return res
+        return VkImageViewArray(count) { memGetLong(images + Long.BYTES * it) }
     }
 
     inline fun invalidateMappedMemoryRanges(device: VkDevice, memoryRange: VkMappedMemoryRange): VkResult {

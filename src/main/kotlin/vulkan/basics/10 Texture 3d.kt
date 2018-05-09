@@ -9,17 +9,13 @@
 package vulkan.basics
 
 import glfw_.appBuffer
-import glm_.L
-import glm_.b
+import glm_.*
 import glm_.func.rad
-import glm_.glm
 import glm_.mat4x4.Mat4
-import glm_.set
 import glm_.vec2.Vec2
 import glm_.vec3.Vec3
 import glm_.vec3.Vec3i
 import glm_.vec4.Vec4
-import kotlinx.coroutines.experimental.runBlocking
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkDescriptorImageInfo
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
@@ -28,6 +24,7 @@ import org.lwjgl.vulkan.VkVertexInputBindingDescription
 import uno.buffer.bufferBig
 import uno.buffer.destroy
 import uno.kotlin.buffers.capacity
+import uno.kotlin.buffers.indices
 import vkn.*
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
@@ -53,14 +50,11 @@ fun main(args: Array<String>) {
 private class Texture3d : VulkanExampleBase() {
 
     /** Vertex layout for this example */
-    object Vertex {
-        //    float pos[3];
-//    float uv[2];
-//    float normal[3];
-        val offsetPos = 0
-        val offsetUv = Vec3.size
-        val offsetNor = offsetUv + Vec2.size
-        val size = Vec3.size * 2 + Vec2.size
+    object Vertex : Bufferizable() {
+        lateinit var pos: Vec3
+        lateinit var uv: Vec2
+        @Order(2)
+        lateinit var normal: Vec3
     }
 
     /** Fractal noise generator based on perlin noise above */
@@ -260,6 +254,9 @@ private class Texture3d : VulkanExampleBase() {
         val texMemSize = ext.x * ext.y * ext.z
 
         val data = bufferBig(texMemSize)
+        val adr = memAddress(data)
+        for (i in data.indices)
+            memPutByte(adr + i, i.b)
 
         // Generate perlin based noise
         println("Generating ${ext.x} x ${ext.y} x ${ext.z} noise texture...")
@@ -277,12 +274,14 @@ private class Texture3d : VulkanExampleBase() {
             val FRACTAL = true
             val noiseScale = rand() % 10 + 4f
 
-            if (!true)
+            val parallel = true
+
+            if (!parallel)
                 for (z in 0 until ext.z) {
                     println(z)
                     for (y in 0 until ext.y)
                         for (x in 0 until ext.x) {
-
+                            println("x $x, y $y, z $z")
                             val v = Vec3(x, y, z) / ext
                             var n = when {
                                 FRACTAL -> FractalNoise().noise(v * noiseScale)
@@ -293,14 +292,13 @@ private class Texture3d : VulkanExampleBase() {
                             data[x + y * ext.x + z * ext.x * ext.y] = glm.floor(n * 255).b
                         }
                 }
-            else
-                runBlocking {
-//                    async(CommonPool) {
-//                    for (z in 0 until texture.extent.z) {
+            else {
+//                runBlocking {
+//                    for (z in 0 until 1) {
 //                        println(z)
 ////                    for (z in 0 until 1) {
-//                        for (y in 0 until texture.extent.y)
-//                            for (x in 0 until texture.extent.x) {
+//                        for (y in 0 until 1)
+//                            for (x in 0 until 100) {
 //                                launch {
 //                                    val v = Vec3(x, y, z) / texture.extent
 //                                    var n = when {
@@ -309,28 +307,46 @@ private class Texture3d : VulkanExampleBase() {
 //                                    }
 //                                    n -= glm.floor(n)
 //
-//                                    data[x + y * texture.extent.x + z * texture.extent.x * texture.extent.y] = glm.floor(n * 255).b
+//                                    val offset = x + y * texture.extent.x + z * texture.extent.x * texture.extent.y
+//                                    println("$adr, "+offset)
+//                                    memPutByte(adr + offset, glm.floor(n * 255).b)
+////                                    data[x + y * texture.extent.x + z * texture.extent.x * texture.extent.y] = glm.floor(n * 255).b
 //                                }
 //                            }
 //                    }
-//                    jobs.forEach { it.join() }
-                }
-//                IntStream.range(0, ext.x).parallel().flatMap { x ->
-//                    IntStream.range(0, ext.y).flatMap { y ->
-//                        IntStream.range(0, ext.z).flatMap { z ->
-//                            Vec3(x, y, z)
-//                        }
-//                    }
 //                }
-//                        .forEach { vec ->
-//                            var n = when {
-//                                FRACTAL -> FractalNoise().noise(v * noiseScale)
-//                                else -> 20f * glm.perlin(v)
-//                            }
-//                            n -= glm.floor(n)
+                IntStream
+                        .range(0, ext.x * ext.y * ext.z)
+                        .parallel()
+                        .forEach {
+                            val z = it / (ext.x * ext.y)
+                            val remainder = it - z * ext.x * ext.y
+                            val y = remainder / ext.x
+                            val x = remainder % ext.x
+                            val v = Vec3(x, y, z) / ext
+                            var n = when {
+                                FRACTAL -> FractalNoise().noise(v * noiseScale)
+                                else -> 20f * glm.perlin(v)
+                            }
+                            n -= glm.floor(n)
+
+                            data[x + y * ext.x + z * ext.x * ext.y] = glm.floor(n * 255).b
+                        }
 //
-//                            data[x + y * ext.x + z * ext.x * ext.y] = glm.floor(n * 255).b
-//                        }
+//                val channel = Channel<ProcessingRequest>()
+//
+//                val processingPool = newThreadPool
+//
+//                launch(processingPool) {  for (request in channel) doProcessing(it) }
+//
+//
+//
+//                for ...
+//
+//                    for ...
+//
+//                        channel.sendBlocking(ProcessingRequest(...))
+            }
         }
         println("Done in ${time}ms")
 
@@ -521,11 +537,11 @@ private class Texture3d : VulkanExampleBase() {
         // Describes memory layout and shader positions
         vertices.inputAttributes = vk.VertexInputAttributeDescription(
                 // Location 0 : Position
-                VERTEX_BUFFER_BIND_ID, 0, VkFormat.R32G32B32_SFLOAT, Vertex.offsetPos,
+                VERTEX_BUFFER_BIND_ID, 0, VkFormat.R32G32B32_SFLOAT, Vertex.offsetOf("pos"),
                 // Location 1 : Texture coordinates
-                VERTEX_BUFFER_BIND_ID, 1, VkFormat.R32G32_SFLOAT, Vertex.offsetUv,
+                VERTEX_BUFFER_BIND_ID, 1, VkFormat.R32G32_SFLOAT, Vertex.offsetOf("uv"),
                 // Location 1 : Vertex normal
-                VERTEX_BUFFER_BIND_ID, 2, VkFormat.R32G32B32_SFLOAT, Vertex.offsetNor)
+                VERTEX_BUFFER_BIND_ID, 2, VkFormat.R32G32B32_SFLOAT, Vertex.offsetOf("normal"))
 
         vertices.inputState = vk.PipelineVertexInputStateCreateInfo {
             vertexBindingDescription = vertices.inputBinding

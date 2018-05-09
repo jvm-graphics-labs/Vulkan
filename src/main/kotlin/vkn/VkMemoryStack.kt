@@ -48,7 +48,7 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     }
 //
 //    fun vkCreateDebugReportCallback(instance: VkInstance, createInfo: VkDebugReportCallbackCreateInfoEXT,
-//                                    allocator: VkAllocationCallbacks?, callback: VkDebugReportCallbackI?): VkResult {
+//                                    allocator: VkAllocationCallbacks?, callback: VkDebugReportCallbackFunc?): VkResult {
 //        vkDebugReportCallback = VkDebugReportCallback().apply { cb = callback }
 //        val pCallback = longs(vkDebugReportCallback!!.adr)
 //        return VkResult of EXTDebugReport.vkCreateDebugReportCallbackEXT(instance, createInfo, allocator, pCallback).also {
@@ -279,7 +279,7 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
         set(value) {
             sType(value.i)
         }
-    var VkDebugReportCallbackCreateInfoEXT.callback: VkDebugReportCallbackI?
+    var VkDebugReportCallbackCreateInfoEXT.callback: VkDebugReportCallbackFunc?
 //        get() = pfnCallback()
         get() = null
         set(value) {
@@ -710,13 +710,13 @@ class VkMemoryStack private constructor(size: Int) : MemoryStackPlus(size) {
     val ByteBuffer.utf8: String get() = MemoryUtil.memUTF8(this)
 }
 
-typealias VkDebugReportCallbackI = (VkDebugReportFlagsEXT, VkDebugReportObjectType, Long, Long, Int, String, String, Any?) -> Boolean
+typealias VkDebugReportCallbackFunc = (VkDebugReportFlagsEXT, VkDebugReportObjectType, Long, Long, Int, String, String, Any?) -> Boolean
 
 //var vkDebugReportCallback: VkDebugReportCallback? = null
 //
 //class VkDebugReportCallback : VkDebugReportCallbackEXT() {
 ////    val instance: VkDebugReportCallbackEXT = create(address)
-//    var cb: VkDebugReportCallbackI? = null
+//    var cb: VkDebugReportCallbackFunc? = null
 //    override fun invoke(flags: VkDebugReportFlagsEXT, objectType: VkDebugReportObjectTypeEXT, `object`: Long, location: Long,
 //                        messageCode: Int, pLayerPrefix: Long, pMessage: Long, userData: Long): VkBool32 = withStack {
 //        val layerPrefix = getString(pLayerPrefix)

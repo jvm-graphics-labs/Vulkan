@@ -901,6 +901,15 @@ inline var VkImageViewCreateInfo.format: VkFormat
 inline var VkImageViewCreateInfo.components: VkComponentMapping
     get() = VkImageViewCreateInfo.ncomponents(adr)
     set(value) = VkImageViewCreateInfo.ncomponents(adr, value)
+
+/** JVM custom */
+inline fun VkImageViewCreateInfo.components(r: VkComponentSwizzle, g: VkComponentSwizzle, b: VkComponentSwizzle, a: VkComponentSwizzle) {
+    components.r = r
+    components.g = g
+    components.b = b
+    components.a = a
+}
+
 inline var VkImageViewCreateInfo.subresourceRange: VkImageSubresourceRange
     get() = VkImageViewCreateInfo.nsubresourceRange(adr)
     set(value) = VkImageViewCreateInfo.nsubresourceRange(adr, value)
@@ -928,6 +937,11 @@ inline var VkImageCreateInfo.extent: VkExtent3D
 /** JVM custom */
 inline fun VkImageCreateInfo.extent(extent: Vec3i) {
     this.extent.set(extent.x, extent.y, extent.z)
+}
+
+/** JVM custom */
+inline fun VkImageCreateInfo.extent(extent: Vec2i, depth: Int) {
+    this.extent.set(extent.x, extent.y, depth)
 }
 
 inline var VkImageCreateInfo.mipLevels
@@ -997,7 +1011,7 @@ inline var VkImageSubresourceRange.levelCount: Int
 inline var VkImageSubresourceRange.baseArrayLayer: Int
     get() = VkImageSubresourceRange.nbaseArrayLayer(adr)
     set(value) = VkImageSubresourceRange.nbaseArrayLayer(adr, value)
-inline var VkImageSubresourceRange.layerCount
+inline var VkImageSubresourceRange.layerCount: Int
     get() = VkImageSubresourceRange.nlayerCount(adr)
     set(value) = VkImageSubresourceRange.nlayerCount(adr, value)
 
@@ -1778,6 +1792,19 @@ inline var VkDescriptorSetLayoutBinding.stageFlags: VkShaderStageFlags
 inline var VkDescriptorSetLayoutBinding.immutableSamplers: VkSamplerBuffer?
     get() = VkDescriptorSetLayoutBinding.npImmutableSamplers(adr)
     set(value) = VkDescriptorSetLayoutBinding.npImmutableSamplers(adr, value)
+/** JVM custom */
+inline var VkDescriptorSetLayoutBinding.immutableSampler: VkSampler?
+    get() = VkDescriptorSetLayoutBinding.npImmutableSamplers(adr)?.get(0)
+    set(value) {
+        if (value == null)
+            memPutAddress(adr + VkDescriptorSetLayoutBinding.PIMMUTABLESAMPLERS, NULL)
+        else {
+            val pSampler = appBuffer.long
+            memPutLong(pSampler, value)
+            memPutAddress(adr + VkDescriptorSetLayoutBinding.PIMMUTABLESAMPLERS, pSampler)
+            VkDescriptorSetLayoutBinding.ndescriptorCount(adr, 1)
+        }
+    }
 
 
 inline var VkDescriptorSetLayoutCreateInfo.type: VkStructureType
@@ -1951,6 +1978,20 @@ inline var VkFramebufferCreateInfo.renderPass: VkRenderPass
 inline var VkFramebufferCreateInfo.attachments: VkImageViewBuffer?
     get() = VkFramebufferCreateInfo.npAttachments(adr)
     set(value) = VkFramebufferCreateInfo.npAttachments(adr, value)
+/** JVM custom */
+inline var VkFramebufferCreateInfo.attachment: VkImageView?
+    get() = VkFramebufferCreateInfo.npAttachments(adr)?.get(0)
+    set(value) {
+        if (value == null) {
+            memPutAddress(adr + VkFramebufferCreateInfo.PATTACHMENTS, NULL)
+            VkFramebufferCreateInfo.nattachmentCount(adr, 0)
+        } else {
+            val pAtt = appBuffer.long
+            memPutLong(pAtt, value)
+            memPutAddress(adr + VkFramebufferCreateInfo.PATTACHMENTS, pAtt)
+            VkFramebufferCreateInfo.nattachmentCount(adr, 1)
+        }
+    }
 inline var VkFramebufferCreateInfo.width
     get() = VkFramebufferCreateInfo.nwidth(adr)
     set(value) = VkFramebufferCreateInfo.nwidth(adr, value)
@@ -2019,9 +2060,13 @@ inline var VkSubpassDescription.inputAttachments
 inline var VkSubpassDescription.colorAttachmentCount
     get() = VkSubpassDescription.ncolorAttachmentCount(adr)
     set(value) = VkSubpassDescription.ncolorAttachmentCount(adr, value)
-inline var VkSubpassDescription.colorAttachments
+inline var VkSubpassDescription.colorAttachments: VkAttachmentReference.Buffer?
     get() = VkSubpassDescription.npColorAttachments(adr)
     set(value) = VkSubpassDescription.npColorAttachments(adr, value)
+/** JVM custom */
+inline var VkSubpassDescription.colorAttachment: VkAttachmentReference?
+    get() = VkSubpassDescription.npColorAttachments(adr)?.get(0)
+    set(value) = memPutAddress(adr + VkSubpassDescription.PCOLORATTACHMENTS, memAddressSafe(value))
 inline var VkSubpassDescription.resolveAttachments
     get() = VkSubpassDescription.npResolveAttachments(adr)
     set(value) = VkSubpassDescription.npResolveAttachments(adr, value)
@@ -2067,17 +2112,38 @@ inline var VkRenderPassCreateInfo.flags: VkRenderPassCreateFlags
     get() = VkRenderPassCreateInfo.nflags(adr)
     set(value) = VkRenderPassCreateInfo.nflags(adr, value)
 inline val VkRenderPassCreateInfo.attachmentCount get() = VkRenderPassCreateInfo.nattachmentCount(adr)
-inline var VkRenderPassCreateInfo.attachments
+inline var VkRenderPassCreateInfo.attachments: VkAttachmentDescription.Buffer?
     get() = VkRenderPassCreateInfo.npAttachments(adr)
     set(value) = VkRenderPassCreateInfo.npAttachments(adr, value)
+/** JVM custom */
+inline var VkRenderPassCreateInfo.attachment: VkAttachmentDescription?
+    get() = VkRenderPassCreateInfo.npAttachments(adr)?.get(0)
+    set(value) {
+        memPutAddress(adr + VkRenderPassCreateInfo.PATTACHMENTS, memAddressSafe(value))
+        VkRenderPassCreateInfo.nattachmentCount(adr, if (value == null) 0 else 1)
+    }
 inline val VkRenderPassCreateInfo.subpassCount get() = VkRenderPassCreateInfo.nsubpassCount(adr)
-inline var VkRenderPassCreateInfo.subpasses
+inline var VkRenderPassCreateInfo.subpasses: VkSubpassDescription.Buffer
     get() = VkRenderPassCreateInfo.npSubpasses(adr)
     set(value) = VkRenderPassCreateInfo.npSubpasses(adr, value)
+/** JVM custom */
+inline var VkRenderPassCreateInfo.subpass: VkSubpassDescription
+    get() = VkRenderPassCreateInfo.npSubpasses(adr)[0]
+    set(value) {
+        memPutAddress(adr + VkRenderPassCreateInfo.PSUBPASSES, value.address())
+        VkRenderPassCreateInfo.nsubpassCount(adr, 1)
+    }
 inline val VkRenderPassCreateInfo.dependencyCount get() = VkRenderPassCreateInfo.ndependencyCount(adr)
-inline var VkRenderPassCreateInfo.dependencies
+inline var VkRenderPassCreateInfo.dependencies: VkSubpassDependency.Buffer?
     get() = VkRenderPassCreateInfo.npDependencies(adr)
     set(value) = VkRenderPassCreateInfo.npDependencies(adr, value)
+/** JVM custom */
+inline var VkRenderPassCreateInfo.dependency: VkSubpassDependency?
+    get() = VkRenderPassCreateInfo.npDependencies(adr)?.get(0)
+    set(value) {
+        memPutAddress(adr + VkRenderPassCreateInfo.PDEPENDENCIES, memAddressSafe(value))
+        VkRenderPassCreateInfo.ndependencyCount(adr, if (value == null) 0 else 1)
+    }
 
 
 inline var VkCommandPoolCreateInfo.type: VkStructureType
@@ -2231,6 +2297,16 @@ inline var VkBufferImageCopy.imageOffset: VkOffset3D
 inline var VkBufferImageCopy.imageExtent: VkExtent3D
     get() = VkBufferImageCopy.nimageExtent(adr)
     set(value) = VkBufferImageCopy.nimageExtent(adr, value)
+
+/** JVM custom */
+inline fun VkBufferImageCopy.imageExtent(extent: Vec2i, depth: Int) {
+    imageExtent.apply {
+        width = extent.x
+        height = extent.y
+        this.depth = depth
+    }
+}
+
 /** JVM custom */
 inline fun VkBufferImageCopy.imageExtent(extent: Vec3i) {
     this.imageExtent.set(extent.x, extent.y, extent.z)
@@ -3480,6 +3556,13 @@ inline var VkSwapchainCreateInfoKHR.imageColorSpace: VkColorSpace
 inline var VkSwapchainCreateInfoKHR.imageExtent: VkExtent2D
     get() = VkSwapchainCreateInfoKHR.nimageExtent(adr)
     set(value) = VkSwapchainCreateInfoKHR.nimageExtent(adr, value)
+
+/** JVM custom */
+inline fun VkSwapchainCreateInfoKHR.imageExtent(extent: Vec2i) {
+    imageExtent.width = extent.x
+    imageExtent.height = extent.y
+}
+
 inline var VkSwapchainCreateInfoKHR.imageArrayLayers
     get() = VkSwapchainCreateInfoKHR.nimageArrayLayers(adr)
     set(value) = VkSwapchainCreateInfoKHR.nimageArrayLayers(adr, value)
@@ -5126,9 +5209,13 @@ inline var VkDebugReportCallbackCreateInfoEXT.next
 inline var VkDebugReportCallbackCreateInfoEXT.flags: VkDebugReportFlagsEXT
     get() = VkDebugReportCallbackCreateInfoEXT.nflags(adr)
     set(value) = VkDebugReportCallbackCreateInfoEXT.nflags(adr, value)
-inline var VkDebugReportCallbackCreateInfoEXT.callback: VkDebugReportCallbackEXTI
-    get() = VkDebugReportCallbackCreateInfoEXT.npfnCallback(adr)
-    set(value) = VkDebugReportCallbackCreateInfoEXT.npfnCallback(adr, value)
+inline var VkDebugReportCallbackCreateInfoEXT.callback: VkDebugReportCallbackFunc
+    get() = TODO() //VkDebugReportCallbackCreateInfoEXT.npfnCallback(adr)
+    set(crossinline value) = VkDebugReportCallbackCreateInfoEXT.npfnCallback(adr,
+            { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
+                val type = VkDebugReportObjectType of objectType
+                value(flags, type, `object`, location, messageCode, pLayerPrefix.utf8, pMessage.utf8, pUserData as Any).i
+            })
 inline var VkDebugReportCallbackCreateInfoEXT.userData
     get() = VkDebugReportCallbackCreateInfoEXT.npUserData(adr)
     set(value) = VkDebugReportCallbackCreateInfoEXT.npUserData(adr, value)

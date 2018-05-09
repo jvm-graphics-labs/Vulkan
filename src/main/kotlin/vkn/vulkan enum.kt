@@ -1667,8 +1667,9 @@ enum class VkChromaLocation(val i: Int) {
 }
 
 enum class VkDescriptorUpdateTemplateType(val i: Int) {
-    DESCRIPTOR_SET (0),
-    PUSH_DESCRIPTORS_KHR (1);
+    DESCRIPTOR_SET(0),
+    PUSH_DESCRIPTORS_KHR(1);
+
     companion object {
         inline infix fun of(i: Int) = values().first { it.i == i }
     }
@@ -1676,15 +1677,16 @@ enum class VkDescriptorUpdateTemplateType(val i: Int) {
 
 
 enum class VkSubgroupFeature(val i: Int) {
-    BASIC_BIT ( 0x00000001),
-    VOTE_BIT ( 0x00000002),
-    ARITHMETIC_BIT ( 0x00000004),
-    BALLOT_BIT ( 0x00000008),
-    SHUFFLE_BIT ( 0x00000010),
-    SHUFFLE_RELATIVE_BIT ( 0x00000020),
-    CLUSTERED_BIT ( 0x00000040),
-    QUAD_BIT ( 0x00000080),
-    PARTITIONED_BIT_NV ( 0x00000100);
+    BASIC_BIT(0x00000001),
+    VOTE_BIT(0x00000002),
+    ARITHMETIC_BIT(0x00000004),
+    BALLOT_BIT(0x00000008),
+    SHUFFLE_BIT(0x00000010),
+    SHUFFLE_RELATIVE_BIT(0x00000020),
+    CLUSTERED_BIT(0x00000040),
+    QUAD_BIT(0x00000080),
+    PARTITIONED_BIT_NV(0x00000100);
+
     companion object {
         inline infix fun of(i: Int) = values().first { it.i == i }
     }
@@ -1693,10 +1695,11 @@ enum class VkSubgroupFeature(val i: Int) {
 typealias VkSubgroupFeatureFlags = VkFlags
 
 enum class VkPeerMemoryFeature(val i: Int) {
-    COPY_SRC_BIT (0x00000001),
-    COPY_DST_BIT (0x00000002),
-    GENERIC_SRC_BIT (0x00000004),
-    GENERIC_DST_BIT (0x00000008);
+    COPY_SRC_BIT(0x00000001),
+    COPY_DST_BIT(0x00000002),
+    GENERIC_SRC_BIT(0x00000004),
+    GENERIC_DST_BIT(0x00000008);
+
     companion object {
         inline infix fun of(i: Int) = values().first { it.i == i }
     }
@@ -1705,7 +1708,8 @@ enum class VkPeerMemoryFeature(val i: Int) {
 typealias VkPeerMemoryFeatureFlags = VkFlags
 
 enum class VkMemoryAllocateFlagBits(val i: Int) {
-    DEVICE_MASK_BIT (0x00000001);
+    DEVICE_MASK_BIT(0x00000001);
+
     companion object {
         inline infix fun of(i: Int) = values().first { it.i == i }
     }
@@ -1946,6 +1950,7 @@ enum class VkDebugReport(val i: Int) {
 }
 
 inline infix fun Int.has(f: VkDebugReport) = and(f.i) != 0
+inline infix fun Int.or(f: VkDebugReport): VkDebugReportFlagsEXT = or(f.i)
 
 typealias VkDebugReportFlagsEXT = VkFlags
 

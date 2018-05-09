@@ -2,7 +2,6 @@ package vulkan.base
 
 import glm_.i
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.vulkan.EXTDebugReport
 import org.lwjgl.vulkan.VkDebugReportCallbackEXTI
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
@@ -17,7 +16,7 @@ object debug {
     var msgCallback: VkDebugReportCallback = NULL
 
     /** Default debug callback  */
-    val messageCallback: VkDebugReportCallbackI = { flags, objType, srcObject, location, msgCode, layerPrefix, msg, userData ->
+    val messageCallback: VkDebugReportCallbackFunc = { flags, objType, srcObject, location, msgCode, layerPrefix, msg, userData ->
         /*  Select prefix depending on flags passed to the callback
             Note that multiple flags may be set for a single validation message         */
         val prefix = StringBuilder()
@@ -58,13 +57,10 @@ object debug {
 
     /** Load debug function pointers and set debug callback
      *  @param flags = VkDebugReportFlagBitsEXT */
-    fun setupDebugging(instance: VkInstance, flags: Int, callBack: VkDebugReportCallbackI?) {
+    fun setupDebugging(instance: VkInstance, flags: Int, callBack: VkDebugReportCallbackFunc?) {
 
         val dbgCreateInfo = vk.DebugReportCallbackCreateInfoEXT {
-            callback = VkDebugReportCallbackEXTI { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
-                val type = VkDebugReportObjectType of objectType
-                (callBack ?: messageCallback).invoke(flags, type, `object`, location, messageCode, pLayerPrefix.utf8, pMessage.utf8, pUserData as Any).i
-            }
+            this.callback = callBack ?: messageCallback
             this.flags = flags
         }
 

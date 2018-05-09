@@ -357,7 +357,7 @@ inline infix fun VkDevice.createSemaphore(createInfo: VkSemaphoreCreateInfo): Vk
     return memGetLong(pSemaphore)
 }
 
-inline infix fun VkDevice.createShaderModule(createInfo: VkShaderModuleCreateInfo): Long {
+inline infix fun VkDevice.createShaderModule(createInfo: VkShaderModuleCreateInfo): VkShaderModule {
     val pShaderModule = appBuffer.long
     VK_CHECK_RESULT(VK10.nvkCreateShaderModule(this, createInfo.adr, NULL, pShaderModule))
     return memGetLong(pShaderModule)
@@ -549,7 +549,7 @@ inline fun VkDevice.getQueue(queueFamilyIndex: Int, queueIndex: Int): VkQueue {
     return VkQueue(memGetLong(pQueue), this)
 }
 
-inline infix fun VkDevice.getSwapchainImagesKHR(swapchain: VkSwapchainKHR): ArrayList<VkImageView> {
+inline infix fun VkDevice.getSwapchainImagesKHR(swapchain: VkSwapchainKHR): VkImageViewArray {
     return vk.getSwapchainImagesKHR(this, swapchain)
 }
 

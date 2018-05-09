@@ -5,15 +5,17 @@ import glfw_.appBuffer
 import glfw_.appBuffer.ptr
 import gli_.extension
 import glm_.BYTES
+import glm_.buffer.bufferBig
+import glm_.buffer.intBufferBig
 import glm_.i
 import glm_.mat3x3.Mat3
 import glm_.mat4x4.Mat4
 import glm_.set
+import glm_.vec2.Vec2
+import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
-import gln.buf
 import graphics.scenery.spirvcrossj.*
-import imgui.Col
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
@@ -22,6 +24,7 @@ import org.lwjgl.system.Struct
 import org.lwjgl.system.StructBuffer
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDevice
+import org.lwjgl.vulkan.VkExtent2D
 import org.lwjgl.vulkan.VkPhysicalDevice
 import uno.buffer.bufferBig
 import uno.buffer.intBufferBig
@@ -33,6 +36,7 @@ import java.nio.LongBuffer
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KType
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.defaultType
 import kotlin.reflect.full.findAnnotation
@@ -105,8 +109,12 @@ typealias VkResultBuffer = IntBuffer
 typealias VkSamplerBuffer = LongBuffer
 typealias VkImageViewBuffer = LongBuffer
 
+typealias VkCommandPoolArray = LongArray
+typealias VkFenceArray = LongArray
+typealias VkFramebufferArray = LongArray
 typealias VkImageArray = LongArray
 typealias VkImageViewArray = LongArray
+typealias VkSemaphoreArray = LongArray
 
 
 object LongArrayList {
@@ -169,6 +177,12 @@ fun Collection<String>.toPointerBuffer(): PointerBuffer {
     for (i in indices)
         pointers.put(i, elementAt(i).utf8)
     return pointers
+}
+
+
+infix fun Vec2i.put(extent: VkExtent2D) {
+    x = extent.width
+    y = extent.height
 }
 
 
@@ -289,6 +303,13 @@ object WithAddress {
         }
     }
 
+    fun addVec2(vec2: Vec2) {
+        for (i in 0..1) {
+            memPutFloat(address + offset, vec2[i])
+            offset += Float.BYTES
+        }
+    }
+
     fun addFloat(float: Float) {
         memPutFloat(address + offset, float)
         offset += Float.BYTES
@@ -322,18 +343,7 @@ abstract class Bufferizable {
         get() = if (field.isEmpty()) fieldOrderDefault else field
 
     open val size: Int by lazy {
-        fieldOrder.sumBy { field ->
-            val member = this::class.declaredMemberProperties.find { it.name == field }!!
-            when (member.returnType) {
-                Mat4::class.defaultType -> Mat4.size
-                Mat3::class.defaultType -> Mat3.size
-                Vec4::class.defaultType -> Vec4.size
-                Vec3::class.defaultType -> Vec3.size
-                Float::class.defaultType -> Float.BYTES
-                Int::class.defaultType -> Int.BYTES
-                else -> throw Error(member.returnType.toString())
-            }
-        }
+        fieldOrder.sumBy { field -> this::class.declaredMemberProperties.find { it.name == field }!!.returnType.size }
     }
 
     open infix fun to(address: Long) {
@@ -351,18 +361,44 @@ abstract class Bufferizable {
         Array(fieldOrder.size) {
             val field = fieldOrder[it]
             val member = this::class.declaredMemberProperties.find { it.name == field }!!
-            val func = when (member.returnType) {
-                Mat4::class.defaultType -> WithAddress::addMat4
-                Mat3::class.defaultType -> WithAddress::addMat3
-                Vec4::class.defaultType -> WithAddress::addVec4
-                Vec3::class.defaultType -> WithAddress::addVec3
-                Float::class.defaultType -> WithAddress::addFloat
-                Int::class.defaultType -> WithAddress::addInt
-                else -> throw Error(member.returnType.toString())
-            } as BufferizableAddFunctionType
+            val func = member.returnType.func
             func to member
         }
     }
+
+    val offsets by lazy {
+        var offset = 0
+        MutableList(fieldOrder.size) { i ->
+            fieldOrder[i] to offset.also {
+                offset += data[i].second.returnType.size
+            }
+        }.toMap()
+    }
+
+    fun offsetOf(field: String) = offsets[field]!!
+
+    private val KType.size: Int
+        get() = when (this) {
+            Mat4::class.defaultType -> Mat4.size
+            Mat3::class.defaultType -> Mat3.size
+            Vec4::class.defaultType -> Vec4.size
+            Vec3::class.defaultType -> Vec3.size
+            Vec2::class.defaultType -> Vec2.size
+            Float::class.defaultType -> Float.BYTES
+            Int::class.defaultType -> Int.BYTES
+            else -> throw Error(toString())
+        }
+    private val KType.func: BufferizableAddFunctionType
+        get() = when (this) {
+            Mat4::class.defaultType -> WithAddress::addMat4
+            Mat3::class.defaultType -> WithAddress::addMat3
+            Vec4::class.defaultType -> WithAddress::addVec4
+            Vec3::class.defaultType -> WithAddress::addVec3
+            Vec2::class.defaultType -> WithAddress::addVec2
+            Float::class.defaultType -> WithAddress::addFloat
+            Int::class.defaultType -> WithAddress::addInt
+            else -> throw Error(toString())
+        } as BufferizableAddFunctionType
 }
 
 typealias BufferizableAddFunctionType = (Any) -> Unit
@@ -394,7 +430,7 @@ fun bufferOf(data: Collection<Bufferizable>): ByteBuffer {
 
 fun intArrayOf(ints: Collection<Int>): IntBuffer {
     val buffer = intBufferBig(ints.size)
-    for(i in ints.indices)
+    for (i in ints.indices)
         buffer[i] = ints.elementAt(i)
     return buffer
 }

@@ -20,17 +20,17 @@ kotlin {
 //        jvmTarget = '1.8'
 //    }
 //}
-//
-//allprojects {
-//
-//    apply plugin: 'java'
-//    sourceCompatibility = 1.8
-//    targetCompatibility = 1.8
-//    apply plugin: 'kotlin'
-//    compileKotlin {
-//        kotlinOptions.jvmTarget = '1.8'
-//    }
-//}
+
+allprojects {
+
+    apply plugin: 'java'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    apply plugin: 'kotlin'
+    compileKotlin {
+        kotlinOptions.jvmTarget = '1.8'
+    }
+}
 
 buildscript {
 
@@ -51,19 +51,20 @@ buildscript {
 
 dependencies {
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
-    compile 'com.github.kotlin-graphics:uno-sdk:fc67ccf36c7da5baffa41efab4c5911be41c9c77'
-    compile 'com.github.kotlin-graphics:assimp:c224cf47516bc91a848a4dea88bf82d5327074a0'
+    implementation 'com.github.kotlin-graphics:uno-sdk:7bada9b49adef3e007a6fb4a2052da2b11933dcd'
+    implementation 'com.github.kotlin-graphics:assimp:c224cf47516bc91a848a4dea88bf82d5327074a0'
     implementation 'com.github.kotlin-graphics:imgui:b721ceaf260a47fa3623ab8d780ecfbe3510ec21'
 
-    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21"
 
     ext.spirvCrossVersion = "0.4.0"
-    compile "graphics.scenery:spirvcrossj:$spirvCrossVersion"
+    implementation "graphics.scenery:spirvcrossj:$spirvCrossVersion"
 
     testCompile 'io.kotlintest:kotlintest:2.0.7'
 
+    ext.lwjglVersion = "3.1.7-SNAPSHOT"
     switch (OperatingSystem.current()) {
         case OperatingSystem.WINDOWS:
             ext.lwjglNatives = "natives-windows"
@@ -75,16 +76,10 @@ dependencies {
             ext.lwjglNatives = "natives-macos"
             break
     }
-    ext.lwjglVersion = "3.1.7-SNAPSHOT"
-    compile "org.lwjgl:lwjgl:$lwjglVersion"
-    compile "org.lwjgl:lwjgl-glfw:$lwjglVersion"
-    compile "org.lwjgl:lwjgl-openal:$lwjglVersion"
-    compile "org.lwjgl:lwjgl-stb:$lwjglVersion"
-    compile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
-    runtime "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
-    runtime "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
-    runtime "org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives"
-    runtime "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
+    ["", "-glfw", "-jemalloc", "-openal", "-opengl", "-stb", "-vulkan"].each {
+        implementation "org.lwjgl:lwjgl$it:$lwjglVersion"
+        runtime "org.lwjgl:lwjgl$it:$lwjglVersion:$lwjglNatives"
+    }
     runtime "graphics.scenery:spirvcrossj:$spirvCrossVersion:$lwjglNatives"
 }
 

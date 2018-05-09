@@ -2,15 +2,14 @@ package glfw_
 
 import glm_.BYTES
 import glm_.L
+import glm_.buffer.bufferBig
 import glm_.pow
 import glm_.set
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.Pointer
-import uno.buffer.bufferBig
 import uno.kotlin.buffers.indices
 import vkn.VkDynamicState
-import vkn.adr
 import java.nio.*
 import java.util.concurrent.atomic.AtomicLong
 

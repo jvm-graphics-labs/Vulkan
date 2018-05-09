@@ -38,7 +38,7 @@ class VulkanSwapChain {
     /** @brief Handle to the current swap chain, required for recreation */
     var swapChain: VkSwapchainKHR = NULL
     var imageCount = 0
-    lateinit var images: ArrayList<VkImage>
+    lateinit var images: VkImageArray
     val buffers = ArrayList<SwapChainBuffer>()
     /** @brief Queue family index of the detected graphics and presenting device queue */
     var queueNodeIndex = UINT32_MAX
