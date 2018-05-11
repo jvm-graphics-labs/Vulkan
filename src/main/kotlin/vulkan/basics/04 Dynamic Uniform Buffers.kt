@@ -20,19 +20,20 @@ package vulkan.basics
 
 import glfw_.appBuffer
 import glm_.L
-import glm_.detail.Random
+import glm_.buffer.adr
+import glm_.buffer.bufferBig
+import glm_.buffer.free
 import glm_.glm
 import glm_.i
 import glm_.mat4x4.Mat4
 import glm_.pow
 import glm_.vec3.Vec3
 import glm_.vec3.operators.times
-import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.memCopy
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-import uno.buffer.bufferBig
-import uno.buffer.destroy
 import uno.kotlin.buffers.capacity
 import vkn.*
 import vulkan.VERTEX_BUFFER_BIND_ID
@@ -118,7 +119,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
     override fun destroy() {
 
-        uboDataDynamic.model.destroy()
+        uboDataDynamic.model.free()
 
         /*  Clean up used Vulkan resources
             Note : Inherited destructor cleans up resources stored in base class         */
@@ -340,9 +341,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
         val bufferSize = OBJECT_INSTANCES * dynamicAlignment
 
-        uboDataDynamic.model = bufferBig(bufferSize.i).also {
-            uboDataDynamic.address = memAddress(it)
-        }
+        uboDataDynamic.model = bufferBig(bufferSize.i).apply { uboDataDynamic.address = adr }
 
         println("minUniformBufferOffsetAlignment = $minUboAlignment")
         println("dynamicAlignment = $dynamicAlignment")

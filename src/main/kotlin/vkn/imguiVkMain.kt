@@ -5,11 +5,15 @@ import glfw_.appBuffer
 import glfw_.glfw
 import glm_.i
 import glm_.set
+import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
+import glm_.vec4.Vec4
+import imgui.Cond
 import imgui.Context
+import imgui.ImGui
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.VK_SUBPASS_EXTERNAL
+import org.lwjgl.vulkan.VK10.*
 
 
 var VULKAN_DEBUG_REPORT = true
@@ -18,11 +22,12 @@ const val MAX_POSSIBLE_BACK_BUFFERS = 16
 
 
 fun main(args: Array<String>) {
-
-
+    Example().run()
 }
 
 class Example {
+
+    val window: GlfwWindow
 
     ////#define IMGUI_UNLIMITED_FRAME_RATE
 //#ifdef _DEBUG
@@ -46,34 +51,36 @@ class Example {
 
     var pipelineCache: VkPipelineCache = NULL
     var descriptorPool: VkDescriptorPool = NULL
-//
+    //
     val fbSize = Vec2i()
     var resizeWanted = false
     var resizeSize = Vec2i()
-//static uint32_t                 g_BackbufferIndices[IMGUI_VK_QUEUED_FRAMES];    // keep track of recently rendered swapchain frame indices
-//static uint32_t                 g_BackBufferCount = 0;
+    val backbufferIndices = IntArray(VK_QUEUED_FRAMES)    // keep track of recently rendered swapchain frame indices
+    //    var backBufferCount = 0
     var backBuffer = VkImageArray(MAX_POSSIBLE_BACK_BUFFERS)
     val backBufferView = VkImageViewArray(MAX_POSSIBLE_BACK_BUFFERS)
     val framebuffer = VkFramebufferArray(MAX_POSSIBLE_BACK_BUFFERS)
-    //
-//static uint32_t                 g_FrameIndex = 0;
+
+    var frameIndex = 0
     val commandPool = VkCommandPoolArray(VK_QUEUED_FRAMES)
     val commandBuffer: Array<VkCommandBuffer?> = Array(VK_QUEUED_FRAMES) { null }
     val fence = VkFenceArray(VK_QUEUED_FRAMES)
     val presentCompleteSemaphore = VkSemaphoreArray(VK_QUEUED_FRAMES)
     val renderCompleteSemaphore = VkSemaphoreArray(VK_QUEUED_FRAMES)
-//
-//static VkClearValue g_ClearValue = {};
+
+
+    var f = 0f
+    var showDemoWindow = true
+    var showAnotherWindow = false
+    val clearColor = Vec4(0.45f, 0.55f, 0.6f, 1f)
 
     init {
         // Setup window
 //    glfwSetErrorCallback(glfw_error_callback);
         glfw.init()
-        glfw.windowHint {
-            api = "none"
-        }
+        glfw.windowHint { api = "none" }
 
-        val window = GlfwWindow(1280, 720, "ImGui GLFW+Vulkan example")
+        window = GlfwWindow(1280, 720, "ImGui GLFW+Vulkan example")
 
         // Setup Vulkan
         if (!glfw.vulkanSupported)
@@ -83,6 +90,10 @@ class Example {
             resizeWanted = true
             resizeSize put size
         }
+        window.show()
+    }
+
+    fun run() {
 
         // Setup Dear ImGui binding
 //        IMGUI_CHECKVERSION() TODO
@@ -95,10 +106,10 @@ class Example {
                 descriptorPool)
 
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-        ImGui_ImplGlfwVulkan_Init(window, true, & init_data)
+        ImplGlfwVulkan.init(window, true, initData)
 
         // Setup style
-        ImGui::StyleColorsDark();
+        ImGui.styleColorsDark()
         //ImGui::StyleColorsClassic();
 
         // Load Fonts
@@ -117,104 +128,84 @@ class Example {
         //IM_ASSERT(font != NULL);
 
         // Upload Fonts
-        {
-            VkResult err
-                    err = vkResetCommandPool(g_Device, g_CommandPool[g_FrameIndex], 0)
-            check_vk_result(err)
-            VkCommandBufferBeginInfo begin_info = {}
-            begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
-            begin_info.flags | = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-            err = vkBeginCommandBuffer(g_CommandBuffer[g_FrameIndex], & begin_info)
-            check_vk_result(err)
+        run {
+            device resetCommandPool commandPool[frameIndex]
+            val beginInfo = vk.CommandBufferBeginInfo { flags = flags or VkCommandBufferUsage.ONE_TIME_SUBMIT_BIT }
+            commandBuffer[frameIndex]!! begin beginInfo
 
-            ImGui_ImplGlfwVulkan_CreateFontsTexture(g_CommandBuffer[g_FrameIndex])
+            ImplGlfwVulkan.createFontsTexture(commandBuffer[frameIndex]!!)
 
-            VkSubmitInfo end_info = {}
-            end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO
-            end_info.commandBufferCount = 1
-            end_info.pCommandBuffers = & g_CommandBuffer [g_FrameIndex]
-            err = vkEndCommandBuffer(g_CommandBuffer[g_FrameIndex])
-            check_vk_result(err)
-            err = vkQueueSubmit(g_Queue, 1, & end_info, VK_NULL_HANDLE)
-            check_vk_result(err)
+            val endInfo = vk.SubmitInfo { commandBuffer = this@Example.commandBuffer[frameIndex]!! }
+            commandBuffer[frameIndex]!!.end()
+            queue submit endInfo
 
-            err = vkDeviceWaitIdle(g_Device)
-            check_vk_result(err)
-            ImGui_ImplGlfwVulkan_InvalidateFontUploadObjects()
+            device.waitIdle()
+            ImplGlfwVulkan.invalidateFontUploadObjects()
         }
 
-        bool show_demo_window = true
-        bool show_another_window = false
-        ImVec4 clear_color = ImVec4 (0.45f, 0.55f, 0.60f, 1.00f)
+        var counter = 0
 
 
         // Main loop
-        while (!glfwWindowShouldClose(window)) {
+        while (!window.shouldClose) {
             // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
             // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
             // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
             // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-            glfwPollEvents()
+            glfw.pollEvents()
 
-            if (g_ResizeWanted)
-                resize_vulkan(g_ResizeWidth, g_ResizeHeight)
-            g_ResizeWanted = false
+            if (resizeWanted)
+                resizeVulkan(resizeSize)
+            resizeWanted = false
 
-            ImGui_ImplGlfwVulkan_NewFrame();
+            ImplGlfwVulkan.newFrame()
 
             // 1. Show a simple window.
             // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
-            {
-                static float f = 0.0f
-                static int counter = 0
-                ImGui::Text("Hello, world!")                           // Display some text (you can use a format string too)
-                ImGui::SliderFloat("float", & f, 0.0f, 1.0f)            // Edit 1 float using a slider from 0.0f to 1.0f
-                ImGui::ColorEdit3("clear color", (float *)& clear_color) // Edit 3 floats representing a color
+            run {
+                ImGui.text("Hello, world!")                           // Display some text (you can use a format string too)
+                ImGui.sliderFloat("float", ::f, 0f, 1f)            // Edit 1 float using a slider from 0.0f to 1.0f
+                ImGui.colorEdit3("clear color", clearColor) // Edit 3 floats representing a color
 
-                ImGui::Checkbox("Demo Window", & show_demo_window)      // Edit bools storing our windows open/close state
-                ImGui::Checkbox("Another Window", & show_another_window)
+                ImGui.checkbox("Demo Window", ::showDemoWindow)      // Edit bools storing our windows open/close state
+                ImGui.checkbox("Another Window", ::showAnotherWindow)
 
-                if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+                if (ImGui.button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
                     counter++
-                ImGui::SameLine()
-                ImGui::Text("counter = %d", counter)
+                ImGui.sameLine()
+                ImGui.text("counter = %d", counter)
 
-                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate)
+                ImGui.text("Application average %.3f ms/frame (%.1f FPS)", 1000f / io.framerate, io.framerate)
             }
 
             // 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-            if (show_another_window) {
-                ImGui::Begin("Another Window", & show_another_window)
-                ImGui::Text("Hello from another window!")
-                if (ImGui::Button("Close Me"))
-                    show_another_window = false
-                ImGui::End()
+            if (showAnotherWindow) {
+                ImGui._begin("Another Window", ::showAnotherWindow)
+                ImGui.text("Hello from another window!")
+                if (ImGui.button("Close Me"))
+                    showAnotherWindow = false
+                ImGui.end()
             }
 
             // 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-            if (show_demo_window) {
-                ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver) // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-                ImGui::ShowDemoWindow(& show_demo_window)
+            if (showDemoWindow) {
+                ImGui.setNextWindowPos(Vec2(650, 20), Cond.FirstUseEver) // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+                ImGui.showDemoWindow(::showDemoWindow)
             }
 
-            memcpy(& g_ClearValue . color . float32 [0], &clear_color, 4 * sizeof(float))
-            frame_begin()
-            ImGui_ImplGlfwVulkan_Render(g_CommandBuffer[g_FrameIndex])
-            frame_end()
-            frame_present()
+            frameBegin()
+            ImplGlfwVulkan.render(commandBuffer[frameIndex]!!)
+            frameEnd()
+            framePresent()
         }
 
         // Cleanup
-        VkResult err = vkDeviceWaitIdle (g_Device)
-        check_vk_result(err)
-        ImGui_ImplGlfwVulkan_Shutdown()
-        ImGui::DestroyContext()
-        cleanup_vulkan()
+        device.waitIdle()
+        ImplGlfwVulkan.shutdown()
+        cleanupVulkan()
 
-        glfwDestroyWindow(window)
-        glfwTerminate()
-
-        return 0
+        window.destroy()
+        glfw.terminate()
     }
 
 
@@ -504,6 +495,92 @@ class Example {
                 attachment[0] = backBufferView[i]
                 framebuffer[i] = device createFramebuffer info
             }
+        }
+    }
+
+    fun frameBegin() {
+
+        while (true) {
+            val err = vkWaitForFences(device, fence[frameIndex], true, 100)
+            if (err == VK_SUCCESS) break
+            if (err == VK_TIMEOUT) continue
+            VK_CHECK_RESULT(err)
+        }
+
+        backbufferIndices[frameIndex] = device.acquireNextImageKHR(swapchain, UINT64_MAX, presentCompleteSemaphore[frameIndex], NULL)
+
+        run {
+            device resetCommandPool commandPool[frameIndex]
+            val info = vk.CommandBufferBeginInfo { flags = flags or VkCommandBufferUsage.ONE_TIME_SUBMIT_BIT }
+            commandBuffer[frameIndex]!! begin info
+        }
+
+        val info = vk.RenderPassBeginInfo {
+            renderPass = this@Example.renderPass
+            framebuffer = this@Example.framebuffer[backbufferIndices[frameIndex]]
+            renderArea.apply { extent(fbSize) }
+            clearValue(clearColor)
+        }
+        commandBuffer[frameIndex]!!.beginRenderPass(info, VkSubpassContents.INLINE)
+    }
+
+    fun frameEnd() {
+
+        commandBuffer[frameIndex]!!.endRenderPass()
+
+        val waitStage: VkPipelineStageFlags = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
+        val info = vk.SubmitInfo {
+            waitSemaphoreCount = 1
+            waitSemaphore = presentCompleteSemaphore[frameIndex]
+            waitDstStageMask = appBuffer intBufferOf waitStage
+            commandBuffer = this@Example.commandBuffer[frameIndex]
+            signalSemaphore = renderCompleteSemaphore[frameIndex]
+        }
+        commandBuffer[frameIndex]!!.end()
+        device resetFence fence[frameIndex]
+        queue.submit(info, fence[frameIndex])
+    }
+
+    fun framePresent() {
+
+        val info = vk.PresentInfoKHR {
+            waitSemaphores = appBuffer longBufferOf renderCompleteSemaphore[frameIndex] // TODO bug
+            swapchainCount = 1
+            swapchain = this@Example.swapchain
+            imageIndex = backbufferIndices[frameIndex]
+        }
+        queue presentKHR info
+
+        frameIndex = (frameIndex + 1) % VK_QUEUED_FRAMES
+    }
+
+    fun cleanupVulkan() {
+
+        device.apply {
+
+            destroyDescriptorPool(descriptorPool)
+            for (i in 0 until VK_QUEUED_FRAMES) {
+                destroyFence(fence[i])
+                freeCommandBuffer(commandPool[i], commandBuffer[i]!!)
+                destroyCommandPool(commandPool[i])
+                destroySemaphore(presentCompleteSemaphore[i])
+                destroySemaphore(renderCompleteSemaphore[i])
+            }
+            for (i in backBuffer.indices) {
+                destroyImageView(backBufferView[i])
+                destroyFramebuffer(framebuffer[i])
+            }
+            destroyRenderPass(renderPass)
+            destroySwapchainKHR(swapchain)
+//            destroySurfaceKHR(g_Instance, g_Surface, g_Allocator) TODO
+
+            if (VULKAN_DEBUG_REPORT) TODO()
+            // get the proc address of the function pointer, required for used extensions
+//                auto vkDestroyDebugReportCallbackEXT =(PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr (g_Instance, "vkDestroyDebugReportCallbackEXT")
+//            vkDestroyDebugReportCallbackEXT(g_Instance, g_Debug_Report, g_Allocator)
+
+            device.destroy()
+            instance.destroy()
         }
     }
 }

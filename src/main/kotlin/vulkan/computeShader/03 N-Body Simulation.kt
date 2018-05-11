@@ -9,6 +9,7 @@
 package vulkan.computeShader
 
 import glm_.*
+import glm_.buffer.bufferBig
 import glm_.func.rad
 import glm_.mat4x4.Mat4
 import glm_.vec2.Vec2
@@ -17,8 +18,6 @@ import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
-import uno.buffer.bufferBig
-import uno.buffer.bufferOf
 import vkn.*
 import vulkan.PARTICLES_PER_ATTRACTOR
 import vulkan.VERTEX_BUFFER_BIND_ID
@@ -328,7 +327,7 @@ private class NBodySimulation : VulkanExampleBase() {
                 } else {
                     // Position
                     val position = attractors[i] + Vec3 { next() } * 0.75f
-                    val len = (position - attractors[i]).normalizeAssign().length
+                    val len = (position - attractors[i]).normalizeAssign().length()
                     position.y *= 2f - len * len
 
                     // Velocity

@@ -2,6 +2,8 @@ package vulkan.basics
 
 import glfw_.glfw
 import glm_.*
+import glm_.buffer.bufferBig
+import glm_.buffer.free
 import glm_.func.rad
 import glm_.mat4x4.Mat4
 import glm_.vec3.Vec3
@@ -216,10 +218,10 @@ private class TriangleVerbose : VulkanExampleBase() {
         }
 
         semaphoreCreateInfo.free()
-        pPresentCompleteSemaphore.destroy()
-        pRenderCompleteSemaphore.destroy()
+        pPresentCompleteSemaphore.free()
+        pRenderCompleteSemaphore.free()
         fenceCreateInfo.free()
-        pFence.destroy()
+        pFence.free()
     }
 
     /** Get a new command buffer from the command pool
@@ -246,7 +248,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         }
 
         cmdBufAllocateInfo.free()
-        pCmdBuffer.destroy()
+        pCmdBuffer.free()
 
         return cmdBuffer
     }
@@ -284,7 +286,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         vkFreeCommandBuffers(device, cmdPool, commandBuffer)
 
         pCommandBuffer.free()
-        pFence.destroy()
+        pFence.free()
     }
 
     /** Build separate command buffers for every framebuffer image
@@ -384,9 +386,9 @@ private class TriangleVerbose : VulkanExampleBase() {
 
             viewport.free()
             scissor.free()
-            pDescriptorSet.destroy()
-            pBuffer.destroy()
-            pOffset.destroy()
+            pDescriptorSet.free()
+            pBuffer.free()
+            pOffset.free()
         }
         cmdBufInfo.free()
         clearValues.free()
@@ -435,10 +437,10 @@ private class TriangleVerbose : VulkanExampleBase() {
             This ensures that the image is not presented to the windowing system until all commands have been submitted */
         swapChain.queuePresent(queue, currentBuffer, renderCompleteSemaphore)
 
-        pWaitStageMask.destroy()
-        pWaitSemaphore.destroy()
-        pSignalSemaphore.destroy()
-        pCommandBuffer.destroy()
+        pWaitStageMask.free()
+        pWaitSemaphore.free()
+        pSignalSemaphore.free()
+        pCommandBuffer.free()
         submitInfo.free()
     }
 
@@ -590,8 +592,8 @@ private class TriangleVerbose : VulkanExampleBase() {
             vkFreeMemory(device, stagingBuffers.indices.memory, null)
 
             vertexBufferInfo.free()
-            pBuffer.destroy()
-            pMemory.destroy()
+            pBuffer.free()
+            pMemory.free()
 
         } else {
 
@@ -643,11 +645,11 @@ private class TriangleVerbose : VulkanExampleBase() {
             VK_CHECK_RESULT(vkBindBufferMemory(device, indices.buffer, indices.memory, 0))
 
             vertexBufferInfo.free()
-            pBuffer.destroy()
-            pMemory.destroy()
+            pBuffer.free()
+            pMemory.free()
         }
-        vertexBuffer.destroy()
-        indexBuffer.destroy()
+        vertexBuffer.free()
+        indexBuffer.free()
         memAlloc.free()
         memReqs.free()
         pData.free()
@@ -679,7 +681,7 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         typeCounts.free()
         descriptorPoolInfo.free()
-        pDescriptorPool.destroy()
+        pDescriptorPool.free()
     }
 
     fun setupDescriptorSetLayout() {
@@ -716,9 +718,9 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         layoutBinding.free()
         descriptorLayout.free()
-        pDescriptorSetLayout.destroy()
+        pDescriptorSetLayout.free()
         pipelineLayoutCreateInfo.free()
-        pPipelineLayout.destroy()
+        pPipelineLayout.free()
     }
 
     fun setupDescriptorSet() {
@@ -748,9 +750,9 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         vkUpdateDescriptorSets(device, writeDescriptorSet, null)
 
-        pDescriptorSetLayour.destroy()
+        pDescriptorSetLayour.free()
         allocInfo.free()
-        pDescriptorSet.destroy()
+        pDescriptorSet.free()
         writeDescriptorSet.free()
     }
 
@@ -809,12 +811,12 @@ private class TriangleVerbose : VulkanExampleBase() {
         depthStencil.view = pImageView[0]
 
         image.free()
-        pImage.destroy()
+        pImage.free()
         memAlloc.free()
         memReqs.free()
-        pMemory.destroy()
+        pMemory.free()
         depthStencilView.free()
-        pImageView.destroy()
+        pImageView.free()
     }
 
     /** Create a frame buffer for each swap chain image
@@ -841,7 +843,7 @@ private class TriangleVerbose : VulkanExampleBase() {
             VK_CHECK_RESULT(vkCreateFramebuffer(device, frameBufferCreateInfo, null, pFramebuffer))
             frameBuffers[i] = pFramebuffer[0]
 
-            pFramebuffer.destroy()
+            pFramebuffer.free()
         }
     }
 
@@ -950,7 +952,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         subpassDescription.free()
         dependencies.free()
         renderPassInfo.free()
-        pRenderPass.destroy()
+        pRenderPass.free()
     }
 
     /** Vulkan loads it's shaders from an immediate binary representation called SPIR-V
@@ -980,9 +982,9 @@ private class TriangleVerbose : VulkanExampleBase() {
             VK_CHECK_RESULT(vkCreateShaderModule(device, moduleCreateInfo, null, pShaderModule))
             val shaderModule = pShaderModule[0]
 
-            shaderCode.destroy()
+            shaderCode.free()
             moduleCreateInfo.free()
-            pShaderModule.destroy()
+            pShaderModule.free()
 
             return shaderModule
         } else {
@@ -1177,7 +1179,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         blendAttachmentState.free()
         colorBlendState.free()
         viewportState.free()
-        dynamicStateEnables.destroy()
+        dynamicStateEnables.free()
         dynamicState.free()
         depthStencilState.free()
         multisampleState.free()
@@ -1185,7 +1187,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         vertexInputAttributs.free()
         vertexInputState.free()
         shaderStages.free()
-        pPipeline.destroy()
+        pPipeline.free()
     }
 
     fun prepareUniformBuffers() {
@@ -1239,8 +1241,8 @@ private class TriangleVerbose : VulkanExampleBase() {
         memReqs.free()
         allocInfo.free()
         bufferInfo.free()
-        pBuffer.destroy()
-        pMemory.destroy()
+        pBuffer.free()
+        pMemory.free()
     }
 
     fun updateUniformBuffers() {

@@ -12,6 +12,7 @@ import glfw_.appBuffer
 import gli_.Texture2dArray
 import gli_.gli
 import glm_.L
+import glm_.buffer.bufferBig
 import glm_.f
 import glm_.func.rad
 import glm_.glm
@@ -23,9 +24,6 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-import uno.buffer.bufferBig
-import uno.buffer.floatBufferOf
-import uno.buffer.intBufferOf
 import uno.kotlin.buffers.capacity
 import vkn.*
 import vulkan.VERTEX_BUFFER_BIND_ID

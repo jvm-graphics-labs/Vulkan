@@ -1213,6 +1213,15 @@ inline var VkViewport.maxDepth: Float
     set(value) = VkViewport.nmaxDepth(adr, value)
 
 /** JVM custom */
+inline fun VkViewport.offset(f: Float) = offset(f, f)
+
+/** JVM custom */
+inline fun VkViewport.offset(x: Float, y: Float) {
+    this.x = x
+    this.y = y
+}
+
+/** JVM custom */
 inline fun VkViewport.size(size: Vec2i) {
     width = size.x.f
     height = size.y.f
@@ -1346,6 +1355,9 @@ inline fun VkRect2D.extent(width: Int, height: Int) {
     extent.width = width
     extent.height = height
 }
+
+/** JVM custom */
+inline fun VkRect2D.extent(width: Number, height: Number) = extent(width.i, height.i)
 
 
 inline var VkPipelineViewportStateCreateInfo.type: VkStructureType
@@ -2443,36 +2455,33 @@ inline var VkImageMemoryBarrier.subresourceRange: VkImageSubresourceRange
 
 
 inline var VkRenderPassBeginInfo.type: VkStructureType
-    get() = VkStructureType of sType()
-    set(value) {
-        sType(value.i)
-    }
+    get() = VkStructureType of VkRenderPassBeginInfo.nsType(adr)
+    set(value) = VkRenderPassBeginInfo.nsType(adr, value.i)
 inline var VkRenderPassBeginInfo.next
-    get() = pNext()
-    set(value) {
-        pNext(value)
-    }
+    get() = VkRenderPassBeginInfo.npNext(adr)
+    set(value) = VkRenderPassBeginInfo.npNext(adr, value)
 inline var VkRenderPassBeginInfo.renderPass: VkRenderPass
-    get() = renderPass()
-    set(value) {
-        renderPass(value)
-    }
+    get() = VkRenderPassBeginInfo.nrenderPass(adr)
+    set(value) = VkRenderPassBeginInfo.nrenderPass(adr, value)
 inline var VkRenderPassBeginInfo.framebuffer: VkFramebuffer
-    get() = framebuffer()
-    set(value) {
-        framebuffer(value)
-    }
+    get() = VkRenderPassBeginInfo.nframebuffer(adr)
+    set(value) = VkRenderPassBeginInfo.nframebuffer(adr, value)
 inline var VkRenderPassBeginInfo.renderArea: VkRect2D
-    get() = renderArea()
-    set(value) {
-        renderArea(value)
-    }
+    get() = VkRenderPassBeginInfo.nrenderArea(adr)
+    set(value) = VkRenderPassBeginInfo.nrenderArea(adr, value)
 inline val VkRenderPassBeginInfo.clearValueCount get() = clearValueCount()
-inline var VkRenderPassBeginInfo.clearValues
-    get() = pClearValues()
-    set(value) {
-        pClearValues(value)
-    }
+inline var VkRenderPassBeginInfo.clearValues: VkClearValue.Buffer?
+    get() = VkRenderPassBeginInfo.npClearValues(adr)
+    set(value) = VkRenderPassBeginInfo.npClearValues(adr, value)
+
+/** JVM custom */
+inline fun VkRenderPassBeginInfo.clearValue(vec4: Vec4) {
+    memPutFloat(adr + VkRenderPassBeginInfo.PCLEARVALUES, vec4.x)
+    memPutFloat(adr + VkRenderPassBeginInfo.PCLEARVALUES + Float.BYTES, vec4.y)
+    memPutFloat(adr + VkRenderPassBeginInfo.PCLEARVALUES + Float.BYTES * 2, vec4.z)
+    memPutFloat(adr + VkRenderPassBeginInfo.PCLEARVALUES + Float.BYTES * 3, vec4.w)
+    VkRenderPassBeginInfo.nclearValueCount(adr, 1)
+}
 
 //typedef struct VkRenderPassBeginInfo {
 //    VkStructureType        sType;
@@ -3627,15 +3636,45 @@ inline var VkPresentInfoKHR.next
 inline var VkPresentInfoKHR.waitSemaphores: VkSemaphoreBuffer?
     get() = VkPresentInfoKHR.npWaitSemaphores(adr)
     set(value) = VkPresentInfoKHR.npWaitSemaphores(adr, value)
+/** JVM custom */
+inline var VkPresentInfoKHR.waitSemaphore: VkSemaphore?
+    get() = VkPresentInfoKHR.npWaitSemaphores(adr)?.get(0)
+    set(value) {
+        if(value != null) {
+            val pLong = appBuffer.long
+            memPutLong(pLong, value)
+            memPutAddress(adr + VkPresentInfoKHR.PWAITSEMAPHORES, pLong)
+            VkPresentInfoKHR.nwaitSemaphoreCount(adr, 1)
+        }else {
+            memPutAddress(adr + VkPresentInfoKHR.PWAITSEMAPHORES, NULL)
+            VkPresentInfoKHR.nwaitSemaphoreCount(adr, 0)
+        }
+    }
 inline var VkPresentInfoKHR.swapchainCount: Int
     get() = VkPresentInfoKHR.nswapchainCount(adr)
     set(value) = VkPresentInfoKHR.nswapchainCount(adr, value)
 inline var VkPresentInfoKHR.swapchains: VkSwapchainKhrBuffer
     get() = VkPresentInfoKHR.npSwapchains(adr)
     set(value) = VkPresentInfoKHR.npSwapchains(adr, value)
+/** JVM custom */
+inline var VkPresentInfoKHR.swapchain: VkSwapchainKHR
+    get() = VkPresentInfoKHR.npSwapchains(adr)[0]
+    set(value) {
+        val pLong = appBuffer.long // TODO pLong of
+        memPutLong(pLong, value)
+        memPutAddress(adr + VkPresentInfoKHR.PSWAPCHAINS, pLong)
+    }
 inline var VkPresentInfoKHR.imageIndices: IntBuffer
     get() = VkPresentInfoKHR.npImageIndices(adr)
     set(value) = VkPresentInfoKHR.npImageIndices(adr, value)
+/** JVM custom */
+inline var VkPresentInfoKHR.imageIndex: Int
+    get() = VkPresentInfoKHR.npImageIndices(adr)[0]
+    set(value) {
+        val pInt = appBuffer.int
+        memPutInt(pInt, value)
+        memPutAddress(adr + VkPresentInfoKHR.PIMAGEINDICES, pInt)
+    }
 inline var VkPresentInfoKHR.results: VkResultBuffer?
     get() = VkPresentInfoKHR.npResults(adr)
     set(value) = VkPresentInfoKHR.npResults(adr, value)

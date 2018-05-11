@@ -22,7 +22,6 @@ import glm_.vec3.Vec3
 import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
-import uno.buffer.bufferBig
 import uno.kotlin.buffers.capacity
 import vkn.*
 import vulkan.USE_STAGING

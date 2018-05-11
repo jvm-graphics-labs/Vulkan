@@ -14,20 +14,19 @@
 package vkn
 
 import glfw_.GlfwWindow
+import glfw_.appBuffer
+import glfw_.glfw
 import gli_.has
-import glm_.L
+import glm_.*
 import glm_.buffer.adr
 import glm_.buffer.longBufferBig
-import glm_.c
-import glm_.i
-import glm_.set
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.system.MemoryUtil.memCopy
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
+import org.lwjgl.vulkan.VK10.VK_WHOLE_SIZE
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkPhysicalDevice
@@ -47,7 +46,7 @@ class ImplGlfwVulkan_InitData(
 //    void (*check_vk_result)(VkResult err);
 )
 
-object GlfwVulkan {
+object ImplGlfwVulkan {
     // GLFW data
     var window: GlfwWindow? = null
     var time = 0.0
@@ -63,7 +62,7 @@ object GlfwVulkan {
     var descriptorPool: VkDescriptorPool = NULL
 //static void (*g_CheckVkResult)(VkResult err) = NULL;
 
-    lateinit var commandBuffer: VkCommandBuffer
+    var commandBuffer: VkCommandBuffer? = null
     var bufferMemoryAlignment: VkDeviceSize = 256
     var pipelineCreateFlags: VkPipelineCreateFlags = 0
     var frameIndex = 0
@@ -260,8 +259,204 @@ object GlfwVulkan {
         // Destroy Vulkan objects
         invalidateDeviceObjects()
     }
-    IMGUI_API void        ImGui_ImplGlfwVulkan_NewFrame()
-    IMGUI_API void        ImGui_ImplGlfwVulkan_Render(VkCommandBuffer command_buffer)
+
+    fun newFrame() {
+
+        // Setup display size (every frame to accommodate for window resizing)
+        val size = window!!.size
+        val displaySize = window!!.framebufferSize
+        io.displaySize put size
+        io.displayFramebufferScale.put(
+                if (size.x > 0) displaySize.x.f / size.x else 0f,
+                if (size.y > 0) displaySize.y.f / size.y else 0f)
+
+        // Setup time step
+        val currentTime = glfw.time
+        io.deltaTime = if (time > 0.0) (currentTime - time).f else 1f / 60f
+        time = currentTime.d
+
+        // Setup inputs
+        // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
+        if (window!!.focused)
+            io.mousePos put window!!.cursorPos
+        else
+            io.mousePos put -Float.MAX_VALUE
+
+        for (i in 0..2) {
+            /*  If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events
+                that are shorter than 1 frame.             */
+            io.mouseDown[i] = mouseJustPressed[i] || window!!.mouseButton(i) != 0
+            mouseJustPressed[i] = false
+        }
+
+        // Update OS/hardware mouse cursor if imgui isn't drawing a software cursor
+        if (io.configFlags hasnt ConfigFlag.NoMouseCursorChange) {
+            val cursor = g.mouseCursor // TODO remove .g
+            if (io.mouseDrawCursor || cursor == MouseCursor.None)
+                window!!.cursor = GlfwWindow.Cursor.Hidden
+            else {
+                glfwSetCursor(window!!.handle, if (mouseCursors[cursor.i] != 0L) mouseCursors[cursor.i] else mouseCursors[MouseCursor.Arrow.i])
+                window!!.cursor = GlfwWindow.Cursor.Normal
+            }
+        }
+
+        // Start the frame. This call will update the io.WantCaptureMouse, io.WantCaptureKeyboard flag that you can use to dispatch inputs (or not) to your application.
+        ImGui.newFrame()
+    }
+
+    fun render(commandBuffer: VkCommandBuffer) {
+        this.commandBuffer = commandBuffer
+        ImGui.render()
+        renderDrawData(ImGui.drawData!!)
+        this.commandBuffer = null
+        frameIndex = (frameIndex + 1) % VK_QUEUED_FRAMES
+    }
+
+    /** This is the main rendering function that you have to implement and provide to ImGui
+     *  (via setting up 'RenderDrawListsFn' in the ImGuiIO structure) */
+    fun renderDrawData(drawData: DrawData) {
+
+        if (drawData.totalVtxCount == 0) return
+
+        // Create the Vertex Buffer:
+        val vertexSize = drawData.totalVtxCount * DrawVert.size
+        if (vertexBuffer[frameIndex] == NULL || vertexBufferSize[frameIndex] < vertexSize) {
+            if (vertexBuffer[frameIndex] != NULL)
+                device destroyBuffer vertexBuffer[frameIndex]
+            if (vertexBufferMemory[frameIndex] != NULL)
+                device freeMemory vertexBufferMemory[frameIndex]
+            val vertexBufferSize: VkDeviceSize = ((vertexSize - 1) / bufferMemoryAlignment + 1) * bufferMemoryAlignment
+            val bufferInfo = vk.BufferCreateInfo {
+                size = vertexBufferSize
+                usage = VkBufferUsage.VERTEX_BUFFER_BIT.i
+                sharingMode = VkSharingMode.EXCLUSIVE
+            }
+            vertexBuffer[frameIndex] = device createBuffer bufferInfo
+            val req = device getBufferMemoryRequirements vertexBuffer[frameIndex]
+            bufferMemoryAlignment = if (bufferMemoryAlignment > req.alignment) bufferMemoryAlignment else req.alignment
+            val allocInfo = vk.MemoryAllocateInfo {
+                allocationSize = req.size
+                memoryTypeIndex = memoryType(VkMemoryProperty.HOST_VISIBLE_BIT.i, req.memoryTypeBits)
+            }
+            vertexBufferMemory[frameIndex] = device allocateMemory allocInfo
+            device.bindBufferMemory(vertexBuffer[frameIndex], vertexBufferMemory[frameIndex])
+            this.vertexBufferSize[frameIndex] = vertexBufferSize
+        }
+
+        // Create the Index Buffer:
+        val indexSize = drawData.totalIdxCount * DrawIdx.BYTES
+        if (indexBuffer[frameIndex] == NULL || indexBufferSize[frameIndex] < indexSize) {
+            if (indexBuffer[frameIndex] != NULL)
+                device destroyBuffer indexBuffer[frameIndex]
+            if (indexBufferMemory[frameIndex] != NULL)
+                device freeMemory indexBufferMemory[frameIndex]
+            val indexBufferSize: VkDeviceSize = ((indexSize - 1) / bufferMemoryAlignment + 1) * bufferMemoryAlignment
+            val bufferInfo = vk.BufferCreateInfo {
+                size = indexBufferSize
+                usage = VkBufferUsage.INDEX_BUFFER_BIT.i
+                sharingMode = VkSharingMode.EXCLUSIVE
+            }
+            indexBuffer[frameIndex] = device createBuffer bufferInfo
+            val req = device getBufferMemoryRequirements indexBuffer[frameIndex]
+            bufferMemoryAlignment = if (bufferMemoryAlignment > req.alignment) bufferMemoryAlignment else req.alignment
+            val allocInfo = vk.MemoryAllocateInfo {
+                allocationSize = req.size
+                memoryTypeIndex = memoryType(VkMemoryProperty.HOST_VISIBLE_BIT.i, req.memoryTypeBits)
+            }
+            indexBufferMemory[frameIndex] = device allocateMemory allocInfo
+            device.bindBufferMemory(indexBuffer[frameIndex], indexBufferMemory[frameIndex])
+            this.indexBufferSize[frameIndex] = indexBufferSize
+        }
+
+        // Upload Vertex and index Data:
+        run {
+            val pVtxDst = appBuffer.pointer
+            val pIdxDst = appBuffer.pointer
+            device.mapMemory(vertexBufferMemory[frameIndex], 0, vertexSize.L, 0, pVtxDst)
+            device.mapMemory(indexBufferMemory[frameIndex], 0, indexSize.L, 0, pIdxDst)
+            var vtxDst = memGetAddress(pVtxDst)
+            var idxDst = memGetAddress(pIdxDst)
+            for (cmdList in drawData.cmdLists) {
+                for (v in cmdList.vtxBuffer) {
+                    memPutFloat(vtxDst, v.pos[0])
+                    memPutFloat(vtxDst + Float.BYTES, v.pos[1])
+                    memPutFloat(vtxDst + Float.BYTES * 2, v.uv[0])
+                    memPutFloat(vtxDst + Float.BYTES * 3, v.uv[1])
+                    memPutInt(vtxDst + Float.BYTES * 4, v.col)
+                    vtxDst += DrawVert.size
+                }
+                for (i in cmdList.idxBuffer) {
+                    memPutInt(idxDst * Int.BYTES, i)
+                    idxDst += Int.BYTES
+                }
+            }
+            val range = vk.MappedMemoryRange(2).also {
+                it[0].memory = vertexBufferMemory[frameIndex]
+                it[0].size = VK_WHOLE_SIZE
+                it[1].memory = indexBufferMemory[frameIndex]
+                it[1].size = VK_WHOLE_SIZE
+            }
+            device.flushMappedMemoryRanges(range)
+            device unmapMemory vertexBufferMemory[frameIndex]
+            device unmapMemory indexBufferMemory[frameIndex]
+        }
+
+        // Bind pipeline and descriptor sets:
+        run {
+            commandBuffer!!.bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)
+            commandBuffer!!.bindDescriptorSets(VkPipelineBindPoint.GRAPHICS, pipelineLayout, descriptorSet)
+        }
+
+        // Bind Vertex And Index Buffer:
+        run {
+            commandBuffer!!.bindVertexBuffers(vertexBuffer[frameIndex])
+            commandBuffer!!.bindIndexBuffer(indexBuffer[frameIndex], 0, VkIndexType.UINT32) // TODO  VkIndexType.UINT16
+        }
+
+        // Setup viewport:
+        run {
+            val viewport = vk.Viewport {
+                offset(0f)
+                size(io.displaySize)
+                depth(0f, 1f)
+            }
+            commandBuffer!!.setViewport(viewport)
+        }
+
+        // Setup scale and translation:
+        run {
+            val scale = appBuffer.floatBuffer(2)
+            scale[0] = 2f / io.displaySize.x
+            scale[1] = 2f / io.displaySize.y
+            val translate = appBuffer.floatBuffer(2)
+            translate[0] = -1f
+            translate[1] = -1f
+            commandBuffer!!.pushConstants(pipelineLayout, VkShaderStage.VERTEX_BIT.i, 0, scale)
+            commandBuffer!!.pushConstants(pipelineLayout, VkShaderStage.VERTEX_BIT.i, scale.size, translate)
+        }
+
+        // Render the command lists:
+        var vtxOffset = 0
+        var idxOffset = 0
+        for (cmdList in drawData.cmdLists) {
+            for (cmd in cmdList.cmdBuffer) {
+                if (cmd.userCallback != null)
+                    cmd.userCallback!!(cmdList, cmd)
+                else {
+                    val scissor = vk.Rect2D {
+                        offset(if (cmd.clipRect.x > 0) cmd.clipRect.x.i else 0,
+                                if (cmd.clipRect.y > 0) cmd.clipRect.y.i else 0)
+                        extent(cmd.clipRect.z-cmd.clipRect.x,
+                                cmd.clipRect.w-cmd.clipRect.y+1) // FIXME: Why +1 here?
+                    }
+                    commandBuffer!!.setScissor(scissor)
+                    commandBuffer!!.drawIndexed(cmd.elemCount, 1, idxOffset, vtxOffset, 0)
+                }
+                idxOffset += cmd.elemCount * DrawIdx.BYTES
+            }
+            vtxOffset += cmdList.vtxBuffer.size * DrawVert.size
+        }
+    }
 
     // Use if you want to reset your rendering device without losing ImGui state.
     fun invalidateFontUploadObjects() {
@@ -496,7 +691,7 @@ object GlfwVulkan {
                 descriptorType = VkDescriptorType.COMBINED_IMAGE_SAMPLER
                 descriptorCount = 1
                 stageFlags = VkShaderStage.FRAGMENT_BIT.i
-                immutableSampler = fontSampler
+                immutableSamplers = appBuffer longBufferOf fontSampler//TODO bug
             }
             val info = vk.DescriptorSetLayoutCreateInfo { this.binding = binding }
             descriptorSetLayout = device createDescriptorSetLayout info
@@ -505,7 +700,7 @@ object GlfwVulkan {
         // Create Descriptor Set:
         run {
             val allocInfo = vk.DescriptorSetAllocateInfo {
-                descriptorPool = this@GlfwVulkan.descriptorPool
+                descriptorPool = this@ImplGlfwVulkan.descriptorPool
                 descriptorSetCount = 1
                 setLayout = descriptorSetLayout
             }
@@ -587,7 +782,7 @@ object GlfwVulkan {
             colorBlendState = blendInfo
             this.dynamicState = dynamicState
             layout = pipelineLayout
-            renderPass = this@GlfwVulkan.renderPass
+            renderPass = this@ImplGlfwVulkan.renderPass
         }
         pipeline = device.createGraphicsPipelines(pipelineCache, info)
 

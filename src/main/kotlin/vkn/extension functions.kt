@@ -10,6 +10,7 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
 import java.nio.ByteBuffer
+import java.nio.FloatBuffer
 import kotlin.reflect.KMutableProperty0
 
 
@@ -113,6 +114,10 @@ inline fun VkCommandBuffer.pipelineBarrier(srcStageMask: VkPipelineStageFlags, d
             if (memoryBarrier != null) 1 else 0, memoryBarrier?.adr ?: NULL,
             if (bufferMemoryBarrier != null) 1 else 0, bufferMemoryBarrier?.adr ?: NULL,
             if (imageMemoryBarrier != null) 1 else 0, imageMemoryBarrier?.adr ?: NULL)
+}
+
+inline fun VkCommandBuffer.pushConstants(layout: VkPipelineLayout, stageFlags: VkShaderStageFlags, offset: Int, values: FloatBuffer) {
+    VK10.nvkCmdPushConstants(this, layout, stageFlags, offset, values.size, memAddress(values))
 }
 
 inline fun VkCommandBuffer.pushConstants(layout: VkPipelineLayout, stageFlags: VkShaderStageFlags, offset: Int, values: ByteBuffer) {
@@ -470,6 +475,10 @@ inline infix fun VkDevice.flushMappedMemoryRanges(memoryRange: VkMappedMemoryRan
     VK_CHECK_RESULT(VK10.nvkFlushMappedMemoryRanges(this, 1, memoryRange.adr))
 }
 
+inline infix fun VkDevice.flushMappedMemoryRanges(memoryRanges: VkMappedMemoryRange.Buffer) {
+    VK_CHECK_RESULT(VK10.nvkFlushMappedMemoryRanges(this, memoryRanges.capacity(), memoryRanges.adr))
+}
+
 inline fun VkDevice.freeCommandBuffer(commandPool: VkCommandPool, commandBuffer: VkCommandBuffer) {
     val pCommandBuffer = appBuffer.pointer
     memPutAddress(pCommandBuffer, commandBuffer.adr)
@@ -551,6 +560,13 @@ inline fun VkDevice.getQueue(queueFamilyIndex: Int, queueIndex: Int): VkQueue {
 
 inline infix fun VkDevice.getSwapchainImagesKHR(swapchain: VkSwapchainKHR): VkImageViewArray {
     return vk.getSwapchainImagesKHR(this, swapchain)
+}
+
+inline infix fun VkDevice.resetCommandPool(commandPool: VkCommandPool) {
+    resetCommandPool(commandPool, 0)
+}
+inline fun VkDevice.resetCommandPool(commandPool: VkCommandPool, flags: VkCommandPoolResetFlags) {
+    VK_CHECK_RESULT(VK10.vkResetCommandPool(this, commandPool, flags))
 }
 
 inline infix fun VkDevice.resetFence(fence: VkFence) {

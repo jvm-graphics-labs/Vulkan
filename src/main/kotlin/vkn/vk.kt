@@ -225,6 +225,12 @@ object vk {
         }
     }
 
+    inline fun MappedMemoryRange(capacity: Int): VkMappedMemoryRange.Buffer {
+        return VkMappedMemoryRange.create(ptr.advance(VkMappedMemoryRange.SIZEOF * capacity), capacity).apply {
+            for(range in this)
+                range.type = VkStructureType.MAPPED_MEMORY_RANGE
+        }
+    }
     inline fun MappedMemoryRange(block: VkMappedMemoryRange.() -> Unit): VkMappedMemoryRange {
         return MappedMemoryRange().also(block)
     }

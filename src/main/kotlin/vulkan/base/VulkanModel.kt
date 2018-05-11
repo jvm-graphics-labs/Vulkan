@@ -14,6 +14,7 @@ import assimp.Importer
 import assimp.or
 import glm_.BYTES
 import glm_.L
+import glm_.buffer.free
 import glm_.max
 import glm_.min
 import glm_.vec2.Vec2
@@ -95,9 +96,9 @@ class Model {
             vk.freeMemory(dev, indices.memory)
         }
         if (::vertexBuffer.isInitialized)
-            vertexBuffer.destroy()
+            vertexBuffer.free()
         if (::indexBuffer.isInitialized)
-            indexBuffer.destroy()
+            indexBuffer.free()
     }
 
     /**

@@ -1586,6 +1586,9 @@ enum class VkCommandBufferUsage(val i: Int) {
         inline infix fun of(i: Int) = values().first { it.i == i }
     }
 }
+
+infix fun Int.or(f: VkCommandBufferUsage) = or(f.i)
+
 typealias VkCommandBufferUsageFlags = VkFlags
 
 

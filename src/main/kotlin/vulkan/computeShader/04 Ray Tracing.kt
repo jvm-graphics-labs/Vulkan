@@ -10,6 +10,7 @@ package vulkan.computeShader
 
 import glm_.BYTES
 import glm_.L
+import glm_.buffer.bufferBig
 import glm_.func.rad
 import glm_.size
 import glm_.vec2.Vec2i
@@ -19,7 +20,6 @@ import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkQueue
-import uno.buffer.bufferBig
 import vkn.*
 import vulkan.TEX_DIM
 import vulkan.assetPath

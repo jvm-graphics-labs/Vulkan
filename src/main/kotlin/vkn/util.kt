@@ -26,8 +26,6 @@ import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkExtent2D
 import org.lwjgl.vulkan.VkPhysicalDevice
-import uno.buffer.bufferBig
-import uno.buffer.intBufferBig
 import uno.kotlin.buffers.indices
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer

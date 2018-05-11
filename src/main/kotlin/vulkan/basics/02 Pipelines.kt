@@ -7,8 +7,7 @@ import glm_.mat4x4.Mat4
 import glm_.vec2.Vec2
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
-import org.lwjgl.system.MemoryUtil.*
-import uno.buffer.bufferBig
+import org.lwjgl.system.MemoryUtil.NULL
 import vkn.*
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath

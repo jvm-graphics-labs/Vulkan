@@ -9,9 +9,14 @@
 package vulkan.basics
 
 import glfw_.appBuffer
-import glm_.*
+import glm_.L
+import glm_.b
+import glm_.buffer.bufferBig
+import glm_.buffer.free
 import glm_.func.rad
+import glm_.glm
 import glm_.mat4x4.Mat4
+import glm_.set
 import glm_.vec2.Vec2
 import glm_.vec3.Vec3
 import glm_.vec3.Vec3i
@@ -21,8 +26,6 @@ import org.lwjgl.vulkan.VkDescriptorImageInfo
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-import uno.buffer.bufferBig
-import uno.buffer.destroy
 import uno.kotlin.buffers.capacity
 import uno.kotlin.buffers.indices
 import vkn.*
@@ -424,7 +427,7 @@ private class Texture3d : VulkanExampleBase() {
         super.flushCommandBuffer(copyCmd, queue, true)
 
         // Clean up staging resources
-        data.destroy()
+        data.free()
         device freeMemory stagingMemory
         device destroyBuffer stagingBuffer
         regenerateNoise = false

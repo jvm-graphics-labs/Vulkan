@@ -9,6 +9,7 @@
 package vulkan.basics
 
 import glm_.L
+import glm_.buffer.bufferBig
 import glm_.func.rad
 import glm_.glm
 import glm_.mat4x4.Mat4
@@ -16,12 +17,10 @@ import glm_.size
 import glm_.vec2.Vec2
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
-import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.vulkan.VK10
+import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-import uno.buffer.bufferBig
 import vkn.*
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
