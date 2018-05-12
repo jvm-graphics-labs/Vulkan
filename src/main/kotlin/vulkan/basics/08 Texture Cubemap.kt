@@ -9,7 +9,6 @@
 package vulkan.basics
 
 import gli_.gli
-import glm_.BYTES
 import glm_.L
 import glm_.f
 import glm_.func.rad
@@ -17,11 +16,9 @@ import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.vec3.Vec3
 import org.lwjgl.system.MemoryUtil.*
-import uno.buffer.bufferBig
-import vkn.*
+import vkk.*
 import vulkan.assetPath
 import vulkan.base.*
-import java.net.URL
 
 fun main(args: Array<String>) {
     TextureCubemap().apply {

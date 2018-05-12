@@ -11,11 +11,12 @@
 package vulkan.base
 
 import org.lwjgl.PointerBuffer
-import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.memCallocPointer
 import org.lwjgl.vulkan.VK10.VK_WHOLE_SIZE
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
 import org.lwjgl.vulkan.VkDevice
-import vkn.*
+import vkk.*
 
 /**
  * @brief Encapsulates access to a Vulkan buffer backed up by device memory

@@ -4,7 +4,7 @@ import glm_.f
 import glm_.vec2.Vec2i
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
-import vkn.*
+import vkk.*
 
 object initializers {
 

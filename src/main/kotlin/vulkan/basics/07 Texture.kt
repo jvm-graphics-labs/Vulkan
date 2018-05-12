@@ -8,9 +8,7 @@
 
 package vulkan.basics
 
-import glfw_.appBuffer
 import gli_.gli
-import glm_.BYTES
 import glm_.L
 import glm_.f
 import glm_.func.rad
@@ -22,9 +20,8 @@ import glm_.vec3.Vec3
 import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
-import uno.buffer.bufferBig
 import uno.kotlin.buffers.capacity
-import vkn.*
+import vkk.*
 import vulkan.USE_STAGING
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath

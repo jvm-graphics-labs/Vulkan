@@ -8,7 +8,6 @@
 
 package vulkan.base
 
-import assimp.exists
 import gli_.gli
 import glm_.L
 import glm_.f
@@ -16,10 +15,8 @@ import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkDescriptorImageInfo
 import org.lwjgl.vulkan.VkQueue
-import vkn.*
+import vkk.*
 import java.io.File
-import java.net.URI
-import java.net.URL
 
 /** @brief Vulkan texture base class */
 open class Texture {

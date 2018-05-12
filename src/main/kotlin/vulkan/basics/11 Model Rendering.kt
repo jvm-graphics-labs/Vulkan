@@ -12,6 +12,7 @@ import assimp.AiPostProcessStepsFlags
 import assimp.Importer
 import assimp.or
 import glm_.L
+import glm_.buffer.adr
 import glm_.func.rad
 import glm_.glm
 import glm_.mat4x4.Mat4
@@ -24,7 +25,7 @@ import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-import vkn.*
+import vkk.*
 import vulkan.USE_STAGING
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
@@ -122,7 +123,7 @@ class ModelRendering : VulkanExampleBase() {
         rotation(-0.5f, -112.75f, 0f)
         cameraPos(0.1f, 1.1f, 0f)
         title = "Model rendering"
-        settings.overlay = true
+        settings.overlay = false // TODO
     }
 
     override fun destroy() {
@@ -270,7 +271,7 @@ class ModelRendering : VulkanExampleBase() {
                     indexBuffer.size.L,
                     indexStaging::buffer,
                     indexStaging::memory,
-                    indices.adr)
+                    indexBuffer.adr)
 
             // Create device local buffers
             // Vertex buffer
@@ -319,7 +320,7 @@ class ModelRendering : VulkanExampleBase() {
                     vertexBuffer.size.L,
                     model.vertices::buffer,
                     model.vertices::memory,
-                    vertices.adr)
+                    vertexBuffer.adr)
             // Index buffer
             vulkanDevice.createBuffer(
                     VkBufferUsage.INDEX_BUFFER_BIT.i,
@@ -327,7 +328,7 @@ class ModelRendering : VulkanExampleBase() {
                     indexBuffer.size.L,
                     model.indices::buffer,
                     model.indices::memory,
-                    indices.adr)
+                    indexBuffer.adr)
         }
     }
 
@@ -342,7 +343,7 @@ class ModelRendering : VulkanExampleBase() {
         textures.colorMap.loadFromFile("$assetPath/models/voyager/$texture", format, vulkanDevice, queue)
     }
 
-    fun etupVertexDescriptions() {
+    fun setupVertexDescriptions() {
         val vertex = Vertex()
         // Binding description
         vertices.bindingDescriptions = vk.VertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vertex.size, VkVertexInputRate.VERTEX)
@@ -484,23 +485,21 @@ class ModelRendering : VulkanExampleBase() {
         uboVS to uniformBuffers.scene.mapped[0]
     }
 
-    void draw()
-    {
-        VulkanExampleBase::prepareFrame()
+    fun draw()    {
+
+        super.prepareFrame()
 
         // Command buffer to be sumitted to the queue
-        submitInfo.commandBufferCount = 1
-        submitInfo.pCommandBuffers = & drawCmdBuffers [currentBuffer]
+        submitInfo.commandBuffer = drawCmdBuffers [currentBuffer]
 
         // Submit to queue
-        VK_CHECK_RESULT(vkQueueSubmit(queue, 1, & submitInfo, VK_NULL_HANDLE))
+        queue submit submitInfo
 
-        VulkanExampleBase::submitFrame()
+        super.submitFrame()
     }
 
-    void prepare()
-    {
-        VulkanExampleBase::prepare()
+    override fun prepare()    {
+        super.prepare()
         loadAssets()
         setupVertexDescriptions()
         prepareUniformBuffers()
@@ -510,28 +509,23 @@ class ModelRendering : VulkanExampleBase() {
         setupDescriptorSet()
         buildCommandBuffers()
         prepared = true
+        window.show()
     }
 
-    virtual void render()
-    {
+    override fun render()    {
         if (!prepared)
             return
         draw()
     }
 
-    virtual void viewChanged()
-    {
-        updateUniformBuffers()
-    }
+    override fun viewChanged() = updateUniformBuffers()
 
-    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)
-    {
-        if (overlay->header("Settings")) {
-        if (overlay->checkBox("Wireframe", &wireframe)) {
-        buildCommandBuffers()
-    }
-    }
-    }
+//    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)
+//    {
+//        if (overlay->header("Settings")) {
+//        if (overlay->checkBox("Wireframe", &wireframe)) {
+//        buildCommandBuffers()
+//    }
+//    }
+//    }
 }
-
-VULKAN_EXAMPLE_MAIN()

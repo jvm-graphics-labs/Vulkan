@@ -1,6 +1,5 @@
 package vulkan.base
 
-import glfw_.appBuffer
 import glm_.L
 import glm_.i
 import glm_.size
@@ -9,7 +8,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
-import vkn.*
+import vkk.*
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer

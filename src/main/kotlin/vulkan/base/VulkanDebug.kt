@@ -1,12 +1,10 @@
 package vulkan.base
 
-import glm_.i
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.vulkan.VkDebugReportCallbackEXTI
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
 import uno.kotlin.plusAssign
-import vkn.*
+import vkk.*
 
 object debug {
 

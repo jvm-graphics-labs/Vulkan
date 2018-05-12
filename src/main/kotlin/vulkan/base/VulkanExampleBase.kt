@@ -1,6 +1,5 @@
 package vulkan.base
 
-import glfw_.*
 import glm_.detail.GLM_DEPTH_CLIP_SPACE
 import glm_.detail.GLM_DEPTH_ZERO_TO_ONE
 import glm_.f
@@ -19,9 +18,9 @@ import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.intBufferOf
 import uno.buffer.longBufferOf
-import vkn.*
-import vkn.LongArrayList.resize
-import vkn.VkMemoryStack.Companion.withStack
+import uno.glfw.*
+import vkk.*
+import vkk.LongArrayList.resize
 import vulkan.ENABLE_VALIDATION
 import vulkan.base.initializers.commandBufferAllocateInfo
 import vulkan.base.tools.loadShader
@@ -478,6 +477,7 @@ abstract class VulkanExampleBase {
                 fullscreen -> GlfwWindow(videoMode.size, windowTitle, primaryMonitor)
                 else -> GlfwWindow(size, windowTitle)
             }
+            window.autoSwap = false
         }
         with(window) {
             keyCallback = keyboardHandler
@@ -553,11 +553,9 @@ abstract class VulkanExampleBase {
     }
 
     /** Setup default depth and stencil views   */
-    open fun setupDepthStencil() = withStack {
+    open fun setupDepthStencil() {
 
-        val image = cVkImageCreateInfo {
-            type = VkStructureType.IMAGE_CREATE_INFO
-            next = NULL
+        val image = vk.ImageCreateInfo {
             imageType = VkImageType.`2D`
             format = depthFormat
             extent.set(size.x, size.y, 1)
@@ -569,16 +567,12 @@ abstract class VulkanExampleBase {
             flags = 0
         }
 
-        val memAlloc = cVkMemoryAllocateInfo {
-            type = VkStructureType.MEMORY_ALLOCATE_INFO
-            next = NULL
+        val memAlloc = vk.MemoryAllocateInfo {
             allocationSize = 0
             memoryTypeIndex = 0
         }
 
-        val depthStencilView = cVkImageViewCreateInfo {
-            type = VkStructureType.IMAGE_VIEW_CREATE_INFO
-            next = NULL
+        val depthStencilView = vk.ImageViewCreateInfo {
             viewType = VkImageViewType.`2D`
             format = depthFormat
             flags = 0
@@ -591,17 +585,15 @@ abstract class VulkanExampleBase {
             }
         }
 
-        val memReqs = cVkMemoryRequirements()
-
-        vkCreateImage(device, image, null, depthStencil::image)
-        vkGetImageMemoryRequirements(device, depthStencil.image, memReqs)
+        depthStencil.image = device createImage image
+        val memReqs = device getImageMemoryRequirements depthStencil.image
         memAlloc.allocationSize = memReqs.size
         memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
-        vkAllocateMemory(device, memAlloc, null, depthStencil::mem).check()
+        depthStencil.mem = device allocateMemory memAlloc
         VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0))
 
         depthStencilView.image = depthStencil.image
-        vkCreateImageView(device, depthStencilView, null, depthStencil::view).check()
+        depthStencil.view = device createImageView depthStencilView
     }
 
     /** Create framebuffers for all requested swap chain images
@@ -1063,7 +1055,7 @@ abstract class VulkanExampleBase {
 
     var framebufferSizeHandler: FramebufferSizeCallbackT = { size -> windowResize(size) }
 
-    var mouseScrollHandler: ScrollCallbackT = { scroll -> mouseScrolled(scroll.y) }
+    var mouseScrollHandler: ScrollCallbackT = { scroll -> mouseScrolled(scroll.y.f) }
 
     fun keyPressBase(key: Int) {
         when (key) {

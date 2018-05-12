@@ -1,7 +1,5 @@
 package vulkan.base
 
-import glfw_.GlfwWindow
-import glfw_.appBuffer
 import gli_.has
 import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil.NULL
@@ -13,7 +11,8 @@ import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
 import org.lwjgl.vulkan.VkPhysicalDevice
 import org.lwjgl.vulkan.VkQueue
-import vkn.*
+import uno.glfw.GlfwWindow
+import vkk.*
 import kotlin.reflect.KMutableProperty0
 
 class VulkanSwapChain {
