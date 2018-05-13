@@ -1,10 +1,14 @@
 package vulkan.base
 
+import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
+import org.lwjgl.vulkan.VkQueue
 import uno.kotlin.plusAssign
 import vkk.*
+import java.nio.ByteBuffer
 
 object debug {
 
@@ -79,46 +83,141 @@ object debug {
  *  See VulkanExampleBase::createInstance and VulkanExampleBase::createDevice (base/vulkanexamplebase.cpp)  */
 object debugMarker {
 
-//    // Set to true if function pointer for the debug marker are available
-//    extern bool active;
-//
-    /** Get function pointers for the debug report extensions from the device   */
-    fun setup(device: VkDevice) {
+    /** Set to true if function pointer for the debug marker are available */
+    var active = false
 
+    lateinit var device: VkDevice
+
+    /** Sets the debug name of an object
+     *  All Objects in Vulkan are represented by their 64-bit handles which are passed into this function
+     *  along with the object type */
+    fun setObjectName(device: VkDevice, `object`: Long, objectType: VkDebugReportObjectType, name: String) {
+        // Check for valid function pointer (may not be present if not running in a debugging application)
+        if (active) {
+            val nameInfo = vk.DebugMarkerObjectNameInfoEXT {
+                this.objectType = objectType
+                this.`object` = `object`
+                objectName = name
+            }
+            device debugMarkerSetObjectName nameInfo
+        }
     }
-//
-//    // Sets the debug name of an object
-//    // All Objects in Vulkan are represented by their 64-bit handles which are passed into this function
-//    // along with the object type
-//    void setObjectName (VkDevice device, uint64_t object, VkDebugReportObjectTypeEXT objectType, const char *name);
-//
-//    // Set the tag for an object
-//    void setObjectTag (VkDevice device, uint64_t object, VkDebugReportObjectTypeEXT objectType, uint64_t name, size_t tagSize, const void* tag);
-//
-//    // Start a new debug marker region
-//    void beginRegion (VkCommandBuffer cmdbuffer, const char* pMarkerName, glm::vec4 color);
-//
-//    // Insert a new debug marker into the command buffer
-//    void insert (VkCommandBuffer cmdbuffer, std::string markerName, glm::vec4 color);
-//
-//    // End the current debug marker region
-//    void endRegion (VkCommandBuffer cmdBuffer);
-//
-//    // Object specific naming functions
-//    void setCommandBufferName (VkDevice device, VkCommandBuffer cmdBuffer, const char * name);
-//    void setQueueName (VkDevice device, VkQueue queue, const char * name);
-//    void setImageName (VkDevice device, VkImage image, const char * name);
-//    void setSamplerName (VkDevice device, VkSampler sampler, const char * name);
-//    void setBufferName (VkDevice device, VkBuffer buffer, const char * name);
-//    void setDeviceMemoryName (VkDevice device, VkDeviceMemory memory, const char * name);
-//    void setShaderModuleName (VkDevice device, VkShaderModule shaderModule, const char * name);
-//    void setPipelineName (VkDevice device, VkPipeline pipeline, const char * name);
-//    void setPipelineLayoutName (VkDevice device, VkPipelineLayout pipelineLayout, const char * name);
-//    void setRenderPassName (VkDevice device, VkRenderPass renderPass, const char * name);
-//    void setFramebufferName (VkDevice device, VkFramebuffer framebuffer, const char * name);
-//    void setDescriptorSetLayoutName (VkDevice device, VkDescriptorSetLayout descriptorSetLayout, const char * name);
-//    void setDescriptorSetName (VkDevice device, VkDescriptorSet descriptorSet, const char * name);
-//    void setSemaphoreName (VkDevice device, VkSemaphore semaphore, const char * name);
-//    void setFenceName (VkDevice device, VkFence fence, const char * name);
-//    void setEventName (VkDevice device, VkEvent _event, const char * name);
+
+    /** Set the tag for an object */
+    fun setObjectTag(device: VkDevice, `object`: Long, objectType: VkDebugReportObjectType, name: String, tag: ByteBuffer) {
+
+        // Check for valid function pointer (may not be present if not running in a debugging application)
+        if (active) {
+            val tagInfo = vk.DebugMarkerObjectTagInfoEXT {
+                this.objectType = objectType
+                this.`object` = `object`
+                tagName = name
+                this.tag = tag
+            }
+            device debugMarkerSetObjectTag tagInfo
+        }
+    }
+
+    fun withRegion(cmdBuffer: VkCommandBuffer, markerName: String, color: Vec4, block: () -> Unit) {
+        beginRegion(cmdBuffer, markerName, color)
+        block()
+        endRegion(cmdBuffer)
+    }
+
+    /** Start a new debug marker region */
+    fun beginRegion(cmdBuffer: VkCommandBuffer, markerName: String, color: Vec4) {
+        // Check for valid function pointer (may not be present if not running in a debugging application)
+        if (active) {
+            val markerInfo = vk.DebugMarkerMarkerInfoEXT {
+                this.color(color)
+                this.markerName = markerName
+            }
+            cmdBuffer debugMarkerBegin markerInfo
+        }
+    }
+
+    /** Insert a new debug marker into the command buffer */
+    fun insert(cmdBuffer: VkCommandBuffer, markerName: String, color: Vec4) {
+        // Check for valid function pointer (may not be present if not running in a debugging application)
+        if (active) {
+            val markerInfo = vk.DebugMarkerMarkerInfoEXT {
+                this.color(color)
+                this.markerName = markerName
+            }
+            cmdBuffer debugMarkerInsert markerInfo
+        }
+    }
+
+    /** End the current debug marker region */
+    fun endRegion(cmdBuffer: VkCommandBuffer) {
+        // Check for valid function (may not be present if not runnin in a debugging application)
+        if (active)
+            cmdBuffer.debugMarkerEnd()
+    }
+
+    // TODO remove device?
+    // Object specific naming functions
+    fun setCommandBufferName(device: VkDevice, cmdBuffer: VkCommandBuffer, name: String) {
+        setObjectName(device, cmdBuffer.adr, VkDebugReportObjectType.COMMAND_BUFFER_EXT, name)
+    }
+
+    fun setQueueName(device: VkDevice, queue: VkQueue, name: String) {
+        setObjectName(device, queue.adr, VkDebugReportObjectType.QUEUE_EXT, name)
+    }
+
+    fun setImageName(device: VkDevice, image: VkImage, name: String) {
+        setObjectName(device, image, VkDebugReportObjectType.IMAGE_EXT, name)
+    }
+
+    fun setSamplerName(device: VkDevice, sampler: VkSampler, name: String) {
+        setObjectName(device, sampler, VkDebugReportObjectType.SAMPLER_EXT, name)
+    }
+
+    fun setBufferName(device: VkDevice, buffer: VkBuffer, name: String) {
+        setObjectName(device, buffer, VkDebugReportObjectType.BUFFER_EXT, name)
+    }
+
+    fun setDeviceMemoryName(device: VkDevice, memory: VkDeviceMemory, name: String) {
+        setObjectName(device, memory, VkDebugReportObjectType.DEVICE_MEMORY_EXT, name)
+    }
+
+    fun setShaderModuleName(device: VkDevice, shaderModule: VkShaderModule, name: String) {
+        setObjectName(device, shaderModule, VkDebugReportObjectType.SHADER_MODULE_EXT, name)
+    }
+
+    fun setPipelineName(device: VkDevice, pipeline: VkPipeline, name: String) {
+        setObjectName(device, pipeline, VkDebugReportObjectType.PIPELINE_EXT, name)
+    }
+
+    fun setPipelineLayoutName(device: VkDevice, pipelineLayout: VkPipelineLayout, name: String) {
+        setObjectName(device, pipelineLayout, VkDebugReportObjectType.PIPELINE_LAYOUT_EXT, name)
+    }
+
+    fun setRenderPassName(device: VkDevice, renderPass: VkRenderPass, name: String) {
+        setObjectName(device, renderPass, VkDebugReportObjectType.RENDER_PASS_EXT, name)
+    }
+
+    fun setFramebufferName(device: VkDevice, framebuffer: VkFramebuffer, name: String) {
+        setObjectName(device, framebuffer, VkDebugReportObjectType.FRAMEBUFFER_EXT, name)
+    }
+
+    fun setDescriptorSetLayoutName(device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout, name: String) {
+        setObjectName(device, descriptorSetLayout, VkDebugReportObjectType.DESCRIPTOR_SET_LAYOUT_EXT, name)
+    }
+
+    fun setDescriptorSetName(device: VkDevice, descriptorSet: VkDescriptorSet, name: String) {
+        setObjectName(device, descriptorSet, VkDebugReportObjectType.DESCRIPTOR_SET_EXT, name)
+    }
+
+    fun setSemaphoreName(device: VkDevice, semaphore: VkSemaphore, name: String) {
+        setObjectName(device, semaphore, VkDebugReportObjectType.SEMAPHORE_EXT, name)
+    }
+
+    fun setFenceName(device: VkDevice, fence: VkFence, name: String) {
+        setObjectName(device, fence, VkDebugReportObjectType.FENCE_EXT, name)
+    }
+
+    fun setEventName(device: VkDevice, event: VkEvent, name: String) {
+        setObjectName(device, event, VkDebugReportObjectType.EVENT_EXT, name)
+    }
 }

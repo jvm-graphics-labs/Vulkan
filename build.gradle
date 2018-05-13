@@ -55,10 +55,10 @@ dependencies {
 
     ext.kx = 'com.github.kotlin-graphics'
     implementation "$kx:glm:738c60621c18939ad6093a13cddfe158344edbbe"
-    implementation "$kx:uno-sdk:4f00f5f4a69720be1906f88305d190280da04fb1"
-    implementation "$kx:assimp:4a3211a557d72e929ea0d18cc780455d9026cb53"
-    implementation "$kx:imgui:06a60147e3d2de8b46a40d7db8c9e5edce54aae0"
-    implementation "$kx:vkk:2c3593c914165b6078f5a711eacd3ce75e4b63b2"
+    implementation "$kx:vkk:a5176a1f51734ef62571a1674713948e91d35fc6"
+    implementation "$kx:uno-sdk:527bfab6e3d8f9cec9be7ef16abe592c1dd1636e"
+    implementation "$kx:assimp:c188e675d533f9966d7214d3ec8dc73c4b0d176a"
+//    implementation "$kx:imgui:6aea5d675ec24b45ffda10e9106eb47656c049b2"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21"
 
