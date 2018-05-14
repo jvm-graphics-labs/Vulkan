@@ -661,7 +661,7 @@ abstract class VulkanExampleBase {
             layout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         }
 
-        val subpassDescription = vk.SubpassDescription(1) {
+        val subpassDescription = vk.SubpassDescription {
             pipelineBindPoint = VkPipelineBindPoint.GRAPHICS
             colorAttachmentCount = 1
             colorAttachments = colorReference
@@ -696,7 +696,7 @@ abstract class VulkanExampleBase {
 
         val renderPassInfo = vk.RenderPassCreateInfo {
             this.attachments = attachments
-            subpasses = subpassDescription
+            subpass = subpassDescription
             this.dependencies = dependencies
         }
 
@@ -775,7 +775,7 @@ abstract class VulkanExampleBase {
     open fun prepare() {
 
         if (vulkanDevice.enableDebugMarkers)
-            debugMarker.setup(device)
+            debugMarker.device = device
         initSwapchain()
         createCommandPool()
         setupSwapChain()

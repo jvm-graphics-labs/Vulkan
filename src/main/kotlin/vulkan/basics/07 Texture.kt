@@ -45,7 +45,7 @@ private class Texture : VulkanExampleBase() {
 
     /** Vertex layout for this example */
     object Vertex {
-//    float pos[3];
+        //    float pos[3];
 //    float uv[2];
 //    float normal[3];
         val size = Vec3.size * 2 + Vec2.size
@@ -79,7 +79,7 @@ private class Texture : VulkanExampleBase() {
 
     val uniformBufferVS = Buffer()
 
-    object uboVS : Bufferizable(){
+    object uboVS : Bufferizable() {
 
         val projection = Mat4()
         @Order(1)
@@ -704,13 +704,9 @@ private class Texture : VulkanExampleBase() {
                 VkFrontFace.COUNTER_CLOCKWISE,
                 0)
 
-        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(1) {
-            colorWriteMask = 0xf
-        }
+        val blendAttachmentState = vk.PipelineColorBlendAttachmentState { colorWriteMask = 0xf }
 
-        val colorBlendState = vk.PipelineColorBlendStateCreateInfo {
-            attachments = blendAttachmentState
-        }
+        val colorBlendState = vk.PipelineColorBlendStateCreateInfo { attachment = blendAttachmentState }
 
         val depthStencilState = initializers.pipelineDepthStencilStateCreateInfo(
                 true,

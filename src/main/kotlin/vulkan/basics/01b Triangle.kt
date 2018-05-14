@@ -687,7 +687,7 @@ private class Triangle : VulkanExampleBase() {
         }
 
         // Setup a single subpass reference
-        val subpassDescription = vk.SubpassDescription(1) {
+        val subpassDescription = vk.SubpassDescription {
             pipelineBindPoint = VkPipelineBindPoint.GRAPHICS
             colorAttachmentCount = 1
             colorAttachments = colorReference                   // Reference to the color attachment in slot 0
@@ -730,7 +730,7 @@ private class Triangle : VulkanExampleBase() {
         // Create the actual renderpass
         val renderPassInfo = vk.RenderPassCreateInfo {
             this.attachments = attachments      // Descriptions of the attachments used by the render pass
-            subpasses = subpassDescription      // We only use one subpass in this example, Description of that subpass
+            subpass = subpassDescription      // We only use one subpass in this example, Description of that subpass
             this.dependencies = dependencies    // Subpass dependencies used by the render pass
         }
 
