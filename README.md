@@ -20,7 +20,7 @@ The expressiveness of Kotlin meets the power of Vulkan.
 Basic and verbose example for getting a colored triangle rendered to the screen using Vulkan. This is meant as a starting point for learning Vulkan from the ground up. A huge part of the code is boilerplate that is abstracted away in later examples.
 
 #### [01b - Triangle](src/main/kotlin/vulkan/basics/01b%20Triangle.kt)
-Boilerplate code gone, 1/3 of code less.
+Boilerplate code gone, 1/3 less code.
 
 #### [02 - Pipelines](src/main/kotlin/vulkan/basics/02%20Pipelines.kt)
 
@@ -38,7 +38,7 @@ Dynamic uniform buffers are used for rendering multiple objects with multiple ma
 
 Uses push constants, small blocks of uniform data stored within a command buffer, to pass data to a shader without the need for uniform buffers.
 
-#### [06 - Specialization constants](examples/specializationconstants/) TODO
+#### [06 - Specialization constants](src/main/kotlin/vulkan/basics/06%20Specialization%20Constants.kt) BUGGED
 
 Uses SPIR-V specialization constants to create multiple pipelines with different lighting paths from a single "uber" shader.
 
@@ -46,7 +46,7 @@ Uses SPIR-V specialization constants to create multiple pipelines with different
 
 Loads a 2D texture from disk (including all mip levels), uses staging to upload it into video memory and samples from it using combined image samplers.
 
-#### [08 - Cube map textures](examples/texturecubemap/) TODO
+#### [08 - Cube map textures](src/main/kotlin/vulkan/basics/08%Texture%20Cubemap.kt) Only sphere model
 
 Loads a cube map texture from disk containing six different faces. All faces and mip levels are uploaded into video memory and the cubemap is sampled once as a skybox (for the background) and as a source for reflections (for a 3D model).
 
@@ -54,15 +54,15 @@ Loads a cube map texture from disk containing six different faces. All faces and
 
 Loads a 2D texture array containing multiple 2D texture slices (each with it's own mip chain) and renders multiple meshes each sampling from a different layer of the texture. 2D texture arrays don't do any interpolation between the slices.
 
-#### [10 - 3D textures](examples/texture3d/) TODO
+#### [10 - 3D textures](src/main/kotlin/vulkan/basics/10%20Texture%203d.kt)
 
 Generates a 3D texture on the cpu (using perlin noise), uploads it to the device and samples it to render an animation. 3D textures store volumetric data and interpolate in all three dimensions.
 
-#### [11 - Model rendering](examples/mesh/) TODO
+#### [11 - Model rendering](src/main/kotlin/vulkan/basics/11%20Model%20Rendering.kt)
 
 Loads a 3D model and texture maps from a common file format (using [assimp](https://github.com/assimp/assimp)), uploads the vertex and index buffer data to video memory, sets up a matching vertex layout and renders the 3D model.
 
-#### [12 - Sub passes](examples/subpasses/) TODO
+#### [12 - Sub passes](examples/subpasses/) TOFINISH
 
 Uses sub passes and input attachments to write and read back data from framebuffer attachments (same location only) in single render pass. This is used to implement deferred render composition with added forward transparency in a single pass. 
 
@@ -113,7 +113,7 @@ Purely GPU based frustum visibility culling and level-of-detail system. A comput
 
 
 
-##### Credits:
+#### Credits:
 
 - [Sascha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
 - [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :), also the tip about the buffer came from him 
