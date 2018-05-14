@@ -113,7 +113,7 @@ Purely GPU based frustum visibility culling and level-of-detail system. A comput
 
 
 
-##### Credits:
+#### Credits:
 
 - [Sascha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
 - [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :), also the tip about the buffer came from him 
