@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VkImageSubresourceRange
 import org.lwjgl.vulkan.VkPhysicalDevice
 import uno.buffer.toBuffer
 import uno.buffer.use
-import vkn.*
+import vkk.*
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.reflect.KMutableProperty0

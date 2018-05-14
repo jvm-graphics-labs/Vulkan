@@ -1,8 +1,7 @@
 package vulkan.basics
 
-import glfw_.appBuffer
-import glfw_.glfw
 import glm_.L
+import glm_.buffer.adr
 import glm_.func.rad
 import glm_.glm
 import glm_.mat4x4.Mat4
@@ -13,9 +12,10 @@ import org.lwjgl.system.MemoryUtil.memCopy
 import org.lwjgl.vulkan.VK10.VK_SUBPASS_EXTERNAL
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
+import uno.glfw.glfw
 import uno.kotlin.buffers.capacity
-import vkn.*
-import vkn.LongArrayList.resize
+import vkk.*
+import vkk.LongArrayList.resize
 import vulkan.USE_STAGING
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase

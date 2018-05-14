@@ -53,14 +53,14 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
-    implementation 'com.github.kotlin-graphics:uno-sdk:7bada9b49adef3e007a6fb4a2052da2b11933dcd'
-    implementation 'com.github.kotlin-graphics:assimp:c224cf47516bc91a848a4dea88bf82d5327074a0'
-    implementation 'com.github.kotlin-graphics:imgui:b721ceaf260a47fa3623ab8d780ecfbe3510ec21'
+    ext.kx = 'com.github.kotlin-graphics'
+    implementation "$kx:glm:738c60621c18939ad6093a13cddfe158344edbbe"
+    implementation "$kx:vkk:a5176a1f51734ef62571a1674713948e91d35fc6"
+    implementation "$kx:uno-sdk:527bfab6e3d8f9cec9be7ef16abe592c1dd1636e"
+    implementation "$kx:assimp:c188e675d533f9966d7214d3ec8dc73c4b0d176a"
+//    implementation "$kx:imgui:6aea5d675ec24b45ffda10e9106eb47656c049b2"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21"
-
-    ext.spirvCrossVersion = "0.4.0"
-    implementation "graphics.scenery:spirvcrossj:$spirvCrossVersion"
 
     testCompile 'io.kotlintest:kotlintest:2.0.7'
 
@@ -80,7 +80,10 @@ dependencies {
         implementation "org.lwjgl:lwjgl$it:$lwjglVersion"
         runtime "org.lwjgl:lwjgl$it:$lwjglVersion:$lwjglNatives"
     }
-    runtime "graphics.scenery:spirvcrossj:$spirvCrossVersion:$lwjglNatives"
+
+    ext.spirvCross = "graphics.scenery:spirvcrossj:0.4.0"
+    implementation spirvCross
+    runtime "$spirvCross:$lwjglNatives"
 }
 
 repositories {

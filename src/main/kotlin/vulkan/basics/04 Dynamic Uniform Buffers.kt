@@ -18,7 +18,6 @@
 
 package vulkan.basics
 
-import glfw_.appBuffer
 import glm_.L
 import glm_.buffer.adr
 import glm_.buffer.bufferBig
@@ -35,7 +34,7 @@ import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
 import uno.kotlin.buffers.capacity
-import vkn.*
+import vkk.*
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
 import vulkan.base.Buffer

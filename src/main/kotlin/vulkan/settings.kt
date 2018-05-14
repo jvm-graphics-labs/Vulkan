@@ -1,7 +1,6 @@
 package vulkan
 
 import glm_.vec2.Vec2i
-import java.nio.file.Path
 import java.nio.file.Paths
 
 
@@ -23,3 +22,5 @@ const val PARTICLE_COUNT = 256 * 1024
 const val PARTICLES_PER_ATTRACTOR = 4 * 1024
 
 val TEX_DIM = Vec2i(2048)
+
+val NUM_LIGHTS = 64

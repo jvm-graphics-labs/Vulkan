@@ -20,7 +20,7 @@ import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkQueue
-import vkn.*
+import vkk.*
 import vulkan.TEX_DIM
 import vulkan.assetPath
 import vulkan.base.*

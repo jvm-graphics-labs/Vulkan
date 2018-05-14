@@ -8,7 +8,6 @@
 
 package vulkan.base
 
-import assimp.AiPostProcessStep as Pp
 import assimp.AiPostProcessStepsFlags
 import assimp.Importer
 import assimp.or
@@ -23,10 +22,12 @@ import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkQueue
-import uno.buffer.*
-import vkn.*
+import uno.buffer.floatBufferOf
+import uno.buffer.intBufferOf
+import vkk.*
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
+import assimp.AiPostProcessStep as Pp
 
 
 /** @brief Vertex layout components */

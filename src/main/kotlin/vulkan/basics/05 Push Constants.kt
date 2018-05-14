@@ -21,7 +21,7 @@ import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
-import vkn.*
+import vkk.*
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
 import vulkan.base.*

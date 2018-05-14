@@ -2,7 +2,7 @@ package vulkan.base
 
 import glm_.vec2.Vec2i
 import org.lwjgl.vulkan.VkQueue
-import vkn.VkFramebuffer
+import vkk.VkFramebuffer
 
 class UIOverlayCreateInfo {
 

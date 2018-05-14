@@ -20,7 +20,7 @@ import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
-import vkn.*
+import vkk.*
 import vulkan.PARTICLE_COUNT
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath

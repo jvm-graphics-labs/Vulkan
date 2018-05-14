@@ -8,7 +8,6 @@
 
 package vulkan.computeShader
 
-import glfw_.appBuffer
 import glm_.L
 import glm_.buffer.bufferBig
 import glm_.f
@@ -21,7 +20,7 @@ import glm_.vec3.Vec3
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import uno.kotlin.buffers.capacity
-import vkn.*
+import vkk.*
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
 import vulkan.base.*

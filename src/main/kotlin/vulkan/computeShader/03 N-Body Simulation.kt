@@ -18,7 +18,7 @@ import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
-import vkn.*
+import vkk.*
 import vulkan.PARTICLES_PER_ATTRACTOR
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath

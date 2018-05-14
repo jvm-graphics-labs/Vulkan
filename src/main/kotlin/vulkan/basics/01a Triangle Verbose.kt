@@ -1,6 +1,5 @@
 package vulkan.basics
 
-import glfw_.glfw
 import glm_.*
 import glm_.buffer.bufferBig
 import glm_.buffer.free
@@ -12,10 +11,13 @@ import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
-import uno.buffer.*
+import uno.buffer.floatBufferOf
+import uno.buffer.intBufferOf
+import uno.buffer.toBuffer
+import uno.glfw.glfw
 import uno.kotlin.buffers.capacity
-import vkn.*
-import vkn.LongArrayList.resize
+import vkk.*
+import vkk.LongArrayList.resize
 import vulkan.USE_STAGING
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
