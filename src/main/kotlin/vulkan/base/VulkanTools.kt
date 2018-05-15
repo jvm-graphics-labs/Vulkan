@@ -10,7 +10,6 @@ import uno.buffer.use
 import vkk.*
 import java.io.File
 import java.nio.ByteBuffer
-import kotlin.reflect.KMutableProperty0
 
 object tools {
 
@@ -35,23 +34,17 @@ object tools {
 //        }
 //    }
 //
-    fun getSupportedDepthFormat(physicalDevice: VkPhysicalDevice, depthFormat: KMutableProperty0<VkFormat>): Boolean {
+    infix fun getSupportedDepthFormat(physicalDevice: VkPhysicalDevice): VkFormat {
         /*  Since all depth formats may be optional, we need to find a suitable depth format to use
             Start with the highest precision packed format         */
-        arrayOf(VkFormat.D32_SFLOAT_S8_UINT,
+        return arrayOf(VkFormat.D32_SFLOAT_S8_UINT,
                 VkFormat.D32_SFLOAT,
                 VkFormat.D24_UNORM_S8_UINT,
                 VkFormat.D16_UNORM_S8_UINT,
-                VkFormat.D16_UNORM).forEach {
-
-            val formatProps = vk.getPhysicalDeviceFormatProperties(physicalDevice, it)
+                VkFormat.D16_UNORM).find {
             // Format must support depth stencil attachment for optimal tiling
-            if (formatProps.optimalTilingFeatures has VkFormatFeature.DEPTH_STENCIL_ATTACHMENT_BIT) {
-                depthFormat.set(it)
-                return true
-            }
-        }
-        return false
+            vk.getPhysicalDeviceFormatProperties(physicalDevice, it).optimalTilingFeatures has VkFormatFeature.DEPTH_STENCIL_ATTACHMENT_BIT
+        } ?: VkFormat.UNDEFINED
     }
 
     /** Create an image memory barrier for changing the layout of an image and put it into an active command buffer

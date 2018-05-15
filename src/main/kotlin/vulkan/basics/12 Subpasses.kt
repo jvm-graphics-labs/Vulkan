@@ -18,7 +18,9 @@
 //
 //package vulkan.basics
 //
+//import glm_.BYTES
 //import glm_.L
+//import glm_.glm
 //import glm_.mat4x4.Mat4
 //import glm_.set
 //import glm_.vec3.Vec3
@@ -33,6 +35,7 @@
 //import vulkan.VERTEX_BUFFER_BIND_ID
 //import vulkan.assetPath
 //import vulkan.base.*
+//import java.lang.Math.abs
 //
 //
 //fun main(args: Array<String>) {
@@ -72,7 +75,7 @@
 //    object uboGBuffer : Bufferizable() {
 //        lateinit var projection: Mat4
 //        @Order(1)
-//        lateinit var model:  Mat4
+//        lateinit var model: Mat4
 //        lateinit var view: Mat4
 //    }
 //
@@ -716,34 +719,34 @@
 //        }
 //
 //        // Use specialization constants to pass number of lights to the shader
-//        val specializationEntry = vk.SpecializationMapEntry
-//        specializationEntry.constantID = 0
-//        specializationEntry.offset = 0
-//        specializationEntry.size = sizeof(uint32_t)
-//
-//        val specializationData = NUM_LIGHTS
+//        val specializationEntry = vk.SpecializationMapEntry {
+//            constantId = 0
+//            offset = 0
+//            size = Int.BYTES.L
+//        }
+//        val specializationData = appBuffer.buffer(Int.BYTES).apply { putInt(0, NUM_LIGHTS) }
 //
 //        val specializationInfo = vk.SpecializationInfo {
-//            mapEntries = specializationEntry
+//            mapEntry = specializationEntry
 //            data = specializationData
 //        }
 //        shaderStages[1].specializationInfo = specializationInfo
 //
-//        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(pipelineLayouts.composition, renderPass)
+//        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(pipelineLayouts.composition, renderPass).also {
 //
-//        val emptyInputState = vk.PipelineVertexInputStateCreateInfo().also {
+//            val emptyInputState = vk.PipelineVertexInputStateCreateInfo()
+//
 //            it.vertexInputState = emptyInputState
 //            it.inputAssemblyState = inputAssemblyState
 //            it.rasterizationState = rasterizationState
-//            pipelineCreateInfo.pColorBlendState = & colorBlendState
-//                    pipelineCreateInfo.pMultisampleState = & multisampleState
-//                    pipelineCreateInfo.pViewportState = & viewportState
-//                    pipelineCreateInfo.pDepthStencilState = & depthStencilState
-//                    pipelineCreateInfo.pDynamicState = & dynamicState
-//                    pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size())
-//            pipelineCreateInfo.pStages = shaderStages.data()
+//            it.colorBlendState = colorBlendState
+//            it.multisampleState = multisampleState
+//            it.viewportState = viewportState
+//            it.depthStencilState = depthStencilState
+//            it.dynamicState = dynamicState
+//            it.stages = shaderStages
 //            // Index of the subpass that this pipeline will be used in
-//            pipelineCreateInfo.subpass = 1
+//            it.subpass = 1
 //        }
 //        depthStencilState.depthWriteEnable = false
 //
@@ -806,79 +809,69 @@
 //                uboGBuffer.size.L)
 //
 //        // Deferred fragment shader
-//        vulkanDevice.createBuffer(
-//                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
-//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
-//                uniformBuffers.lights,
-//                uboLights)
+//        TODO()
+////        vulkanDevice.createBuffer(
+////                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
+////                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+////                uniformBuffers.lights,
+////                uboLights.size)
 //
 //        // Update
 //        updateUniformBufferDeferredMatrices()
 //        updateUniformBufferDeferredLights()
 //    }
 //
-//    fun updateUniformBufferDeferredMatrices()    {
+//    fun updateUniformBufferDeferredMatrices() {
 //
 //        uboGBuffer.projection = camera.matrices.perspective
 //        uboGBuffer.view = camera.matrices.view
-//        uboGBuffer.model = glm::mat4(1.0f)
+//        uboGBuffer.model put 1f
 //
-//        VK_CHECK_RESULT(uniformBuffers.GBuffer.map())
-//        memcpy(uniformBuffers.GBuffer.mapped, & uboGBuffer, sizeof(uboGBuffer))
-//        uniformBuffers.GBuffer.unmap()
+//        uniformBuffers.GBuffer.mapping { mapped -> uboGBuffer to mapped }
 //    }
 //
-//    void initLights()
-//    {
-//        std::vector < glm::vec3 > colors =
-//                {
-//                    glm::vec3(1.0f, 1.0f, 1.0f),
-//                    glm::vec3(1.0f, 0.0f, 0.0f),
-//                    glm::vec3(0.0f, 1.0f, 0.0f),
-//                    glm::vec3(0.0f, 0.0f, 1.0f),
-//                    glm::vec3(1.0f, 1.0f, 0.0f),
-//                }
+//    fun initLights() {
 //
-//        std::default_random_engine rndGen (benchmark.active ? 0 : (unsigned)time(nullptr))
-//        std::uniform_real_distribution<float> rndDist (-1.0f, 1.0f)
-//        std::uniform_int_distribution<uint32_t> rndCol (0, static_cast<uint32_t>(colors.size()-1))
+//        val colors = arrayOf(
+//                Vec3(1f, 1f, 1f),
+//                Vec3(1f, 0f, 0f),
+//                Vec3(0f, 1f, 0f),
+//                Vec3(0f, 0f, 1f),
+//                Vec3(1f, 1f, 0f))
 //
-//        for (auto& light : uboLights.lights)
-//        {
-//            light.position = glm::vec4(rndDist(rndGen) * 6.0f, 0.25f + std::abs(rndDist(rndGen)) * 4.0f, rndDist(rndGen) * 6.0f, 1.0f)
-//            light.color = colors[rndCol(rndGen)]
-//            light.radius = 1.0f + std::abs(rndDist(rndGen))
+//        fun rndDist() = glm.linearRand(-1f, 1f)
+//        fun rndCol() = glm.linearRand(0, colors.lastIndex)
+//
+//        for (light in uboLights.lights) {
+//            light.position.put(rndDist() * 6f, 0.25f + abs(rndDist()) * 4f, rndDist() * 6f, 1f)
+//            light.color put colors[rndCol()]
+//            light.radius = 1f + abs(rndDist())
 //        }
 //    }
 //
-//    // Update fragment shader light position uniform block
-//    void updateUniformBufferDeferredLights()
-//    {
+//    /** Update fragment shader light position uniform block */
+//    fun updateUniformBufferDeferredLights()    {
 //        // Current view position
-//        uboLights.viewPos = glm::vec4(camera.position, 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f)
+//        uboLights.viewPos = Vec4(camera.position, 0f) * Vec4(-1f, 1f, -1f, 1f)
 //
-//        VK_CHECK_RESULT(uniformBuffers.lights.map())
-//        memcpy(uniformBuffers.lights.mapped, & uboLights, sizeof(uboLights))
-//        uniformBuffers.lights.unmap()
+//        uniformBuffers.lights.mapping { mapped -> uboLights to mapped }
 //    }
 //
-//    void draw()
-//    {
-//        VulkanExampleBase::prepareFrame()
+//    fun draw()    {
+//
+//        super.prepareFrame()
 //
 //        // Command buffer to be sumitted to the queue
-//        submitInfo.commandBufferCount = 1
-//        submitInfo.pCommandBuffers = & drawCmdBuffers [currentBuffer]
+//        submitInfo.commandBuffer = drawCmdBuffers [currentBuffer]
 //
 //        // Submit to queue
-//        VK_CHECK_RESULT(vkQueueSubmit(queue, 1, & submitInfo, VK_NULL_HANDLE))
+//        queue submit submitInfo
 //
-//        VulkanExampleBase::submitFrame()
+//        super.submitFrame()
 //    }
 //
-//    void prepare()
-//    {
-//        VulkanExampleBase::prepare()
+//    override fun prepare()    {
+//        super.prepare()
 //        loadAssets()
 //        setupVertexDescriptions()
 //        initLights()
@@ -890,51 +883,48 @@
 //        prepareCompositionPass()
 //        buildCommandBuffers()
 //        prepared = true
+//        window.show()
 //    }
 //
-//    virtual void render()
-//    {
+//    override fun render()    {
 //        if (!prepared)
 //            return
 //        draw()
 //    }
 //
-//    virtual void viewChanged()
-//    {
+//    override fun viewChanged()    {
 //        updateUniformBufferDeferredMatrices()
 //        updateUniformBufferDeferredLights()
 //    }
 //
 //    // UI overlay configuration needs to be adjusted for this example (renderpass setup, attachment count, etc.)
-//    virtual void OnSetupUIOverlay(vks::UIOverlayCreateInfo &createInfo)
-//    {
-//        createInfo.renderPass = uiRenderPass
-//        createInfo.framebuffers = frameBuffers
-//        createInfo.subpassCount = 3
-//        createInfo.attachmentCount = 4
-//        createInfo.clearValues = {
-//            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-//            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-//            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-//            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-//            { { 1.0f, 0 } },
-//        }
-//    }
-//
-//    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)
-//    {
-//        if (overlay->header("Subpasses")) { overlay ->
-//        text("0: Deferred G-Buffer creation")
-//        overlay->text("1: Deferred composition")
-//        overlay->text("2: Forward transparency")
-//    }
-//        if (overlay->header("Settings")) {
-//        if (overlay->button("Randomize lights")) {
-//        initLights()
-//        updateUniformBufferDeferredLights()
-//    }
-//    }
-//    }
+////    virtual void OnSetupUIOverlay(vks::UIOverlayCreateInfo &createInfo)
+////    {
+////        createInfo.renderPass = uiRenderPass
+////        createInfo.framebuffers = frameBuffers
+////        createInfo.subpassCount = 3
+////        createInfo.attachmentCount = 4
+////        createInfo.clearValues = {
+////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
+////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
+////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
+////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
+////            { { 1.0f, 0 } },
+////        }
+////    }
+////
+////    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)
+////    {
+////        if (overlay->header("Subpasses")) { overlay ->
+////        text("0: Deferred G-Buffer creation")
+////        overlay->text("1: Deferred composition")
+////        overlay->text("2: Forward transparency")
+////    }
+////        if (overlay->header("Settings")) {
+////        if (overlay->button("Randomize lights")) {
+////        initLights()
+////        updateUniformBufferDeferredLights()
+////    }
+////    }
+////    }
 //}
-//
-//VULKAN_EXAMPLE_MAIN()

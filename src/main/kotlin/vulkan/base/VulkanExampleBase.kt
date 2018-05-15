@@ -431,8 +431,8 @@ abstract class VulkanExampleBase {
         queue = device.getQueue(vulkanDevice.queueFamilyIndices.graphics, 0)
 
         // Find a suitable depth format
-        val validDepthFormat = tools.getSupportedDepthFormat(physicalDevice, ::depthFormat)
-        assert(validDepthFormat)
+        depthFormat = tools getSupportedDepthFormat physicalDevice
+        assert(depthFormat != VkFormat.UNDEFINED)
 
         swapChain.connect(instance, physicalDevice, device)
 
