@@ -30,7 +30,7 @@ class Buffer {
     val descriptor: VkDescriptorBufferInfo = VkDescriptorBufferInfo.calloc()
     var size: VkDeviceSize = 0
     var alignment: VkDeviceSize = 0
-    var mapped: PointerBuffer = memCallocPointer(1)
+    var mapped = NULL
 
     /** @brief Usage flags to be filled by external source at buffer creation (to query at some later point) */
     var usageFlags: VkBufferUsageFlags = 0
@@ -46,12 +46,12 @@ class Buffer {
      * @return VkResult of the buffer mapping call
      */
     fun map(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0) {
-        device.mapMemory(memory, offset, size, 0, mapped.adr)
+        mapped = device.mapMemory(memory, offset, size)
     }
 
     fun mapping(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = 0, block: (Long) -> Unit) {
         map(size, offset)
-        block(mapped[0])
+        block(mapped)
         unmap()
     }
 
@@ -61,9 +61,9 @@ class Buffer {
      * @note Does not return a result as vkUnmapMemory can't fail
      */
     fun unmap() {
-        if (mapped[0] != NULL) {
+        if (mapped != NULL) {
             device unmapMemory memory
-            mapped[0] = NULL
+            mapped = NULL
         }
     }
 

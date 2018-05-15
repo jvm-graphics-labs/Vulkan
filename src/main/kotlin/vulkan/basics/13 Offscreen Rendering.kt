@@ -12,6 +12,7 @@
 //import glm_.buffer.adr
 //import glm_.mat4x4.Mat4
 //import glm_.size
+//import glm_.vec2.Vec2
 //import glm_.vec2.Vec2i
 //import glm_.vec3.Vec3
 //import glm_.vec4.Vec4
@@ -72,9 +73,11 @@
 //        val vsDebugQuad = Buffer()
 //    }
 //
-//    object uboShared {
+//    object uboShared : Bufferizable() {
 //        lateinit var projection: Mat4
+//        @Order(1)
 //        lateinit var model: Mat4
+//        @Order(2)
 //        val lightPos = Vec4(0f, 0f, 0f, 1f)
 //    }
 //
@@ -527,330 +530,210 @@
 //        models.quad.device = device
 //    }
 //
-//    void setupVertexDescriptions()
-//    {
+//    fun setupVertexDescriptions() {
 //        // Binding description
-//        vertices.bindingDescriptions.resize(1)
-//        vertices.bindingDescriptions[0] =
-//                vks::initializers::vertexInputBindingDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        vertexLayout.stride(),
-//                        VK_VERTEX_INPUT_RATE_VERTEX)
+//        vertices.bindingDescriptions = vk.VertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vertexLayout.stride, VkVertexInputRate.VERTEX)
 //
 //        // Attribute descriptions
-//        vertices.attributeDescriptions.resize(4)
-//        // Location 0 : Position
-//        vertices.attributeDescriptions[0] =
-//                vks::initializers::vertexInputAttributeDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        0,
-//                        VK_FORMAT_R32G32B32_SFLOAT,
-//                        0)
-//        // Location 1 : Texture coordinates
-//        vertices.attributeDescriptions[1] =
-//                vks::initializers::vertexInputAttributeDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        1,
-//                        VK_FORMAT_R32G32_SFLOAT,
-//                        sizeof(float) * 3)
-//        // Location 2 : Color
-//        vertices.attributeDescriptions[2] =
-//                vks::initializers::vertexInputAttributeDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        2,
-//                        VK_FORMAT_R32G32B32_SFLOAT,
-//                        sizeof(float) * 5)
-//        // Location 3 : Normal
-//        vertices.attributeDescriptions[3] =
-//                vks::initializers::vertexInputAttributeDescription(
-//                        VERTEX_BUFFER_BIND_ID,
-//                        3,
-//                        VK_FORMAT_R32G32B32_SFLOAT,
-//                        sizeof(float) * 8)
+//        vertices.attributeDescriptions = vk.VertexInputAttributeDescription(
+//                // Location 0 : Position
+//                VERTEX_BUFFER_BIND_ID, 0, VkFormat.R32G32B32_SFLOAT, 0,
+//                // Location 1 : Texture coordinates
+//                VERTEX_BUFFER_BIND_ID, 1, VkFormat.R32G32_SFLOAT, Vec3.size,
+//                // Location 2 : Color
+//                VERTEX_BUFFER_BIND_ID, 2, VkFormat.R32G32B32_SFLOAT, Vec3.size + Vec2.size,
+//                // Location 3 : Normal
+//                VERTEX_BUFFER_BIND_ID, 3, VkFormat.R32G32B32_SFLOAT, Vec3.size * 2 + Vec2.size)
 //
-//        vertices.inputState = vks::initializers::pipelineVertexInputStateCreateInfo()
-//        vertices.inputState.vertexBindingDescriptionCount = vertices.bindingDescriptions.size()
-//        vertices.inputState.pVertexBindingDescriptions = vertices.bindingDescriptions.data()
-//        vertices.inputState.vertexAttributeDescriptionCount = vertices.attributeDescriptions.size()
-//        vertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data()
-//    }
-//
-//    void setupDescriptorPool()
-//    {
-//        std::vector<VkDescriptorPoolSize> poolSizes =
-//        {
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 6),
-//            vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8)
+//        vertices.inputState = vk.PipelineVertexInputStateCreateInfo {
+//            vertexBindingDescription = vertices.bindingDescriptions
+//            vertexAttributeDescriptions = vertices.attributeDescriptions
 //        }
-//
-//        VkDescriptorPoolCreateInfo descriptorPoolInfo =
-//        vks::initializers::descriptorPoolCreateInfo(
-//                poolSizes.size(),
-//                poolSizes.data(),
-//                5)
-//
-//        VK_CHECK_RESULT(vkCreateDescriptorPool(device, & descriptorPoolInfo, nullptr, & descriptorPool))
 //    }
 //
-//    void setupDescriptorSetLayout()
-//    {
-//        std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings
-//                VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo
-//                VkPipelineLayoutCreateInfo pipelineLayoutInfo
+//    fun setupDescriptorPool() {
 //
+//        val poolSizes = vk.DescriptorPoolSize(
+//                VkDescriptorType.UNIFORM_BUFFER, 6,
+//                VkDescriptorType.COMBINED_IMAGE_SAMPLER, 8)
+//
+//        val descriptorPoolInfo = vk.DescriptorPoolCreateInfo(poolSizes, 5)
+//
+//        descriptorPool = device createDescriptorPool descriptorPoolInfo
+//    }
+//
+//    fun setupDescriptorSetLayout() {
+//
+//        val setLayoutBindings = vk.DescriptorSetLayoutBinding(
 //                // Binding 0 : Vertex shader uniform buffer
-//                setLayoutBindings.push_back(vks::initializers::descriptorSetLayoutBinding(
-//                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                        VK_SHADER_STAGE_VERTEX_BIT,
-//                        0))
-//        // Binding 1 : Fragment shader image sampler
-//        setLayoutBindings.push_back(vks::initializers::descriptorSetLayoutBinding(
-//                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                VK_SHADER_STAGE_FRAGMENT_BIT,
-//                1))
-//        // Binding 2 : Fragment shader image sampler
-//        setLayoutBindings.push_back(vks::initializers::descriptorSetLayoutBinding(
-//                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                VK_SHADER_STAGE_FRAGMENT_BIT,
-//                2))
+//                VkDescriptorType.UNIFORM_BUFFER, VkShaderStage.VERTEX_BIT.i, 0,
+//                // Binding 1 : Fragment shader image sampler
+//                VkDescriptorType.COMBINED_IMAGE_SAMPLER, VkShaderStage.FRAGMENT_BIT.i, 1,
+//                // Binding 2 : Fragment shader image sampler
+//                VkDescriptorType.COMBINED_IMAGE_SAMPLER, VkShaderStage.FRAGMENT_BIT.i, 2)
 //
-//        // Shaded layouts (only use first layout binding)
-//        descriptorLayoutInfo = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings.data(), 1)
-//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, & descriptorLayoutInfo, nullptr, & descriptorSetLayouts . shaded))
+//        // Shaded layouts (only use first layout binding, that is [0])
+//        var descriptorLayoutInfo = vk.DescriptorSetLayoutCreateInfo(setLayoutBindings[0])
+//        descriptorSetLayouts.shaded = device createDescriptorSetLayout descriptorLayoutInfo
 //
-//        pipelineLayoutInfo = vks::initializers::pipelineLayoutCreateInfo(& descriptorSetLayouts . shaded, 1)
-//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, & pipelineLayoutInfo, nullptr, & pipelineLayouts . shaded))
+//        var pipelineLayoutInfo = vk.PipelineLayoutCreateInfo(descriptorSetLayouts.shaded)
+//        pipelineLayouts.shaded = device createPipelineLayout pipelineLayoutInfo
 //
 //        // Textured layouts (use all layout bindings)
-//        descriptorLayoutInfo = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings.data(), static_cast<uint32_t>(setLayoutBindings.size()))
-//        VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, & descriptorLayoutInfo, nullptr, & descriptorSetLayouts . textured))
+//        descriptorLayoutInfo = vk.DescriptorSetLayoutCreateInfo(setLayoutBindings)
+//        descriptorSetLayouts.textured = device createDescriptorSetLayout descriptorLayoutInfo
 //
-//        pipelineLayoutInfo = vks::initializers::pipelineLayoutCreateInfo(& descriptorSetLayouts . textured, 1)
-//        VK_CHECK_RESULT(vkCreatePipelineLayout(device, & pipelineLayoutInfo, nullptr, & pipelineLayouts . textured))
+//        pipelineLayoutInfo = vk.PipelineLayoutCreateInfo(descriptorSetLayouts.textured)
+//        pipelineLayouts.textured = device createPipelineLayout pipelineLayoutInfo
 //    }
 //
-//    void setupDescriptorSet()
-//    {
+//    fun setupDescriptorSet() {
 //        // Mirror plane descriptor set
-//        VkDescriptorSetAllocateInfo allocInfo =
-//        vks::initializers::descriptorSetAllocateInfo(
-//                descriptorPool,
-//                & descriptorSetLayouts . textured,
-//        1)
+//        val allocInfo = vk.DescriptorSetAllocateInfo(descriptorPool, descriptorSetLayouts.textured)
 //
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSets . mirror))
+//        descriptorSets.mirror = device allocateDescriptorSets allocInfo
 //
-//        std::vector<VkWriteDescriptorSet> writeDescriptorSets =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSets.mirror,
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    0,
-//                    & uniformBuffers . vsMirror . descriptor),
-//            // Binding 1 : Fragment shader texture sampler
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSets.mirror,
-//                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                    1,
-//                    & offscreenPass . descriptor),
-//            // Binding 2 : Fragment shader texture sampler
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSets.mirror,
-//                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                    2,
-//                    & textures . colorMap . descriptor)
-//        }
+//        val writeDescriptorSets = vk.WriteDescriptorSet(
+//                // Binding 0 : Vertex shader uniform buffer
+//                descriptorSets.mirror, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBuffers.vsMirror.descriptor,
+//                // Binding 1 : Fragment shader texture sampler
+//                descriptorSets.mirror, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1, offscreenPass.descriptor,
+//                // Binding 2 : Fragment shader texture sampler
+//                descriptorSets.mirror, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 2, textures.colorMap.descriptor)
 //
-//        vkUpdateDescriptorSets(device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, NULL)
+//        device updateDescriptorSets writeDescriptorSets
 //
 //        // Debug quad
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSets . debugQuad))
+//        descriptorSets.debugQuad = device allocateDescriptorSets allocInfo
 //
-//        std::vector<VkWriteDescriptorSet> debugQuadWriteDescriptorSets =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSets.debugQuad,
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    0,
-//                    & uniformBuffers . vsDebugQuad . descriptor),
-//            // Binding 1 : Fragment shader texture sampler
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSets.debugQuad,
-//                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-//                    1,
-//                    & offscreenPass . descriptor)
-//        }
-//        vkUpdateDescriptorSets(device, debugQuadWriteDescriptorSets.size(), debugQuadWriteDescriptorSets.data(), 0, NULL)
+//        val debugQuadWriteDescriptorSets = vk.WriteDescriptorSet(
+//                // Binding 0 : Vertex shader uniform buffer
+//                descriptorSets.debugQuad, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBuffers.vsDebugQuad.descriptor,
+//                // Binding 1 : Fragment shader texture sampler
+//                descriptorSets.debugQuad, VkDescriptorType.COMBINED_IMAGE_SAMPLER, 1, offscreenPass.descriptor)
+//
+//        device updateDescriptorSets debugQuadWriteDescriptorSets
 //
 //        // Shaded descriptor sets
-//        allocInfo.pSetLayouts = & descriptorSetLayouts . shaded
+//        allocInfo.setLayout = descriptorSetLayouts.shaded
 //
-//                // Model
-//                // No texture
-//                VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSets . model))
+//        // Model
+//        // No texture
+//        descriptorSets.model = device allocateDescriptorSets allocInfo
 //
-//        std::vector<VkWriteDescriptorSet> modelWriteDescriptorSets =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSets.model,
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    0,
-//                    & uniformBuffers . vsShared . descriptor)
-//        }
-//        vkUpdateDescriptorSets(device, modelWriteDescriptorSets.size(), modelWriteDescriptorSets.data(), 0, NULL)
+//        val modelWriteDescriptorSets = vk.WriteDescriptorSet(
+//                // Binding 0 : Vertex shader uniform buffer
+//                descriptorSets.model, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBuffers.vsShared.descriptor)
+//
+//        device updateDescriptorSets modelWriteDescriptorSets
 //
 //        // Offscreen
-//        VK_CHECK_RESULT(vkAllocateDescriptorSets(device, & allocInfo, & descriptorSets . offscreen))
+//        descriptorSets.offscreen = device allocateDescriptorSets allocInfo
 //
-//        std::vector<VkWriteDescriptorSet> offScreenWriteDescriptorSets =
-//        {
-//            // Binding 0 : Vertex shader uniform buffer
-//            vks::initializers::writeDescriptorSet(
-//                    descriptorSets.offscreen,
-//                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//                    0,
-//                    & uniformBuffers . vsOffScreen . descriptor)
-//        }
-//        vkUpdateDescriptorSets(device, offScreenWriteDescriptorSets.size(), offScreenWriteDescriptorSets.data(), 0, NULL)
+//        val offScreenWriteDescriptorSets = vk.WriteDescriptorSet(
+//                // Binding 0 : Vertex shader uniform buffer
+//                descriptorSets.offscreen, VkDescriptorType.UNIFORM_BUFFER, 0, uniformBuffers.vsOffScreen.descriptor)
+//
+//        device updateDescriptorSets offScreenWriteDescriptorSets
 //    }
 //
-//    void preparePipelines()
-//    {
-//        VkPipelineInputAssemblyStateCreateInfo inputAssemblyState =
-//        vks::initializers::pipelineInputAssemblyStateCreateInfo(
-//                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-//                0,
-//                VK_FALSE)
+//    fun preparePipelines() {
 //
-//        VkPipelineRasterizationStateCreateInfo rasterizationState =
-//        vks::initializers::pipelineRasterizationStateCreateInfo(
-//                VK_POLYGON_MODE_FILL,
-//                VK_CULL_MODE_FRONT_BIT,
-//                VK_FRONT_FACE_CLOCKWISE,
-//                0)
+//        val inputAssemblyState = vk.PipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology.TRIANGLE_LIST, 0, false)
 //
-//        VkPipelineColorBlendAttachmentState blendAttachmentState =
-//        vks::initializers::pipelineColorBlendAttachmentState(
-//                0xf,
-//                VK_FALSE)
+//        val rasterizationState = vk.PipelineRasterizationStateCreateInfo(VkPolygonMode.FILL, VkCullMode.FRONT_BIT.i, VkFrontFace.CLOCKWISE)
 //
-//        VkPipelineColorBlendStateCreateInfo colorBlendState =
-//        vks::initializers::pipelineColorBlendStateCreateInfo(
-//                1,
-//                & blendAttachmentState)
+//        val blendAttachmentState = vk.PipelineColorBlendAttachmentState(0xf, false)
 //
-//        VkPipelineDepthStencilStateCreateInfo depthStencilState =
-//        vks::initializers::pipelineDepthStencilStateCreateInfo(
-//                VK_TRUE,
-//                VK_TRUE,
-//                VK_COMPARE_OP_LESS_OR_EQUAL)
+//        val colorBlendState = vk.PipelineColorBlendStateCreateInfo(blendAttachmentState)
 //
-//        VkPipelineViewportStateCreateInfo viewportState =
-//        vks::initializers::pipelineViewportStateCreateInfo(1, 1, 0)
+//        val depthStencilState = vk.PipelineDepthStencilStateCreateInfo(true, true, VkCompareOp.LESS_OR_EQUAL)
 //
-//        VkPipelineMultisampleStateCreateInfo multisampleState =
-//        vks::initializers::pipelineMultisampleStateCreateInfo(
-//                VK_SAMPLE_COUNT_1_BIT,
-//                0)
+//        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT,
-//                                                            VK_DYNAMIC_STATE_SCISSOR
-//        }
-//        VkPipelineDynamicStateCreateInfo dynamicState =
-//        vks::initializers::pipelineDynamicStateCreateInfo(
-//                dynamicStateEnables.data(),
-//                dynamicStateEnables.size(),
-//                0)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//
+//        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
+//        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
 //
 //        // Solid rendering pipeline
 //        // Load shaders
-//        std::array < VkPipelineShaderStageCreateInfo, 2> shaderStages
-//
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/offscreen/quad.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//        shaderStages[1] = loadShader(getAssetPath() + "shaders/offscreen/quad.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//
-//        VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-//        vks::initializers::pipelineCreateInfo(
-//                pipelineLayouts.textured,
-//                renderPass,
-//                0)
-//
-//        pipelineCreateInfo.pVertexInputState = & vertices . inputState
-//                pipelineCreateInfo.pInputAssemblyState = & inputAssemblyState
-//                pipelineCreateInfo.pRasterizationState = & rasterizationState
-//                pipelineCreateInfo.pColorBlendState = & colorBlendState
-//                pipelineCreateInfo.pMultisampleState = & multisampleState
-//                pipelineCreateInfo.pViewportState = & viewportState
-//                pipelineCreateInfo.pDepthStencilState = & depthStencilState
-//                pipelineCreateInfo.pDynamicState = & dynamicState
-//                pipelineCreateInfo.stageCount = shaderStages.size()
-//        pipelineCreateInfo.pStages = shaderStages.data()
-//
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . debug))
+//        val shaderStages = vk.PipelineShaderStageCreateInfo(2).also {
+//            it[0].loadShader("$assetPath/shaders/offscreen/quad.vert.spv", VkShaderStage.VERTEX_BIT)
+//            it[1].loadShader("$assetPath/shaders/offscreen/quad.frag.spv", VkShaderStage.FRAGMENT_BIT)
+//        }
+//        val pipelineCreateInfo = vk.GraphicsPipelineCreateInfo(pipelineLayouts.textured, renderPass).also {
+//            it.vertexInputState = vertices.inputState
+//            it.inputAssemblyState = inputAssemblyState
+//            it.rasterizationState = rasterizationState
+//            it.colorBlendState = colorBlendState
+//            it.multisampleState = multisampleState
+//            it.viewportState = viewportState
+//            it.depthStencilState = depthStencilState
+//            it.dynamicState = dynamicState
+//            it.stages = shaderStages
+//        }
+//        pipelines.debug = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 //
 //        // Mirror
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/offscreen/mirror.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//        shaderStages[1] = loadShader(getAssetPath() + "shaders/offscreen/mirror.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//        rasterizationState.cullMode = VK_CULL_MODE_NONE
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . mirror))
+//        shaderStages[0].loadShader("$assetPath/shaders/offscreen/mirror.vert.spv", VkShaderStage.VERTEX_BIT)
+//        shaderStages[1].loadShader("$assetPath/shaders/offscreen/mirror.frag.spv", VkShaderStage.FRAGMENT_BIT)
+//        rasterizationState.cullMode = VkCullMode.NONE.i
+//        pipelines.mirror = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 //
 //        // Flip culling
-//        rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT
+//        rasterizationState.cullMode = VkCullMode.BACK_BIT.i
 //
 //        // Phong shading pipelines
 //        pipelineCreateInfo.layout = pipelineLayouts.shaded
 //        // Scene
-//        shaderStages[0] = loadShader(getAssetPath() + "shaders/offscreen/phong.vert.spv", VK_SHADER_STAGE_VERTEX_BIT)
-//        shaderStages[1] = loadShader(getAssetPath() + "shaders/offscreen/phong.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . shaded))
+//        shaderStages[0].loadShader("$assetPath/shaders/offscreen/phong.vert.spv", VkShaderStage.VERTEX_BIT)
+//        shaderStages[1].loadShader("$assetPath/shaders/offscreen/phong.frag.spv", VkShaderStage.FRAGMENT_BIT)
+//        pipelines.shaded = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 //        // Offscreen
 //        // Flip culling
-//        rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT
+//        rasterizationState.cullMode = VkCullMode.FRONT_BIT.i
 //        pipelineCreateInfo.renderPass = offscreenPass.renderPass
-//        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, & pipelineCreateInfo, nullptr, & pipelines . shadedOffscreen))
-//
+//        pipelines.shadedOffscreen = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)
 //    }
 //
-//    // Prepare and initialize uniform buffer containing shader uniforms
-//    void prepareUniformBuffers()
-//    {
+//    /** Prepare and initialize uniform buffer containing shader uniforms */
+//    fun prepareUniformBuffers() {
 //        // Mesh vertex shader uniform buffer block
-//        VK_CHECK_RESULT(vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &uniformBuffers.vsShared,
-//        sizeof(uboShared)))
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                uniformBuffers.vsShared,
+//                uboShared.size.L)
 //
 //        // Mirror plane vertex shader uniform buffer block
-//        VK_CHECK_RESULT(vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &uniformBuffers.vsMirror,
-//        sizeof(uboShared)))
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                uniformBuffers.vsMirror,
+//                uboShared.size.L)
 //
 //        // Offscreen vertex shader uniform buffer block
-//        VK_CHECK_RESULT(vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &uniformBuffers.vsOffScreen,
-//        sizeof(uboShared)))
+//        vulkanDevice.createBuffer(
+//                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
+//                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//                uniformBuffers.vsOffScreen,
+//                uboShared.size.L)
 //
 //        // Debug quad vertex shader uniform buffer block
-//        VK_CHECK_RESULT(vulkanDevice->createBuffer(
-//        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//        &uniformBuffers.vsDebugQuad,
-//        sizeof(uboShared)))
+//        vulkanDevice.createBuffer(
+//        VkBufferUsage.UNIFORM_BUFFER_BIT.i,
+//        VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
+//        uniformBuffers.vsDebugQuad,
+//        uboShared.size.L)
 //
 //        // Map persistent
-//        VK_CHECK_RESULT(uniformBuffers.vsShared.map())
-//        VK_CHECK_RESULT(uniformBuffers.vsMirror.map())
-//        VK_CHECK_RESULT(uniformBuffers.vsOffScreen.map())
-//        VK_CHECK_RESULT(uniformBuffers.vsDebugQuad.map())
-//
+//        uniformBuffers.apply {
+//            vsShared.map()
+//            vsMirror.map()
+//            vsOffScreen.map()
+//            vsDebugQuad.map()
+//        }
 //        updateUniformBuffers()
 //        updateUniformBufferOffscreen()
 //    }

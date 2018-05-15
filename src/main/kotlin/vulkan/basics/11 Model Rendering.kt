@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
 }
 
 
-class ModelRendering : VulkanExampleBase() {
+private class ModelRendering : VulkanExampleBase() {
 
     var wireframe = false
 
