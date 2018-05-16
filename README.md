@@ -26,7 +26,7 @@ Boilerplate code gone, 1/3 less code.
 
 Using pipeline state objects (pso) that bake state information (rasterization states, culling modes, etc.) along with the shaders into a single object, making it easy for an implementation to optimize usage (compared to OpenGL's dynamic state machine). Also demonstrates the use of pipeline derivatives.
 
-#### [03 - Descriptor sets](examples/descriptorsets) Broken (original broken as well)
+#### [03 - Descriptor sets](src/main/kotlin/vulkan/basics/03%20Descriptor%20Sets.kt)
 
 Descriptors are used to pass data to shader binding points. Sets up descriptor sets, layouts, pools, creates a single pipeline based on the set layout and renders multiple objects with different descriptor sets.
 
