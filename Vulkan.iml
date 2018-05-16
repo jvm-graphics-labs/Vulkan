@@ -39,9 +39,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:assimp:4c219ae7ba8048f7909266f77bb778c0e65ee5da" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:uno-sdk:dea48060cb85ebaa456ce6c06891f47b76fff287" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:vkk:154c486e71e7ad5ee301b6e65e6be9d697675d9d" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:assimp:3f92fc2a92a4964420db5aec9f228d534feec2c2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:uno-sdk:a4bc98637e04a660fd89ce586abd19cfd11f9d1c" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:vkk:eb50e291a4e1a308cb4e583309d966ea8cbc1729" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:gln:b6f92bf107aa87046bccb5d35edcccb50e767770" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:gli:e486e385dfea7707b682a43f9ce8810b1be73506" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
@@ -69,9 +69,9 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: graphics.scenery:spirvcrossj:0.4.0:natives-linux" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:assimp:4c219ae7ba8048f7909266f77bb778c0e65ee5da" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:uno-sdk:dea48060cb85ebaa456ce6c06891f47b76fff287" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:vkk:154c486e71e7ad5ee301b6e65e6be9d697675d9d" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:assimp:3f92fc2a92a4964420db5aec9f228d534feec2c2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:uno-sdk:a4bc98637e04a660fd89ce586abd19cfd11f9d1c" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:vkk:eb50e291a4e1a308cb4e583309d966ea8cbc1729" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:gln:b6f92bf107aa87046bccb5d35edcccb50e767770" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:gli:e486e385dfea7707b682a43f9ce8810b1be73506" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
@@ -106,9 +106,9 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: graphics.scenery:spirvcrossj:0.4.0:natives-linux" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:assimp:4c219ae7ba8048f7909266f77bb778c0e65ee5da" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:uno-sdk:dea48060cb85ebaa456ce6c06891f47b76fff287" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:vkk:154c486e71e7ad5ee301b6e65e6be9d697675d9d" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:assimp:3f92fc2a92a4964420db5aec9f228d534feec2c2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:uno-sdk:a4bc98637e04a660fd89ce586abd19cfd11f9d1c" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:vkk:eb50e291a4e1a308cb4e583309d966ea8cbc1729" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:gln:b6f92bf107aa87046bccb5d35edcccb50e767770" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:gli:e486e385dfea7707b682a43f9ce8810b1be73506" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />

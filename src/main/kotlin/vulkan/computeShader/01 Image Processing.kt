@@ -573,7 +573,7 @@ private class ImageProcessing : VulkanExampleBase() {
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
         uboVS.pack()
-        memCopy(uboVS.address, uniformBufferVS.mapped[0], uboVS.size.L)
+        memCopy(uboVS.address, uniformBufferVS.mapped, uboVS.size.L)
     }
 
     fun draw() {

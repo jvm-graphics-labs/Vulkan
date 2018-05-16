@@ -539,7 +539,7 @@ class TextureArray : VulkanExampleBase() {
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
         // Only update the matrices part of the uniform buffer
-        uboVS.matrices to uniformBufferVS.mapped[0]
+        uboVS.matrices to uniformBufferVS.mapped
     }
 
     fun draw() {

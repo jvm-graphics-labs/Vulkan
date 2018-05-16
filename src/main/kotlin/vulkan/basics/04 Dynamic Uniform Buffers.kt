@@ -380,7 +380,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
         uboVS.projection put camera.matrices.perspective
         uboVS.view put camera.matrices.view
 
-        uboVS to uniformBuffers.view.mapped[0]
+        uboVS to uniformBuffers.view.mapped
     }
 
     fun updateDynamicUniformBuffer(force: Boolean = false) {
@@ -415,7 +415,7 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
 
         animationTimer = 0f
 
-        memCopy(uboDataDynamic.address, uniformBuffers.dynamic.mapped[0], uniformBuffers.dynamic.size)
+        memCopy(uboDataDynamic.address, uniformBuffers.dynamic.mapped, uniformBuffers.dynamic.size)
         // Flush to make changes visible to the host
         val memoryRange = vk.MappedMemoryRange {
             memory = uniformBuffers.dynamic.memory

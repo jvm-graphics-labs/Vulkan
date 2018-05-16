@@ -355,7 +355,7 @@ private class DescriptorSets : VulkanExampleBase() {
                         .rotateAssign(cube.rotation.y.rad, 0f, 1f, 0f)
                         .rotateAssign(cube.rotation.z.rad, 0f, 0f, 1f)
             }
-            cube.matrices to cube.uniformBuffer.mapped[0]
+            cube.matrices to cube.uniformBuffer.mapped
         }
     }
 

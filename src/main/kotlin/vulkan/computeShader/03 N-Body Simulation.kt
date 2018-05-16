@@ -627,7 +627,7 @@ private class NBodySimulation : VulkanExampleBase() {
         compute.ubo.deltaT = if (paused) 0f else frameTimer * 0.05f
         compute.ubo.dest(sin((timer * 360f).rad) * 0.75f, 0f)
         compute.ubo.pack()
-        memCopy(compute.ubo.address, compute.uniformBuffer.mapped[0], compute.ubo.size.L)
+        memCopy(compute.ubo.address, compute.uniformBuffer.mapped, compute.ubo.size.L)
     }
 
     fun updateGraphicsUniformBuffers() {
@@ -635,7 +635,7 @@ private class NBodySimulation : VulkanExampleBase() {
         graphics.ubo.view put camera.matrices.view
         graphics.ubo.screenDim(size)
         compute.ubo.pack()
-        memCopy(graphics.ubo.address, graphics.uniformBuffer.mapped[0], graphics.ubo.size.L)
+        memCopy(graphics.ubo.address, graphics.uniformBuffer.mapped, graphics.ubo.size.L)
     }
 
     fun draw() {

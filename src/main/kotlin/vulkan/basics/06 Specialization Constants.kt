@@ -341,7 +341,7 @@ class SpecializationConstants : VulkanExampleBase() {
         uboVS.projection = camera.matrices.perspective
         uboVS.modelView = camera.matrices.view
 
-        uboVS to uniformBuffer.mapped[0]
+        uboVS to uniformBuffer.mapped
     }
 
     fun draw() {

@@ -317,7 +317,7 @@ private class PushConstants : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        uboVS to uniformBuffer.mapped[0]
+        uboVS to uniformBuffer.mapped
     }
 
     fun draw()    {

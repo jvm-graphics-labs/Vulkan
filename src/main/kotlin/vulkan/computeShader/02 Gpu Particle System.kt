@@ -499,7 +499,7 @@ class GpuParticleSystem : VulkanExampleBase() {
         }
 
         compute.ubo.pack()
-        memCopy(compute.ubo.address, compute.uniformBuffer.mapped[0], compute.ubo.size.L)
+        memCopy(compute.ubo.address, compute.uniformBuffer.mapped, compute.ubo.size.L)
     }
 
     fun draw() {

@@ -523,7 +523,7 @@ private class TextureCubemap : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        uboVS to uniformBuffers.`object`.mapped[0]
+        uboVS to uniformBuffers.`object`.mapped
 
         // Skybox
         viewMatrix put 1f
@@ -535,7 +535,7 @@ private class TextureCubemap : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        uboVS to uniformBuffers.skybox.mapped[0]
+        uboVS to uniformBuffers.skybox.mapped
     }
 
     fun draw() {

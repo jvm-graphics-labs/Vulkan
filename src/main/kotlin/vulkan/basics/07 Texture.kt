@@ -10,6 +10,7 @@ package vulkan.basics
 
 import gli_.gli
 import glm_.L
+import glm_.buffer.adr
 import glm_.f
 import glm_.func.rad
 import glm_.glm
@@ -242,9 +243,8 @@ private class Texture : VulkanExampleBase() {
             device.bindBufferMemory(stagingBuffer, stagingMemory)
 
             // Copy texture data into staging buffer
-            val data = appBuffer.pointer
-            device.mapMemory(stagingMemory, 0, memReqs.size, 0, data)
-            memCopy(memAddress(tex2D.data()), memGetAddress(data), tex2D.size.L)
+            val data = device.mapMemory(stagingMemory, 0, memReqs.size)
+            memCopy(tex2D.data().adr, data, tex2D.size.L)
             device unmapMemory stagingMemory
 
             // Setup buffer copy regions for each mip level

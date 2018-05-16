@@ -482,7 +482,7 @@ private class ModelRendering : VulkanExampleBase() {
                 .rotateAssign(rotation.y.rad, 0f, 1f, 0f)
                 .rotateAssign(rotation.z.rad, 0f, 0f, 1f)
 
-        uboVS to uniformBuffers.scene.mapped[0]
+        uboVS to uniformBuffers.scene.mapped
     }
 
     fun draw()    {
