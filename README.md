@@ -66,11 +66,11 @@ Loads a 3D model and texture maps from a common file format (using [assimp](http
 
 Uses sub passes and input attachments to write and read back data from framebuffer attachments (same location only) in single render pass. This is used to implement deferred render composition with added forward transparency in a single pass. 
 
-#### [13 - Offscreen rendering](examples/offscreen/) TODO
+#### [13 - Offscreen rendering](src/main/kotlin/vulkan/basics/13%20Offscreen%20Rendering.kt) TODO
 
 Basic offscreen rendering in two passes. First pass renders the mirrored scene to a separate framebuffer with color and depth attachments, second pass samples from that color attachment for rendering a mirror surface.
 
-#### [14 - CPU particle system](examples/particlefire/) TODO
+#### [14 - CPU particle system](examples/particlefire/) TOFINISH
 
 Implements a simple CPU based particle system. Particle data is stored in host memory, updated on the CPU per-frame and synchronized with the device before it's rendered using pre-multiplied alpha.
 
