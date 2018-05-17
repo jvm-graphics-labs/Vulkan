@@ -39,16 +39,16 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:assimp:3f92fc2a92a4964420db5aec9f228d534feec2c2" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:uno-sdk:a4bc98637e04a660fd89ce586abd19cfd11f9d1c" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:vkk:eb50e291a4e1a308cb4e583309d966ea8cbc1729" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:assimp:598051180e5ca467f5c9b806653b21f3779c07f7" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:uno-sdk:f74c19683632fe33a810acd3c6890143cb6d0175" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:vkk:8bff64f6a686bfbb3e2e38f3b5665f8e3ec2c396" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.41" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:gln:b6f92bf107aa87046bccb5d35edcccb50e767770" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:gli:e486e385dfea7707b682a43f9ce8810b1be73506" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:kotlin-unsigned:1a060d87adc12a53ad1e16f08489bb4924b9c036" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.41" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: io.github.microutils:kotlin-logging:1.4.6" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.kotlin-graphics:kotlin-unsigned:1a060d87adc12a53ad1e16f08489bb4924b9c036" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.41" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.lwjgl:lwjgl-glfw:3.1.7-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.lwjgl:lwjgl-glfw:3.1.7-SNAPSHOT:natives-linux" level="project" />
@@ -69,16 +69,16 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: graphics.scenery:spirvcrossj:0.4.0:natives-linux" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:assimp:3f92fc2a92a4964420db5aec9f228d534feec2c2" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:uno-sdk:a4bc98637e04a660fd89ce586abd19cfd11f9d1c" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:vkk:eb50e291a4e1a308cb4e583309d966ea8cbc1729" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:assimp:598051180e5ca467f5c9b806653b21f3779c07f7" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:uno-sdk:f74c19683632fe33a810acd3c6890143cb6d0175" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:vkk:8bff64f6a686bfbb3e2e38f3b5665f8e3ec2c396" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.41" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:gln:b6f92bf107aa87046bccb5d35edcccb50e767770" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:gli:e486e385dfea7707b682a43f9ce8810b1be73506" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:kotlin-unsigned:1a060d87adc12a53ad1e16f08489bb4924b9c036" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.41" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: io.github.microutils:kotlin-logging:1.4.6" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:kotlin-unsigned:1a060d87adc12a53ad1e16f08489bb4924b9c036" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.41" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-glfw:3.1.7-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-glfw:3.1.7-SNAPSHOT:natives-windows" level="project" />
@@ -106,16 +106,16 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: graphics.scenery:spirvcrossj:0.4.0:natives-linux" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:assimp:3f92fc2a92a4964420db5aec9f228d534feec2c2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:uno-sdk:a4bc98637e04a660fd89ce586abd19cfd11f9d1c" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:vkk:eb50e291a4e1a308cb4e583309d966ea8cbc1729" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:gln:b6f92bf107aa87046bccb5d35edcccb50e767770" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:gli:e486e385dfea7707b682a43f9ce8810b1be73506" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:assimp:598051180e5ca467f5c9b806653b21f3779c07f7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:uno-sdk:f74c19683632fe33a810acd3c6890143cb6d0175" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:vkk:8bff64f6a686bfbb3e2e38f3b5665f8e3ec2c396" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: io.kotlintest:kotlintest:2.0.7" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:kotlin-unsigned:1a060d87adc12a53ad1e16f08489bb4924b9c036" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:gln:b6f92bf107aa87046bccb5d35edcccb50e767770" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:gli:e486e385dfea7707b682a43f9ce8810b1be73506" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: io.github.microutils:kotlin-logging:1.4.6" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:glm:738c60621c18939ad6093a13cddfe158344edbbe" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.kotlin-graphics:kotlin-unsigned:1a060d87adc12a53ad1e16f08489bb4924b9c036" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.41" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.41" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.lwjgl:lwjgl-glfw:3.1.7-SNAPSHOT" level="project" />

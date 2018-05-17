@@ -12,6 +12,7 @@ import org.lwjgl.system.MemoryUtil.memCopy
 import org.lwjgl.vulkan.VK10.VK_SUBPASS_EXTERNAL
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
+import org.lwjgl.vulkan.VkDevice
 import uno.glfw.glfw
 import uno.kotlin.buffers.capacity
 import vkk.*

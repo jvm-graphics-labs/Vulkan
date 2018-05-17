@@ -334,7 +334,7 @@ private class DescriptorSets : VulkanExampleBase() {
                     VkBufferUsage.UNIFORM_BUFFER_BIT.i,
                     VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
                     cube.uniformBuffer,
-                    Mat4.size.L)
+                    cube.matrices.size.L)
             cube.uniformBuffer.map()
         }
 
