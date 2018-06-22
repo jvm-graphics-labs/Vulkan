@@ -18,6 +18,7 @@
 
 package vulkan.basics
 
+import ab.appBuffer
 import glm_.BYTES
 import glm_.L
 import glm_.glm

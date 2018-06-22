@@ -1,5 +1,6 @@
 package vulkan.base
 
+import ab.appBuffer
 import gli_.has
 import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil.NULL

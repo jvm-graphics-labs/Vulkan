@@ -1,5 +1,6 @@
 package vulkan.base
 
+import VkDebugReportCallbackFunc
 import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkCommandBuffer
@@ -18,35 +19,35 @@ object debug {
     var msgCallback: VkDebugReportCallback = NULL
 
     /** Default debug callback  */
-    val messageCallback: VkDebugReportCallbackFunc = { flags, objType, srcObject, location, msgCode, layerPrefix, msg, userData ->
+    val messageCallback: VkDebugReportCallbackFunc = { flags, _, _, _, msgCode, layerPrefix, msg, _ ->
         /*  Select prefix depending on flags passed to the callback
             Note that multiple flags may be set for a single validation message         */
         val prefix = StringBuilder()
 
         // Error that may result in undefined behaviour
         if (flags has VkDebugReport.ERROR_BIT_EXT)
-            prefix += "ERROR:"
+            prefix += "ERROR"
         // Warnings may hint at unexpected / non-spec API usage
         if (flags has VkDebugReport.WARNING_BIT_EXT)
-            prefix += "WARNING:"
+            prefix += "WARNING"
         // May indicate sub-optimal usage of the API
         if (flags has VkDebugReport.PERFORMANCE_WARNING_BIT_EXT)
-            prefix += "PERFORMANCE:"
+            prefix += "PERFORMANCE"
         // Informal messages that may become handy during debugging
         if (flags has VkDebugReport.INFORMATION_BIT_EXT)
-            prefix += "INFO:"
+            prefix += "INFO"
         /*  Diagnostic info from the Vulkan loader and layers
             Usually not helpful in terms of API usage, but may help to debug layer and loader problems         */
         if (flags has VkDebugReport.DEBUG_BIT_EXT)
-            prefix += "DEBUG:"
+            prefix += "DEBUG"
 
         // Display message to default output (console/logcat)
-        val debugMessage = "$prefix [$layerPrefix] Code $msgCode : $msg"
+        val debugMessage = "$prefix: [$layerPrefix] Code $msgCode : $msg"
 
-        if (flags has VkDebugReport.ERROR_BIT_EXT)
-            System.err.println(debugMessage)
-        else
-            println(debugMessage)
+        when {
+            flags has VkDebugReport.ERROR_BIT_EXT -> System.err
+            else -> System.out
+        }.println(debugMessage)
 
         /*  The return value of this callback controls wether the Vulkan call that caused
             the validation message will be aborted or not

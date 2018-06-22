@@ -34,7 +34,7 @@ allprojects {
 
 buildscript {
 
-    ext.kotlinVersion = '1.2.41'
+    ext.kotlinVersion = '1.2.50'
 
     repositories {
         jcenter()   // shadow
@@ -54,9 +54,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
     ext.kx = 'com.github.kotlin-graphics'
-    implementation "$kx:glm:e8b8d21fd5da3753eb426a021dd8a88771ee0468"
-    implementation "$kx:vkk:8bff64f6a686bfbb3e2e38f3b5665f8e3ec2c396"
-    implementation "$kx:uno-sdk:f74c19683632fe33a810acd3c6890143cb6d0175"
+    implementation "$kx:glm:b12f1818240ee21bd29b7f8a70fb45e23c9e5aff"
+    implementation "$kx:vkk:42327f5bd47c766baa922678ab497efc77fbdc98"
+    implementation "$kx:uno-sdk:1573c122ad690d85eece5542e2fec08db4de3c1e"
     implementation "$kx:assimp:598051180e5ca467f5c9b806653b21f3779c07f7"
 //    implementation "$kx:imgui:6aea5d675ec24b45ffda10e9106eb47656c049b2"
 

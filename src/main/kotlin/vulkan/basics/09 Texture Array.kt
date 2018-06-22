@@ -8,6 +8,7 @@
 
 package vulkan.basics
 
+import ab.appBuffer
 import gli_.Texture2dArray
 import gli_.gli
 import glm_.L

@@ -1,7 +1,8 @@
 package vulkan.base
 
+import ab.appBuffer
 import glm_.detail.GLM_DEPTH_CLIP_SPACE
-import glm_.detail.GLM_DEPTH_ZERO_TO_ONE
+import glm_.detail.GlmDepthClipSpace
 import glm_.f
 import glm_.i
 import glm_.set
@@ -122,9 +123,7 @@ abstract class VulkanExampleBase {
     lateinit var vulkanDevice: VulkanDevice
 
     /** @brief Example settings that can be changed e.g. by command line arguments */
-    protected val settings = Settings()
-
-    class Settings {
+    object settings {
         /** @brief Activates validation layers (and message output) when set to true */
         var validation = false
         /** @brief Set to true if fullscreen mode has been requested via command line */
@@ -187,7 +186,7 @@ abstract class VulkanExampleBase {
 
     init {
 
-        GLM_DEPTH_CLIP_SPACE = GLM_DEPTH_ZERO_TO_ONE
+        GLM_DEPTH_CLIP_SPACE = GlmDepthClipSpace.ZERO_TO_ONE
 
         settings.validation = ENABLE_VALIDATION
 
@@ -345,13 +344,13 @@ abstract class VulkanExampleBase {
     fun initVulkan() {
 
         // Vulkan instance
-        createInstance(settings.validation).check("Could not create Vulkan instance")
+        createInstance().check("Could not create Vulkan instance")
 
         // If requested, we enable the default validation layers for debugging
         if (settings.validation) {
             /*  The report flags determine what type of messages for the layers will be displayed
                 For validating (debugging) an appplication the error and warning bits should suffice             */
-            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT
+            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT or VkDebugReport.INFORMATION_BIT_EXT
             // Additional flags include performance info, loader and layer debug messages, etc.
             debug.setupDebugging(instance, debugReportFlags, null)
         }
@@ -494,9 +493,7 @@ abstract class VulkanExampleBase {
      *
      * @note Virtual, can be overriden by derived example class for custom instance creation
      */
-    open fun createInstance(enableValidation: Boolean): VkResult {
-
-        settings.validation = enableValidation
+    open fun createInstance(): VkResult {
 
         val appInfo = vk.ApplicationInfo {
             applicationName = name
@@ -750,8 +747,6 @@ abstract class VulkanExampleBase {
     /** End the command buffer, submit it to the queue and free (if requested)
      *  Note : Waits for the queue to become idle   */
     fun flushCommandBuffer(commandBuffer: VkCommandBuffer, queue: VkQueue, free: Boolean) {
-
-        if (commandBuffer == null) return
 
         commandBuffer.end()
 
