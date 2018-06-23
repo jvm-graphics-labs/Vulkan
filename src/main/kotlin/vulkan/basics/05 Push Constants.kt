@@ -149,15 +149,15 @@ private class PushConstants : VulkanExampleBase() {
                 // Update light positions
                 // w component = light radius scale
                 val r = 7.5f
-                val sin_t = sin((timer * 360).rad)
-                val cos_t = cos((timer * 360).rad)
+                val sinT = sin((timer * 360).rad)
+                val cosT = cos((timer * 360).rad)
                 val y = -4f
-                Vec4(r * 1.1 * sin_t, y, r * 1.1 * cos_t, 1f) to pushConstants
-                Vec4(-r * sin_t, y, -r * cos_t, 1f).to(pushConstants, Vec4.size)
-                Vec4(r * 0.85f * sin_t, y, -sin_t * 2.5f, 1.5f).to(pushConstants, Vec4.size * 2)
-                Vec4(0f, y, r * 1.25f * cos_t, 1.5f).to(pushConstants, Vec4.size * 3)
-                Vec4(r * 2.25f * cos_t, y, 0f, 1.25f).to(pushConstants, Vec4.size * 4)
-                Vec4(r * 2.5f * cos_t, y, r * 2.5f * sin_t, 1.25f).to(pushConstants, Vec4.size * 5)
+                Vec4(r * 1.1 * sinT, y, r * 1.1 * cosT, 1f) to pushConstants
+                Vec4(-r * sinT, y, -r * cosT, 1f).to(pushConstants, Vec4.size)
+                Vec4(r * 0.85f * sinT, y, -sinT * 2.5f, 1.5f).to(pushConstants, Vec4.size * 2)
+                Vec4(0f, y, r * 1.25f * cosT, 1.5f).to(pushConstants, Vec4.size * 3)
+                Vec4(r * 2.25f * cosT, y, 0f, 1.25f).to(pushConstants, Vec4.size * 4)
+                Vec4(r * 2.5f * cosT, y, r * 2.5f * sinT, 1.25f).to(pushConstants, Vec4.size * 5)
 
                 // Submit via push constant (rather than a UBO)
                 pushConstants(
