@@ -110,6 +110,8 @@ abstract class VulkanExampleBase {
         var overlayComplete: VkSemaphore = NULL
     }
 
+    var waitFences = VkFenceArray(0)
+
     var prepared = false
     val size = Vec2i(1280, 720)
 
@@ -541,6 +543,12 @@ abstract class VulkanExampleBase {
      *  Called in case of an event where e.g. the framebuffer has to be rebuild and thus
      *  all command buffers that may reference this */
     abstract fun buildCommandBuffers()
+
+    fun createSynchronizationPrimitives() {
+        // Wait fences to sync command buffer access
+        val fenceCreateInfo = vk.FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT)
+        waitFences = VkFenceArray(drawCmdBuffers.size) { device createFence fenceCreateInfo }
+    }
 
     /** Creates a new (graphics) command pool object storing command buffers    */
     fun createCommandPool() {
