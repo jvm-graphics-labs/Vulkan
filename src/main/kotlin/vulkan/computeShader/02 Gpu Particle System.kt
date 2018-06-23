@@ -504,11 +504,11 @@ class GpuParticleSystem : VulkanExampleBase() {
 
     fun draw() {
 
-        // Submit graphics commands
-        super.prepareFrame()
-
         val computeSubmitInfo = vk.SubmitInfo { commandBuffer = compute.commandBuffer }
         compute.queue.submit(computeSubmitInfo, compute.fence)
+
+        // Submit graphics commands
+        super.prepareFrame()
 
         submitInfo.commandBuffer = drawCmdBuffers[currentBuffer]
         queue submit submitInfo
