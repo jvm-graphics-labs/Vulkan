@@ -99,8 +99,9 @@ abstract class VulkanExampleBase {
     var pipelineCache: VkPipelineCache = NULL
     // Wraps the swap chain to present images (framebuffers) to the windowing system
     var swapChain = VulkanSwapChain()
+
     // Synchronization semaphores
-    object semaphores{
+    object semaphores {
         // Swap chain image presentation
         var presentComplete: VkSemaphore = NULL
         // Command buffer submission and execution
@@ -307,7 +308,8 @@ abstract class VulkanExampleBase {
     open fun destroy() {
 
         // Clean up Vulkan resources
-        swapChain.cleanup()
+        if (prepared)
+            swapChain.cleanup()
         device.apply {
             if (descriptorPool != NULL)
                 destroyDescriptorPool(descriptorPool)
@@ -853,7 +855,8 @@ abstract class VulkanExampleBase {
         }
 
         // Flush device to make sure all resources can be freed
-        device.waitIdle()
+        if (device.adr != NULL)
+            device.waitIdle()
     }
 
     /** Render one frame of a render loop on platforms that sync rendering  */
