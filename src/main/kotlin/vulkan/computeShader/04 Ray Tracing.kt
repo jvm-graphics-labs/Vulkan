@@ -18,6 +18,7 @@ import glm_.vec3.Vec3
 import glm_.vec3.Vec3i
 import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.vulkan.VK10.VK_WHOLE_SIZE
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkQueue
 import vkk.*
@@ -313,6 +314,15 @@ class RayTracing : VulkanExampleBase() {
 
             begin(cmdBufInfo)
 
+            val bufferMemoryBarrier = vk.BufferMemoryBarrier {
+                srcAccessMask = VkAccess.HOST_WRITE_BIT.i
+                dstAccessMask = VkAccess.UNIFORM_READ_BIT.i
+                buffer = compute.uniformBuffer.buffer
+                offset = 0
+                size = VK_WHOLE_SIZE
+            }
+            pipelineBarrier(VkPipelineStage.HOST_BIT.i, VkPipelineStage.COMPUTE_SHADER_BIT.i, bufferMemoryBarrier = bufferMemoryBarrier)
+
             bindPipeline(VkPipelineBindPoint.COMPUTE, compute.pipeline)
             bindDescriptorSets(VkPipelineBindPoint.COMPUTE, compute.pipelineLayout, compute.descriptorSet)
 
@@ -574,6 +584,9 @@ class RayTracing : VulkanExampleBase() {
 
     fun draw() {
 
+        val computeSubmitInfo = vk.SubmitInfo { commandBuffer = compute.commandBuffer }
+        compute.queue.submit(computeSubmitInfo, compute.fence)
+
         super.prepareFrame()
 
         // Command buffer to be sumitted to the queue
@@ -586,9 +599,6 @@ class RayTracing : VulkanExampleBase() {
         // Use a fence to ensure that compute command buffer has finished executing before using it again
         device.waitForFence(compute.fence, true, UINT64_MAX)
         device resetFence compute.fence
-
-        val computeSubmitInfo = vk.SubmitInfo { commandBuffer = compute.commandBuffer }
-        compute.queue.submit(computeSubmitInfo, compute.fence)
     }
 
     override fun prepare() {
