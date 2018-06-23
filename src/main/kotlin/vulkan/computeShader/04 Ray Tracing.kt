@@ -314,15 +314,6 @@ class RayTracing : VulkanExampleBase() {
 
             begin(cmdBufInfo)
 
-            val bufferMemoryBarrier = vk.BufferMemoryBarrier {
-                srcAccessMask = VkAccess.HOST_WRITE_BIT.i
-                dstAccessMask = VkAccess.UNIFORM_READ_BIT.i
-                buffer = compute.uniformBuffer.buffer
-                offset = 0
-                size = VK_WHOLE_SIZE
-            }
-            pipelineBarrier(VkPipelineStage.HOST_BIT.i, VkPipelineStage.COMPUTE_SHADER_BIT.i, bufferMemoryBarrier = bufferMemoryBarrier)
-
             bindPipeline(VkPipelineBindPoint.COMPUTE, compute.pipeline)
             bindDescriptorSets(VkPipelineBindPoint.COMPUTE, compute.pipelineLayout, compute.descriptorSet)
 
