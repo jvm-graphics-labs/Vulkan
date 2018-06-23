@@ -575,9 +575,6 @@ class RayTracing : VulkanExampleBase() {
 
     fun draw() {
 
-        val computeSubmitInfo = vk.SubmitInfo { commandBuffer = compute.commandBuffer }
-        compute.queue.submit(computeSubmitInfo, compute.fence)
-
         super.prepareFrame()
 
         // Command buffer to be sumitted to the queue
@@ -590,6 +587,9 @@ class RayTracing : VulkanExampleBase() {
         // Use a fence to ensure that compute command buffer has finished executing before using it again
         device.waitForFence(compute.fence, true, UINT64_MAX)
         device resetFence compute.fence
+
+        val computeSubmitInfo = vk.SubmitInfo { commandBuffer = compute.commandBuffer }
+        compute.queue.submit(computeSubmitInfo, compute.fence)
     }
 
     override fun prepare() {
