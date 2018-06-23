@@ -172,7 +172,7 @@ private class Texture3d : VulkanExampleBase() {
         // 3D texture support in Vulkan is mandatory (in contrast to OpenGL) so no need to check if it's supported
         val formatProperties = physicalDevice getFormatProperties texture.format
         // Check if format supports transfer
-        if (formatProperties.optimalTilingFeatures hasnt VkImageUsage.TRANSFER_DST_BIT) {
+        if (formatProperties.optimalTilingFeatures hasnt VkFormatFeature.TRANSFER_DST_BIT) {
             System.err.println("Error: Device does not support flag TRANSFER_DST for selected texture format!")
             return
         }
