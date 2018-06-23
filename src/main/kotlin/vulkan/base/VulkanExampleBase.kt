@@ -284,6 +284,7 @@ abstract class VulkanExampleBase {
 //
     var title = "Vulkan Example"
     val name = "vulkanExample"
+    val apiVersion = VK_API_VERSION_1_0
 
     protected val depthStencil = DepthStencil()
 
@@ -500,7 +501,7 @@ abstract class VulkanExampleBase {
         val appInfo = vk.ApplicationInfo {
             applicationName = name
             engineName = name
-            apiVersion = VK_API_VERSION_1_0
+            apiVersion = this@VulkanExampleBase.apiVersion
         }
 
         val instanceExtensions = glfw.requiredInstanceExtensions
