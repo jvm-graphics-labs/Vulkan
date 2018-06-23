@@ -236,10 +236,10 @@ private class ImageProcessing : VulkanExampleBase() {
 
         val cmdBufInfo = vk.CommandBufferBeginInfo()
 
-        val clearValues = vk.ClearValue(2)
-        clearValues[0].color(defaultClearColor)
-        clearValues[1].depthStencil.set(1f, 0)
-
+        val clearValues = vk.ClearValue(2).also {
+            it[0].color(defaultClearColor)
+            it[1].depthStencil.set(1f, 0)
+        }
         val renderPassBeginInfo = vk.RenderPassBeginInfo {
             renderPass = this@ImageProcessing.renderPass
             renderArea.apply {

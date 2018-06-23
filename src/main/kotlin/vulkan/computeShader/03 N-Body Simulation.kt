@@ -181,10 +181,10 @@ private class NBodySimulation : VulkanExampleBase() {
 
         val cmdBufInfo = vk.CommandBufferBeginInfo()
 
-        val clearValues = vk.ClearValue(2)
-        clearValues[0].color(0f, 0f, 0f, 1f)
-        clearValues[1].depthStencil.set(1f, 0)
-
+        val clearValues = vk.ClearValue(2).also {
+            it[0].color(0f, 0f, 0f, 1f)
+            it[1].depthStencil.set(1f, 0)
+        }
         val renderPassBeginInfo = vk.RenderPassBeginInfo {
             renderPass = this@NBodySimulation.renderPass
             renderArea.offset.set(0, 0)
