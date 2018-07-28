@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: org.lwjgl:lwjgl-tootle:3.1.7-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tootle/3.1.7-SNAPSHOT/d0f821c0d98336d81522d185271e4d53c0058b89/lwjgl-tootle-3.1.7-SNAPSHOT.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tootle/3.1.7-SNAPSHOT/3d49bfe4c306b7b85d4d32639cd58d9da7a5d669/lwjgl-tootle-3.1.7-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tootle/3.1.7-SNAPSHOT/34df761b6d6a4c891a0a012732ae905683a37779/lwjgl-tootle-3.1.7-SNAPSHOT-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tootle/3.1.7-SNAPSHOT/341502df86251598d84eb24e570900a6aeb1ccfc/lwjgl-tootle-3.1.7-SNAPSHOT-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

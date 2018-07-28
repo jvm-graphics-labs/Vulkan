@@ -20,6 +20,7 @@ import org.lwjgl.vulkan.VK10.*
 import uno.buffer.intBufferOf
 import uno.buffer.longBufferOf
 import uno.glfw.*
+import uno.glfw.windowHint.Api
 import vkk.*
 import vkk.LongArrayList.resize
 import vulkan.ENABLE_VALIDATION
@@ -474,7 +475,7 @@ abstract class VulkanExampleBase {
             if (!vulkanSupported) throw AssertionError("GLFW failed to find the Vulkan loader")
             windowHint {
                 default()
-                api = "none"
+                api = Api.None
                 visible = false
             }
             window = when {

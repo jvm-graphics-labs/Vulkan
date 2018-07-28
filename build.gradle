@@ -34,7 +34,7 @@ allprojects {
 
 buildscript {
 
-    ext.kotlinVersion = '1.2.50'
+    ext.kotlinVersion = '1.2.51'
 
     repositories {
         jcenter()   // shadow
@@ -45,7 +45,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
     }
 }
 
@@ -54,11 +54,11 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
     ext.kx = 'com.github.kotlin-graphics'
-    implementation "$kx:glm:b12f1818240ee21bd29b7f8a70fb45e23c9e5aff"
-    implementation "$kx:vkk:dba2c4c24af214399d04fb5dec5f79253919d7b0"
-    implementation "$kx:uno-sdk:6f5d75ed5b25c4ca47aa176ca45512026d03f09a"
-    implementation "$kx:assimp:598051180e5ca467f5c9b806653b21f3779c07f7"
-//    implementation "$kx:imgui:6aea5d675ec24b45ffda10e9106eb47656c049b2"
+    implementation "$kx:glm:6fc68ca"
+    implementation "$kx:vkk:d8e8c1e"
+    implementation "$kx:uno-sdk:806fd6f"
+    implementation "$kx:assimp:bfa5b44"
+    implementation "$kx:imgui:4c6d1b6"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21"
 

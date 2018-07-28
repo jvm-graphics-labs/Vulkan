@@ -139,7 +139,7 @@ private class TriangleVerbose : VulkanExampleBase() {
 
     /** Fences
      *  Used to check the completion of queue operations (e.g. command buffer execution)    */
-    val waitFences = ArrayList<VkFence>()
+//    val waitFences = ArrayList<VkFence>()
 
     override fun destroy() {
 

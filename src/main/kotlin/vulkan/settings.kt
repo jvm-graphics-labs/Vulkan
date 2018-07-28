@@ -24,3 +24,6 @@ const val PARTICLES_PER_ATTRACTOR = 4 * 1024
 val TEX_DIM = Vec2i(2048)
 
 val NUM_LIGHTS = 64
+
+
+fun FloatArray.last(last: Float) = set(lastIndex, last)

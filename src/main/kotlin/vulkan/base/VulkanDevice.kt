@@ -315,8 +315,7 @@ constructor(
      *
      * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
      */
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, size: VkDeviceSize,
-                     data: Long = NULL) {
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, size: VkDeviceSize, data: Long = NULL) {
 
         buffer.device = logicalDevice!!
 

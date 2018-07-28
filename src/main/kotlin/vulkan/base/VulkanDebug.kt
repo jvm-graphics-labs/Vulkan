@@ -60,7 +60,7 @@ object debug {
 
     /** Load debug function pointers and set debug callback
      *  @param flags = VkDebugReportFlagBitsEXT */
-    fun setupDebugging(instance: VkInstance, flags: Int, callBack: VkDebugReportCallbackFunc?) {
+    fun setupDebugging(instance: VkInstance, flags: VkDebugReportFlagsEXT, callBack: VkDebugReportCallbackFunc?) {
 
         val dbgCreateInfo = vk.DebugReportCallbackCreateInfoEXT {
             this.callback = callBack ?: messageCallback
