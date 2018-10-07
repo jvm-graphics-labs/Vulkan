@@ -859,7 +859,8 @@ abstract class VulkanExampleBase {
         window.loop {
             /*  Handle window messages. Resize events happen exactly here (before lambda).
                 So it is safe to use the new swapchain images and framebuffers afterwards.             */
-            renderFrame()
+            if (!window.isIconified)
+                renderFrame()
         }
 
         // Flush device to make sure all resources can be freed
@@ -1036,10 +1037,11 @@ abstract class VulkanExampleBase {
 
         device.waitIdle()
 
-        if (settings.overlay)
-            uiOverlay!!.resize(size, frameBuffers)
-
-        camera.updateAspectRatio(size.aspect)
+        if (newSize allGreaterThan 0) {
+            if (settings.overlay)
+                uiOverlay!!.resize(newSize, frameBuffers)
+            camera.updateAspectRatio(newSize.aspect)
+        }
 
         // Notify derived class
         windowResized()
