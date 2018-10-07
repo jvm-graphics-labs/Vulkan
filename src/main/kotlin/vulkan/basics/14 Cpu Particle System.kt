@@ -145,8 +145,7 @@
 //        lateinit var model: Mat4
 //        lateinit var normal: Mat4
 //        val lightPos = Vec4(0f)
-//        lateinit var cameraPos: Vec4
-//        override var fieldOrder = arrayOf("projection", "model", "normal", "lightPos", "cameraPos")
+//        override var fieldOrder = arrayOf("projection", "model", "normal", "lightPos")
 //    }
 //
 //    object pipelines {
@@ -592,7 +591,6 @@
 //        uboEnv.model = uboVS.model
 ////        uboEnv.normal = glm.inverseTranspose(uboEnv.model)
 //        uboEnv.normal = uboEnv.model.inverse().transposeAssign()
-//        uboEnv.cameraPos = Vec4(0f, 0f, zoom, 0f)
 //        uboEnv to uniformBuffers.environment.mapped
 //    }
 //
