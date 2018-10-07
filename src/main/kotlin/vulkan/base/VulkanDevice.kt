@@ -282,6 +282,7 @@ constructor(
                 memCopy(data, mapped, size.L)
                 // If host coherency hasn't been requested, do a manual flush to make writes visible
                 if (memoryPropertyFlags hasnt VkMemoryProperty.HOST_COHERENT_BIT) {
+                    TODO()
 //                    val mappedRange = vk.MappedMemoryRange{
 //                        this.memory = memory()
 //                        offset = 0
@@ -334,7 +335,11 @@ constructor(
         }
         // If a pointer to the buffer data has been passed, map the buffer and copy over the data
         if (data != NULL)
-            buffer.mapping { dst -> memCopy(data, dst, size.L) }
+            buffer.mapping { dst ->
+                memCopy(data, dst, size.L)
+                if (memoryPropertyFlags hasnt VkMemoryProperty.HOST_COHERENT_BIT)
+                    buffer.flush()
+            }
 
         // Initialize a default descriptor that covers the whole buffer size
         buffer.setupDescriptor()
