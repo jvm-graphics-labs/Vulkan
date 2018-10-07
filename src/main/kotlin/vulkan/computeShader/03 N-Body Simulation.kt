@@ -213,6 +213,8 @@
 //                bindVertexBuffers(VERTEX_BUFFER_BIND_ID, compute.storageBuffer.buffer)
 //                draw(numParticles, 1, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

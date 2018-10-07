@@ -527,6 +527,8 @@
 //
 //            it.drawIndexed(indexCount, 1, 0, 0, 0)
 //
+//            it.drawUI()
+//
 //            it.endRenderPass()
 //
 //            it.end()

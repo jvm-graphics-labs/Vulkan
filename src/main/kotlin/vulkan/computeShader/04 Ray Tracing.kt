@@ -299,6 +299,8 @@
 //                bindPipeline(VkPipelineBindPoint.GRAPHICS, graphics.pipeline)
 //                draw(3, 1, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

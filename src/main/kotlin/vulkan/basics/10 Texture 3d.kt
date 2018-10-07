@@ -484,6 +484,8 @@
 //                bindIndexBuffer(indexBuffer.buffer, VkDeviceSize(0), VkIndexType.UINT32)
 //                drawIndexed(indexCount, 1, 0, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

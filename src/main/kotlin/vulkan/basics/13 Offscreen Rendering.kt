@@ -407,6 +407,8 @@
 //            bindIndexBuffer(models.example.indices.buffer, VkDeviceSize(0), VkIndexType.UINT32)
 //            drawIndexed(models.example.indexCount, 1, 0, 0, 0)
 //
+//            drawUI()
+//
 //            endRenderPass()
 //
 //            end()

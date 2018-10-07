@@ -347,6 +347,8 @@
 //                bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.reflect)
 //                drawIndexed(models.objects[models.objectIndex].indexCount, 1, 0, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

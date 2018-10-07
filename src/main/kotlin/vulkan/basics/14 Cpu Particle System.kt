@@ -245,6 +245,8 @@
 //                bindVertexBuffers(VERTEX_BUFFER_BIND_ID, particlesData.buffer)
 //                draw(particle.COUNT, 1, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

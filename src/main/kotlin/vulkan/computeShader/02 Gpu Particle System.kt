@@ -191,6 +191,8 @@
 //                bindVertexBuffers(VERTEX_BUFFER_BIND_ID, compute.storageBuffer.buffer)
 //                draw(PARTICLE_COUNT, 1, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()
@@ -497,6 +499,7 @@
 //        else {
 //            val normalizedM = (mousePos - (size / 2)) / (size / 2)
 //            compute.ubo.dest(normalizedM)
+//        }
 //        }
 //
 //        compute.ubo.pack()

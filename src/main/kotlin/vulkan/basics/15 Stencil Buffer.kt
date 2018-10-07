@@ -121,6 +121,8 @@
 //                bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.outline)
 //                drawIndexed(model.indexCount, 1, 0, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

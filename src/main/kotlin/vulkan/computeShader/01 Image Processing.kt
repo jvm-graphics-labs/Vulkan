@@ -296,6 +296,8 @@
 //                setViewport(viewport)
 //                drawIndexed(indexCount, 1, 0, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

@@ -133,8 +133,6 @@
 //        val albedo = FrameBufferAttachment()
 //    }
 //
-//    var uiRenderPass = VkRenderPass(NULL)
-//
 //    init {
 //        title = "Subpasses"
 //        camera.type = Camera.CameraType.firstPerson
@@ -174,8 +172,6 @@
 //            destroyDescriptorSetLayout(descriptorSetLayouts.scene)
 //            destroyDescriptorSetLayout(descriptorSetLayouts.composition)
 //            destroyDescriptorSetLayout(descriptorSetLayouts.transparent)
-//
-//            destroyRenderPass(uiRenderPass)
 //        }
 //        textures.glass.destroy()
 //        models.scene.destroy()
@@ -445,11 +441,6 @@
 //            this.dependencies = dependencies
 //        }
 //        renderPass = device createRenderPass renderPassInfo
-//
-//        // Create custom overlay render pass
-//        attachments[0].loadOp = VkAttachmentLoadOp.LOAD
-//        attachments[0].initialLayout = VkImageLayout.PRESENT_SRC_KHR
-//        uiRenderPass = device createRenderPass renderPassInfo
 //    }
 //
 //    override fun buildCommandBuffers() {
@@ -516,6 +507,7 @@
 //                    bindIndexBuffer(models.transparent.indices.buffer, VkDeviceSize(0), VkIndexType.UINT32)
 //                    drawIndexed(models.transparent.indexCount, 1, 0, 0, 0)
 //                }
+// Create custom overlay render pass
 //
 //                endRenderPass()
 //
@@ -902,17 +894,7 @@
 //    // UI overlay configuration needs to be adjusted for this example (renderpass setup, attachment count, etc.)
 ////    virtual void OnSetupUIOverlay(vks::UIOverlayCreateInfo &createInfo)
 ////    {
-////        createInfo.renderPass = uiRenderPass
-////        createInfo.framebuffers = frameBuffers
-////        createInfo.subpassCount = 3
-////        createInfo.attachmentCount = 4
-////        createInfo.clearValues = {
-////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-////            { { 0.0f, 0.0f, 0.0f, 0.0f } },
-////            { { 1.0f, 0 } },
-////        }
+////        createInfo.targetSubpass = 2
 ////    }
 ////
 ////    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)

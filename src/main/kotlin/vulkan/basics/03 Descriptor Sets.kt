@@ -136,6 +136,8 @@
 //                    drawIndexed(models.cube.indexCount, 1, 0, 0, 0)
 //                }
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

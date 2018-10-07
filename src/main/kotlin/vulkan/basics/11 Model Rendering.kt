@@ -191,6 +191,8 @@
 //                // Render mesh vertex buffer using it's indices
 //                drawIndexed(model.indices.count, 1, 0, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

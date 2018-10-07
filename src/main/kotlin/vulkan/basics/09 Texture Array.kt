@@ -349,6 +349,8 @@
 //
 //                drawIndexed(indexCount, layerCount, 0, 0, 0)
 //
+//                drawUI()
+//
 //                endRenderPass()
 //
 //                end()

@@ -105,7 +105,7 @@
 //    var dynamicAlignment = 0L
 //
 //    init {
-//        title = "Vulkan Example - Dynamic uniform buffers"
+//        title = "Dynamic uniform buffers"
 //        camera.type = Camera.CameraType.lookAt
 //        camera.setPosition(Vec3(0f, 0f, -30f))
 //        camera.setRotation(Vec3(.0f))
@@ -179,6 +179,8 @@
 //
 //                    drawIndexed(indexCount, 1, 0, 0, 0)
 //                }
+//
+//                drawUI()
 //
 //                endRenderPass()
 //
