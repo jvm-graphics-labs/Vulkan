@@ -3,6 +3,7 @@ package vulkan.base
 import VkDebugReportCallbackFunc
 import glm_.vec4.Vec4
 import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
@@ -16,7 +17,7 @@ object debug {
     /** Default validation layers   */
     val validationLayerNames = arrayListOf("VK_LAYER_LUNARG_standard_validation")
 
-    var msgCallback: VkDebugReportCallback = NULL
+    var msgCallback = VkDebugReportCallback(NULL)
 
     /** Default debug callback  */
     val messageCallback: VkDebugReportCallbackFunc = { flags, _, _, _, msgCode, layerPrefix, msg, _ ->
@@ -72,7 +73,7 @@ object debug {
 
     /** Clear debug callback    */
     fun freeDebugCallback(instance: VkInstance) {
-        if (msgCallback != NULL)
+        if (msgCallback.L != NULL)
             instance destroyDebugReportCallbackEXT msgCallback
     }
 }
@@ -88,6 +89,20 @@ object debugMarker {
     var active = false
 
     lateinit var device: VkDevice
+
+    /** Sets the debug name of an object
+     *  All Objects in Vulkan are represented by their 64-bit handles which are passed into this function
+     *  along with the object type */
+    fun setObjectName(device: VkDevice, `object`: VkObject, objectType: VkDebugReportObjectType, name: String) {
+        setObjectName(device, `object`.L, objectType, name)
+    }
+
+    /** Sets the debug name of an object
+     *  All Objects in Vulkan are represented by their 64-bit handles which are passed into this function
+     *  along with the object type */
+    fun setObjectName(device: VkDevice, pointer: Pointer, objectType: VkDebugReportObjectType, name: String) {
+        setObjectName(device, pointer.adr, objectType, name)
+    }
 
     /** Sets the debug name of an object
      *  All Objects in Vulkan are represented by their 64-bit handles which are passed into this function
@@ -159,11 +174,11 @@ object debugMarker {
     // TODO remove device?
     // Object specific naming functions
     fun setCommandBufferName(device: VkDevice, cmdBuffer: VkCommandBuffer, name: String) {
-        setObjectName(device, cmdBuffer.adr, VkDebugReportObjectType.COMMAND_BUFFER_EXT, name)
+        setObjectName(device, cmdBuffer, VkDebugReportObjectType.COMMAND_BUFFER_EXT, name)
     }
 
     fun setQueueName(device: VkDevice, queue: VkQueue, name: String) {
-        setObjectName(device, queue.adr, VkDebugReportObjectType.QUEUE_EXT, name)
+        setObjectName(device, queue, VkDebugReportObjectType.QUEUE_EXT, name)
     }
 
     fun setImageName(device: VkDevice, image: VkImage, name: String) {

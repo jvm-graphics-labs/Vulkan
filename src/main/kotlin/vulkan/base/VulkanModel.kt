@@ -13,12 +13,12 @@ import assimp.Importer
 import assimp.or
 import glm_.BYTES
 import glm_.L
-import glm_.buffer.free
 import glm_.max
 import glm_.min
 import glm_.vec2.Vec2
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
+import kool.free
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkQueue
@@ -92,9 +92,9 @@ class Model {
         val dev = device!!
         vk.destroyBuffer(dev, vertices.buffer)
         vk.freeMemory(dev, vertices.memory)
-        if (indices.buffer != NULL) {
-            vk.destroyBuffer(dev, indices.buffer)
-            vk.freeMemory(dev, indices.memory)
+        if (indices.buffer.L != NULL) {
+            dev destroyBuffer indices.buffer
+            dev freeMemory indices.memory
         }
         if (::vertexBuffer.isInitialized)
             vertexBuffer.free()
@@ -250,14 +250,14 @@ class Model {
                 VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
                 VkMemoryProperty.DEVICE_LOCAL_BIT.i,
                 this.vertices,
-                vBufferSize.L)
+                VkDeviceSize(vBufferSize.L))
 
         // Index buffer
         device.createBuffer(
                 VkBufferUsage.INDEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
                 VkMemoryProperty.DEVICE_LOCAL_BIT.i,
                 this.indices,
-                iBufferSize.L)
+                VkDeviceSize(iBufferSize.L))
 
         // Copy from staging buffers
         val copyCmd = device.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)

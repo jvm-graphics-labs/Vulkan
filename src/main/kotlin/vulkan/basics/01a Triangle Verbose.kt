@@ -1,11 +1,12 @@
 package vulkan.basics
 
 import glm_.*
-import glm_.buffer.bufferBig
-import glm_.buffer.free
 import glm_.func.rad
 import glm_.mat4x4.Mat4
 import glm_.vec3.Vec3
+import kool.bufferBig
+import kool.cap
+import kool.free
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
@@ -15,9 +16,8 @@ import uno.buffer.floatBufferOf
 import uno.buffer.intBufferOf
 import uno.buffer.toBuffer
 import uno.glfw.glfw
-import uno.kotlin.buffers.capacity
 import vkk.*
-import vkk.LongArrayList.resize
+import vulkan.UINT64_MAX
 import vulkan.USE_STAGING
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
@@ -56,22 +56,22 @@ private class TriangleVerbose : VulkanExampleBase() {
     /** Vertex buffer and attributes    */
     object vertices {
         /** Handle to the device memory for this buffer */
-        var memory: VkDeviceMemory = NULL
+        var memory: Long = NULL
         /** Handle to the Vulkan buffer object that the memory is bound to  */
-        var buffer: VkBuffer = NULL
+        var buffer: Long = NULL
     }
 
     /** Index buffer    */
     object indices {
-        var memory: VkDeviceMemory = NULL
-        var buffer: VkBuffer = NULL
+        var memory: Long = NULL
+        var buffer: Long = NULL
         var count = 0
     }
 
     /** Uniform buffer block object */
     object uniformBufferVS {
-        var memory: VkDeviceMemory = NULL
-        var buffer: VkBuffer = NULL
+        var memory: Long = NULL
+        var buffer: Long = NULL
         lateinit var descriptor: VkDescriptorBufferInfo.Buffer
     }
 
@@ -107,7 +107,7 @@ private class TriangleVerbose : VulkanExampleBase() {
      *  It defines interface (without binding any actual data) between the shader stages used by the pipeline and the
      *  shader resources
      *  A pipeline layout can be shared among multiple pipelines as long as their interfaces match  */
-    var pipelineLayout: VkPipelineLayout = NULL
+    var pipelineLayout: Long = NULL
 
     /** Pipelines (often called "pipeline state objects") are used to bake all states that affect a pipeline
      *  While in OpenGL every state can be changed at (almost) any time, Vulkan requires to layout the graphics
@@ -116,16 +116,16 @@ private class TriangleVerbose : VulkanExampleBase() {
      *  this not discussed here)
      *  Even though this adds a new dimension of planing ahead, it's a great opportunity for performance optimizations
      *  by the driver   */
-    var pipeline: VkPipeline = NULL
+    var pipeline: Long = NULL
 
     /** The descriptor set layout describes the shader binding layout (without actually referencing descriptor)
      *  Like the pipeline layout it's pretty much a blueprint and can be used with different descriptor sets as long as
      *  their layout matches    */
-    var descriptorSetLayout: VkDescriptorSetLayout = NULL
+    var descriptorSetLayout: Long = NULL
 
     /** The descriptor set stores the resources bound to the binding points in a shader
      *  It connects the binding points of the different shaders with the buffers and images used for those bindings */
-    var descriptorSet: VkDescriptorSet = NULL
+    var descriptorSet: Long = NULL
 
 
     /*  Synchronization primitives
@@ -134,8 +134,8 @@ private class TriangleVerbose : VulkanExampleBase() {
 
     /** Semaphores
      *  Used to coordinate operations within the graphics queue and ensure correct command ordering */
-    var presentCompleteSemaphore: VkSemaphore = NULL
-    var renderCompleteSemaphore: VkSemaphore = NULL
+    var presentCompleteSemaphore: Long = NULL
+    var renderCompleteSemaphore: Long = NULL
 
     /** Fences
      *  Used to check the completion of queue operations (e.g. command buffer execution)    */
@@ -168,7 +168,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         vkDestroySemaphore(device, renderCompleteSemaphore, null)
 
         for (fence in waitFences)
-            vkDestroyFence(device, fence, null)
+            vkDestroyFence(device, fence.L, null)
 
         super.destroy()
     }
@@ -179,8 +179,8 @@ private class TriangleVerbose : VulkanExampleBase() {
      *  This is necessary as implementations can offer an arbitrary number of memory types with different
      *  memory properties.
      *  You can check http://vulkan.gpuinfo.org/ for details on different memory configurations */
-    fun getMemoryTypeIndex(typeBits: Int, properties: VkMemoryPropertyFlags): Int {
-        var typeBits = typeBits
+    fun getMemoryTypeIndex(typeBits_: Int, properties: Int): Int {
+        var typeBits = typeBits_
         // Iterate over all memory types available for the device used in this example
         for (i in 0 until deviceMemoryProperties.memoryTypeCount()) {
             if ((typeBits and 1) == 1 && (deviceMemoryProperties.memoryTypes(i).propertyFlags() and properties) == properties)
@@ -214,9 +214,10 @@ private class TriangleVerbose : VulkanExampleBase() {
                 // Create in signaled state so we don't wait on first render of each command buffer
                 .flags(VK_FENCE_CREATE_SIGNALED_BIT)
         val pFence = MemoryUtil.memAllocLong(1)
+        waitFences = vkFenceArrayBig(drawCmdBuffers.size)
         for (i in drawCmdBuffers.indices) {
             VK_CHECK_RESULT(vkCreateFence(device, fenceCreateInfo, null, pFence))
-            waitFences += pFence[0]
+            waitFences[i] = VkFence(pFence[0])
         }
 
         semaphoreCreateInfo.free()
@@ -233,7 +234,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         val cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
                 .pNext(NULL)
-                .commandPool(cmdPool)
+                .commandPool(cmdPool.L)
                 .level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 .commandBufferCount(1)
         val pCmdBuffer = MemoryUtil.memAllocPointer(1)
@@ -259,7 +260,7 @@ private class TriangleVerbose : VulkanExampleBase() {
      *  Uses a fence to ensure command buffer has finished executing before deleting it */
     fun flushCommandBuffer(commandBuffer: VkCommandBuffer) {
 
-        assert(commandBuffer.adr != NULL)
+        assert(commandBuffer.address() != NULL)
 
         VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer))
 
@@ -277,7 +278,7 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .flags(0)
         val pFence = MemoryUtil.memAllocLong(1)
         VK_CHECK_RESULT(vkCreateFence(device, fenceCreateInfo, null, pFence))
-        val fence: VkFence = pFence[0]
+        val fence = pFence[0]
 
         // Submit to the queue
         VK_CHECK_RESULT(vkQueueSubmit(queue, submitInfo, fence))
@@ -285,8 +286,9 @@ private class TriangleVerbose : VulkanExampleBase() {
         VK_CHECK_RESULT(vkWaitForFences(device, fence, true, DEFAULT_FENCE_TIMEOUT))
 
         vkDestroyFence(device, fence, null)
-        vkFreeCommandBuffers(device, cmdPool, commandBuffer)
+        vkFreeCommandBuffers(device, cmdPool.L, commandBuffer)
 
+        fenceCreateInfo.free()
         pCommandBuffer.free()
         pFence.free()
     }
@@ -303,19 +305,19 @@ private class TriangleVerbose : VulkanExampleBase() {
         // Set clear values for all framebuffer attachments with loadOp set to clear
         // We use two attachments (color and depth) that are cleared at the start of the subpass and as such we need to set clear values for both
         val clearValues = VkClearValue.calloc(2)
-        clearValues[0].color
+        clearValues[0].color()
                 .float32(0, 0f)
                 .float32(1, 0f)
                 .float32(2, 0.2f)
                 .float32(3, 1f)
-        clearValues[1].depthStencil
+        clearValues[1].depthStencil()
                 .depth(1f)
                 .stencil(0)
 
         val renderPassBeginInfo = VkRenderPassBeginInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
                 .pNext(NULL)
-                .renderPass(renderPass)
+                .renderPass(renderPass.L)
         renderPassBeginInfo.renderArea().apply {
             offset()
                     .x(0)
@@ -329,7 +331,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         for (i in drawCmdBuffers.indices) {
 
             // Set target frame buffer
-            renderPassBeginInfo.framebuffer(frameBuffers[i])
+            renderPassBeginInfo.framebuffer(frameBuffers[i].L)
 
             VK_CHECK_RESULT(vkBeginCommandBuffer(drawCmdBuffers[i], cmdBufInfo))
 
@@ -366,7 +368,7 @@ private class TriangleVerbose : VulkanExampleBase() {
             vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
 
             // Bind triangle vertex buffer (contains position and colors)
-            val offset: VkDeviceSize = 0
+            val offset = 0L
             val pBuffer = MemoryUtil.memAllocLong(1)
             pBuffer[0] = vertices.buffer
             val pOffset = MemoryUtil.memAllocLong(1)
@@ -399,11 +401,11 @@ private class TriangleVerbose : VulkanExampleBase() {
 
     fun draw() {
         // Get next image in the swap chain (back/front buffer)
-        swapChain.acquireNextImage(presentCompleteSemaphore, ::currentBuffer).check()
+        currentBuffer = swapChain acquireNextImage VkSemaphore(presentCompleteSemaphore)
 
         // Use a fence to wait until the command buffer has finished execution before using it again
-        VK_CHECK_RESULT(vkWaitForFences(device, waitFences[currentBuffer], true, UINT64_MAX))
-        VK_CHECK_RESULT(vkResetFences(device, waitFences[currentBuffer]))
+        VK_CHECK_RESULT(vkWaitForFences(device, waitFences[currentBuffer].L, true, UINT64_MAX))
+        VK_CHECK_RESULT(vkResetFences(device, waitFences[currentBuffer].L))
 
         // Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
         val waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
@@ -431,13 +433,13 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .pCommandBuffers(pCommandBuffer)
 
         // Submit to the graphics queue passing a wait fence
-        queue.submit(submitInfo, waitFences[currentBuffer])
+        VK_CHECK_RESULT(vkQueueSubmit(queue, submitInfo, waitFences[currentBuffer].L))
 
         /*  Present the current buffer to the swap chain
             Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore
             for swap chain presentation
             This ensures that the image is not presented to the windowing system until all commands have been submitted */
-        swapChain.queuePresent(queue, currentBuffer, renderCompleteSemaphore)
+        swapChain.queuePresent(queue, currentBuffer, VkSemaphore(renderCompleteSemaphore))
 
         pWaitStageMask.free()
         pWaitSemaphore.free()
@@ -466,7 +468,7 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         // Setup indices
         val indexBuffer = intBufferOf(0, 1, 2)
-        indices.count = indexBuffer.capacity
+        indices.count = indexBuffer.cap
         val indexBufferSize = indexBuffer.size.L
 
         val memAlloc = VkMemoryAllocateInfo.calloc()
@@ -491,8 +493,8 @@ private class TriangleVerbose : VulkanExampleBase() {
                 - Use the device local buffers for rendering    */
 
             class StagingBuffer {
-                var memory: VkDeviceMemory = NULL
-                var buffer: VkBuffer = NULL
+                var memory = NULL
+                var buffer = NULL
             }
 
             val stagingBuffers = object {
@@ -679,7 +681,7 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         val pDescriptorPool = MemoryUtil.memAllocLong(1)
         VK_CHECK_RESULT(vkCreateDescriptorPool(device, descriptorPoolInfo, null, pDescriptorPool))
-        descriptorPool = pDescriptorPool[0]
+        descriptorPool = VkDescriptorPool(pDescriptorPool[0])
 
         typeCounts.free()
         descriptorPoolInfo.free()
@@ -731,7 +733,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         pDescriptorSetLayour[0] = descriptorSetLayout
         val allocInfo = VkDescriptorSetAllocateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO)
-                .descriptorPool(descriptorPool)
+                .descriptorPool(descriptorPool.L)
                 .pSetLayouts(pDescriptorSetLayour)
 
         val pDescriptorSet = MemoryUtil.memAllocLong(1)
@@ -778,20 +780,20 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
         val pImage = MemoryUtil.memAllocLong(1)
         VK_CHECK_RESULT(vkCreateImage(device, image, null, pImage))
-        depthStencil.image = pImage[0]
+        depthStencil.image = VkImage(pImage[0])
 
         // Allocate memory for the image (device local) and bind it to our image
         val memAlloc = VkMemoryAllocateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
                 .pNext(NULL)
         val memReqs = VkMemoryRequirements.calloc()
-        vkGetImageMemoryRequirements(device, depthStencil.image, memReqs)
+        vkGetImageMemoryRequirements(device, depthStencil.image.L, memReqs)
         memAlloc.allocationSize(memReqs.size())
         memAlloc.memoryTypeIndex(getMemoryTypeIndex(memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
         val pMemory = MemoryUtil.memAllocLong(1)
         VK_CHECK_RESULT(vkAllocateMemory(device, memAlloc, null, pMemory))
-        depthStencil.mem = pMemory[0]
-        VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0))
+        depthStencil.mem = VkDeviceMemory(pMemory[0])
+        VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image.L, depthStencil.mem.L, 0))
 
         /*  Create a view for the depth stencil image
             Images aren't directly accessed in Vulkan, but rather through views described by a subresource range
@@ -807,10 +809,10 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .levelCount(1)
                 .baseArrayLayer(0)
                 .layerCount(1)
-        depthStencilView.image(depthStencil.image)
+        depthStencilView.image(depthStencil.image.L)
         val pImageView = MemoryUtil.memAllocLong(1)
         VK_CHECK_RESULT(vkCreateImageView(device, depthStencilView, null, pImageView))
-        depthStencil.view = pImageView[0]
+        depthStencil.view = VkImageView(pImageView[0])
 
         image.free()
         pImage.free()
@@ -825,17 +827,16 @@ private class TriangleVerbose : VulkanExampleBase() {
      *  Note: Override of virtual function in the base class and called from within VulkanExampleBase::prepare  */
     override fun setupFrameBuffer() {
         // Create a frame buffer for every image in the swapchain
-        frameBuffers resize swapChain.imageCount
-        for (i in frameBuffers.indices) {
+        frameBuffers = initVkFramebufferArray(swapChain.imageCount) { i ->
             val attachments = MemoryUtil.memAllocLong(2)
-            attachments[0] = swapChain.buffers[i].view  // Color attachment is the view of the swapchain image
-            attachments[1] = depthStencil.view            // Depth/Stencil attachment is the same for all frame buffers
+            attachments[0] = swapChain.buffers[i].view.L  // Color attachment is the view of the swapchain image
+            attachments[1] = depthStencil.view.L            // Depth/Stencil attachment is the same for all frame buffers
 
             val frameBufferCreateInfo = VkFramebufferCreateInfo.calloc()
                     .sType(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
                     .pNext(NULL)
                     // All frame buffers use the same renderpass setup
-                    .renderPass(renderPass)
+                    .renderPass(renderPass.L)
                     .pAttachments(attachments)
                     .width(size.x)
                     .height(size.y)
@@ -843,9 +844,9 @@ private class TriangleVerbose : VulkanExampleBase() {
             // Create the framebuffer
             val pFramebuffer = MemoryUtil.memAllocLong(1)
             VK_CHECK_RESULT(vkCreateFramebuffer(device, frameBufferCreateInfo, null, pFramebuffer))
-            frameBuffers[i] = pFramebuffer[0]
-
-            pFramebuffer.free()
+            VkFramebuffer(pFramebuffer[0]).also {
+                pFramebuffer.free()
+            }
         }
     }
 
@@ -946,7 +947,7 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         val pRenderPass = MemoryUtil.memAllocLong(1)
         VK_CHECK_RESULT(vkCreateRenderPass(device, renderPassInfo, null, pRenderPass))
-        renderPass = pRenderPass[0]
+        renderPass = VkRenderPass(pRenderPass[0])
 
         attachments.free()
         colorReference.free()
@@ -960,7 +961,7 @@ private class TriangleVerbose : VulkanExampleBase() {
     /** Vulkan loads it's shaders from an immediate binary representation called SPIR-V
      *  Shaders are compiled offline from e.g. GLSL using the reference glslang compiler
      *  This function loads such a shader from a binary file and returns a shader module structure */
-    fun loadSPIRVShader(filename: String): VkShaderModule {
+    fun loadSPIRVShader(filename: String): Long {
 
         var shaderCode: ByteBuffer? = null
 
@@ -1007,7 +1008,7 @@ private class TriangleVerbose : VulkanExampleBase() {
                 // The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
                 .layout(pipelineLayout)
                 // Renderpass this pipeline is attached to
-                .renderPass(renderPass)
+                .renderPass(renderPass.L)
 
         /*  Construct the different states making up the pipeline
 
@@ -1138,7 +1139,7 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .module(loadSPIRVShader("$assetPath/shaders/triangle/triangle.vert.spv"))
                 // Main entry point for the shader
                 .pName(pName)
-        assert(shaderStages[0].module() != NULL)
+        assert(shaderStages[0].module.L != NULL)
 
         // Fragment shader
         shaderStages[1]
@@ -1150,7 +1151,7 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .module(loadSPIRVShader("$assetPath/shaders/triangle/triangle.frag.spv"))
                 // Main entry point for the shader
                 .pName(pName)
-        assert(shaderStages[1].module() != NULL)
+        assert(shaderStages[1].module.L != NULL)
 
         // Set pipeline shader stage info
         pipelineCreateInfo
@@ -1163,17 +1164,17 @@ private class TriangleVerbose : VulkanExampleBase() {
                 .pMultisampleState(multisampleState)
                 .pViewportState(viewportState)
                 .pDepthStencilState(depthStencilState)
-                .renderPass(renderPass)
+                .renderPass(renderPass.L)
                 .pDynamicState(dynamicState)
 
         // Create rendering pipeline using the specified states
         val pPipeline = MemoryUtil.memAllocLong(1)
-        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, pipelineCreateInfo, null, pPipeline))
+        VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache.L, pipelineCreateInfo, null, pPipeline))
         pipeline = pPipeline[0]
 
         // Shader modules are no longer needed once the graphics pipeline has been created
-        vkDestroyShaderModule(device, shaderStages[0].module, null)
-        vkDestroyShaderModule(device, shaderStages[1].module, null)
+        vkDestroyShaderModule(device, shaderStages[0].module.L, null)
+        vkDestroyShaderModule(device, shaderStages[1].module.L, null)
 
         pipelineCreateInfo.free()
         inputAssemblyState.free()

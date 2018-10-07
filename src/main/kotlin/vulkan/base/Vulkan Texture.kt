@@ -22,17 +22,17 @@ import java.io.File
 open class Texture {
 
     lateinit var device: VulkanDevice
-    var image: VkImage = NULL
+    var image = VkImage (NULL)
     var imageLayout = VkImageLayout.UNDEFINED
-    var deviceMemory: VkDeviceMemory = NULL
-    var view: VkImageView = NULL
+    var deviceMemory = VkDeviceMemory (NULL)
+    var view = VkImageView (NULL)
     val size = Vec2i()
     var mipLevels = 0
     var layerCount = 0
     val descriptor = VkDescriptorImageInfo.calloc()
 
     /** @brief Optional sampler to use with this texture */
-    var sampler: VkSampler = NULL
+    var sampler= VkSampler (NULL)
 
     /** @brief Update image descriptor from current sampler, view and image layout */
     fun updateDescriptor() {
@@ -48,7 +48,7 @@ open class Texture {
         device.logicalDevice!!.apply {
             destroyImageView(view)
             destroyImage(image)
-            if (sampler != NULL)
+            if (sampler.L != NULL)
                 destroySampler(sampler)
             freeMemory(deviceMemory)
         }
@@ -114,7 +114,7 @@ class Texture2D : Texture() {
             // Create a host-visible staging buffer that contains the raw image data
 
             val bufferCreateInfo = vk.BufferCreateInfo {
-                size = tex2D.size.L
+                size = VkDeviceSize(tex2D.size.L)
                 // This buffer is used as a transfer source for the buffer copy
                 usage = VkBufferUsage.TRANSFER_SRC_BIT.i
                 sharingMode = VkSharingMode.EXCLUSIVE
@@ -132,13 +132,13 @@ class Texture2D : Texture() {
             dev.bindBufferMemory(stagingBuffer, stagingMemory)
 
             // Copy texture data into staging buffer
-            dev.mappingMemory(stagingMemory, 0, memReqs.size, 0) { data ->
+            dev.mappingMemory(stagingMemory, VkDeviceSize(0), memReqs.size, 0) { data ->
                 memCopy(memAddress(tex2D.data()), data, tex2D.size.L)
             }
 
             // Setup buffer copy regions for each mip level
             val bufferCopyRegions = vk.BufferImageCopy(mipLevels)
-            var offset = 0L
+            var offset = VkDeviceSize(0L)
 
             for (i in 0 until mipLevels) {
 
@@ -266,7 +266,7 @@ class Texture2D : Texture() {
             val subResLayout = dev.getImageSubresourceLayout(mappableImage, subRes)
 
             // Map image memory
-            dev.mappingMemory(mappableMemory, 0, memReqs.size, 0) { data ->
+            dev.mappingMemory(mappableMemory, VkDeviceSize(0), memReqs.size, 0) { data ->
                 // Copy image data into memory
                 memCopy(memAddress(tex2D[subRes.mipLevel].data()!!), data, tex2D[subRes.mipLevel].size.L)
             }

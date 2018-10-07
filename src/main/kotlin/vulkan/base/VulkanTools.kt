@@ -1,6 +1,7 @@
 package vulkan.base
 
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkImageSubresourceRange
@@ -220,7 +221,7 @@ object tools {
 
         val file = File(filename)
 
-        var shaderModule = MemoryUtil.NULL
+        var shaderModule = VkShaderModule(NULL)
 
         if (file.exists() && file.canRead()) {
 

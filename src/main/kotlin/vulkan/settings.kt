@@ -1,6 +1,8 @@
 package vulkan
 
 import glm_.vec2.Vec2i
+import org.lwjgl.vulkan.VK10
+import vkk.VkDeviceSize
 import java.nio.file.Paths
 
 
@@ -27,3 +29,9 @@ val NUM_LIGHTS = 64
 
 
 fun FloatArray.last(last: Float) = set(lastIndex, last)
+
+
+val VK_WHOLE_SIZE = VkDeviceSize(VK10.VK_WHOLE_SIZE)
+
+const val UINT32_MAX = 0.inv()
+const val UINT64_MAX = 0L.inv()

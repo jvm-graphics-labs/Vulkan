@@ -1,19 +1,19 @@
 package vulkan.base
 
-import ab.appBuffer
 import glm_.L
 import glm_.i
-import glm_.size
-import org.lwjgl.system.MemoryUtil.*
+import imgui.getValue
+import imgui.setValue
+import kool.adr
+import kool.remSize
+import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.memCopy
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import vkk.*
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
-import java.nio.ByteBuffer
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
 import kotlin.reflect.KMutableProperty0
 
 class VulkanDevice
@@ -42,7 +42,7 @@ constructor(
     val supportedExtensions: ArrayList<String>
 
     /** @brief Default command pool for the graphics queue family index */
-    var commandPool: VkCommandPool = NULL
+    var commandPool = VkCommandPool(NULL)
 
     /** @brief Set to true when the debug marker extension is detected */
     var enableDebugMarkers = false
@@ -80,14 +80,15 @@ constructor(
      * @note Frees the logical device
      */
     fun destroy() {
-        if (commandPool != NULL) vkDestroyCommandPool(logicalDevice!!, commandPool, null)
-        logicalDevice?.let { vkDestroyDevice(it, null) }
+        if (commandPool.L != NULL)
+            logicalDevice!! destroyCommandPool commandPool
+        logicalDevice?.destroy()
     }
 
     /**
      * Get the index of a memory type that has all the requested property bits set
      *
-     * @param typeBits Bitmask with bits set for each memory type supported by the resource to request for (from VkMemoryRequirements)
+     * @param typeBits_ Bitmask with bits set for each memory type supported by the resource to request for (from VkMemoryRequirements)
      * @param properties Bitmask of properties for the memory type to request
      * @param (Optional) memTypeFound Pointer to a bool that is set to true if a matching memory type has been found
      *
@@ -95,8 +96,8 @@ constructor(
      *
      * @throw Throws an exception if memTypeFound is null and no memory type could be found that supports the requested properties
      */
-    fun getMemoryType(typeBits: Int, properties: VkMemoryPropertyFlags, memTypeFound: KMutableProperty0<Boolean>? = null): Int {
-        var typeBits = typeBits
+    fun getMemoryType(typeBits_: Int, properties: VkMemoryPropertyFlags, memTypeFound: KMutableProperty0<Boolean>? = null): Int {
+        var typeBits = typeBits_
         for (i in 0 until memoryProperties.memoryTypeCount) {
             if ((typeBits and 1) == 1 && (memoryProperties.memoryTypes[i].propertyFlags and properties) == properties) {
                 if (memTypeFound?.get() == true)
@@ -214,7 +215,7 @@ constructor(
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
         val deviceCreateInfo = vk.DeviceCreateInfo {
-            this.queueCreateInfos = queueCreateInfos.toBuffer()
+            this.queueCreateInfos = queueCreateInfos.toBufferStack()
             this.enabledFeatures = enabledFeatures
         }
 
@@ -229,7 +230,7 @@ constructor(
 
         val result = vk.createDevice(physicalDevice, deviceCreateInfo, ::logicalDevice)
 
-        if (result == VkResult.SUCCESS)
+        if (result == SUCCESS)
         // Create a default command pool for graphics command buffers
             commandPool = createCommandPool(queueFamilyIndices.graphics)
 
@@ -245,14 +246,17 @@ constructor(
      * @param usageFlags Usage flag bitmask for the buffer (i.e. index, vertex, uniform buffer)
      * @param memoryPropertyFlags Memory properties for this buffer (i.e. device local, host visible, coherent)
      * @param size Size of the buffer in byes
-     * @param buffer Pointer to the buffer handle acquired by the function
-     * @param memory Pointer to the memory handle acquired by the function
+     * @param pBuffer Pointer to the buffer handle acquired by the function
+     * @param pMemory Pointer to the memory handle acquired by the function
      * @param data Pointer to the data that should be copied to the buffer after creation (optional, if not set, no data is copied over)
      *
      * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
      */
     fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, size: VkDeviceSize,
-                     buffer: KMutableProperty0<VkBuffer>, memory: KMutableProperty0<VkDeviceMemory>, data: Long = NULL) {
+                     pBuffer: KMutableProperty0<VkBuffer>, pMemory: KMutableProperty0<VkDeviceMemory>, data: Long = NULL) {
+
+        var buffer by pBuffer
+        var memory by pMemory
 
         val dev = logicalDevice!!
         // Create the buffer handle
@@ -261,21 +265,21 @@ constructor(
             this.size = size
             sharingMode = VkSharingMode.EXCLUSIVE
         }
-        dev.createBuffer(bufferCreateInfo, buffer)
+        buffer = dev createBuffer bufferCreateInfo
 
         // Create the memory backing up the buffer handle
-        val memReqs = dev getBufferMemoryRequirements buffer()
+        val memReqs = dev getBufferMemoryRequirements buffer
         val memAlloc = vk.MemoryAllocateInfo {
             allocationSize = memReqs.size
             // Find a memory type index that fits the properties of the buffer
             memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags)
         }
-        dev.allocateMemory(memAlloc, memory)
+        memory = dev allocateMemory memAlloc
 
         // If a pointer to the buffer data has been passed, map the buffer and copy over the data
         if (data != NULL)
-            dev.mappingMemory(memory(), 0, size) { mapped ->
-                memCopy(data, mapped, size)
+            dev.mappingMemory(pMemory(), VkDeviceSize(0), size) { mapped ->
+                memCopy(data, mapped, size.L)
                 // If host coherency hasn't been requested, do a manual flush to make writes visible
                 if (memoryPropertyFlags hasnt VkMemoryProperty.HOST_COHERENT_BIT) {
 //                    val mappedRange = vk.MappedMemoryRange{
@@ -288,21 +292,12 @@ constructor(
             }
 
         // Attach the memory to the buffer object
-        dev.bindBufferMemory(buffer(), memory())
+        dev.bindBufferMemory(pBuffer(), pMemory())
     }
 
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: ByteBuffer) {
-        createBuffer(usageFlags, memoryPropertyFlags, buffer, bytes.size.L, memAddress(bytes))
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: java.nio.Buffer) {
+        createBuffer(usageFlags, memoryPropertyFlags, buffer, VkDeviceSize(bytes.remSize.L), bytes.adr)
     }
-
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, floats: FloatBuffer) {
-        createBuffer(usageFlags, memoryPropertyFlags, buffer, floats.size.L, memAddress(floats))
-    }
-
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, ints: IntBuffer) {
-        createBuffer(usageFlags, memoryPropertyFlags, buffer, ints.size.L, memAddress(ints))
-    }
-
 
     /**
      * Create a buffer on the device
@@ -339,7 +334,7 @@ constructor(
         }
         // If a pointer to the buffer data has been passed, map the buffer and copy over the data
         if (data != NULL)
-            buffer.mapping { dst -> memCopy(data, dst, size) }
+            buffer.mapping { dst -> memCopy(data, dst, size.L) }
 
         // Initialize a default descriptor that covers the whole buffer size
         buffer.setupDescriptor()
@@ -392,7 +387,7 @@ constructor(
             this.queueFamilyIndex = queueFamilyIndex
             flags = createFlags
         }
-        return getLong { vk.createCommandPool(logicalDevice!!, cmdPoolInfo, it).check() }
+        return logicalDevice!! createCommandPool cmdPoolInfo
     }
 
 
@@ -429,14 +424,12 @@ constructor(
      */
     fun flushCommandBuffer(commandBuffer: VkCommandBuffer, queue: VkQueue, free: Boolean = true) {
 
-        if (commandBuffer.adr == NULL)
+        if (commandBuffer.isInvalid())
             return
 
         commandBuffer.end()
 
-        val submitInfo = vk.SubmitInfo {
-            commandBuffers = appBuffer pointerBufferOf commandBuffer
-        }
+        val submitInfo = vk.SubmitInfo { this.commandBuffer = commandBuffer }
         // Create fence to ensure that the command buffer has finished executing
         logicalDevice!!.withFence { fence ->
             // Submit to the queue

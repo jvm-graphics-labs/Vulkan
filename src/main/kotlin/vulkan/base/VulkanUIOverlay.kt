@@ -3,6 +3,7 @@ package vulkan.base
 import glm_.vec2.Vec2i
 import org.lwjgl.vulkan.VkQueue
 import vkk.VkFramebuffer
+import vkk.VkFramebufferArray
 
 class UIOverlayCreateInfo {
 
@@ -85,7 +86,7 @@ class UIOverlay {
 
     //
 //    void update();
-    fun resize(size: Vec2i, framebuffers: ArrayList<VkFramebuffer>) {
+    fun resize(size: Vec2i, framebuffers: VkFramebufferArray) {
 
 //        ImGuiIO& io = ImGui::GetIO();
 //        io.DisplaySize = ImVec2((float)(width), (float)(height));

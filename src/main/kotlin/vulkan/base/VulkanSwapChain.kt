@@ -1,19 +1,18 @@
 package vulkan.base
 
-import ab.appBuffer
 import gli_.has
 import glm_.vec2.Vec2i
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.KHRSurface.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
-import org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR
-import org.lwjgl.vulkan.KHRSwapchain.vkDestroySwapchainKHR
-import org.lwjgl.vulkan.VK10.vkDestroyImageView
+import org.lwjgl.vulkan.KHRSwapchain.vkQueuePresentKHR
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
 import org.lwjgl.vulkan.VkPhysicalDevice
 import org.lwjgl.vulkan.VkQueue
 import uno.glfw.GlfwWindow
 import vkk.*
+import vulkan.UINT32_MAX
+import vulkan.UINT64_MAX
 import kotlin.reflect.KMutableProperty0
 
 class VulkanSwapChain {
@@ -21,7 +20,7 @@ class VulkanSwapChain {
     lateinit var instance: VkInstance
     lateinit var device: VkDevice
     lateinit var physicalDevice: VkPhysicalDevice
-    var surface: VkSurfaceKHR = NULL
+    var surface = VkSurface(NULL)
 //    // Function pointers
 //    PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
 //    PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
@@ -36,10 +35,10 @@ class VulkanSwapChain {
     var colorFormat = VkFormat.UNDEFINED
     var colorSpace = VkColorSpace.SRGB_NONLINEAR_KHR
     /** @brief Handle to the current swap chain, required for recreation */
-    var swapChain: VkSwapchainKHR = NULL
+    var swapChain = VkSwapchainKHR(NULL)
     var imageCount = 0
-    lateinit var images: VkImageArray
-    val buffers = ArrayList<SwapChainBuffer>()
+    var images = vkImageArrayOf()
+    var buffers = arrayOf<SwapChainBuffer>()
     /** @brief Queue family index of the detected graphics and presenting device queue */
     var queueNodeIndex = UINT32_MAX
 
@@ -219,7 +218,7 @@ class VulkanSwapChain {
 
         /*  If an existing swap chain is re-created, destroy the old swap chain
             This also cleans up all the presentable images         */
-        if (oldSwapchain != NULL) {
+        if (oldSwapchain.L != NULL) {
             for (i in 0 until imageCount)
                 device destroyImageView buffers[i].view
             device destroySwapchainKHR oldSwapchain
@@ -230,8 +229,9 @@ class VulkanSwapChain {
         imageCount = images.size
 
         // Get the swap chain buffers containing the image and imageview
-        buffers resize images.size
-        for (i in images.indices) {
+        buffers = Array(images.size) { i ->
+
+            val buffer = SwapChainBuffer()
 
             val colorAttachmentView = vk.ImageViewCreateInfo {
                 format = colorFormat
@@ -247,12 +247,12 @@ class VulkanSwapChain {
                 flags = 0
 
                 images[i].also {
-                    buffers[i].image = it
-                    image(it) // TODO BUG
+                    buffer.image = it
+                    image(it.L) // TODO BUG
                 }
             }
-
-            buffers[i].view = device createImageView colorAttachmentView
+            buffer.view = device createImageView colorAttachmentView
+            buffer
         }
     }
 
@@ -266,11 +266,25 @@ class VulkanSwapChain {
      *
      * @return VkResult of the image acquisition
      */
-    fun acquireNextImage(presentCompleteSemaphore: VkSemaphore, imageIndex: KMutableProperty0<Int>): VkResult {
+    infix fun acquireNextImage(presentCompleteSemaphore: VkSemaphore): Int =
         // By setting timeout to UINT64_MAX we will always wait until the next image has been acquired or an actual error is thrown
         // With that we don't have to handle VK_NOT_READY
-        return vk.acquireNextImageKHR(device, swapChain, UINT64_MAX, presentCompleteSemaphore, NULL, imageIndex)
-    }
+        device.acquireNextImageKHR(swapChain, UINT64_MAX, presentCompleteSemaphore)
+
+    /**
+     * Acquires the next image in the swap chain
+     *
+     * @param presentCompleteSemaphore (Optional) Semaphore that is signaled when the image is ready for use
+     * @param imageIndex Pointer to the image index that will be increased if the next image could be acquired
+     *
+     * @note The function will always wait until the next image has been acquired by setting timeout to UINT64_MAX
+     *
+     * @return VkResult of the image acquisition
+     */
+    fun acquireNextImage(presentCompleteSemaphore: VkSemaphore, imageIndex: KMutableProperty0<Int>): VkResult =
+        // By setting timeout to UINT64_MAX we will always wait until the next image has been acquired or an actual error is thrown
+        // With that we don't have to handle VK_NOT_READY
+        vk.acquireNextImageKHR(device, swapChain, UINT64_MAX, presentCompleteSemaphore, VkFence(NULL), imageIndex)
 
     /**
      * Queue an image for presentation
@@ -281,16 +295,16 @@ class VulkanSwapChain {
      *
      * @return VkResult of the queue presentation
      */
-    fun queuePresent(queue: VkQueue, imageIndex: Int, waitSemaphore: VkSemaphore = NULL) {
+    fun queuePresent(queue: VkQueue, imageIndex: Int, waitSemaphore: VkSemaphore = VkSemaphore(NULL)): VkResult {
         val presentInfo = vk.PresentInfoKHR {
             swapchainCount = 1
-            swapchains = appBuffer.longBufferOf(swapChain)
-            imageIndices = appBuffer.intBufferOf(imageIndex)
+            swapchain = swapChain
+            this.imageIndex = imageIndex
             // Check if a wait semaphore has been specified to wait for before presenting the image
-            if (waitSemaphore != NULL)
-                waitSemaphores = appBuffer.longBufferOf(waitSemaphore)
+            if (waitSemaphore.L != NULL)
+                this.waitSemaphore = waitSemaphore
         }
-        queue presentKHR presentInfo
+        return VkResult(vkQueuePresentKHR(queue, presentInfo)) //        queue presentKHR presentInfo
     }
 
 
@@ -298,15 +312,16 @@ class VulkanSwapChain {
      * Destroy and free Vulkan resources used for the swapchain
      */
     fun cleanup() {
-        if (swapChain != NULL)
+
+        if (swapChain.L != NULL)
             for (i in 0 until imageCount)
-                vkDestroyImageView(device, buffers[i].view, null)
-        if (surface != NULL) {
-            vkDestroySwapchainKHR(device, swapChain, null)
-            vkDestroySurfaceKHR(instance, surface, null)
+                device destroyImageView buffers[i].view
+        if (surface.L != NULL) {
+            device destroySwapchainKHR swapChain
+            instance destroySurfaceKHR surface
         }
-        surface = NULL
-        swapChain = NULL
+        surface = VkSurface(NULL)
+        swapChain = VkSwapchainKHR(NULL)
     }
 
     inline infix fun ArrayList<SwapChainBuffer>.resize(newSize: Int) {
@@ -320,6 +335,6 @@ class VulkanSwapChain {
 }
 
 class SwapChainBuffer {
-    var image: VkImage = NULL
-    var view: VkImageView = NULL
+    var image = VkImage(NULL)
+    var view = VkImageView(NULL)
 }

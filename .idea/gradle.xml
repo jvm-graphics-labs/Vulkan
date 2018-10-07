@@ -6,13 +6,14 @@
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleHome" value="C:/gradle-3.3" />
-        <option name="gradleJvm" value="9" />
+        <option name="gradleJvm" value="10" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
+        <option name="useAutoImport" value="true" />
       </GradleProjectSettings>
     </option>
   </component>

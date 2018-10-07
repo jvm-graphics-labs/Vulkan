@@ -1,28 +1,25 @@
 package vulkan.base
 
-import ab.appBuffer
 import glm_.detail.GLM_DEPTH_CLIP_SPACE
 import glm_.detail.GlmDepthClipSpace
 import glm_.f
 import glm_.i
-import glm_.set
 import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
 import graphics.scenery.spirvcrossj.Loader
 import graphics.scenery.spirvcrossj.libspirvcrossj
+import kool.stak
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.intBufferOf
-import uno.buffer.longBufferOf
 import uno.glfw.*
 import uno.glfw.windowHint.Api
 import vkk.*
-import vkk.LongArrayList.resize
 import vulkan.ENABLE_VALIDATION
 import vulkan.base.initializers.commandBufferAllocateInfo
 import vulkan.base.tools.loadShader
@@ -79,7 +76,7 @@ abstract class VulkanExampleBase {
     /** Depth buffer format (selected during Vulkan initialization) */
     var depthFormat = VkFormat.UNDEFINED
     /** Command buffer pool */
-    var cmdPool: VkCommandPool = NULL
+    var cmdPool = VkCommandPool(NULL)
     /** @brief Pipeline stages used to wait at for graphics queue submissions */
     val submitPipelineStages = intBufferOf(VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i)
     /** Contains command buffers and semaphores to be presented to the queue    */
@@ -87,31 +84,31 @@ abstract class VulkanExampleBase {
     /** Command buffers used for rendering  */
     lateinit var drawCmdBuffers: ArrayList<VkCommandBuffer>
     /** Global render pass for frame buffer writes  */
-    var renderPass: VkRenderPass = NULL
+    var renderPass = VkRenderPass(NULL)
     /** List of available frame buffers (same as number of swap chain images)   */
-    val frameBuffers = ArrayList<VkFramebuffer>()
+    var frameBuffers = vkFramebufferArrayOf()
     /** Active frame buffer index   */
     var currentBuffer = 0
     /** Descriptor set pool */
-    var descriptorPool: VkDescriptorPool = NULL
+    var descriptorPool = VkDescriptorPool(NULL)
     /** List of shader modules created (stored for cleanup) */
     val shaderModules = ArrayList<VkShaderModule>()
     // Pipeline cache object
-    var pipelineCache: VkPipelineCache = NULL
+    var pipelineCache = VkPipelineCache(NULL)
     // Wraps the swap chain to present images (framebuffers) to the windowing system
     var swapChain = VulkanSwapChain()
 
     // Synchronization semaphores
     object semaphores {
         // Swap chain image presentation
-        var presentComplete: VkSemaphore = NULL
+        var presentComplete = VkSemaphore(NULL)
         // Command buffer submission and execution
-        var renderComplete: VkSemaphore = NULL
+        var renderComplete = VkSemaphore(NULL)
         // UI overlay submission and execution
-        var overlayComplete: VkSemaphore = NULL
+        var overlayComplete = VkSemaphore(NULL)
     }
 
-    var waitFences = VkFenceArray(0)
+    var waitFences = vkFenceArrayOf()
 
     var prepared = false
     val size = Vec2i(1280, 720)
@@ -292,9 +289,9 @@ abstract class VulkanExampleBase {
     protected val depthStencil = DepthStencil()
 
     class DepthStencil {
-        var image: VkImage = NULL
-        var mem: VkDeviceMemory = NULL
-        var view: VkImageView = NULL
+        var image = VkImage(NULL)
+        var mem = VkDeviceMemory(NULL)
+        var view = VkImageView(NULL)
     }
 
 //    struct {
@@ -315,7 +312,7 @@ abstract class VulkanExampleBase {
         if (prepared)
             swapChain.cleanup()
         device.apply {
-            if (descriptorPool != NULL)
+            if (descriptorPool.L != NULL)
                 destroyDescriptorPool(descriptorPool)
             destroyCommandBuffers()
             destroyRenderPass(renderPass)
@@ -356,7 +353,7 @@ abstract class VulkanExampleBase {
         if (settings.validation) {
             /*  The report flags determine what type of messages for the layers will be displayed
                 For validating (debugging) an appplication the error and warning bits should suffice             */
-            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT or VkDebugReport.INFORMATION_BIT_EXT
+            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT// or VkDebugReport.INFORMATION_BIT_EXT
             // Additional flags include performance info, loader and layer debug messages, etc.
             debug.setupDebugging(instance, debugReportFlags, null)
         }
@@ -459,12 +456,13 @@ abstract class VulkanExampleBase {
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
             Command buffer submission info is set by each example   */
-        submitInfo = cVkSubmitInfo {
-            waitDstStageMask = submitPipelineStages
-            waitSemaphoreCount = 1
-            waitSemaphores = longBufferOf(semaphores.presentComplete)
-            signalSemaphores = longBufferOf(semaphores.renderComplete)
-        }
+        TODO()
+//        submitInfo = cVkSubmitInfo {
+//            waitDstStageMask = submitPipelineStages
+//            waitSemaphoreCount = 1
+//            waitSemaphore = semaphores.presentComplete
+//            signalSemaphore = semaphores.renderComplete
+//        }
     }
 
     /** Create GLFW window  */
@@ -472,7 +470,8 @@ abstract class VulkanExampleBase {
         with(glfw) {
             val fullscreen = false
             init()
-            if (!vulkanSupported) throw AssertionError("GLFW failed to find the Vulkan loader")
+            if (!vulkanSupported)
+                throw AssertionError("GLFW failed to find the Vulkan loader")
             windowHint {
                 default()
                 api = Api.None
@@ -548,7 +547,7 @@ abstract class VulkanExampleBase {
     fun createSynchronizationPrimitives() {
         // Wait fences to sync command buffer access
         val fenceCreateInfo = vk.FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT)
-        waitFences = VkFenceArray(drawCmdBuffers.size) { device createFence fenceCreateInfo }
+        waitFences = initVkFenceArray(drawCmdBuffers.size) { device createFence fenceCreateInfo }
     }
 
     /** Creates a new (graphics) command pool object storing command buffers    */
@@ -577,7 +576,7 @@ abstract class VulkanExampleBase {
         }
 
         val memAlloc = vk.MemoryAllocateInfo {
-            allocationSize = 0
+            allocationSize = VkDeviceSize(0)
             memoryTypeIndex = 0
         }
 
@@ -599,7 +598,7 @@ abstract class VulkanExampleBase {
         memAlloc.allocationSize = memReqs.size
         memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
         depthStencil.mem = device allocateMemory memAlloc
-        VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0))
+        device.bindImageMemory(depthStencil.image, depthStencil.mem)
 
         depthStencilView.image = depthStencil.image
         depthStencil.view = device createImageView depthStencilView
@@ -607,9 +606,9 @@ abstract class VulkanExampleBase {
 
     /** Create framebuffers for all requested swap chain images
      *  Can be overriden in derived class to setup a custom framebuffer (e.g. for MSAA) */
-    open fun setupFrameBuffer() {
+    open fun setupFrameBuffer() = stak {
 
-        val attachments = appBuffer.longBuffer(2)
+        val attachments = it.vkImageViewBufferBig(2)
 
         // Depth/Stencil attachment is the same for all frame buffers
         attachments[1] = depthStencil.view
@@ -625,10 +624,9 @@ abstract class VulkanExampleBase {
         }
 
         // Create frame buffers for every swap chain image
-        frameBuffers resize swapChain.imageCount
-        for (i in frameBuffers.indices) {
+        frameBuffers = initVkFramebufferArray(swapChain.imageCount) { i ->
             attachments[0] = swapChain.buffers[i].view
-            frameBuffers[i] = device createFramebuffer frameBufferCreateInfo
+            device createFramebuffer frameBufferCreateInfo
         }
     }
 
@@ -722,7 +720,7 @@ abstract class VulkanExampleBase {
     fun setupSwapChain() = swapChain.create(size, settings.vsync)
 
     /** Check if command buffers are valid (!= NULL) */
-    fun checkCommandBuffers() = drawCmdBuffers.all { it.adr != NULL }
+    fun checkCommandBuffers() = drawCmdBuffers.all { it.isValid() }
 
     /** Create command buffers for drawing commands */
     fun createCommandBuffers() {
@@ -763,7 +761,7 @@ abstract class VulkanExampleBase {
         commandBuffer.end()
 
         val submitInfo = vk.SubmitInfo {
-            commandBuffers = appBuffer.pointerBufferOf(commandBuffer)
+            this.commandBuffer = commandBuffer
         }
 
         queue submit submitInfo
@@ -775,7 +773,7 @@ abstract class VulkanExampleBase {
 
     /** Create a cache pool for rendering pipelines */
     fun createPipelineCache() {
-        pipelineCache = device createPipelineCache vk.PipelineCacheCreateInfo {}
+        pipelineCache = device createPipelineCache vk.PipelineCacheCreateInfo()
     }
 
     /** Prepare commonly used Vulkan functions  */
@@ -838,7 +836,7 @@ abstract class VulkanExampleBase {
             }
         }
         name = "main" // todo : make param
-        assert(module != NULL)
+        assert(module.L != NULL)
         if (add)
             shaderModules += module
     }
@@ -865,7 +863,7 @@ abstract class VulkanExampleBase {
         }
 
         // Flush device to make sure all resources can be freed
-        if (device.adr != NULL)
+        if (device.isValid())
             device.waitIdle()
     }
 
@@ -950,7 +948,7 @@ abstract class VulkanExampleBase {
         // Acquire the next image from the swap chain
         val err = swapChain.acquireNextImage(semaphores.presentComplete, ::currentBuffer)
         // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE) or no longer optimal for presentation (SUBOPTIMAL)
-        if (err == VkResult.ERROR_OUT_OF_DATE_KHR || err == VkResult.SUBOPTIMAL_KHR)
+        if (err == ERROR_OUT_OF_DATE_KHR || err == SUBOPTIMAL_KHR)
             windowResize(window.size)
         else
             err.check()
@@ -989,7 +987,15 @@ abstract class VulkanExampleBase {
 //            submitInfo.pSignalSemaphores = &semaphores.renderComplete
         }
 
-        swapChain.queuePresent(queue, currentBuffer, if (submitOverlay) semaphores.overlayComplete else semaphores.renderComplete)
+        val res = swapChain.queuePresent(queue, currentBuffer, if (submitOverlay) semaphores.overlayComplete else semaphores.renderComplete)
+
+        if (res != SUCCESS && res != SUBOPTIMAL_KHR)
+            if (res == ERROR_OUT_OF_DATE_KHR) {
+                // Swap chain is no longer compatible with the surface and needs to be recreated
+                windowResize(window.size)
+                return
+            } else
+                res.check()
 
         queue.waitIdle()
     }
@@ -1002,8 +1008,6 @@ abstract class VulkanExampleBase {
     /** Called if the window is resized and some resources have to be recreated    */
     fun windowResize(newSize: Vec2i) {
 
-        appBuffer.reset()
-
         if (!prepared) return
         prepared = false
 
@@ -1015,11 +1019,13 @@ abstract class VulkanExampleBase {
         setupSwapChain()
 
         // Recreate the frame buffers
-        vkDestroyImageView(device, depthStencil.view, null)
-        vkDestroyImage(device, depthStencil.image, null)
-        vkFreeMemory(device, depthStencil.mem, null)
+        device.apply {
+            destroyImageView(depthStencil.view)
+            destroyImage(depthStencil.image)
+            freeMemory(depthStencil.mem)
+        }
         setupDepthStencil()
-        frameBuffers.forEach { vkDestroyFramebuffer(device, it, null) }
+        frameBuffers.forEach(device::destroyFramebuffer)
         setupFrameBuffer()
 
         // Command buffers need to be recreated as they may store
@@ -1028,7 +1034,7 @@ abstract class VulkanExampleBase {
         createCommandBuffers()
         buildCommandBuffers()
 
-        vkDeviceWaitIdle(device)
+        device.waitIdle()
 
         if (settings.overlay)
             uiOverlay!!.resize(size, frameBuffers)
