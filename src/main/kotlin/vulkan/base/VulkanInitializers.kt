@@ -466,6 +466,8 @@ object initializers {
 //            basePipelineHandle = VK_NULL_HANDLE
         }
     }
+
+    inline fun pipelineCreateInfo(): VkGraphicsPipelineCreateInfo = vk.GraphicsPipelineCreateInfo { basePipelineIndex = -1 }
 //
 //    inline VkComputePipelineCreateInfo computePipelineCreateInfo(
 //            VkPipelineLayout layout,
