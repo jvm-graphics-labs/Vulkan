@@ -804,7 +804,6 @@ abstract class VulkanExampleBase {
 //            }
 //            UIOverlay = new vks ::UIOverlay(overlayCreateInfo)
 //            UIOverlay->preparePipeline(pipelineCache, renderPass);
-//            updateOverlay()
         }
     }
 
@@ -932,8 +931,9 @@ abstract class VulkanExampleBase {
 //        ImGui::PopStyleVar();
 //        ImGui::Render();
 //
-//        if (UIOverlay->update()) {
+//        if (UIOverlay->update()  || UIOverlay.updated) {
 //		    buildCommandBuffers();
+//        UIOverlay.updated = false;
 //	      }
     }
 
