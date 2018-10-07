@@ -938,8 +938,13 @@ abstract class VulkanExampleBase {
     }
 
     fun drawUI(commandBuffer: VkCommandBuffer) {
-        if (settings.overlay)
+        if (settings.overlay) {
+
+            commandBuffer setViewport vk.Viewport(size)
+            commandBuffer setScissor vk.Rect2D(size)
+
             uiOverlay!!.draw(commandBuffer)
+        }
     }
 
     /** Prepare the frame for workload submission
