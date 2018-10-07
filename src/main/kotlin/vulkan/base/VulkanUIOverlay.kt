@@ -1,9 +1,12 @@
 package vulkan.base
 
 import glm_.vec2.Vec2i
+import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkQueue
 import vkk.VkFramebuffer
 import vkk.VkFramebufferArray
+import vkk.VkPipelineCache
+import vkk.VkRenderPass
 
 // TODO redo completely
 class UIOverlayCreateInfo {
@@ -87,7 +90,7 @@ class UIOverlay {
 
     //
 //    void update();
-    fun resize(size: Vec2i, framebuffers: VkFramebufferArray) {
+    fun resize(size: Vec2i) {
 
 //        ImGuiIO& io = ImGui::GetIO();
 //        io.DisplaySize = ImVec2((float)(width), (float)(height));
@@ -96,6 +99,12 @@ class UIOverlay {
 //        createInfo.framebuffers = framebuffers;
 //        updateCommandBuffers()
     }
+
+    fun preparePipeline(pipelineCache: VkPipelineCache, renderPass: VkRenderPass) = Unit
+
+    fun update() = Unit
+
+    fun draw(commandBuffer: VkCommandBuffer) = Unit
 //
 //    void submit(VkQueue queue, uint32_t bufferindex, VkSubmitInfo submitInfo);
 //

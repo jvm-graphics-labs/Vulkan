@@ -104,8 +104,6 @@ abstract class VulkanExampleBase {
         var presentComplete = VkSemaphore(NULL)
         // Command buffer submission and execution
         var renderComplete = VkSemaphore(NULL)
-        // UI overlay submission and execution
-        var overlayComplete = VkSemaphore(NULL)
     }
 
     var waitFences = vkFenceArrayOf()
@@ -311,6 +309,7 @@ abstract class VulkanExampleBase {
         // Clean up Vulkan resources
         if (prepared)
             swapChain.cleanup()
+
         device.apply {
             if (descriptorPool.L != NULL)
                 destroyDescriptorPool(descriptorPool)
@@ -327,7 +326,7 @@ abstract class VulkanExampleBase {
 
             destroyCommandPool(cmdPool)
 
-            destroySemaphores(semaphores.presentComplete, semaphores.renderComplete, semaphores.overlayComplete)
+            destroySemaphores(semaphores.presentComplete, semaphores.renderComplete)
         }
 
         uiOverlay?.destroy()
@@ -447,10 +446,6 @@ abstract class VulkanExampleBase {
             /*  Create a semaphore used to synchronize command submission
                 Ensures that the image is not presented until all commands have been submitted and executed */
             renderComplete = device createSemaphore semaphoreCreateInfo
-            /* Create a semaphore used to synchronize command submission
-                Ensures that the image is not presented until all commands for the UI overlay have been submitted and executed
-                Will be inserted after the render complete semaphore if the UI overlay is enabled */
-            overlayComplete = device createSemaphore semaphoreCreateInfo
         }
 
         /*  Set up submit info structure
@@ -796,9 +791,6 @@ abstract class VulkanExampleBase {
 //            // Setup default overlay creation info
 //            overlayCreateInfo.device = vulkanDevice
 //            overlayCreateInfo.copyQueue = queue
-//            overlayCreateInfo.framebuffers = frameBuffers
-//            overlayCreateInfo.colorformat = swapChain.colorFormat
-//            overlayCreateInfo.depthformat = depthFormat
 //            overlayCreateInfo.width = width
 //            overlayCreateInfo.height = height
 //            // Virtual function call for example to customize overlay creation
@@ -811,6 +803,7 @@ abstract class VulkanExampleBase {
 //                }
 //            }
 //            UIOverlay = new vks ::UIOverlay(overlayCreateInfo)
+//            UIOverlay->preparePipeline(pipelineCache, renderPass);
 //            updateOverlay()
         }
     }
@@ -939,7 +932,14 @@ abstract class VulkanExampleBase {
 //        ImGui::PopStyleVar();
 //        ImGui::Render();
 //
-//        UIOverlay->update();
+//        if (UIOverlay->update()) {
+//		    buildCommandBuffers();
+//	      }
+    }
+
+    fun drawUI(commandBuffer: VkCommandBuffer) {
+        if (settings.overlay)
+            uiOverlay!!.draw(commandBuffer)
     }
 
     /** Prepare the frame for workload submission
@@ -958,37 +958,7 @@ abstract class VulkanExampleBase {
     /** Submit the frames' workload */
     fun submitFrame() {
 
-        val submitOverlay = settings.overlay && uiOverlay!!.visible
-
-        if (submitOverlay) {
-            TODO()
-            // Wait for color attachment output to finish before rendering the text overlay
-//            val stageFlags = VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i
-//            submitInfo.waitDstStageMask = appBuffer.intBufferOf(stageFlags)
-//
-//            // Set semaphores
-//            // Wait for render complete semaphore
-//            submitInfo.waitSemaphoreCount = 1
-//            submitInfo.waitSemaphores = appBuffer.longBufferOf(semaphores.renderComplete)
-//            // Signal ready with UI overlay complete semaphpre
-//            submitInfo.signalSemaphores = appBuffer.longBufferOf(semaphores.overlayComplete)
-//
-//            // Submit current UI overlay command buffer
-//            submitInfo.commandBuffers = appBuffer.pointerBufferOf(uiOverlay.cmdBuffers[currentBuffer])
-//            VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE))
-//
-//            // Reset stage mask
-//            submitInfo.pWaitDstStageMask = &submitPipelineStages
-//            // Reset wait and signal semaphores for rendering next frame
-//            // Wait for swap chain presentation to finish
-//            submitInfo.waitSemaphoreCount = 1
-//            submitInfo.pWaitSemaphores = &semaphores.presentComplete
-//            // Signal ready with offscreen semaphore
-//            submitInfo.signalSemaphoreCount = 1
-//            submitInfo.pSignalSemaphores = &semaphores.renderComplete
-        }
-
-        val res = swapChain.queuePresent(queue, currentBuffer, if (submitOverlay) semaphores.overlayComplete else semaphores.renderComplete)
+        val res = swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete)
 
         if (res != SUCCESS && res != SUBOPTIMAL_KHR)
             if (res == ERROR_OUT_OF_DATE_KHR) {
@@ -1029,6 +999,11 @@ abstract class VulkanExampleBase {
         frameBuffers.forEach(device::destroyFramebuffer)
         setupFrameBuffer()
 
+        if (newSize allGreaterThan 0) {
+            if (settings.overlay)
+                uiOverlay!!.resize(newSize)
+        }
+
         // Command buffers need to be recreated as they may store
         // references to the recreated frame buffer
         destroyCommandBuffers()
@@ -1037,11 +1012,8 @@ abstract class VulkanExampleBase {
 
         device.waitIdle()
 
-        if (newSize allGreaterThan 0) {
-            if (settings.overlay)
-                uiOverlay!!.resize(newSize, frameBuffers)
-            camera.updateAspectRatio(newSize.aspect)
-        }
+        if (newSize allGreaterThan 0)
+            camera updateAspectRatio newSize.aspect
 
         // Notify derived class
         windowResized()
