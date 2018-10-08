@@ -2,8 +2,6 @@ package vulkan.base
 
 import glm_.L
 import glm_.i
-import imgui.getValue
-import imgui.setValue
 import kool.adr
 import kool.remSize
 import org.lwjgl.system.MemoryUtil.NULL
@@ -12,6 +10,8 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
+import uno.kotlin.getValue
+import uno.kotlin.setValue
 import vkk.*
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import kotlin.reflect.KMutableProperty0

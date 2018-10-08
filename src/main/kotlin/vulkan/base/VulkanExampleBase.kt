@@ -451,13 +451,12 @@ abstract class VulkanExampleBase {
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
             Command buffer submission info is set by each example   */
-        TODO()
-//        submitInfo = cVkSubmitInfo {
-//            waitDstStageMask = submitPipelineStages
-//            waitSemaphoreCount = 1
-//            waitSemaphore = semaphores.presentComplete
-//            signalSemaphore = semaphores.renderComplete
-//        }
+        submitInfo = cVkSubmitInfo {
+            waitDstStageMask = submitPipelineStages
+            waitSemaphoreCount = 1
+            waitSemaphore = semaphores.presentComplete
+            signalSemaphore = semaphores.renderComplete
+        }
     }
 
     /** Create GLFW window  */
