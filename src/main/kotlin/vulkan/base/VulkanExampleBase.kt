@@ -11,7 +11,9 @@ import glm_.vec4.Vec4
 import graphics.scenery.spirvcrossj.Loader
 import graphics.scenery.spirvcrossj.libspirvcrossj
 import kool.stak
+import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFW.*
+import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
@@ -352,7 +354,7 @@ abstract class VulkanExampleBase {
         if (settings.validation) {
             /*  The report flags determine what type of messages for the layers will be displayed
                 For validating (debugging) an appplication the error and warning bits should suffice             */
-            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT// or VkDebugReport.INFORMATION_BIT_EXT
+            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT or VkDebugReport.INFORMATION_BIT_EXT
             // Additional flags include performance info, loader and layer debug messages, etc.
             debug.setupDebugging(instance, debugReportFlags, null)
         }
@@ -509,12 +511,20 @@ abstract class VulkanExampleBase {
             if (instanceExtensions.isNotEmpty()) {
                 if (settings.validation)
                     instanceExtensions += VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-                enabledExtensionNames = instanceExtensions
+                ppEnabledExtensionNames(instanceExtensions.toP())
             }
             if (settings.validation)
-                enabledLayerNames = debug.validationLayerNames
+                ppEnabledLayerNames(debug.validationLayerNames.toP())
         }
         return vk.createInstance(instanceCreateInfo, ::instance)
+    }
+
+    private fun Collection<String>.toP(): PointerBuffer {
+        val stack = MemoryStack.stackGet()
+        val pointers = stack.mallocPointer(size)
+        for (i in indices)
+            pointers.put(i, elementAt(i).toUTF8(stack))
+        return pointers
     }
 
 
