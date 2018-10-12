@@ -54,8 +54,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
     ext.kx = 'com.github.kotlin-graphics'
-    implementation "$kx:assimp:58f9f0f05627549787c1a07eea32764ade496142"
-    implementation "$kx:imgui:5dacd7326785d3df05486af55ccf6d9fac445425"
+    implementation "$kx:assimp:e5b8b25dd5faa25c225a025fba7d94343bd840a3"
+    implementation "$kx:imgui:c313b986da38093e6b44ac4481eb10b97a93ebb9"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.24.0-eap13"
 
