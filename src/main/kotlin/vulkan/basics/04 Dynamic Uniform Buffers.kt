@@ -336,8 +336,8 @@ private class DynamicUniformBuffers : VulkanExampleBase() {
         // Calculate required alignment based on minimum device offset alignment
         val minUboAlignment = vulkanDevice.properties.limits.minUniformBufferOffsetAlignment
         dynamicAlignment = Mat4.size.L
-        if (minUboAlignment > 0)
-            dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) and (minUboAlignment - 1).inv()
+//        if (minUboAlignment > 0)
+//            dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) and (minUboAlignment - 1).inv()
 //
 //        val bufferSize = VkDeviceSize(OBJECT_INSTANCES * dynamicAlignment)
 //
