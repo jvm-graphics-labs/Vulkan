@@ -2,9 +2,9 @@
 
 A comprehensive collection of open source Kotlin examples for [Vulkan®](https://www.khronos.org/vulkan/), the new graphics and compute API from Khronos, based on the excellent examples of [Sascha Willems](https://github.com/SaschaWillems/Vulkan)
 
-Enhancements:
+Notes:
 
-The examples uses a wrapper/library I'm developing in order to easier and push tedious code behind the curtains without overhead (in `inline` we trust). The idea is pretty simple, a buffer (64k at the moment) gets allocated for the whole time and used as a pool memory for once-time frequent allocations, by moving the pointer for the requested amount of memory. 
+This suite uses [VK²](https://github.com/kotlin-graphics/vkk) in combination with [AppBuffer](https://github.com/kotlin-graphics/appBuffer) in order to easier and push tedious code behind the curtains without any significant overhead (in `inline` we trust). The idea is pretty simple, a buffer (64k at the moment) gets allocated for the whole time and used as a pool memory for once-time frequent allocations, by moving the pointer for the requested amount of memory. 
 
 No manual management, no stack pushes and pops. Dead simple. And also faster, because you don't have any additional overhead given by continuous memory `malloc`s/`calloc`s or Thread Local Store lookups (which can easily add up in hot loops).
 
