@@ -46,7 +46,7 @@ Uses SPIR-V specialization constants to create multiple pipelines with different
 
 Loads a 2D texture from disk (including all mip levels), uses staging to upload it into video memory and samples from it using combined image samplers.
 
-#### [08 - Cube map textures](src/main/kotlin/vulkan/basics/08%Texture%20Cubemap.kt) Only sphere model
+#### [08 - Cubemap textures](src/main/kotlin/vulkan/basics/08%20Texture%20Cubemap.kt) Only sphere model
 
 Loads a cube map texture from disk containing six different faces. All faces and mip levels are uploaded into video memory and the cubemap is sampled once as a skybox (for the background) and as a source for reflections (for a 3D model).
 
