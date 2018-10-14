@@ -50,7 +50,7 @@ Loads a 2D texture from disk (including all mip levels), uses staging to upload 
 
 Loads a cube map texture from disk containing six different faces. All faces and mip levels are uploaded into video memory and the cubemap is sampled once as a skybox (for the background) and as a source for reflections (for a 3D model).
 
-#### [09 - Texture arrays](src/main/kotlin/vulkan/basics/09%20Texture%20Arra.kt)
+#### [09 - Texture arrays](src/main/kotlin/vulkan/basics/09%20Texture%20Array.kt)
 
 Loads a 2D texture array containing multiple 2D texture slices (each with it's own mip chain) and renders multiple meshes each sampling from a different layer of the texture. 2D texture arrays don't do any interpolation between the slices.
 
