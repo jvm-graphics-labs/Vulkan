@@ -210,12 +210,9 @@ private class Texture3d : VulkanExampleBase() {
 
         // Create sampler
         val sampler = vk.SamplerCreateInfo {
-            magFilter = VkFilter.LINEAR
-            minFilter = VkFilter.LINEAR
+            minMagFilter = VkFilter.LINEAR
             mipmapMode = VkSamplerMipmapMode.LINEAR
-            addressModeU = VkSamplerAddressMode.CLAMP_TO_EDGE
-            addressModeV = VkSamplerAddressMode.CLAMP_TO_EDGE
-            addressModeW = VkSamplerAddressMode.CLAMP_TO_EDGE
+            addressModeUVW = VkSamplerAddressMode.CLAMP_TO_EDGE
             mipLodBias = 0f
             compareOp = VkCompareOp.NEVER
             minLod = 0f

@@ -10,6 +10,7 @@
 
 package vulkan.base
 
+import kool.Ptr
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
 import org.lwjgl.vulkan.VkDevice
@@ -28,7 +29,7 @@ class Buffer {
     val descriptor: VkDescriptorBufferInfo = VkDescriptorBufferInfo.calloc()
     var size = VkDeviceSize(0)
     var alignment = VkDeviceSize(0)
-    var mapped = NULL
+    var mapped: Ptr = NULL
 
     /** @brief Usage flags to be filled by external source at buffer creation (to query at some later point) */
     var usageFlags: VkBufferUsageFlags = 0
@@ -47,7 +48,7 @@ class Buffer {
         mapped = device.mapMemory(memory, offset, size)
     }
 
-    fun mapping(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = VkDeviceSize(0), block: (Long) -> Unit) {
+    fun mapping(size: VkDeviceSize = VK_WHOLE_SIZE, offset: VkDeviceSize = VkDeviceSize(0), block: (Ptr) -> Unit) {
         map(size, offset)
         block(mapped)
         unmap()

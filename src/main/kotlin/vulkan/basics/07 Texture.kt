@@ -430,12 +430,9 @@ private class Texture : VulkanExampleBase() {
         // This separates all the sampling information from the texture data. This means you could have multiple sampler objects for the same texture with different settings
         // Note: Similar to the samplers available with OpenGL 3.3
         val sampler = vk.SamplerCreateInfo {
-            magFilter = VkFilter.LINEAR
-            minFilter = VkFilter.LINEAR
+            minMagFilter = VkFilter.LINEAR
             mipmapMode = VkSamplerMipmapMode.LINEAR
-            addressModeU = VkSamplerAddressMode.REPEAT
-            addressModeV = VkSamplerAddressMode.REPEAT
-            addressModeW = VkSamplerAddressMode.REPEAT
+            addressModeUVW = VkSamplerAddressMode.REPEAT
             mipLodBias = 0f
             compareOp = VkCompareOp.NEVER
             minLod = 0f

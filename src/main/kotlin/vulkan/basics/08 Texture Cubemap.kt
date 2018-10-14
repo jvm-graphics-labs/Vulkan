@@ -245,12 +245,9 @@ private class TextureCubemap : VulkanExampleBase() {
 
         // Create sampler
         val sampler = vk.SamplerCreateInfo {
-            magFilter = VkFilter.LINEAR
-            minFilter = VkFilter.LINEAR
+            minMagFilter = VkFilter.LINEAR
             mipmapMode = VkSamplerMipmapMode.LINEAR
-            addressModeU = VkSamplerAddressMode.CLAMP_TO_EDGE
-            addressModeV = addressModeU
-            addressModeW = addressModeU
+            addressModeUVW = VkSamplerAddressMode.CLAMP_TO_EDGE
             mipLodBias = 0f
             compareOp = VkCompareOp.NEVER
             minLod = 0f

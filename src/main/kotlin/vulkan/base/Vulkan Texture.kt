@@ -285,12 +285,9 @@ class Texture2D : Texture() {
 
         // Create a defaultsampler
         val samplerCreateInfo = vk.SamplerCreateInfo {
-            magFilter = VkFilter.LINEAR
-            minFilter = VkFilter.LINEAR
+            minMagFilter = VkFilter.LINEAR
             mipmapMode = VkSamplerMipmapMode.LINEAR
-            addressModeU = VkSamplerAddressMode.REPEAT
-            addressModeV = VkSamplerAddressMode.REPEAT
-            addressModeW = VkSamplerAddressMode.REPEAT
+            addressModeUVW = VkSamplerAddressMode.REPEAT
             mipLodBias = 0f
             compareOp = VkCompareOp.NEVER
             minLod = 0f

@@ -922,6 +922,7 @@ object vk {
     fun PipelineLayoutCreateInfo(setLayout: VkDescriptorSetLayout): VkPipelineLayoutCreateInfo =
             PipelineLayoutCreateInfo { this.setLayout = setLayout }
 
+    // TODO flag
     fun PipelineMultisampleStateCreateInfo(rasterizationSamples: VkSampleCount, flags: VkPipelineMultisampleStateCreateFlags = 0): VkPipelineMultisampleStateCreateInfo =
             PipelineMultisampleStateCreateInfo {
                 this.rasterizationSamples = rasterizationSamples

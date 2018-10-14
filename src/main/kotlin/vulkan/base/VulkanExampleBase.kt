@@ -10,6 +10,9 @@ import glm_.vec3.Vec3
 import glm_.vec4.Vec4
 import graphics.scenery.spirvcrossj.Loader
 import graphics.scenery.spirvcrossj.libspirvcrossj
+import imgui.*
+import imgui.functionalProgramming.withStyleVar
+import imgui.functionalProgramming.withWindow
 import kool.stak
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFW.*
@@ -23,6 +26,7 @@ import uno.glfw.*
 import uno.glfw.windowHint.Api
 import vkk.*
 import vulkan.ENABLE_VALIDATION
+import vulkan.assetPath
 import vulkan.base.initializers.commandBufferAllocateInfo
 import vulkan.base.tools.loadShader
 import java.nio.file.Paths
@@ -46,7 +50,7 @@ abstract class VulkanExampleBase {
     /** Destination dimensions for resizing the window  */
     val destSize = Vec2i()
     var resizing = false
-    var uiOverlay: UIOverlay? = null
+    val uiOverlay = UIOverlay()
 
     /** Frame counter to display fps    */
     var frameCounter = 0
@@ -126,7 +130,7 @@ abstract class VulkanExampleBase {
     /** @brief Example settings that can be changed e.g. by command line arguments */
     object settings {
         /** @brief Activates validation layers (and message output) when set to true */
-        var validation = false
+        var validation = ENABLE_VALIDATION
         /** @brief Set to true if fullscreen mode has been requested via command line */
         var fullscreen = false
         /** @brief Set to true if v-sync will be forced for the swapchain */
@@ -331,7 +335,8 @@ abstract class VulkanExampleBase {
             destroySemaphores(semaphores.presentComplete, semaphores.renderComplete)
         }
 
-        uiOverlay?.destroy()
+        if (settings.overlay)
+            uiOverlay.freeResources()
 
         vulkanDevice.destroy()
 
@@ -794,26 +799,15 @@ abstract class VulkanExampleBase {
         createPipelineCache()
         setupFrameBuffer()
         settings.overlay = settings.overlay && !benchmark.active
-        if (settings.overlay) {
-            TODO()
-//            vks::UIOverlayCreateInfo overlayCreateInfo = {}
-//            // Setup default overlay creation info
-//            overlayCreateInfo.device = vulkanDevice
-//            overlayCreateInfo.copyQueue = queue
-//            overlayCreateInfo.width = width
-//            overlayCreateInfo.height = height
-//            // Virtual function call for example to customize overlay creation
-//            OnSetupUIOverlay(overlayCreateInfo)
-//            // Load default shaders if not specified by example
-//            if (overlayCreateInfo.shaders.size() == 0) {
-//                overlayCreateInfo.shaders = {
-//                    loadShader(getAssetPath() + "shaders/base/uioverlay.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
-//                    loadShader(getAssetPath() + "shaders/base/uioverlay.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT),
-//                }
-//            }
-//            UIOverlay = new vks ::UIOverlay(overlayCreateInfo)
-//            UIOverlay->preparePipeline(pipelineCache, renderPass);
-        }
+        if (settings.overlay)
+            uiOverlay.apply {
+                device = vulkanDevice
+                queue = this@VulkanExampleBase.queue
+                shaders[0].loadShader("$assetPath/shaders/base/uioverlay.vert.spv", VkShaderStage.VERTEX_BIT)
+                shaders[1].loadShader("$assetPath/shaders/base/uioverlay.frag.spv", VkShaderStage.FRAGMENT_BIT)
+                prepareResources()
+                preparePipeline(pipelineCache, renderPass)
+            }
     }
 
     /** Load a SPIR-V shader    */
@@ -906,53 +900,54 @@ abstract class VulkanExampleBase {
 
         if (!settings.overlay) return
 
-        TODO()
-//        ImGuiIO& io = ImGui::GetIO();
-//
-//        io.DisplaySize = ImVec2((float)width, (float)height);
-//        io.DeltaTime = frameTimer;
-//
-//        io.MousePos = ImVec2(mousePos.x, mousePos.y);
-//        io.MouseDown[0] = mouseButtons.left;
-//        io.MouseDown[1] = mouseButtons.right;
-//
-//        ImGui::NewFrame();
-//
-//        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-//        ImGui::SetNextWindowPos(ImVec2(10, 10));
-//        ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
-//        ImGui::Begin("Vulkan Example", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-//        ImGui::TextUnformatted(title.c_str());
-//        ImGui::TextUnformatted(deviceProperties.deviceName);
-//        ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / lastFPS), lastFPS);
-//
-//        #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-//        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 5.0f * UIOverlay->scale));
-//        #endif
-//        ImGui::PushItemWidth(110.0f * UIOverlay->scale);
-//        OnUpdateUIOverlay(UIOverlay);
-//        ImGui::PopItemWidth();
-//        #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-//        ImGui::PopStyleVar();
-//        #endif
-//
-//        ImGui::End();
-//        ImGui::PopStyleVar();
-//        ImGui::Render();
-//
-//        if (UIOverlay->update()  || UIOverlay.updated) {
-//		    buildCommandBuffers();
-//        UIOverlay.updated = false;
-//	      }
+        ImGui.apply {
+
+            io.apply {
+
+                displaySize put size
+                deltaTime = frameTimer
+
+                mousePos put this@VulkanExampleBase.mousePos
+                mouseDown[0] = window.mouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
+                mouseDown[1] = window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
+            }
+
+            newFrame()
+
+            withStyleVar(StyleVar.WindowRounding, 0f) {
+
+                setNextWindowPos(Vec2(10))
+                setNextWindowSize(Vec2(), Cond.FirstUseEver)
+
+                withWindow("Vulkan Example", null, WindowFlag.AlwaysAutoResize or WindowFlag.NoResize or WindowFlag.NoMove) {
+
+                    textUnformatted(title)
+                    textUnformatted(deviceProperties.deviceName)
+//                    text("%.2f ms/frame (%.1d fps)", 1000f / lastFPS, lastFPS)
+
+                    pushItemWidth(110f * uiOverlay.scale)
+                    uiOverlay.onUpdate()
+                    popItemWidth()
+                }
+            }
+            render()
+            TODO()//ImplGL3.renderDrawData(ImGui.drawData!!)
+
+            if (uiOverlay.update() || uiOverlay.updated) {
+                buildCommandBuffers()
+                uiOverlay.updated = false
+            }
+        }
     }
 
     fun VkCommandBuffer.drawUI() {
+
         if (settings.overlay) {
 
             setViewport(vk.Viewport(size))
             setScissor(vk.Rect2D(size))
 
-            uiOverlay!!.draw(this)
+            uiOverlay.apply { draw() }
         }
     }
 
@@ -987,8 +982,8 @@ abstract class VulkanExampleBase {
 
 //    /** @brief (Virtual) Called before the UI overlay is created, can be used to do a custom setup e.g. with different renderpass */
 //    virtual void OnSetupUIOverlay(vks::UIOverlayCreateInfo &createInfo);
-//    /** @brief (Virtual) Called when the UI overlay is updating, can be used to add custom elements to the overlay */
-//    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay);
+    /** @brief (Virtual) Called when the UI overlay is updating, can be used to add custom elements to the overlay */
+    open fun UIOverlay.onUpdate() {}
 
     /** Called if the window is resized and some resources have to be recreated    */
     fun windowResize(newSize: Vec2i) {
@@ -1013,10 +1008,9 @@ abstract class VulkanExampleBase {
         frameBuffers.forEach(device::destroyFramebuffer)
         setupFrameBuffer()
 
-        if (newSize allGreaterThan 0) {
+        if (newSize allGreaterThan 0)
             if (settings.overlay)
-                uiOverlay!!.resize(newSize)
-        }
+                uiOverlay.resize(newSize)
 
         // Command buffers need to be recreated as they may store
         // references to the recreated frame buffer
@@ -1062,7 +1056,7 @@ abstract class VulkanExampleBase {
     fun keyPressBase(key: Int) {
         when (key) {
             GLFW_KEY_P -> paused = !paused
-            GLFW_KEY_F1 -> if (settings.overlay) TODO() //textOverlay->visible = !textOverlay->visible;
+            GLFW_KEY_F1 -> if (settings.overlay) uiOverlay.visible = !uiOverlay.visible
             GLFW_KEY_ESCAPE -> window.shouldClose = true
         }
         if (camera.type == Camera.CameraType.firstPerson)
@@ -1089,8 +1083,15 @@ abstract class VulkanExampleBase {
     }
 
     fun mouseMoved(newPos: Vec2) {
+
         val deltaPos = mousePos - newPos
-        if (deltaPos.x == 0f && deltaPos.y == 0f) return
+        if (deltaPos allEqual 0f) return
+
+//        if (settings.overlay) {
+//            ImGuiIO& io = ImGui::GetIO();
+//            handled = io.WantCaptureMouse;
+//        }
+
         if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT)) {
             zoom += deltaPos.y * .005f * zoomSpeed
             camera translate Vec3(0f, 0f, deltaPos.y * .005f * zoomSpeed)

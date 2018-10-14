@@ -70,7 +70,7 @@ private class Pipelines : VulkanExampleBase() {
         zoom = -10.5f
         rotation(-25f, 15f, 0f)
         title = "Pipeline state objects"
-//        settings.overlay = true
+        //settings.overlay = true
     }
 
     override fun destroy() {

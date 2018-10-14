@@ -135,11 +135,13 @@ private class Subpasses : VulkanExampleBase() {
 
     init {
         title = "Subpasses"
-        camera.type = Camera.CameraType.firstPerson
-        camera.movementSpeed = 5f
-        camera.setPosition(Vec3(-3.2f, 1f, 5.9f))
-        camera.setRotation(Vec3(0.5f, 210.05f, 0f))
-        camera.setPerspective(60f, size.aspect, 0.1f, 256f)
+        camera.apply {
+            type = Camera.CameraType.firstPerson
+            movementSpeed = 5f
+            setPosition(Vec3(-3.2f, 1f, 5.9f))
+            setRotation(Vec3(0.5f, 210.05f, 0f))
+            setPerspective(60f, size.aspect, 0.1f, 256f)
+        }
         settings.overlay = false // TODO
     }
 

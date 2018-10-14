@@ -186,7 +186,7 @@ private class ImageProcessing : VulkanExampleBase() {
 
         // Create sampler
         val sampler = vk.SamplerCreateInfo {
-            magFilter = VkFilter.LINEAR
+            minMagFilter = VkFilter.LINEAR
             minFilter = VkFilter.LINEAR
             mipmapMode = VkSamplerMipmapMode.LINEAR
             addressModeU = VkSamplerAddressMode.CLAMP_TO_BORDER

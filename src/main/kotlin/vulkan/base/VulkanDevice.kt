@@ -296,9 +296,8 @@ constructor(
         dev.bindBufferMemory(pBuffer(), pMemory())
     }
 
-    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: java.nio.Buffer) {
-        createBuffer(usageFlags, memoryPropertyFlags, buffer, VkDeviceSize(bytes.remSize.L), bytes.adr)
-    }
+    fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: java.nio.Buffer) =
+            createBuffer(usageFlags, memoryPropertyFlags, buffer, VkDeviceSize(bytes.remSize.L), bytes.adr)
 
     /**
      * Create a buffer on the device
