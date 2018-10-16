@@ -81,11 +81,13 @@ class Model {
 
     val defaultFlags = Pp.FlipWindingOrder or Pp.Triangulate or Pp.PreTransformVertices or Pp.CalcTangentSpace or Pp.GenSmoothNormals
 
-    object dim {
+    class Dimension {
         val min = Vec3(Float.MAX_VALUE)
         val max = Vec3(-Float.MAX_VALUE)
         val size = Vec3()
     }
+
+    val dim = Dimension()
 
     /** @brief Release all Vulkan resources of this model */
     fun destroy() {

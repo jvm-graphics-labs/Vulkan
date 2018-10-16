@@ -88,7 +88,7 @@ abstract class VulkanExampleBase {
     /** Contains command buffers and semaphores to be presented to the queue    */
     lateinit var submitInfo: VkSubmitInfo
     /** Command buffers used for rendering  */
-    lateinit var drawCmdBuffers: ArrayList<VkCommandBuffer>
+    lateinit var drawCmdBuffers: Array<VkCommandBuffer>
     /** Global render pass for frame buffer writes  */
     var renderPass = VkRenderPass(NULL)
     /** List of available frame buffers (same as number of swap chain images)   */
@@ -551,7 +551,7 @@ abstract class VulkanExampleBase {
     /** Pure virtual function to be overriden by the dervice class
      *  Called in case of an event where e.g. the framebuffer has to be rebuild and thus
      *  all command buffers that may reference this */
-    abstract fun buildCommandBuffers()
+    open fun buildCommandBuffers() {}
 
     fun createSynchronizationPrimitives() {
         // Wait fences to sync command buffer access
@@ -742,7 +742,7 @@ abstract class VulkanExampleBase {
 
     /** Destroy all command buffers and set their handles to VK_NULL_HANDLE
      *  May be necessary during runtime if options are toggled  */
-    fun destroyCommandBuffers() = device.freeCommandBuffers(cmdPool, drawCmdBuffers)
+    fun destroyCommandBuffers() = Unit//device.freeCommandBuffers(cmdPool, drawCmdBuffers)
 
     /** Command buffer creation
      *  Creates and returns a new command buffer */

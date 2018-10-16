@@ -264,9 +264,7 @@ private class Triangle : VulkanExampleBase() {
             // Set target frame buffer
             renderPassBeginInfo.framebuffer(frameBuffers[i].L) // TODO = BUG
 
-            drawCmdBuffers[i].apply {
-
-                begin(cmdBufInfo)
+            drawCmdBuffers[i].record(cmdBufInfo) {
 
                 /*  Start the first sub pass specified in our default render pass setup by the base class
                     This will clear the color and depth attachment             */
@@ -298,8 +296,6 @@ private class Triangle : VulkanExampleBase() {
 
                 /*  Ending the render pass will add an implicit barrier transitioning the frame buffer color attachment to
                     VK_IMAGE_LAYOUT_PRESENT_SRC_KHR for presenting it to the windowing system             */
-
-                end()
             }
         }
     }

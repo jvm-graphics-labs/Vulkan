@@ -34,12 +34,13 @@ allprojects {
 
 buildscript {
 
-    ext.kotlinVersion = '1.3.0-rc-146'
+    ext.kotlinVersion = '1.3.20-dev-901'
 
     repositories {
         jcenter()   // shadow
         mavenCentral()
         maven { url = 'https://dl.bintray.com/kotlin/kotlin-eap' }
+        maven { url = 'https://dl.bintray.com/kotlin/kotlin-dev' }
         maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
     }
 
@@ -54,8 +55,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
     ext.kx = 'com.github.kotlin-graphics'
-    implementation "$kx:assimp:e5b8b25dd5faa25c225a025fba7d94343bd840a3"
-    implementation "$kx:imgui:c313b986da38093e6b44ac4481eb10b97a93ebb9"
+    implementation "$kx:assimp:86cc7a18b1449badac1ad5b67d7874f9054ba78e"
+    implementation "$kx:imgui:054a38b9e59b12e30da9c394d5d53a380aaf3be9"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.24.0-eap13"
 
@@ -86,6 +87,7 @@ dependencies {
 repositories {
     mavenCentral()
     maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
+    maven { setUrl("https://dl.bintray.com/kotlin/kotlin-dev") }
     maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
     maven { setUrl('https://jitpack.io') }
 }
