@@ -30,7 +30,7 @@ Using pipeline state objects (pso) that bake state information (rasterization st
 
 Descriptors are used to pass data to shader binding points. Sets up descriptor sets, layouts, pools, creates a single pipeline based on the set layout and renders multiple objects with different descriptor sets.
 
-#### [04 - Dynamic uniform buffers](src/main/kotlin/vulkan/basics/04%20Dynamic%20Uniform%20Buffers.kt) Compiler bug
+#### [04 - Dynamic uniform buffers](src/main/kotlin/vulkan/basics/04%20Dynamic%20Uniform%20Buffers.kt)
 
 Dynamic uniform buffers are used for rendering multiple objects with multiple matrices stored in a single uniform buffer object. Individual matrices are dynamically addressed upon descriptor binding time, minimizing the number of required descriptor sets.
 
