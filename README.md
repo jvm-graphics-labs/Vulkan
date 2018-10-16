@@ -30,7 +30,7 @@ Using pipeline state objects (pso) that bake state information (rasterization st
 
 Descriptors are used to pass data to shader binding points. Sets up descriptor sets, layouts, pools, creates a single pipeline based on the set layout and renders multiple objects with different descriptor sets.
 
-#### [04 - Dynamic uniform buffers](src/main/kotlin/vulkan/basics/04%20Dynamic%20Uniform%20Buffers.kt)
+#### [04 - Dynamic uniform buffers](src/main/kotlin/vulkan/basics/04%20Dynamic%20Uniform%20Buffers.kt) Compiler bug
 
 Dynamic uniform buffers are used for rendering multiple objects with multiple matrices stored in a single uniform buffer object. Individual matrices are dynamically addressed upon descriptor binding time, minimizing the number of required descriptor sets.
 
@@ -38,7 +38,7 @@ Dynamic uniform buffers are used for rendering multiple objects with multiple ma
 
 Uses push constants, small blocks of uniform data stored within a command buffer, to pass data to a shader without the need for uniform buffers.
 
-#### [06 - Specialization constants](src/main/kotlin/vulkan/basics/06%20Specialization%20Constants.kt) BUGGED
+#### [06 - Specialization constants](src/main/kotlin/vulkan/basics/06%20Specialization%20Constants.kt)
 
 Uses SPIR-V specialization constants to create multiple pipelines with different lighting paths from a single "uber" shader.
 
@@ -46,11 +46,11 @@ Uses SPIR-V specialization constants to create multiple pipelines with different
 
 Loads a 2D texture from disk (including all mip levels), uses staging to upload it into video memory and samples from it using combined image samplers.
 
-#### [08 - Cube map textures](src/main/kotlin/vulkan/basics/08%Texture%20Cubemap.kt) Only sphere model
+#### [08 - Cubemap textures](src/main/kotlin/vulkan/basics/08%20Texture%20Cubemap.kt) Only sphere model
 
 Loads a cube map texture from disk containing six different faces. All faces and mip levels are uploaded into video memory and the cubemap is sampled once as a skybox (for the background) and as a source for reflections (for a 3D model).
 
-#### [09 - Texture arrays](src/main/kotlin/vulkan/basics/09%20Texture%20Arra.kt)
+#### [09 - Texture arrays](src/main/kotlin/vulkan/basics/09%20Texture%20Array.kt)
 
 Loads a 2D texture array containing multiple 2D texture slices (each with it's own mip chain) and renders multiple meshes each sampling from a different layer of the texture. 2D texture arrays don't do any interpolation between the slices.
 
