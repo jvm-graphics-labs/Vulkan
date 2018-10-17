@@ -118,4 +118,4 @@ Purely GPU based frustum visibility culling and level-of-detail system. A comput
 - [Sascha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
 - [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :), also the tip about the buffer came from him 
 - [Kai](https://github.com/httpdigest), for his first Hello Triangle in java
-- [Urlik](https://github.com/skalarproduktraum), for some tips and the glsl -> spir-v converter
+- [Ulrik](https://github.com/skalarproduktraum), for some tips and the glsl -> spir-v converter
