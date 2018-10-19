@@ -13,11 +13,12 @@ import graphics.scenery.spirvcrossj.libspirvcrossj
 import imgui.*
 import imgui.functionalProgramming.withStyleVar
 import imgui.functionalProgramming.withWindow
+import kool.intBufferBig
 import kool.stak
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryStack.stackGet
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
@@ -29,8 +30,23 @@ import vulkan.ENABLE_VALIDATION
 import vulkan.assetPath
 import vulkan.base.initializers.commandBufferAllocateInfo
 import vulkan.base.tools.loadShader
+import vulkan.reset
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
+import org.lwjgl.vulkan.VkInstance
+import org.lwjgl.vulkan.VK10.VK_SUCCESS
+import org.lwjgl.vulkan.VK10.vkCreateInstance
+import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
+import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO
+import org.lwjgl.vulkan.VkInstanceCreateInfo
+import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+import org.lwjgl.vulkan.VK10.VK_MAKE_VERSION
+import org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_APPLICATION_INFO
+import org.lwjgl.vulkan.VkApplicationInfo
+import vulkan.base.VulkanExampleBase.settings.validation
+import java.nio.ByteBuffer
+
 
 abstract class VulkanExampleBase {
 
@@ -359,7 +375,7 @@ abstract class VulkanExampleBase {
         if (settings.validation) {
             /*  The report flags determine what type of messages for the layers will be displayed
                 For validating (debugging) an appplication the error and warning bits should suffice             */
-            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT or VkDebugReport.INFORMATION_BIT_EXT
+            val debugReportFlags = VkDebugReport.ERROR_BIT_EXT or VkDebugReport.WARNING_BIT_EXT // or VkDebugReport.INFORMATION_BIT_EXT
             // Additional flags include performance info, loader and layer debug messages, etc.
             debug.setupDebugging(instance, debugReportFlags, null)
         }
@@ -445,7 +461,7 @@ abstract class VulkanExampleBase {
         swapChain.connect(instance, physicalDevice, device)
 
         // Create synchronization objects
-        val semaphoreCreateInfo = vk.SemaphoreCreateInfo {}
+        val semaphoreCreateInfo = vk.SemaphoreCreateInfo()
         semaphores.apply {
             /*  Create a semaphore used to synchronize image presentation
                 Ensures that the image is displayed before we start submitting new commands to the queue */
@@ -528,7 +544,7 @@ abstract class VulkanExampleBase {
         val stack = MemoryStack.stackGet()
         val pointers = stack.mallocPointer(size)
         for (i in indices)
-            pointers.put(i, elementAt(i).toUTF8(stack))
+            pointers[i] = stack.UTF8(elementAt(i))
         return pointers
     }
 
@@ -894,6 +910,9 @@ abstract class VulkanExampleBase {
         }
         // TODO: Cap UI overlay update rates
         updateOverlay()
+
+        // reset pointer
+        stackGet().reset()
     }
 
     fun updateOverlay() {

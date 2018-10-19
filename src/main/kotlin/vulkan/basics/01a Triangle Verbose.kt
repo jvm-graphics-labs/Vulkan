@@ -18,7 +18,7 @@ import uno.buffer.toBuffer
 import uno.glfw.glfw
 import vkk.*
 import vulkan.UINT64_MAX
-import vulkan.USE_STAGING
+import vulkan.useStaging
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
@@ -479,7 +479,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         val memoryPropertiesFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
         val pData = MemoryUtil.memAllocPointer(1)
 
-        if (USE_STAGING) {
+        if (useStaging) {
 
             /*  Static data like vertex and index buffer should be stored on the device memory for optimal (and fastest)
                 access by the GPU

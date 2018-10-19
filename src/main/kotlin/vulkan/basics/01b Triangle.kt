@@ -8,10 +8,7 @@ import glm_.size
 import glm_.vec3.Vec3
 import kool.adr
 import kool.stak
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.system.Pointer
-import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
@@ -19,7 +16,7 @@ import uno.glfw.glfw
 import uno.kotlin.buffers.capacity
 import vkk.*
 import vulkan.UINT64_MAX
-import vulkan.USE_STAGING
+import vulkan.useStaging
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
@@ -359,7 +356,7 @@ private class Triangle : VulkanExampleBase() {
 
         val memoryPropertiesFlags = VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT
 
-        if (USE_STAGING) {
+        if (useStaging) {
 
             /*  Static data like vertex and index buffer should be stored on the device memory for optimal (and fastest)
                 access by the GPU

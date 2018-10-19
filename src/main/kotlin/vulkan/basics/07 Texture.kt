@@ -25,13 +25,11 @@ import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.MemoryUtil.memCopy
 import org.lwjgl.vulkan.*
 import vkk.*
-import vulkan.USE_STAGING
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
 import vulkan.base.Buffer
 import vulkan.base.VulkanExampleBase
 import vulkan.base.initializers
-import vulkan.base.tools
 
 
 fun main(args: Array<String>) {
@@ -62,7 +60,7 @@ private class Texture : VulkanExampleBase() {
      *  in a class that is used in subsequent demos */
     object texture {
         var sampler = VkSampler(NULL)
-        var image= VkImage (NULL)
+        var image = VkImage(NULL)
         var imageLayout = VkImageLayout.UNDEFINED
         var deviceMemory = VkDeviceMemory(NULL)
         var view = VkImageView(NULL)
@@ -93,12 +91,12 @@ private class Texture : VulkanExampleBase() {
     }
 
     object pipelines {
-        var solid = VkPipeline (NULL)
+        var solid = VkPipeline(NULL)
     }
 
-    var pipelineLayout = VkPipelineLayout (NULL)
-    var descriptorSet= VkDescriptorSet (NULL)
-    var descriptorSetLayout= VkDescriptorSetLayout (NULL)
+    var pipelineLayout = VkPipelineLayout(NULL)
+    var descriptorSet = VkDescriptorSet(NULL)
+    var descriptorSetLayout = VkDescriptorSetLayout(NULL)
 
     init {
         zoom = -2.5f
@@ -134,69 +132,31 @@ private class Texture : VulkanExampleBase() {
             enabledFeatures.samplerAnisotropy = true
     }
 
-    /** Create an image memory barrier used to change the layout of an image and put it into an active command buffer */
-    fun VkCommandBuffer.setImageLayout(image: VkImage, aspectMask: VkImageAspect, oldImageLayout: VkImageLayout,
-                                       newImageLayout: VkImageLayout, subresourceRange: VkImageSubresourceRange) {
-        // Create an image barrier object
-        val imageMemoryBarrier = initializers.cImageMemoryBarrier().apply {
-            oldLayout = oldImageLayout
-            newLayout = newImageLayout
-            this.image = image
-            this.subresourceRange = subresourceRange
-        }
+    /*  Upload texture image data to the GPU
 
-        // Only sets masks for layouts used in this example
-        // For a more complete version that can be used with other layouts see vks::tools::setImageLayout
+        Vulkan offers two types of image tiling (memory layout):
 
-        // Source layouts (old)
-        imageMemoryBarrier.srcAccessMask =
-                when (oldImageLayout) {
-                /*  Only valid as initial layout, memory contents are not preserved
-                    Can be accessed directly, no source dependency required         */
-                    VkImageLayout.UNDEFINED -> 0
-                /*  Only valid as initial layout for linear images, preserves memory contents
-                    Make sure host writes to the image have been finished             */
-                    VkImageLayout.PREINITIALIZED -> VkAccess.HOST_WRITE_BIT.i
-                /*  Old layout is transfer destination
-                    Make sure any writes to the image have been finished         */
-                    VkImageLayout.TRANSFER_DST_OPTIMAL -> VkAccess.TRANSFER_WRITE_BIT.i
+        Linear tiled images:
+            These are stored as is and can be copied directly to. But due to the linear nature they're not a good match
+            for GPUs and format and feature support is very limited.
+            It's not advised to use linear tiled images for anything else than copying from host to GPU if buffer copies
+            are not an option.
+            Linear tiling is thus only implemented for learning purposes, one should always prefer optimal tiled image.
 
-                    else -> imageMemoryBarrier.srcAccessMask
-                }
+        Optimal tiled images:
+            These are stored in an implementation specific layout matching the capability of the hardware.
+            They usually support more formats and features and are much faster.
+            Optimal tiled images are stored on the device and not accessible by the host. So they can't be written
+            directly to (like liner tiled images) and always require some sort of data copy, either from a buffer or
+            a linear tiled image.
 
-        // Target layouts (new)
-        imageMemoryBarrier.dstAccessMask =
-                when (newImageLayout) {
-                /*  Transfer source (copy, blit)
-                    Make sure any reads from the image have been finished                 */
-                    VkImageLayout.TRANSFER_SRC_OPTIMAL -> VkAccess.TRANSFER_READ_BIT.i
-                /*  Transfer destination (copy, blit)
-                    Make sure any writes to the image have been finished                 */
-                    VkImageLayout.TRANSFER_DST_OPTIMAL -> VkAccess.TRANSFER_WRITE_BIT.i
-                // Shader read (sampler, input attachment)
-                    VkImageLayout.SHADER_READ_ONLY_OPTIMAL -> VkAccess.SHADER_READ_BIT.i
-
-                    else -> imageMemoryBarrier.dstAccessMask
-                }
-
-        // Put barrier on top of pipeline
-        val srcStageFlags: VkPipelineStageFlags = VkPipelineStage.TOP_OF_PIPE_BIT.i
-        val destStageFlags: VkPipelineStageFlags = VkPipelineStage.TOP_OF_PIPE_BIT.i
-
-        // Put barrier inside setup command buffer
-        pipelineBarrier(srcStageFlags, destStageFlags, tools.VK_FLAGS_NONE, imageMemoryBarrier = imageMemoryBarrier)
-    }
+        In Short: Always use optimal tiled images for rendering.    */
 
     fun loadTexture() {
         // We use the Khronos texture format (https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/)
         val filename = "$assetPath/textures/metalplate01_rgba.ktx"
         // Texture data contains 4 channels (RGBA) with unnormalized 8-bit values, this is the most commonly supported format
         val format = VkFormat.R8G8B8A8_UNORM
-
-        /*  Set to true to use linear tiled images
-            This is just for learning purposes and not suggested, as linear tiled images are pretty restricted and
-            often only support a small set of features (e.g. no mips, etc.)         */
-        val forceLinearTiling = false
 
         val tex2D = gli_.Texture2d(gli.load(filename))
 
@@ -205,25 +165,27 @@ private class Texture : VulkanExampleBase() {
         texture.size(tex2D[0].extent())
         texture.mipLevels = tex2D.levels()
 
-        // Get device properites for the requested texture format
-        val formatProperties = physicalDevice getFormatProperties format
-
-        /*  Only use linear tiling if requested (and supported by the device)
-            Support for linear tiling is mostly limited, so prefer to use optimal tiling instead
-            On most implementations linear tiling will only support a very limited amount of formats and features
-            (mip maps, cubemaps, arrays, etc.) */
-        USE_STAGING = true
+        // We prefer using staging to copy the texture data to a device local optimal image
+        var useStaging = true
 
         // Only use linear tiling if forced
-        if (forceLinearTiling)
-        // Don't use linear if format is not supported for (linear) shader sampling
-            USE_STAGING = formatProperties.linearTilingFeatures hasnt VkFormatFeature.SAMPLED_IMAGE_BIT
-
+        val forceLinearTiling = false
+        if (forceLinearTiling) {
+            // Don't use linear if format is not supported for (linear) shader sampling
+            // Get device properites for the requested texture format
+            val formatProperties = physicalDevice getFormatProperties format
+            useStaging = formatProperties.linearTilingFeatures hasnt VkFormatFeature.SAMPLED_IMAGE_BIT
+        }
         val memAllocInfo = vk.MemoryAllocateInfo { }
         val memReqs = vk.MemoryRequirements { }
 
-        if (USE_STAGING) {
+        if (useStaging) {
+
+            // Copy data to an optimal tiled image
+            // This loads the texture data into a host local buffer that is copied to the optimal tiled image on the device
+
             // Create a host-visible staging buffer that contains the raw image data
+            // This buffer will be the data source for copying texture data to the optimal tiled image on the device
 
             val bufferCreateInfo = vk.BufferCreateInfo {
                 size = VkDeviceSize(tex2D.size.L)
@@ -236,12 +198,12 @@ private class Texture : VulkanExampleBase() {
 
             // Get memory requirements for the staging buffer (alignment, memory type bits)
             device.getBufferMemoryRequirements(stagingBuffer, memReqs)
-
-            memAllocInfo.allocationSize = memReqs.size
-            // Get memory type index for a host visible buffer
-            memAllocInfo.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
-
-            val stagingMemory: VkDeviceMemory = device allocateMemory memAllocInfo
+            memAllocInfo.apply {
+                allocationSize = memReqs.size
+                // Get memory type index for a host visible buffer
+                memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT)
+            }
+            val stagingMemory = device allocateMemory memAllocInfo
             device.bindBufferMemory(stagingBuffer, stagingMemory)
 
             // Copy texture data into staging buffer
@@ -269,7 +231,7 @@ private class Texture : VulkanExampleBase() {
                 offset += tex2D[i].size
             }
 
-            // Create optimal tiled target image
+            // Create optimal tiled target image on the device
             val imageCreateInfo = vk.ImageCreateInfo {
                 imageType = VkImageType.`2D`
                 this.format = format
@@ -283,21 +245,20 @@ private class Texture : VulkanExampleBase() {
                 extent.set(texture.size.x, texture.size.y, 1)
                 usage = VkImageUsage.TRANSFER_DST_BIT or VkImageUsage.SAMPLED_BIT
             }
-
             texture.image = device createImage imageCreateInfo
             device.getImageMemoryRequirements(texture.image, memReqs)
-
-            memAllocInfo.allocationSize = memReqs.size
-            memAllocInfo.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
-
+            memAllocInfo.apply {
+                allocationSize = memReqs.size
+                memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
+            }
             texture.deviceMemory = device allocateMemory memAllocInfo
             device.bindImageMemory(texture.image, texture.deviceMemory)
 
             val copyCmd = super.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
 
-            // Image barrier for optimal image
+            // Image memory barriers for the texture image
 
-            // The sub resource range describes the regions of the image we will be transition
+            // The sub resource range describes the regions of the image that will be transitioned using the memory barriers below
             val subresourceRange = VkImageSubresourceRange.calloc().apply {
                 // Image only contains color data
                 aspectMask = VkImageAspect.COLOR_BIT.i
@@ -309,14 +270,22 @@ private class Texture : VulkanExampleBase() {
                 layerCount = 1
             }
 
-            // Optimal image will be used as destination for the copy, so we must transfer from our
-            // initial undefined image layout to the transfer destination layout
-            copyCmd.setImageLayout(
-                    texture.image,
-                    VkImageAspect.COLOR_BIT,
-                    VkImageLayout.UNDEFINED,
-                    VkImageLayout.TRANSFER_DST_OPTIMAL,
-                    subresourceRange)
+            // Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
+            val imageMemoryBarrier = vk.ImageMemoryBarrier {
+                image = texture.image
+                this.subresourceRange = subresourceRange
+                srcAccessMask = 0
+                dstAccessMask = VkAccess.TRANSFER_WRITE_BIT.i
+                oldLayout = VkImageLayout.UNDEFINED
+                newLayout = VkImageLayout.TRANSFER_DST_OPTIMAL
+            }
+            // Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
+            // Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
+            // Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
+            copyCmd.pipelineBarrier(
+                    VkPipelineStage.HOST_BIT,
+                    VkPipelineStage.TRANSFER_BIT,
+                    imageMemoryBarrier = imageMemoryBarrier)
 
             // Copy mip levels from staging buffer
             copyCmd.copyBufferToImage(
@@ -325,14 +294,22 @@ private class Texture : VulkanExampleBase() {
                     VkImageLayout.TRANSFER_DST_OPTIMAL,
                     bufferCopyRegions)
 
-            // Change texture image layout to shader read after all mip levels have been copied
+            // Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
+            imageMemoryBarrier.apply {
+                srcAccessMask = VkAccess.TRANSFER_WRITE_BIT.i
+                dstAccessMask = VkAccess.SHADER_READ_BIT.i
+                oldLayout = VkImageLayout.TRANSFER_DST_OPTIMAL
+                newLayout = VkImageLayout.SHADER_READ_ONLY_OPTIMAL
+            }
+            // Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
+            // Source pipeline stage stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
+            // Destination pipeline stage fragment shader access (VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
+            copyCmd.pipelineBarrier(
+                    VkPipelineStage.TRANSFER_BIT,
+                    VkPipelineStage.FRAGMENT_SHADER_BIT,
+                    imageMemoryBarrier = imageMemoryBarrier)
+            // Store current layout for later reuse
             texture.imageLayout = VkImageLayout.SHADER_READ_ONLY_OPTIMAL
-            copyCmd.setImageLayout(
-                    texture.image,
-                    VkImageAspect.COLOR_BIT,
-                    VkImageLayout.TRANSFER_DST_OPTIMAL,
-                    texture.imageLayout,
-                    subresourceRange)
 
             super.flushCommandBuffer(copyCmd, queue, true)
 
@@ -340,7 +317,9 @@ private class Texture : VulkanExampleBase() {
             device freeMemory stagingMemory
             device destroyBuffer stagingBuffer
         } else {
-            TODO()
+
+            // Copy data to a linear tiled image
+
 //            VkImage mappableImage
 //                    VkDeviceMemory mappableMemory
 //
@@ -437,7 +416,7 @@ private class Texture : VulkanExampleBase() {
             compareOp = VkCompareOp.NEVER
             minLod = 0f
             // Set max level-of-detail to mip level count of the texture
-            maxLod = if (USE_STAGING) texture.mipLevels.f else 0f
+            maxLod = if (useStaging) texture.mipLevels.f else 0f
             // Enable anisotropic filtering
             // This feature is optional, so we must check if it's supported on the device
             if (vulkanDevice.features.samplerAnisotropy) {
@@ -469,7 +448,7 @@ private class Texture : VulkanExampleBase() {
                 layerCount = 1
                 // Linear tiling usually won't support mip maps
                 // Only set mip map count if optimal tiling is used
-                levelCount = if (USE_STAGING) texture.mipLevels else 1
+                levelCount = if (useStaging) texture.mipLevels else 1
             }
             // The view will be based on the texture's image
             image = texture.image

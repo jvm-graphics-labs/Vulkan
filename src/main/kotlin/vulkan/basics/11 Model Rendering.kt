@@ -26,7 +26,7 @@ import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription
 import org.lwjgl.vulkan.VkVertexInputBindingDescription
 import vkk.*
-import vulkan.USE_STAGING
+import vulkan.useStaging
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
 import vulkan.base.Buffer
@@ -248,7 +248,7 @@ private class ModelRendering : VulkanExampleBase() {
 
         // Static mesh should always be device local
 
-        if (USE_STAGING) {
+        if (useStaging) {
 
             val vertexStaging = object {
                 var buffer = VkBuffer(NULL)

@@ -17,13 +17,15 @@ import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VK10.nvkWaitForFences
 import org.lwjgl.vulkan.VkCommandBuffer
+import org.lwjgl.vulkan.VkCommandBufferBeginInfo
 import org.lwjgl.vulkan.VkCommandBufferInheritanceInfo
 import vkk.*
 import vulkan.assetPath
 import vulkan.base.*
+import vulkan.reset
 import java.nio.ByteBuffer
+import java.util.concurrent.Callable
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import kotlin.math.acos
 import kotlin.math.sqrt
 
@@ -79,11 +81,10 @@ private class Multithreading : VulkanExampleBase() {
     // Multi threaded stuff
 
     // Max. number of concurrent threads
-    val numThreads: Int
+    val numThreads = Runtime.getRuntime().availableProcessors()
 
     init {
         // Get number of max. concurrrent threads
-        numThreads = Runtime.getRuntime().availableProcessors()
         assert(numThreads > 0)
         println("numThreads = $numThreads")
         numObjectsPerThread = 512 / numThreads
@@ -157,6 +158,7 @@ private class Multithreading : VulkanExampleBase() {
         super.destroy()
 
         device.apply {
+
             destroyPipeline(pipelines.phong)
             destroyPipeline(pipelines.starsphere)
 
@@ -242,54 +244,57 @@ private class Multithreading : VulkanExampleBase() {
         val objectData = thread.objectData[cmdBufferIndex]
 
         // Check visibility against view frustum
-//        objectData.visible = frustum.checkSphere(objectData.pos, objectSphereDim * 0.5f)
-//
-//        if (!objectData.visible) return
-//
-//        val commandBufferBeginInfo = vk.CommandBufferBeginInfo {
-//            flags = VkCommandBufferUsage.RENDER_PASS_CONTINUE_BIT.i
-//            this.inheritanceInfo = inheritanceInfo
-//        }
-//        thread.commandBuffer[cmdBufferIndex].record(commandBufferBeginInfo) {
-//
-//            setViewport(size)
-//            setScissor(size)
-//
-//            bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.phong)
-//
-//            objectData.apply {
-//                // Update
-//                if (!paused) {
-//                    rotation.y += 2.5f * rotationSpeed * frameTimer
-//                    if (rotation.y > 360f)
-//                        rotation.y -= 360f
-//                    deltaT += 0.15f * frameTimer
-//                    if (deltaT > 1f)
-//                        deltaT -= 1f
-//                    pos.y = (deltaT * 360f).rad.sin * 2.5f
-//                }
-//
-//                model = Mat4(1f).translate(pos)
-//                        .rotate(-(deltaT * 360f).rad.sin * 0.25f, rotationDir, 0f, 0f)
-//                        .rotate(rotation.y.rad, 0f, rotationDir, 0f)
-//                        .rotate((deltaT * 360f).rad, 0f, rotationDir, 0f)
-//                        .scale(scale)
-//            }
-//
-//            thread.pushConstBlock[cmdBufferIndex].mvp = matrices.projection * matrices.view * objectData.model
-//
-//            // Update shader push constant block
-//            // Contains model view matrix
-//            pushConstants(
-//                    pipelineLayout,
-//                    VkShaderStage.VERTEX_BIT.i,
-//                    0,
-//                    thread.pushConstBlock[cmdBufferIndex].toBuf())
-//
-//            bindVertexBuffers(models.ufo.vertices.buffer)
-//            bindIndexBuffer(models.ufo.indices.buffer, VkDeviceSize(0), VkIndexType.UINT32)
-//            drawIndexed(models.ufo.indexCount, 1, 0, 0, 0)
-//        }
+        objectData.visible = frustum.checkSphere(objectData.pos, objectSphereDim * 0.5f)
+
+        if (!objectData.visible) return
+
+        val commandBufferBeginInfo = vk.CommandBufferBeginInfo {
+            flags = VkCommandBufferUsage.RENDER_PASS_CONTINUE_BIT.i
+            this.inheritanceInfo = inheritanceInfo
+        }
+
+        thread.commandBuffer[cmdBufferIndex].record(commandBufferBeginInfo) {
+
+            setViewport(size)
+            setScissor(size)
+
+            bindPipeline(VkPipelineBindPoint.GRAPHICS, pipelines.phong)
+
+            objectData.apply {
+                // Update
+                if (!paused) {
+                    rotation.y += 2.5f * rotationSpeed * frameTimer
+                    if (rotation.y > 360f)
+                        rotation.y -= 360f
+                    deltaT += 0.15f * frameTimer
+                    if (deltaT > 1f)
+                        deltaT -= 1f
+                    pos.y = (deltaT * 360f).rad.sin * 2.5f
+                }
+
+                model = Mat4(1f).translate(pos)
+                        .rotate(-(deltaT * 360f).rad.sin * 0.25f, rotationDir, 0f, 0f)
+                        .rotate(rotation.y.rad, 0f, rotationDir, 0f)
+                        .rotate((deltaT * 360f).rad, 0f, rotationDir, 0f)
+                        .scale(scale)
+            }
+
+            thread.pushConstBlock[cmdBufferIndex].mvp = matrices.projection * matrices.view * objectData.model
+
+            // Update shader push constant block
+            // Contains model view matrix
+            pushConstants(
+                    pipelineLayout,
+                    VkShaderStage.VERTEX_BIT.i,
+                    0,
+                    thread.pushConstBlock[cmdBufferIndex].toBuf())
+
+            bindVertexBuffers(models.ufo.vertices.buffer)
+            bindIndexBuffer(models.ufo.indices.buffer, VkDeviceSize(0), VkIndexType.UINT32)
+            drawIndexed(models.ufo.indexCount, 1, 0, 0, 0)
+
+            stackGet().reset()
+        }
     }
 
     fun updateSecondaryCommandBuffers(inheritanceInfo: VkCommandBufferInheritanceInfo) {
@@ -379,7 +384,7 @@ private class Multithreading : VulkanExampleBase() {
 
             // Inheritance info for the secondary command buffers
             val inheritanceInfo = vk.CommandBufferInheritanceInfo {
-                this.renderPass = renderPass
+                renderPass = this@Multithreading.renderPass
                 // Secondary command buffer also use the currently active framebuffer
                 this.framebuffer = frameBuffer
             }
@@ -390,11 +395,15 @@ private class Multithreading : VulkanExampleBase() {
                 commandBuffers += secondaryCommandBuffers.background
 
             // Add a job to the thread's queue for each object to be rendered
+            val jobs = ArrayList<Callable<Unit>>()
             for (t in 0 until numThreads)
                 for (i in 0 until numObjectsPerThread)
-                    threadPool.submit { threadRenderCode(t, i, inheritanceInfo) }
+                    jobs += Callable { threadRenderCode(t, i, inheritanceInfo) }
 
-            println("terminated properly: ${threadPool.awaitTermination(1, TimeUnit.MINUTES)}")
+            val res = threadPool.invokeAll(jobs)
+            for (r in res)
+                    r.get()
+//            println("terminated properly: ${threadPool.awaitTermination(1, TimeUnit.MINUTES)}")
 
             // Only submit if object is within the current view frustum
             for (t in 0 until numThreads)
@@ -480,7 +489,7 @@ private class Multithreading : VulkanExampleBase() {
         // Object rendering pipeline
         shaderStages[0].loadShader("$assetPath/shaders/multithreading/phong.vert.spv", VkShaderStage.VERTEX_BIT)
         shaderStages[1].loadShader("$assetPath/shaders/multithreading/phong.frag.spv", VkShaderStage.FRAGMENT_BIT)
-        pipelines.phong = device.createGraphicsPipelines(pipelineCache, pipelineCI)
+//        pipelines.phong = device.createGraphicsPipelines(pipelineCache, pipelineCI)
 
         // Star sphere rendering pipeline
         rasterizationState.cullMode = VkCullMode.FRONT_BIT.i
@@ -488,6 +497,10 @@ private class Multithreading : VulkanExampleBase() {
         shaderStages[0].loadShader("$assetPath/shaders/multithreading/starsphere.vert.spv", VkShaderStage.VERTEX_BIT)
         shaderStages[1].loadShader("$assetPath/shaders/multithreading/starsphere.frag.spv", VkShaderStage.FRAGMENT_BIT)
         pipelines.starsphere = device.createGraphicsPipelines(pipelineCache, pipelineCI)
+
+        device destroyPipeline pipelines.phong
+
+        println("${pipelines.phong}, ${pipelines.starsphere}")
     }
 
     fun updateMatrices() {
@@ -532,7 +545,9 @@ private class Multithreading : VulkanExampleBase() {
         preparePipelines()
         prepareMultiThreadedRenderer()
         updateMatrices()
+
         prepared = true
+        window.show()
     }
 
     override fun render() {
