@@ -2,14 +2,6 @@
 
 A comprehensive collection of open source Kotlin examples for [Vulkan®](https://www.khronos.org/vulkan/), the new graphics and compute API from Khronos, based on the excellent examples of [Sascha Willems](https://github.com/SaschaWillems/Vulkan)
 
-Notes:
-
-This suite uses [VK²](https://github.com/kotlin-graphics/vkk) in combination with [AppBuffer](https://github.com/kotlin-graphics/appBuffer) in order to easier and push tedious code behind the curtains without any significant overhead (in `inline` we trust). The idea is pretty simple, a buffer (64k at the moment) gets allocated for the whole time and used as a pool memory for once-time frequent allocations, by moving the pointer for the requested amount of memory. 
-
-No manual management, no stack pushes and pops. Dead simple. And also faster, because you don't have any additional overhead given by continuous memory `malloc`s/`calloc`s or Thread Local Store lookups (which can easily add up in hot loops).
-
-At the begin of every frame, the pointer gets reset to the initial position and the whole buffer gets zeroed/cleared.
-
 The expressiveness of Kotlin meets the power of Vulkan.
 
 ## Examples
@@ -17,10 +9,12 @@ The expressiveness of Kotlin meets the power of Vulkan.
 ### Basics
 
 #### [01a - Triangle Verbose](src/main/kotlin/vulkan/basics/01a%20Triangle%20Verbose.kt)
-Basic and verbose example for getting a colored triangle rendered to the screen using Vulkan. This is meant as a starting point for learning Vulkan from the ground up. A huge part of the code is boilerplate that is abstracted away in later examples.
+Basic and verbose example for getting a colored triangle rendered to the screen using Vulkan. This is meant as a starting point for learning Vulkan from the ground up. 
+A huge part of the code is boilerplate that is abstracted away in later examples. Also, there is no type safety through inline
+classes.
 
 #### [01b - Triangle](src/main/kotlin/vulkan/basics/01b%20Triangle.kt)
-Boilerplate code gone, 1/3 less code.
+Boilerplate code gone, 1/3 less code, strictly type safety for free thanks to inline classes.
 
 #### [02 - Pipelines](src/main/kotlin/vulkan/basics/02%20Pipelines.kt)
 
@@ -118,4 +112,4 @@ Purely GPU based frustum visibility culling and level-of-detail system. A comput
 - [Sascha](https://github.com/SaschaWillems), awesome repo (except for avoiding using glfw)
 - [Spasi](https://github.com/Spasi), for assisting (and tolerating) my continuous boring questions :), also the tip about the buffer came from him 
 - [Kai](https://github.com/httpdigest), for his first Hello Triangle in java
-- [Urlick](https://github.com/skalarproduktraum), for some tips and the glsl -> spir-v converter
+- [Ulrik](https://github.com/skalarproduktraum), for some tips and the glsl -> spir-v converter
