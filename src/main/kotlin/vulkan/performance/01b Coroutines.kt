@@ -1,15 +1,13 @@
 package vulkan.performance
 
-import glm_.d
+import glm_.*
 import glm_.func.cos
 import glm_.func.rad
 import glm_.func.sin
-import glm_.glm
-import glm_.i
 import glm_.mat4x4.Mat4
-import glm_.max
 import glm_.vec3.Vec3
 import kool.stak
+import kotlinx.coroutines.launch
 import org.lwjgl.system.MemoryStack.stackGet
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.MemoryUtil.memGetAddress
@@ -17,7 +15,6 @@ import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VK10.nvkWaitForFences
 import org.lwjgl.vulkan.VkCommandBuffer
-import org.lwjgl.vulkan.VkCommandBufferBeginInfo
 import org.lwjgl.vulkan.VkCommandBufferInheritanceInfo
 import vkk.*
 import vulkan.assetPath
@@ -26,11 +23,11 @@ import vulkan.reset
 import java.nio.ByteBuffer
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.math.acos
-import kotlin.math.sqrt
 
 fun main(args: Array<String>) {
-    Multithreading().apply {
+    Coroutines().apply {
         setupWindow()
         initVulkan()
         prepare()
@@ -39,7 +36,7 @@ fun main(args: Array<String>) {
     }
 }
 
-private class Multithreading : VulkanExampleBase() {
+private class Coroutines : VulkanExampleBase() {
 
     var displaySkybox = true
 
@@ -131,8 +128,6 @@ private class Multithreading : VulkanExampleBase() {
 
     val threadData = Array(numThreads) { ThreadData() }
 
-    val threadPool = Executors.newFixedThreadPool(numThreads)
-
     // Fence to wait for all command buffers to finish before presenting to the swap chain
     var renderFence = VkFence(NULL)
 
@@ -154,9 +149,6 @@ private class Multithreading : VulkanExampleBase() {
     override fun destroy() {
 
         // Clean up used Vulkan resources
-        // Note : Inherited destructor cleans up resources stored in base class
-        super.destroy()
-
         device.apply {
 
             destroyPipeline(pipelines.phong)
@@ -174,6 +166,9 @@ private class Multithreading : VulkanExampleBase() {
 
             destroyFence(renderFence)
         }
+
+        // Note : Inherited destructor cleans up resources stored in base class
+        super.destroy()
     }
 
     fun rnd(range: Float): Float = glm.linearRand(0f, range)
@@ -191,9 +186,9 @@ private class Multithreading : VulkanExampleBase() {
         secondaryCommandBuffers.background = device allocateCommandBuffer cmdBufAllocateInfo
         secondaryCommandBuffers.ui = device allocateCommandBuffer cmdBufAllocateInfo
 
-        val maxX = glm.floor(sqrt(numThreads * numObjectsPerThread.d))
-        var posX = 0
-        var posZ = 0
+//        val maxX = glm.floor(sqrt(numThreads * numObjectsPerThread.d))
+//        var posX = 0
+//        var posZ = 0
 
         for (thread in threadData) {
 
@@ -204,11 +199,12 @@ private class Multithreading : VulkanExampleBase() {
             }
             thread.commandPool = device createCommandPool cmdPoolInfo
 
-            // One secondary command buffer per object that is updated by this thread
+            // Generate secondary command buffers for each thread
             val secondaryCmdBufAllocateInfo = vk.CommandBufferAllocateInfo(thread.commandPool, VkCommandBufferLevel.SECONDARY, numObjectsPerThread)
+            // One secondary command buffer per object that is updated by this thread
             thread.commandBuffer = stak {
-                val count = numObjectsPerThread
-                val pCommandBuffer = it.nmalloc(Pointer.POINTER_SIZE, count * Pointer.POINTER_SIZE)
+                val count = secondaryCmdBufAllocateInfo.commandBufferCount
+                val pCommandBuffer = it.nmalloc(Pointer.POINTER_SIZE, Pointer.POINTER_SIZE * count)
                 VK_CHECK_RESULT(VK10.nvkAllocateCommandBuffers(device, secondaryCmdBufAllocateInfo.adr, pCommandBuffer))
                 Array(count) { VkCommandBuffer(memGetAddress(pCommandBuffer + Pointer.POINTER_SIZE * it), device) }
             }
@@ -234,7 +230,6 @@ private class Multithreading : VulkanExampleBase() {
                 thread.pushConstBlock[j].color = Vec3 { rnd(1f) }
             }
         }
-
     }
 
     /** Builds the secondary command buffer for each thread */
@@ -292,9 +287,8 @@ private class Multithreading : VulkanExampleBase() {
             bindVertexBuffers(models.ufo.vertices.buffer)
             bindIndexBuffer(models.ufo.indices.buffer, VkDeviceSize(0), VkIndexType.UINT32)
             drawIndexed(models.ufo.indexCount, 1, 0, 0, 0)
-
-            stackGet().reset()
         }
+        stackGet().reset()
     }
 
     fun updateSecondaryCommandBuffers(inheritanceInfo: VkCommandBufferInheritanceInfo) {
@@ -366,7 +360,7 @@ private class Multithreading : VulkanExampleBase() {
             it[1].depthStencil(1f, 0)
         }
         val renderPassBeginInfo = vk.RenderPassBeginInfo {
-            renderPass = this@Multithreading.renderPass
+            renderPass = this@Coroutines.renderPass
             renderArea.apply {
                 offset(0)
                 extent(size)
@@ -384,26 +378,22 @@ private class Multithreading : VulkanExampleBase() {
 
             // Inheritance info for the secondary command buffers
             val inheritanceInfo = vk.CommandBufferInheritanceInfo {
-                renderPass = this@Multithreading.renderPass
+                renderPass = this@Coroutines.renderPass
                 // Secondary command buffer also use the currently active framebuffer
                 this.framebuffer = frameBuffer
             }
-            // Update secondary sene command buffers
+            // Update secondary scene command buffers
             updateSecondaryCommandBuffers(inheritanceInfo)
 
             if (displaySkybox)
                 commandBuffers += secondaryCommandBuffers.background
 
             // Add a job to the thread's queue for each object to be rendered
-            val jobs = ArrayList<Callable<Unit>>()
-            for (t in 0 until numThreads)
-                for (i in 0 until numObjectsPerThread)
-                    jobs += Callable { threadRenderCode(t, i, inheritanceInfo) }
-
-            val res = threadPool.invokeAll(jobs)
-            for (r in res)
-                    r.get()
-//            println("terminated properly: ${threadPool.awaitTermination(1, TimeUnit.MINUTES)}")
+//            for (t in 0 until numThreads)
+//                launch {
+//                    for (i in 0 until numObjectsPerThread)
+//                        threadRenderCode(t, i, inheritanceInfo)
+//                }
 
             // Only submit if object is within the current view frustum
             for (t in 0 until numThreads)
@@ -489,7 +479,7 @@ private class Multithreading : VulkanExampleBase() {
         // Object rendering pipeline
         shaderStages[0].loadShader("$assetPath/shaders/multithreading/phong.vert.spv", VkShaderStage.VERTEX_BIT)
         shaderStages[1].loadShader("$assetPath/shaders/multithreading/phong.frag.spv", VkShaderStage.FRAGMENT_BIT)
-//        pipelines.phong = device.createGraphicsPipelines(pipelineCache, pipelineCI)
+        pipelines.phong = device.createGraphicsPipelines(pipelineCache, pipelineCI)
 
         // Star sphere rendering pipeline
         rasterizationState.cullMode = VkCullMode.FRONT_BIT.i
@@ -497,10 +487,6 @@ private class Multithreading : VulkanExampleBase() {
         shaderStages[0].loadShader("$assetPath/shaders/multithreading/starsphere.vert.spv", VkShaderStage.VERTEX_BIT)
         shaderStages[1].loadShader("$assetPath/shaders/multithreading/starsphere.frag.spv", VkShaderStage.FRAGMENT_BIT)
         pipelines.starsphere = device.createGraphicsPipelines(pipelineCache, pipelineCI)
-
-        device destroyPipeline pipelines.phong
-
-        println("${pipelines.phong}, ${pipelines.starsphere}")
     }
 
     fun updateMatrices() {

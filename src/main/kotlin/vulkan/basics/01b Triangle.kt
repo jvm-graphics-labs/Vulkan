@@ -130,10 +130,6 @@ private class Triangle : VulkanExampleBase() {
 
     override fun destroy() { // TODO add to verbose
 
-        window.destroy()
-        window.onWindowClosed()
-        glfw.terminate()
-
         /*  Clean up used Vulkan resources
             Note: Inherited destructor cleans up resources stored in base class         */
         device.apply {

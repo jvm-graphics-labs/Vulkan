@@ -31,10 +31,7 @@ import uno.kotlin.buffers.indices
 import vkk.*
 import vulkan.VERTEX_BUFFER_BIND_ID
 import vulkan.assetPath
-import vulkan.base.Buffer
-import vulkan.base.Model
-import vulkan.base.VulkanExampleBase
-import vulkan.base.tools
+import vulkan.base.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.IntStream
 import kotlin.system.measureTimeMillis
@@ -98,8 +95,6 @@ private class Texture3d : VulkanExampleBase() {
         var mipLevels = 0
     }
 
-    var regenerateNoise = true
-
     object models {
         val cube = Model()
     }
@@ -126,12 +121,12 @@ private class Texture3d : VulkanExampleBase() {
     }
 
     object pipelines {
-        var solid = VkPipeline (NULL)
+        var solid = VkPipeline(NULL)
     }
 
-    var pipelineLayout= VkPipelineLayout (NULL)
-    var descriptorSet= VkDescriptorSet (NULL)
-    var descriptorSetLayout= VkDescriptorSetLayout (NULL)
+    var pipelineLayout = VkPipelineLayout(NULL)
+    var descriptorSet = VkDescriptorSet(NULL)
+    var descriptorSetLayout = VkDescriptorSetLayout(NULL)
 
     init {
         zoom = -2.5f
@@ -245,6 +240,8 @@ private class Texture3d : VulkanExampleBase() {
             imageView = texture.view
             this.sampler = texture.sampler
         }
+
+        updateNoiseTexture()
     }
 
     /** Generate randomized noise and upload it to the 3D texture using staging */
@@ -376,9 +373,7 @@ private class Texture3d : VulkanExampleBase() {
 
         val copyCmd = super.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)
 
-        // Image barrier for optimal image
-
-        // The sub resource range describes the regions of the image we will be transition
+        // The sub resource range describes the regions of the image we will be transitioned
         val subresourceRange = vk.ImageSubresourceRange {
             aspectMask = VkImageAspect.COLOR_BIT.i
             baseMipLevel = 0
@@ -427,7 +422,6 @@ private class Texture3d : VulkanExampleBase() {
         data.free()
         device freeMemory stagingMemory
         device destroyBuffer stagingBuffer
-        regenerateNoise = false
     }
 
     /** Free all Vulkan resources used a texture object */
@@ -669,7 +663,7 @@ private class Texture3d : VulkanExampleBase() {
         generateQuad()
         setupVertexDescriptions()
         prepareUniformBuffers()
-        prepareNoiseTexture(256, 256, 256)
+        prepareNoiseTexture(128, 128, 128)
         setupDescriptorSetLayout()
         preparePipelines()
         setupDescriptorPool()
@@ -683,24 +677,13 @@ private class Texture3d : VulkanExampleBase() {
         if (!prepared)
             return
         draw()
-        if (regenerateNoise)
-            updateNoiseTexture()
-        if (!paused)
-            updateUniformBuffers(false)
+        if (!paused || camera.updated)
+            updateUniformBuffers()
     }
 
-    override fun viewChanged() = updateUniformBuffers()
-
-//    virtual void OnUpdateUIOverlay(vks::UIOverlay *overlay)
-//    {
-//        if (overlay->header("Settings")) {
-//        if (regenerateNoise) { overlay ->
-//            text("Generating new noise texture...")
-//        } else {
-//            if (overlay->button("Generate new texture")) {
-//                regenerateNoise = true
-//            }
-//        }
-//    }
-//    }
+    override fun UIOverlay.onUpdate() {
+        if (header("Settings"))
+            if (button("Generate new texture"))
+                updateNoiseTexture()
+    }
 }

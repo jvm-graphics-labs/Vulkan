@@ -90,12 +90,6 @@ class SpecializationConstants : VulkanExampleBase() {
         camera.setRotation(Vec3(-40f, -90f, 0f))
         camera.setTranslation(Vec3(0f, 0f, -2f))
         settings.overlay = false // TODO
-
-        // temporarily fix because we have a resize call compared to the original sample
-        framebufferSizeHandler = { size ->
-            size.x /= 3
-            windowResize(size)
-        }
     }
 
     override fun destroy() {
@@ -341,6 +335,9 @@ class SpecializationConstants : VulkanExampleBase() {
     }
 
     fun updateUniformBuffers() {
+
+        camera.setPerspective(60f, (size.x / 3f) / size.y, 0.1f, 512f)
+
         uboVS.projection = camera.matrices.perspective
         uboVS.modelView = camera.matrices.view
 
@@ -375,7 +372,9 @@ class SpecializationConstants : VulkanExampleBase() {
         if (!prepared)
             return
         draw()
+        if (camera.updated)
+            updateUniformBuffers()
     }
 
-    override fun viewChanged() = updateUniformBuffers()
+    override fun windowResized() = updateUniformBuffers()
 }

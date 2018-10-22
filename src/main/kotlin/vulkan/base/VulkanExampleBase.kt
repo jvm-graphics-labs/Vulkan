@@ -329,8 +329,7 @@ abstract class VulkanExampleBase {
     open fun destroy() {
 
         // Clean up Vulkan resources
-        if (prepared)
-            swapChain.cleanup()
+        swapChain.cleanup()
 
         device.apply {
             if (descriptorPool.L != NULL)
@@ -363,6 +362,10 @@ abstract class VulkanExampleBase {
 
         if (spirvCrossLoaded)
             libspirvcrossj.finalizeProcess()
+
+        window.destroy()
+        window.onWindowClosed()
+        glfw.terminate()
     }
 
     /** Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)  */
@@ -1011,7 +1014,7 @@ abstract class VulkanExampleBase {
         prepared = false
 
         // Ensure all operations on the device have been finished before destroying resources
-        vkDeviceWaitIdle(device)
+        device.waitIdle()
 
         // Recreate swap chain
         size put newSize
@@ -1027,10 +1030,6 @@ abstract class VulkanExampleBase {
         frameBuffers.forEach(device::destroyFramebuffer)
         setupFrameBuffer()
 
-        if (newSize allGreaterThan 0)
-            if (settings.overlay)
-                uiOverlay.resize(newSize)
-
         // Command buffers need to be recreated as they may store
         // references to the recreated frame buffer
         destroyCommandBuffers()
@@ -1039,8 +1038,11 @@ abstract class VulkanExampleBase {
 
         device.waitIdle()
 
-        if (newSize allGreaterThan 0)
-            camera updateAspectRatio newSize.aspect
+        if (newSize allGreaterThan 0) {
+            if (settings.overlay)
+                uiOverlay.resize(newSize)
+            camera.updateAspectRatio(newSize.aspect)
+        }
 
         // Notify derived class
         windowResized()
