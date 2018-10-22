@@ -75,7 +75,11 @@ Uses the stencil buffer and it's compare functionality for rendering a 3D model 
 
 ### Advanced TODO
 
-### Performance TODO
+### Performance 
+
+#### [01 - Multi threaded command buffer generation](src/main/kotlin/vulkan/performance/01a%20Multithreading.kt)
+
+Multi threaded parallel command buffer generation. Instead of prebuilding and reusing the same command buffers this sample uses multiple hardware threads to demonstrate parallel per-frame recreation of secondary command buffers that are executed and submitted in a primary buffer once all threads have finished.
 
 ### Deferred TODO
 
