@@ -389,7 +389,7 @@ private class Coroutines : VulkanExampleBase() {
                 commandBuffers += secondaryCommandBuffers.background
 
             // Add a job to the thread's queue for each object to be rendered
-//            for (t in 0 until numThreads)
+            for (t in 0 until numThreads)
 //                launch {
 //                    for (i in 0 until numObjectsPerThread)
 //                        threadRenderCode(t, i, inheritanceInfo)

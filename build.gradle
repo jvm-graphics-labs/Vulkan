@@ -51,7 +51,7 @@ dependencies {
     implementation "$kx:assimp:5fe308639a90204dba4bf129386b2b8d430b6a2e"
     implementation "$kx:imgui:a715971ed30b51d9c092d3713db283807eb99462"
 
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.24.0-eap13"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0-RC1"
 
     testCompile 'io.kotlintest:kotlintest:2.0.7'
 
@@ -79,6 +79,7 @@ dependencies {
 
 repositories {
     mavenCentral()
+    jcenter() 
     maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
     maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
     maven { setUrl('https://jitpack.io') }
