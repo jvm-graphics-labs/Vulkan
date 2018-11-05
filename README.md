@@ -2,7 +2,7 @@
 
 A comprehensive collection of open source Kotlin examples for [Vulkan®](https://www.khronos.org/vulkan/), the new graphics and compute API from Khronos, based on the excellent examples of [Sascha Willems](https://github.com/SaschaWillems/Vulkan)
 
-The expressiveness of Kotlin meets the power of Vulkan.
+The expressiveness of Kotlin meets the power of Vulkan, thanks to [VK²](https://github.com/kotlin-graphics/vkk).
 
 ## Examples
 
