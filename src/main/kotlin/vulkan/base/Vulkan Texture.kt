@@ -16,23 +16,25 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VkDescriptorImageInfo
 import org.lwjgl.vulkan.VkQueue
 import vkk.*
+import vkk.entities.*
+import vkk.extensionFunctions.*
 import java.io.File
 
 /** @brief Vulkan texture base class */
 open class Texture {
 
     lateinit var device: VulkanDevice
-    var image = VkImage (NULL)
+    var image = VkImage.NULL
     var imageLayout = VkImageLayout.UNDEFINED
-    var deviceMemory = VkDeviceMemory (NULL)
-    var view = VkImageView (NULL)
+    var deviceMemory = VkDeviceMemory.NULL
+    var view = VkImageView.NULL
     val size = Vec2i()
     var mipLevels = 0
     var layerCount = 0
     val descriptor = VkDescriptorImageInfo.calloc()
 
     /** @brief Optional sampler to use with this texture */
-    var sampler= VkSampler (NULL)
+    var sampler= VkSampler.NULL
 
     /** @brief Update image descriptor from current sampler, view and image layout */
     fun updateDescriptor() {
@@ -94,7 +96,7 @@ class Texture2D : Texture() {
         mipLevels = tex2D.levels()
 
         // Get device properites for the requested texture format
-        val formatProperties = device.physicalDevice getFormatProperties format
+        val formatProperties = device.physicalDevice.getFormatProperties(format)
 
         /*  Only use linear tiling if requested (and supported by the device)
             Support for linear tiling is mostly limited, so prefer to use optimal tiling instead
@@ -114,7 +116,7 @@ class Texture2D : Texture() {
             // Create a host-visible staging buffer that contains the raw image data
 
             val bufferCreateInfo = vk.BufferCreateInfo {
-                size = VkDeviceSize(tex2D.size.L)
+                size = VkDeviceSize(tex2D.size)
                 // This buffer is used as a transfer source for the buffer copy
                 usage = VkBufferUsage.TRANSFER_SRC_BIT.i
                 sharingMode = VkSharingMode.EXCLUSIVE
@@ -122,7 +124,7 @@ class Texture2D : Texture() {
             val stagingBuffer = dev createBuffer bufferCreateInfo
 
             // Get memory requirements for the staging buffer (alignment, memory type bits)
-            val memReqs = dev getBufferMemoryRequirements stagingBuffer
+            val memReqs = dev.getBufferMemoryRequirements(stagingBuffer)
             val memAllocInfo = vk.MemoryAllocateInfo {
                 allocationSize = memReqs.size
                 // Get memory type index for a host visible buffer
@@ -132,13 +134,13 @@ class Texture2D : Texture() {
             dev.bindBufferMemory(stagingBuffer, stagingMemory)
 
             // Copy texture data into staging buffer
-            dev.mappingMemory(stagingMemory, VkDeviceSize(0), memReqs.size, 0) { data ->
+            dev.mappedMemory(stagingMemory, VkDeviceSize(0), memReqs.size, 0) { data ->
                 memCopy(memAddress(tex2D.data()), data, tex2D.size.L)
             }
 
             // Setup buffer copy regions for each mip level
             val bufferCopyRegions = vk.BufferImageCopy(mipLevels)
-            var offset = VkDeviceSize(0L)
+            var offset = VkDeviceSize(0)
 
             for (i in 0 until mipLevels) {
 
@@ -156,11 +158,11 @@ class Texture2D : Texture() {
 
             // Create optimal tiled target image
             val imageCreateInfo = vk.ImageCreateInfo {
-                imageType = VkImageType.`2D`
+                imageType = VkImageType._2D
                 this.format = format
                 mipLevels = this@Texture2D.mipLevels
                 arrayLayers = 1
-                samples = VkSampleCount.`1_BIT`
+                samples = VkSampleCount._1_BIT
                 tiling = VkImageTiling.OPTIMAL
                 sharingMode = VkSharingMode.EXCLUSIVE
                 initialLayout = VkImageLayout.UNDEFINED
@@ -227,12 +229,12 @@ class Texture2D : Texture() {
             assert(formatProperties.linearTilingFeatures has VkFormatFeature.SAMPLED_IMAGE_BIT)
 
             val imageCreateInfo = vk.ImageCreateInfo {
-                imageType = VkImageType.`2D`
+                imageType = VkImageType._2D
                 this.format = format
                 extent.set(size.x, size.y, 1)
                 mipLevels = 1
                 arrayLayers = 1
-                samples = VkSampleCount.`1_BIT`
+                samples = VkSampleCount._1_BIT
                 tiling = VkImageTiling.LINEAR
                 usage = imageUsageFlags
                 sharingMode = VkSharingMode.EXCLUSIVE
@@ -242,7 +244,7 @@ class Texture2D : Texture() {
             val mappableImage = dev createImage imageCreateInfo
 
             // Get memory requirements for this image like size and alignment
-            val memReqs = dev getImageMemoryRequirements mappableImage
+            val memReqs = dev.getImageMemoryRequirements(mappableImage)
             val memAllocInfo = vk.MemoryAllocateInfo {
                 // Set memory allocation size to required memory size
                 allocationSize = memReqs.size
@@ -266,7 +268,7 @@ class Texture2D : Texture() {
             val subResLayout = dev.getImageSubresourceLayout(mappableImage, subRes)
 
             // Map image memory
-            dev.mappingMemory(mappableMemory, VkDeviceSize(0), memReqs.size, 0) { data ->
+            dev.mappedMemory(mappableMemory, VkDeviceSize(0), memReqs.size, 0) { data ->
                 // Copy image data into memory
                 memCopy(memAddress(tex2D[subRes.mipLevel].data()!!), data, tex2D[subRes.mipLevel].size.L)
             }
@@ -304,7 +306,7 @@ class Texture2D : Texture() {
             Textures are not directly accessed by the shaders and are abstracted by image views containing additional
             information and sub resource ranges */
         val viewCreateInfo = vk.ImageViewCreateInfo {
-            viewType = VkImageViewType.`2D`
+            viewType = VkImageViewType._2D
             this.format = format
             components(VkComponentSwizzle.R, VkComponentSwizzle.G, VkComponentSwizzle.B, VkComponentSwizzle.A )
             subresourceRange.set( VkImageAspect.COLOR_BIT.i, 0, 1, 0, 1 )

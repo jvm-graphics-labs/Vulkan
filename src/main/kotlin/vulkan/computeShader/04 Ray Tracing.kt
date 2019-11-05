@@ -30,7 +30,7 @@
 //import kotlin.math.sin
 //
 //
-//fun main(args: Array<String>) {
+//fun main() {
 //    RayTracing().apply {
 //        setupWindow()
 //        initVulkan()
@@ -46,11 +46,11 @@
 //
 //    /** Resources for the graphics part of the example */
 //    object graphics {
-//        var descriptorSetLayout = VkDescriptorSetLayout (NULL)   // Raytraced image display shader binding layout
-//        var descriptorSetPreCompute = VkDescriptorSet (NULL)     // Raytraced image display shader bindings before compute shader image manipulation
-//        var descriptorSet = VkDescriptorSet (NULL)               // Raytraced image display shader bindings after compute shader image manipulation
-//        var pipeline = VkPipeline (NULL)                         // Raytraced image display pipeline
-//        var pipelineLayout = VkPipelineLayout (NULL)             // Layout of the graphics pipeline
+//        var descriptorSetLayout = VkDescriptorSetLayout.NULL   // Raytraced image display shader binding layout
+//        var descriptorSetPreCompute = VkDescriptorSet.NULL     // Raytraced image display shader bindings before compute shader image manipulation
+//        var descriptorSet = VkDescriptorSet.NULL               // Raytraced image display shader bindings after compute shader image manipulation
+//        var pipeline = VkPipeline.NULL                         // Raytraced image display pipeline
+//        var pipelineLayout = VkPipelineLayout.NULL             // Layout of the graphics pipeline
 //    }
 //
 //    /** Resources for the compute part of the example */
@@ -62,13 +62,13 @@
 //
 //        val uniformBuffer = Buffer()                            // Uniform buffer object containing scene data
 //        lateinit var queue: VkQueue                             // Separate queue for compute commands (queue family may differ from the one used for graphics)
-//        var commandPool = VkCommandPool (NULL)                   // Use a separate command pool (queue family may differ from the one used for graphics)
+//        var commandPool = VkCommandPool.NULL                   // Use a separate command pool (queue family may differ from the one used for graphics)
 //        lateinit var commandBuffer: VkCommandBuffer             // Command buffer storing the dispatch commands and barriers
-//        var fence = VkFence (NULL)                               // Synchronization fence to avoid rewriting compute CB if still in use
-//        var descriptorSetLayout = VkDescriptorSetLayout (NULL)   // Compute shader binding layout
-//        var descriptorSet = VkDescriptorSet (NULL)               // Compute shader bindings
-//        var pipelineLayout = VkPipelineLayout (NULL)             // Layout of the compute pipeline
-//        var pipeline = VkPipeline (NULL)                         // Compute raytracing pipeline
+//        var fence = VkFence.NULL                               // Synchronization fence to avoid rewriting compute CB if still in use
+//        var descriptorSetLayout = VkDescriptorSetLayout.NULL   // Compute shader binding layout
+//        var descriptorSet = VkDescriptorSet.NULL               // Compute shader bindings
+//        var pipelineLayout = VkPipelineLayout.NULL             // Layout of the compute pipeline
+//        var pipeline = VkPipeline.NULL                         // Compute raytracing pipeline
 //
 //        object ubo {
 //            // Compute shader uniform block object
@@ -176,12 +176,12 @@
 //        tex.size(size)
 //
 //        val imageCreateInfo = vk.ImageCreateInfo {
-//            imageType = VkImageType.`2D`
+//            imageType = VkImageType._2D
 //            this.format = format
 //            extent.set(size.x, size.y, 1)
 //            mipLevels = 1
 //            arrayLayers = 1
-//            samples = VkSampleCount.`1_BIT`
+//            samples = VkSampleCount._1_BIT
 //            tiling = VkImageTiling.OPTIMAL
 //            initialLayout = VkImageLayout.UNDEFINED
 //            // Image will be sampled in the fragment shader and used as storage target in the compute shader
@@ -229,7 +229,7 @@
 //
 //        // Create image view
 //        val view = vk.ImageViewCreateInfo {
-//            viewType = VkImageViewType.`2D`
+//            viewType = VkImageViewType._2D
 //            this.format = format
 //            components(VkComponentSwizzle.R, VkComponentSwizzle.G, VkComponentSwizzle.B, VkComponentSwizzle.A)
 //            subresourceRange.set(VkImageAspect.COLOR_BIT.i, 0, 1, 0, 1)
@@ -371,7 +371,7 @@
 //                Plane(Vec3(0f, 0f, -1f), roomDim, Vec3(0f), 32f, currentId++),
 //                Plane(Vec3(-1f, 0f, 0f), roomDim, Vec3(1f, 0f, 0f), 32f, currentId++),
 //                Plane(Vec3(1f, 0f, 0f), roomDim, Vec3(0f, 1f, 0f), 32f, currentId++))
-//        storageBufferSize = VkDeviceSize(planes.size.L)
+//        storageBufferSize = VkDeviceSize(planes.size)
 //
 //        // Stage
 //        vulkanDevice.createBuffer(
@@ -451,7 +451,7 @@
 //
 //        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 //
 //        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
 //        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)

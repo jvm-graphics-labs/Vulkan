@@ -1,101 +1,116 @@
-import org.gradle.internal.os.OperatingSystem
+import static org.gradle.internal.os.OperatingSystem.*
 
-apply plugin: 'java'
-apply plugin: 'kotlin'
-
-// jitpack
-apply plugin: 'maven'
-group = 'com.github.kotlin-graphics'
-
-apply plugin: 'com.github.johnrengelman.shadow'
-
-//compileKotlin {
-//    kotlinOptions {
-//        jvmTarget = '1.8'
-//    }
-//}
-
-allprojects {
-
-    apply plugin: 'java'
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-    apply plugin: 'kotlin'
-    compileKotlin {
-        kotlinOptions.jvmTarget = '1.8'
-    }
+plugins {
+    id 'maven'
+    id 'java'
+    id 'application'
+    id 'java-library'
+    id "org.jetbrains.kotlin.jvm" version "1.3.50"
+    id "com.github.johnrengelman.shadow" version '5.1.0'
 }
 
-buildscript {
+// jitpack
+group = 'com.github.kotlin_graphics'
 
-    ext.kotlinVersion = '1.3.0-rc-190'
+application {
+    mainClassName = 'main.TriangleDemo'
+}
 
-    repositories {
-        jcenter()   // shadow
-        mavenCentral()
-        maven { url = 'https://dl.bintray.com/kotlin/kotlin-eap' }
-        maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
-    }
+ext {
+    moduleName = "${group}.assimp"
+    kotlin = 'org.jetbrains.kotlin:kotlin'
+    kotlin_version = '1.3.50'
+//    kotlintest_version = '3.4.0'
+    assimp_version = '648d602f6854279643a7e4934be0d9b31167fdc8'
+    imgui_version = '145229edbf69ae3366ae57414cf6dd75950c5bca'
+    uno_version = '45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9'
+    vkk_version = '9fcbd74dffdbada82c12e5cfc20bd749650e39c9'
+//    gln_version = '2f36e649bb3037981a625a3a2a1c0316adb05fd6'
+    gli_version = '336a02f5acd5db7f5c34cb673512714f1856577e'
+    glm_version = '3d3aea6d420bace96ced057cddeca023129d7c41'
+    unsigned_version = 'c81c2e39fb9e10403650c1b371b8573fc745bfb4'
+    kool_version = '1e564cfb7ab72523d0f748a235e21cf33d0c73bc'
+    lwjgl_version = "3.2.3"
+    lwjgl_natives = current() == WINDOWS ? "windows" : current() == LINUX ? "linux" : "macos"
 }
 
 dependencies {
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation "$kotlin-stdlib"
+    implementation "$kotlin-reflect"
 
-    ext.kx = 'com.github.kotlin-graphics'
-    implementation "$kx:assimp:5fe308639a90204dba4bf129386b2b8d430b6a2e"
-    implementation "$kx:imgui:a715971ed30b51d9c092d3713db283807eb99462"
+    def kx = 'com.github.kotlin-graphics'
+    implementation "$kx:assimp:$assimp_version"
+    ["core", "gl", "vk"].each { implementation "${kx}.imgui:imgui-$it:$imgui_version" }
+    ["core", "gl", "vk"].each { implementation "${kx}.uno-sdk:uno-$it:$uno_version" }
+    implementation "$kx:vkk:$vkk_version"
+    implementation "$kx:gli:$gli_version"
+    implementation "${kx}.glm:glm:$glm_version"
+    implementation "$kx:kotlin-unsigned:$unsigned_version"
+    implementation "$kx:kool:$kool_version"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0-RC1"
 
-    testCompile 'io.kotlintest:kotlintest:2.0.7'
+//    testImplementation "io.kotlintest:kotlintest-runner-junit5:$kotlintest_version"
 
-    ext.lwjglVersion = "3.2.1-SNAPSHOT"
-    switch (OperatingSystem.current()) {
-        case OperatingSystem.WINDOWS:
-            ext.lwjglNatives = "natives-windows"
-            break
-        case OperatingSystem.LINUX:
-            ext.lwjglNatives = "natives-linux"
-            break
-        case OperatingSystem.MAC_OS:
-            ext.lwjglNatives = "natives-macos"
-            break
-    }
-    ["", "-glfw", "-jemalloc", "-openal", "-opengl", "-stb", "-vulkan"].each {
-        implementation "org.lwjgl:lwjgl$it:$lwjglVersion"
-        runtime "org.lwjgl:lwjgl$it:$lwjglVersion:$lwjglNatives"
+    ext.lwjglVersion = "3.2.3"
+    ["", "-glfw", "-jemalloc", "-openal", "-opengl", "-stb", "-vulkan", "-shaderc"].each {
+        implementation "org.lwjgl:lwjgl$it:$lwjgl_version"
+        if(it != "-vulkan")
+        runtime "org.lwjgl:lwjgl$it:$lwjgl_version:natives-$lwjgl_natives"
     }
 
-    ext.spirvCross = "graphics.scenery:spirvcrossj:0.4.1"
+    ext.spirvCross = "graphics.scenery:spirvcrossj:0.5.0-1.1.85"
     implementation spirvCross
-    runtime "$spirvCross:$lwjglNatives"
+    runtime "$spirvCross:natives-$lwjgl_natives"
 }
 
 repositories {
     mavenCentral()
     jcenter() 
-    maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
-    maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
+//    maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
+//    maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
     maven { setUrl('https://jitpack.io') }
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 
 artifacts {
     archives sourcesJar
-    archives javadocJar
+//    archives javadocJar
 }
+
+compileKotlin {
+    // Enable Kotlin compilation to Java 8 class files with method parameter name metadata
+    kotlinOptions {
+        jvmTarget = "11"
+//        javaParameters = true
+    }
+    // As per https://stackoverflow.com/a/47669720
+    // See also https://discuss.kotlinlang.org/t/kotlin-support-for-java-9-module-system/2499/9
+    destinationDir = compileJava.destinationDir
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "11"
+//        javaParameters = true
+    }
+}
+
+compileJava {
+    dependsOn(':compileKotlin')
+    doFirst {
+        options.compilerArgs = ['--module-path', classpath.asPath,]
+        classpath = files()
+    }
+}
+

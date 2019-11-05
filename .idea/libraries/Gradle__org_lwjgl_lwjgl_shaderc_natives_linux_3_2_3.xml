@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.lwjgl:lwjgl-shaderc:natives-linux:3.2.3">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-shaderc/3.2.3/7a7c1d4a0d75e256bf91fa618515b2e984a861a0/lwjgl-shaderc-3.2.3-natives-linux.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-shaderc/3.2.3/b8ed672ffd715e967d02c545c497db2bdaefa58d/lwjgl-shaderc-3.2.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

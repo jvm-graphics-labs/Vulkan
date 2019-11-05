@@ -5,6 +5,9 @@ import glm_.vec2.Vec2i
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
 import vkk.*
+import vkk.entities.VkCommandPool
+import vkk.entities.VkPipelineLayout
+import vkk.entities.VkRenderPass
 
 object initializers {
 

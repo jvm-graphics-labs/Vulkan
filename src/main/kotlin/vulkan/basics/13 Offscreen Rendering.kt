@@ -29,7 +29,7 @@
 //import vulkan.base.*
 //
 //
-//fun main(args: Array<String>) {
+//fun main() {
 //    OffscreenRendering().apply {
 //        setupWindow()
 //        initVulkan()
@@ -80,47 +80,47 @@
 //    }
 //
 //    object pipelines {
-//        var debug = VkPipeline(NULL)
-//        var shaded = VkPipeline(NULL)
-//        var shadedOffscreen = VkPipeline(NULL)
-//        var mirror = VkPipeline(NULL)
+//        var debug = VkPipeline.NULL
+//        var shaded = VkPipeline.NULL
+//        var shadedOffscreen = VkPipeline.NULL
+//        var mirror = VkPipeline.NULL
 //    }
 //
 //    object pipelineLayouts {
-//        var textured = VkPipelineLayout(NULL)
-//        var shaded = VkPipelineLayout(NULL)
+//        var textured = VkPipelineLayout.NULL
+//        var shaded = VkPipelineLayout.NULL
 //    }
 //
 //    object descriptorSets {
-//        var offscreen = VkDescriptorSet(NULL)
-//        var mirror = VkDescriptorSet(NULL)
-//        var model = VkDescriptorSet(NULL)
-//        var debugQuad = VkDescriptorSet(NULL)
+//        var offscreen = VkDescriptorSet.NULL
+//        var mirror = VkDescriptorSet.NULL
+//        var model = VkDescriptorSet.NULL
+//        var debugQuad = VkDescriptorSet.NULL
 //    }
 //
 //    object descriptorSetLayouts {
-//        var textured = VkDescriptorSetLayout(NULL)
-//        var shaded = VkDescriptorSetLayout(NULL)
+//        var textured = VkDescriptorSetLayout.NULL
+//        var shaded = VkDescriptorSetLayout.NULL
 //    }
 //
 //    // Framebuffer for offscreen rendering
 //    class FrameBufferAttachment {
-//        var image = VkImage(NULL)
-//        var mem = VkDeviceMemory(NULL)
-//        var view = VkImageView(NULL)
+//        var image = VkImage.NULL
+//        var mem = VkDeviceMemory.NULL
+//        var view = VkImageView.NULL
 //    }
 //
 //    object offscreenPass {
 //        val size = Vec2i()
-//        var frameBuffer = VkFramebuffer(NULL)
+//        var frameBuffer = VkFramebuffer.NULL
 //        val color = FrameBufferAttachment()
 //        val depth = FrameBufferAttachment()
-//        var renderPass = VkRenderPass(NULL)
-//        var sampler = VkSampler(NULL)
+//        var renderPass = VkRenderPass.NULL
+//        var sampler = VkSampler.NULL
 //        lateinit var descriptor: VkDescriptorImageInfo
 //        var commandBuffer: VkCommandBuffer? = null
 //        // Semaphore used to synchronize between offscreen and final scene render pass
-//        var semaphore = VkSemaphore(NULL)
+//        var semaphore = VkSemaphore.NULL
 //    }
 //
 //    val meshPos = Vec3(0f, -1.5f, 0f)
@@ -203,12 +203,12 @@
 //
 //        // Color attachment
 //        val image = vk.ImageCreateInfo {
-//            imageType = VkImageType.`2D`
+//            imageType = VkImageType._2D
 //            format = FB_COLOR_FORMAT
 //            extent(offscreenPass.size, 1)
 //            mipLevels = 1
 //            arrayLayers = 1
-//            samples = VkSampleCount.`1_BIT`
+//            samples = VkSampleCount._1_BIT
 //            tiling = VkImageTiling.OPTIMAL
 //            // We will sample directly from the color attachment
 //            usage = VkImageUsage.COLOR_ATTACHMENT_BIT or VkImageUsage.SAMPLED_BIT
@@ -224,7 +224,7 @@
 //        device.bindImageMemory(offscreenPass.color.image, offscreenPass.color.mem)
 //
 //        val colorImageView = vk.ImageViewCreateInfo {
-//            viewType = VkImageViewType.`2D`
+//            viewType = VkImageViewType._2D
 //            format = FB_COLOR_FORMAT
 //            subresourceRange.apply {
 //                aspectMask = VkImageAspect.COLOR_BIT.i
@@ -265,7 +265,7 @@
 //        device.bindImageMemory(offscreenPass.depth.image, offscreenPass.depth.mem)
 //
 //        val depthStencilView = vk.ImageViewCreateInfo {
-//            viewType = VkImageViewType.`2D`
+//            viewType = VkImageViewType._2D
 //            format = fbDepthFormat
 //            flags = 0
 //            subresourceRange.apply {
@@ -285,7 +285,7 @@
 //            // Color attachment
 //            it[0].apply {
 //                format = FB_COLOR_FORMAT
-//                samples = VkSampleCount.`1_BIT`
+//                samples = VkSampleCount._1_BIT
 //                loadOp = VkAttachmentLoadOp.CLEAR
 //                storeOp = VkAttachmentStoreOp.STORE
 //                stencilLoadOp = VkAttachmentLoadOp.DONT_CARE
@@ -296,7 +296,7 @@
 //            // Depth attachment
 //            it[1].apply {
 //                format = fbDepthFormat
-//                samples = VkSampleCount.`1_BIT`
+//                samples = VkSampleCount._1_BIT
 //                loadOp = VkAttachmentLoadOp.CLEAR
 //                storeOp = VkAttachmentStoreOp.DONT_CARE
 //                stencilLoadOp = VkAttachmentLoadOp.DONT_CARE
@@ -505,7 +505,7 @@
 //                0f, 1f, 0f, 0f, 1f, *QUAD_COLOR_NORMAL,
 //                0f, 0f, 0f, 0f, 0f, *QUAD_COLOR_NORMAL,
 //                1f, 0f, 0f, 1f, 0f, *QUAD_COLOR_NORMAL)
-//        val vertexBufferSize = VkDeviceSize(vertexBuffer.size.L)
+//        val vertexBufferSize = VkDeviceSize(vertexBuffer.size)
 //
 //        vulkanDevice.createBuffer(
 //                VkBufferUsage.VERTEX_BUFFER_BIT.i,
@@ -517,7 +517,7 @@
 //
 //        // Setup indices
 //        val indexBuffer = it.ints(0, 1, 2, 2, 3, 0)
-//        val indexBufferSize = VkDeviceSize(indexBuffer.size.L)
+//        val indexBufferSize = VkDeviceSize(indexBuffer.size)
 //        models.quad.indexCount = indexBuffer.size
 //
 //        vulkanDevice.createBuffer(
@@ -631,7 +631,7 @@
 //
 //        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 //
 //        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
 //        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
@@ -699,28 +699,28 @@
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                uniformBuffers.vsShared,
-//                VkDeviceSize(uboShared.size.L))
+//                VkDeviceSize(uboShared.size))
 //
 //        // Mirror plane vertex shader uniform buffer block
 //        vulkanDevice.createBuffer(
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                uniformBuffers.vsMirror,
-//                VkDeviceSize(uboShared.size.L))
+//                VkDeviceSize(uboShared.size))
 //
 //        // Offscreen vertex shader uniform buffer block
 //        vulkanDevice.createBuffer(
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                uniformBuffers.vsOffScreen,
-//                VkDeviceSize(uboShared.size.L))
+//                VkDeviceSize(uboShared.size))
 //
 //        // Debug quad vertex shader uniform buffer block
 //        vulkanDevice.createBuffer(
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                uniformBuffers.vsDebugQuad,
-//                VkDeviceSize(uboShared.size.L))
+//                VkDeviceSize(uboShared.size))
 //
 //        // Map persistent
 //        uniformBuffers.apply {

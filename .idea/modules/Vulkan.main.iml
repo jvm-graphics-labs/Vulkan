@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="Vulkan:main" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="GRADLE" external.system.module.group="com.github.kotlin_graphics" external.system.module.type="sourceSet" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="kotlin-language" name="Kotlin">
+      <configuration version="3" platform="JVM 11" allPlatforms="JVM [11]" useProjectSettings="false" pureKotlinSourceFolders="$MODULE_DIR$/../../src/test/kotlin;/home/elect/IdeaProjects/Vulkan/src/main/kotlin">
+        <compilerSettings>
+          <option name="additionalArguments" value="-Xallow-no-source-files" />
+        </compilerSettings>
+        <compilerArguments>
+          <option name="destination" value="$MODULE_DIR$/../../build/classes/java/main" />
+          <option name="classpath" value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/1.3.50/b499f22fd7c3e9c2e5b6c4005221fa47fc7f9a7a/kotlin-reflect-1.3.50.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core/1.0.0-RC1/759a58ebb261b45cb23771c3d53839678fc1ec3a/kotlinx-coroutines-core-1.0.0-RC1.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.50/b529d1738c7e98bbfa36a4134039528f2ce78ebf/kotlin-stdlib-1.3.50.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics/assimp/648d602f6854279643a7e4934be0d9b31167fdc8/da543f1a4076cbfbaff4fb6f208b899e19f9d9b2/assimp-648d602f6854279643a7e4934be0d9b31167fdc8.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics.imgui/imgui-core/145229edbf69ae3366ae57414cf6dd75950c5bca/ce26ece449d2240a14ec70458940fbe7ea927530/imgui-core-145229edbf69ae3366ae57414cf6dd75950c5bca.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics.imgui/imgui-gl/145229edbf69ae3366ae57414cf6dd75950c5bca/67b5da0c1d5902b93e246401b688553a1f46b186/imgui-gl-145229edbf69ae3366ae57414cf6dd75950c5bca.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics.imgui/imgui-vk/145229edbf69ae3366ae57414cf6dd75950c5bca/2828283e1a5d5bf4f05f6e266955dc6819334c3b/imgui-vk-145229edbf69ae3366ae57414cf6dd75950c5bca.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics.uno-sdk/uno-vk/45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9/ec54be8ad979af9b92bf708fa53171d176f7e3/uno-vk-45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics.uno-sdk/uno-core/45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9/1dc1d23c5d597e609ae2075278482d845342f4cd/uno-core-45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics.uno-sdk/uno-gl/45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9/82161a789a95472d735b3b828c91b1baa82b20f6/uno-gl-45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics/vkk/9fcbd74dffdbada82c12e5cfc20bd749650e39c9/68f5ce5d87ab8ef5ad2b06c91de5f9b071f01105/vkk-9fcbd74dffdbada82c12e5cfc20bd749650e39c9.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics/gli/336a02f5acd5db7f5c34cb673512714f1856577e/d4049dcbdd72fbe621fff8d372f85d3fa43baa10/gli-336a02f5acd5db7f5c34cb673512714f1856577e.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics.glm/glm/3d3aea6d420bace96ced057cddeca023129d7c41/d8f93b307b9885bb3e7adf87ff13e13a8a7fff4e/glm-3d3aea6d420bace96ced057cddeca023129d7c41.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics/kotlin-unsigned/c81c2e39fb9e10403650c1b371b8573fc745bfb4/29b63d170a6f4f2bd9d8fbef219150503fa5e97c/kotlin-unsigned-c81c2e39fb9e10403650c1b371b8573fc745bfb4.jar:/home/elect/.gradle/caches/modules-2/files-2.1/com.github.kotlin-graphics/kool/1e564cfb7ab72523d0f748a235e21cf33d0c73bc/45b3b5dbcf9c6972884504e4cb137a5eff33b24f/kool-1e564cfb7ab72523d0f748a235e21cf33d0c73bc.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.2.3/5e520d5c290c8b012545a8d34fa5db5ab051ea53/lwjgl-glfw-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.2.3/b6fd0932171ba3f2eaa4547beddca3a3e645342d/lwjgl-jemalloc-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.2.3/106742e805803ab9eab8e343f0fb31a3d263903c/lwjgl-openal-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.2.3/bdd534a323d0c8f54969b95e424b6ac8984f7d6e/lwjgl-opengl-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.2.3/40eccaa4fa86fc815f2e17946a392fb5fdcc286a/lwjgl-stb-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-vulkan/3.2.3/34a69f76173952424e85943a2dc7d9efd3d8ff9c/lwjgl-vulkan-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-shaderc/3.2.3/3612d4ed5466d100b7cf31f188530c3bdaa23145/lwjgl-shaderc-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.2.3/17a59ba0fe8d474ec9dbe0d5db40d2cfe59c4c08/lwjgl-3.2.3.jar:/home/elect/.gradle/caches/modules-2/files-2.1/graphics.scenery/spirvcrossj/0.5.0-1.1.85/9e7046761351ed6736dc259b9e78742a893cca78/spirvcrossj-0.5.0-1.1.85.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-common/1.0.0-RC1/51ef1a04710c32ccbfd36418b0bd7e926dfdba92/kotlinx-coroutines-core-common-1.0.0-RC1.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.50/3d9cd3e1bc7b92e95f43d45be3bfbcf38e36ab87/kotlin-stdlib-common-1.3.50.jar:/home/elect/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar" />
+          <option name="noStdlib" value="true" />
+          <option name="noReflect" value="true" />
+          <option name="moduleName" value="Vulkan" />
+          <option name="jvmTarget" value="11" />
+          <option name="languageVersion" value="1.3" />
+          <option name="apiVersion" value="1.3" />
+          <option name="pluginOptions">
+            <array />
+          </option>
+          <option name="pluginClasspaths">
+            <array>
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/1.3.50/b499f22fd7c3e9c2e5b6c4005221fa47fc7f9a7a/kotlin-reflect-1.3.50.jar" />
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/1.3.50/59492b8dfb92522ba0ddb5dd1c4d0ef0a4fca1af/kotlin-script-runtime-1.3.50.jar" />
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/1.3.50/b8e0110c386c08f46a8c5e45b8c64aece1914867/kotlin-scripting-common-1.3.50.jar" />
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/1.3.50/53f579e1bee3dab3df915d923ad1bb43bc37cd18/kotlin-scripting-jvm-1.3.50.jar" />
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.50/3d9cd3e1bc7b92e95f43d45be3bfbcf38e36ab87/kotlin-stdlib-common-1.3.50.jar" />
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.50/b529d1738c7e98bbfa36a4134039528f2ce78ebf/kotlin-stdlib-1.3.50.jar" />
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core/1.1.1/3d2b7321cdef9ebf9cb7729ea4f75a6f6457df86/kotlinx-coroutines-core-1.1.1.jar" />
+              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar" />
+            </array>
+          </option>
+          <option name="errors">
+            <ArgumentParseErrors />
+          </option>
+        </compilerArguments>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_11">
+    <output url="file://$MODULE_DIR$/../../build/classes/java/main" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../src/main">
+      <sourceFolder url="file://$MODULE_DIR$/../../src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../src/main/kotlin" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../src/main/resources" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.3.50" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0-RC1" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.3.50" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics:assimp:648d602f6854279643a7e4934be0d9b31167fdc8" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics.imgui:imgui-core:145229edbf69ae3366ae57414cf6dd75950c5bca" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics.imgui:imgui-gl:145229edbf69ae3366ae57414cf6dd75950c5bca" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics.imgui:imgui-glfw:145229edbf69ae3366ae57414cf6dd75950c5bca" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics.imgui:imgui-vk:145229edbf69ae3366ae57414cf6dd75950c5bca" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics.uno-sdk:uno-vk:45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:uno-sdk:45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics.uno-sdk:uno-core:45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics.uno-sdk:uno-gl:45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics:vkk:9fcbd74dffdbada82c12e5cfc20bd749650e39c9" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics.uno-sdk:uno-awt:45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics:gli:336a02f5acd5db7f5c34cb673512714f1856577e" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics.glm:glm:3d3aea6d420bace96ced057cddeca023129d7c41" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics:kotlin-unsigned:c81c2e39fb9e10403650c1b371b8573fc745bfb4" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics:gln:2f36e649bb3037981a625a3a2a1c0316adb05fd6" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.kotlin-graphics:kool:1e564cfb7ab72523d0f748a235e21cf33d0c73bc" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.kotlin-graphics.uno-sdk:build:45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-glfw:3.2.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-jemalloc:3.2.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-openal:3.2.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-opengl:3.2.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-stb:3.2.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-vulkan:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.github.microutils:kotlin-logging:1.6.26" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-shaderc:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.50" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50" level="project" />
+    <orderEntry type="library" name="Gradle: graphics.scenery:spirvcrossj:0.5.0-1.1.85" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.0.0-RC1" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.3.50" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-glfw:natives-linux:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-jemalloc:natives-linux:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-openal:natives-linux:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-opengl:natives-linux:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-stb:natives-linux:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-shaderc:natives-linux:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-remotery:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-jawt:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl:natives-linux:3.2.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: graphics.scenery:spirvcrossj:natives-linux:0.5.0-1.1.85" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.github.microutils:kotlin-logging-common:1.6.26" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-api:1.7.26" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.code.findbugs:jsr305:3.0.2" level="project" />
+  </component>
+</module>

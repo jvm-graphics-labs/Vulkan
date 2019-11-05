@@ -38,7 +38,7 @@
 //}
 //
 //
-//fun main(args: Array<String>) {
+//fun main() {
 //    CpuParticleSystem().apply {
 //        setupWindow()
 //        initVulkan()
@@ -55,7 +55,7 @@
 //            val smoke = Texture2D()
 //            val fire = Texture2D()
 //            // Use a custom sampler to change sampler attributes required for rotating the uvs in the shader for alpha blended textures
-//            var sampler = VkSampler(NULL)
+//            var sampler = VkSampler.NULL
 //        }
 //
 //        object floor {
@@ -119,7 +119,7 @@
 //    val particleSize = Vec4.size * 3 + Float.BYTES * 4 + Int.BYTES
 //
 //    object particlesData {
-//        var buffer = VkBuffer(NULL)
+//        var buffer = VkBuffer.NULL
 //        var memory = VkDeviceMemory(0)
 //        // Store the mapped address of the particle data for reuse
 //        var mappedMemory = NULL
@@ -149,16 +149,16 @@
 //    }
 //
 //    object pipelines {
-//        var particles = VkPipeline(NULL)
-//        var environment = VkPipeline(NULL)
+//        var particles = VkPipeline.NULL
+//        var environment = VkPipeline.NULL
 //    }
 //
-//    var pipelineLayout = VkPipelineLayout(NULL)
-//    var descriptorSetLayout = VkDescriptorSetLayout(NULL)
+//    var pipelineLayout = VkPipelineLayout.NULL
+//    var descriptorSetLayout = VkDescriptorSetLayout.NULL
 //
 //    object descriptorSets {
-//        var particles = VkDescriptorSet(NULL)
-//        var environment = VkDescriptorSet(NULL)
+//        var particles = VkDescriptorSet.NULL
+//        var environment = VkDescriptorSet.NULL
 //    }
 //
 //    lateinit var particleBuffer: ByteBuffer
@@ -288,7 +288,7 @@
 //            particles[i] to (particleBuffer.adr + particleSize * i)
 //
 //        particlesData.size = particleBuffer.size
-//        val particlesSize = VkDeviceSize(particlesData.size.L)
+//        val particlesSize = VkDeviceSize(particlesData.size)
 //
 //        vulkanDevice.createBuffer(
 //                VkBufferUsage.VERTEX_BUFFER_BIT.i,
@@ -456,7 +456,7 @@
 //
 //        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 //
 //        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
 //        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
@@ -551,14 +551,14 @@
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                uniformBuffers.fire,
-//                VkDeviceSize(uboVS.size.L))
+//                VkDeviceSize(uboVS.size))
 //
 //        // Vertex shader uniform buffer block
 //        vulkanDevice.createBuffer(
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                uniformBuffers.environment,
-//                VkDeviceSize(uboEnv.size.L))
+//                VkDeviceSize(uboEnv.size))
 //
 //        // Map persistent
 //        uniformBuffers.fire.map()

@@ -822,7 +822,7 @@ object ClearScreenDemo {
     }
 
     @JvmStatic
-    fun main(args: Array<String>) {
+    fun main() {
         if (!glfwInit()) {
             throw RuntimeException("Failed to initialize GLFW")
         }

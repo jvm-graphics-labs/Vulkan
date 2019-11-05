@@ -2,17 +2,20 @@ package vulkan.base
 
 import gli_.has
 import glm_.vec2.Vec2i
+import kool.indices
+import kool.rem
 import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSurface.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
 import org.lwjgl.vulkan.KHRSwapchain.vkQueuePresentKHR
-import org.lwjgl.vulkan.VkDevice
-import org.lwjgl.vulkan.VkInstance
-import org.lwjgl.vulkan.VkPhysicalDevice
-import org.lwjgl.vulkan.VkQueue
 import uno.glfw.GlfwWindow
 import vkk.*
+import vkk.entities.*
+import vkk.extensionFunctions.*
 import vulkan.UINT32_MAX
 import vulkan.UINT64_MAX
+import vulkan.createSurface
+import vulkan.indices
 import kotlin.reflect.KMutableProperty0
 
 class VulkanSwapChain {
@@ -20,7 +23,7 @@ class VulkanSwapChain {
     lateinit var instance: VkInstance
     lateinit var device: VkDevice
     lateinit var physicalDevice: VkPhysicalDevice
-    var surface = VkSurface(NULL)
+    var surface = VkSurfaceKHR.NULL
 //    // Function pointers
 //    PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
 //    PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
@@ -33,11 +36,11 @@ class VulkanSwapChain {
 //    PFN_vkQueuePresentKHR fpQueuePresentKHR;
 
     var colorFormat = VkFormat.UNDEFINED
-    var colorSpace = VkColorSpace.SRGB_NONLINEAR_KHR
+    var colorSpace = VkColorSpaceKHR.SRGB_NONLINEAR_KHR
     /** @brief Handle to the current swap chain, required for recreation */
-    var swapChain = VkSwapchainKHR(NULL)
+    var swapChain = VkSwapchainKHR.NULL
     var imageCount = 0
-    var images = vkImageArrayOf()
+    var images = VkImage_Array()
     var buffers = arrayOf<SwapChainBuffer>()
     /** @brief Queue family index of the detected graphics and presenting device queue */
     var queueNodeIndex = UINT32_MAX
@@ -91,11 +94,11 @@ class VulkanSwapChain {
         queueNodeIndex = graphicsQueueNodeIndex
 
         // Get list of supported surface formats
-        val surfaceFormats = physicalDevice getSurfaceFormatsKHR surface
+        val surfaceFormats: VkSurfaceFormatKHR.Buffer = physicalDevice.getSurfaceFormatsKHR(surface)
 
         /*  If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
             there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM             */
-        if (surfaceFormats.size == 1 && surfaceFormats[0].format == VkFormat.UNDEFINED) {
+        if (surfaceFormats.rem == 1 && surfaceFormats[0].format == VkFormat.UNDEFINED) {
             colorFormat = VkFormat.B8G8R8A8_UNORM
             colorSpace = surfaceFormats[0].colorSpace
         } else {
@@ -136,7 +139,7 @@ class VulkanSwapChain {
         val surfCaps = physicalDevice getSurfaceCapabilitiesKHR surface
 
         // Get available present modes
-        val presentModes = physicalDevice getSurfacePresentModesKHR surface
+        val presentModes: VkPresentModeKHR_Buffer = physicalDevice.getSurfacePresentModesKHR(surface)
 
         var swapchainExtent = vk.Extent2D {}
         // If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
@@ -154,18 +157,18 @@ class VulkanSwapChain {
 
             The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
             This mode waits for the vertical blank ("v-sync")   */
-        var swapchainPresentMode = VkPresentMode.FIFO_KHR
+        var swapchainPresentMode = VkPresentModeKHR.FIFO
 
         /*  If v-sync is not requested, try to find a mailbox mode
             It's the lowest latency non-tearing present mode available         */
         if (!vsync)
             for (i in presentModes.indices) {
-                if (presentModes[i] == VkPresentMode.MAILBOX_KHR) {
-                    swapchainPresentMode = VkPresentMode.MAILBOX_KHR
+                if (presentModes[i] == VkPresentModeKHR.MAILBOX) {
+                    swapchainPresentMode = VkPresentModeKHR.MAILBOX
                     break
                 }
-                if (swapchainPresentMode != VkPresentMode.MAILBOX_KHR && presentModes[i] == VkPresentMode.IMMEDIATE_KHR)
-                    swapchainPresentMode = VkPresentMode.IMMEDIATE_KHR
+                if (swapchainPresentMode != VkPresentModeKHR.MAILBOX && presentModes[i] == VkPresentModeKHR.IMMEDIATE)
+                    swapchainPresentMode = VkPresentModeKHR.IMMEDIATE
             }
 
         // Determine the number of images
@@ -177,15 +180,15 @@ class VulkanSwapChain {
         val preTransform =
                 if (surfCaps.supportedTransforms has VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
                 // We prefer a non-rotated transform
-                    VkSurfaceTransform.IDENTITY_BIT_KHR
+                    VkSurfaceTransformKHR.IDENTITY_BIT
                 else surfCaps.currentTransform
 
         // Find a supported composite alpha format (not all devices support alpha opaque), Simply select the first composite alpha format available
-        val compositeAlpha = arrayOf(VkCompositeAlpha.OPAQUE_BIT_KHR,
-                VkCompositeAlpha.PRE_MULTIPLIED_BIT_KHR,
-                VkCompositeAlpha.POST_MULTIPLIED_BIT_KHR,
-                VkCompositeAlpha.INHERIT_BIT_KHR).find { surfCaps.supportedCompositeAlpha has it }
-                ?: VkCompositeAlpha.OPAQUE_BIT_KHR
+        val compositeAlpha = arrayOf(VkCompositeAlphaKHR.OPAQUE_BIT,
+                VkCompositeAlphaKHR.PRE_MULTIPLIED_BIT,
+                VkCompositeAlphaKHR.POST_MULTIPLIED_BIT,
+                VkCompositeAlphaKHR.INHERIT_BIT).find { surfCaps.supportedCompositeAlpha has it }
+                ?: VkCompositeAlphaKHR.OPAQUE_BIT
 
 
         val swapchainCI = vk.SwapchainCreateInfoKHR {
@@ -225,7 +228,7 @@ class VulkanSwapChain {
         }
 
         // Get the swap chain images
-        images = device getSwapchainImagesKHR swapChain
+        images = device.getSwapchainImagesKHR(swapChain)
         imageCount = images.size
 
         // Get the swap chain buffers containing the image and imageview
@@ -243,7 +246,7 @@ class VulkanSwapChain {
                     baseArrayLayer = 0
                     layerCount = 1
                 }
-                viewType = VkImageViewType.`2D`
+                viewType = VkImageViewType._2D
                 flags = 0
 
                 images[i].also {
@@ -284,7 +287,7 @@ class VulkanSwapChain {
     fun acquireNextImage(presentCompleteSemaphore: VkSemaphore, imageIndex: KMutableProperty0<Int>): VkResult =
         // By setting timeout to UINT64_MAX we will always wait until the next image has been acquired or an actual error is thrown
         // With that we don't have to handle VK_NOT_READY
-        vk.acquireNextImageKHR(device, swapChain, UINT64_MAX, presentCompleteSemaphore, VkFence(NULL), imageIndex)
+        vk.acquireNextImageKHR(device, swapChain, UINT64_MAX, presentCompleteSemaphore, VkFence.NULL, imageIndex)
 
     /**
      * Queue an image for presentation
@@ -295,7 +298,7 @@ class VulkanSwapChain {
      *
      * @return VkResult of the queue presentation
      */
-    fun queuePresent(queue: VkQueue, imageIndex: Int, waitSemaphore: VkSemaphore = VkSemaphore(NULL)): VkResult {
+    fun queuePresent(queue: VkQueue, imageIndex: Int, waitSemaphore: VkSemaphore = VkSemaphore.NULL): VkResult {
         val presentInfo = vk.PresentInfoKHR {
             swapchainCount = 1
             swapchain = swapChain
@@ -320,8 +323,8 @@ class VulkanSwapChain {
             device destroySwapchainKHR swapChain
             instance destroySurfaceKHR surface
         }
-        surface = VkSurface(NULL)
-        swapChain = VkSwapchainKHR(NULL)
+        surface = VkSurfaceKHR.NULL
+        swapChain = VkSwapchainKHR.NULL
     }
 
     inline infix fun ArrayList<SwapChainBuffer>.resize(newSize: Int) {
@@ -335,6 +338,6 @@ class VulkanSwapChain {
 }
 
 class SwapChainBuffer {
-    var image = VkImage(NULL)
-    var view = VkImageView(NULL)
+    var image = VkImage.NULL
+    var view = VkImageView.NULL
 }

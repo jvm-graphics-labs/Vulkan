@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Vulkan.iml" filepath="$PROJECT_DIR$/Vulkan.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Vulkan.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Vulkan.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Vulkan.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Vulkan.test.iml" />
     </modules>
   </component>
 </project>

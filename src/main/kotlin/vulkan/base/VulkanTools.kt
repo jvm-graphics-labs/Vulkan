@@ -1,14 +1,16 @@
 package vulkan.base
 
-import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.NULL
+import kool.toBuffer
+import kool.use
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkImageSubresourceRange
 import org.lwjgl.vulkan.VkPhysicalDevice
-import uno.buffer.toBuffer
-import uno.buffer.use
 import vkk.*
+import vkk.entities.VkImage
+import vkk.entities.VkShaderModule
+import vkk.extensionFunctions.createShaderModule
+import vkk.extensionFunctions.pipelineBarrier
 import java.io.File
 import java.nio.ByteBuffer
 
@@ -221,7 +223,7 @@ object tools {
 
         val file = File(filename)
 
-        var shaderModule = VkShaderModule(NULL)
+        var shaderModule = VkShaderModule.NULL
 
         if (file.exists() && file.canRead()) {
 

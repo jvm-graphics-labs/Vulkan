@@ -25,6 +25,10 @@ import org.lwjgl.vulkan.VkQueue
 import uno.buffer.floatBufferOf
 import uno.buffer.intBufferOf
 import vkk.*
+import vkk.entities.VkDeviceSize
+import vkk.extensionFunctions.copyBuffer
+import vkk.extensionFunctions.destroyBuffer
+import vkk.extensionFunctions.freeMemory
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import assimp.AiPostProcessStep as Pp
@@ -92,8 +96,8 @@ class Model {
     /** @brief Release all Vulkan resources of this model */
     fun destroy() {
         val dev = device!!
-        vk.destroyBuffer(dev, vertices.buffer)
-        vk.freeMemory(dev, vertices.memory)
+        dev destroyBuffer vertices.buffer
+        dev freeMemory vertices.memory
         if (indices.buffer.L != NULL) {
             dev destroyBuffer indices.buffer
             dev freeMemory indices.memory
@@ -252,14 +256,14 @@ class Model {
                 VkBufferUsage.VERTEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
                 VkMemoryProperty.DEVICE_LOCAL_BIT.i,
                 this.vertices,
-                VkDeviceSize(vBufferSize.L))
+                VkDeviceSize(vBufferSize))
 
         // Index buffer
         device.createBuffer(
                 VkBufferUsage.INDEX_BUFFER_BIT or VkBufferUsage.TRANSFER_DST_BIT,
                 VkMemoryProperty.DEVICE_LOCAL_BIT.i,
                 this.indices,
-                VkDeviceSize(iBufferSize.L))
+                VkDeviceSize(iBufferSize))
 
         // Copy from staging buffers
         val copyCmd = device.createCommandBuffer(VkCommandBufferLevel.PRIMARY, true)

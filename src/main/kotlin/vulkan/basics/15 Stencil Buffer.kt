@@ -17,7 +17,7 @@
 //* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
 //*/
 //
-//fun main(args: Array<String>) {
+//fun main() {
 //    StencilBuffer().apply {
 //        setupWindow()
 //        initVulkan()
@@ -48,13 +48,13 @@
 //    val uniformBufferVS = Buffer()
 //
 //    object pipelines {
-//        var stencil = VkPipeline(NULL)
-//        var outline = VkPipeline(NULL)
+//        var stencil = VkPipeline.NULL
+//        var outline = VkPipeline.NULL
 //    }
 //
-//    var pipelineLayout = VkPipelineLayout(NULL)
-//    var descriptorSet = VkDescriptorSet(NULL)
-//    var descriptorSetLayout = VkDescriptorSetLayout(NULL)
+//    var pipelineLayout = VkPipelineLayout.NULL
+//    var descriptorSet = VkDescriptorSet.NULL
+//    var descriptorSetLayout = VkDescriptorSetLayout.NULL
 //
 //    init {
 //        title = "Stencil buffer outlines"
@@ -176,7 +176,7 @@
 //
 //        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 //
 //        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
 //        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
@@ -253,7 +253,7 @@
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                uniformBufferVS,
-//                VkDeviceSize(uboVS.size.L))
+//                VkDeviceSize(uboVS.size))
 //
 //        // Map persistent
 //        uniformBufferVS.map()

@@ -2,7 +2,7 @@ package vulkan
 
 import glm_.vec2.Vec2i
 import org.lwjgl.vulkan.VK10
-import vkk.VkDeviceSize
+import vkk.entities.VkDeviceSize
 import java.nio.file.Paths
 
 

@@ -6,6 +6,7 @@ import glm_.vec2.Vec2i
 import glm_.vec2.operators.div
 import glm_.vec4.Vec4
 import imgui.*
+import imgui.imgui.Context
 import kool.adr
 import org.lwjgl.system.MemoryStack.stackGet
 import org.lwjgl.system.MemoryUtil.NULL
@@ -14,6 +15,8 @@ import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo
 import org.lwjgl.vulkan.VkQueue
 import vkk.*
+import vkk.entities.*
+import vkk.extensionFunctions.*
 import vulkan.to
 import java.nio.ByteBuffer
 import kotlin.reflect.KMutableProperty0
@@ -42,7 +45,7 @@ class UIOverlay {
     lateinit var queue: VkQueue
 
     // TODO flag
-    var rasterizationSamples: VkSampleCount = VkSampleCount.`1_BIT`
+    var rasterizationSamples: VkSampleCount = VkSampleCount._1_BIT
     var subpass = 0
 
     val vertexBuffer = Buffer()
@@ -52,16 +55,16 @@ class UIOverlay {
 
     val shaders = VkPipelineShaderStageCreateInfo.calloc(2)
 
-    var descriptorPool = VkDescriptorPool(NULL)
-    var descriptorSetLayout = VkDescriptorSetLayout(NULL)
-    var descriptorSet = VkDescriptorSet(NULL)
-    var pipelineLayout = VkPipelineLayout(NULL)
-    var pipeline = VkPipeline(NULL)
+    var descriptorPool = VkDescriptorPool.NULL
+    var descriptorSetLayout = VkDescriptorSetLayout.NULL
+    var descriptorSet = VkDescriptorSet.NULL
+    var pipelineLayout = VkPipelineLayout.NULL
+    var pipeline = VkPipeline.NULL
 
-    var fontMemory = VkDeviceMemory(NULL)
-    var fontImage = VkImage(NULL)
-    var fontView = VkImageView(NULL)
-    var sampler = VkSampler(NULL)
+    var fontMemory = VkDeviceMemory.NULL
+    var fontImage = VkImage.NULL
+    var fontView = VkImageView.NULL
+    var sampler = VkSampler.NULL
 
     private object pushConstBlock : Bufferizable() {
         var scale = Vec2()
@@ -162,7 +165,7 @@ class UIOverlay {
         val vertexInputBindings = vk.VertexInputBindingDescription(0, DrawVert.size, VkVertexInputRate.VERTEX)
 
         val vertexInputAttributes = vk.VertexInputAttributeDescription(
-                0, 0, VkFormat.R32G32_SFLOAT, DrawVert.ofsPos,  // Location 0: Position
+                0, 0, VkFormat.R32G32_SFLOAT, DrawVert.ofsPos.i,  // Location 0: Position TODO remove .i
                 0, 1, VkFormat.R32G32_SFLOAT, DrawVert.ofsUv,   // Location 1: UV
                 0, 2, VkFormat.R8G8B8A8_UNORM, DrawVert.ofsCol) // Location 0: Color
 
@@ -180,23 +183,23 @@ class UIOverlay {
 
         // Create font texture
         val (fontData, texSize, bytePerPixel) = io.fonts.getTexDataAsRGBA32()
-        val uploadSize = VkDeviceSize(texSize.x * texSize.y * bytePerPixel.L)
+        val uploadSize = VkDeviceSize(texSize.x * texSize.y * bytePerPixel)
 
         // Create target image for copy
         val imageInfo = vk.ImageCreateInfo {
-            imageType = VkImageType.`2D`
+            imageType = VkImageType._2D
             format = VkFormat.R8G8B8A8_UNORM
             extent(texSize, 1)
             mipLevels = 1
             arrayLayers = 1
-            samples = VkSampleCount.`1_BIT`
+            samples = VkSampleCount._1_BIT
             tiling = VkImageTiling.OPTIMAL
             usage = VkImageUsage.SAMPLED_BIT or VkImageUsage.TRANSFER_DST_BIT
             sharingMode = VkSharingMode.EXCLUSIVE
             initialLayout = VkImageLayout.UNDEFINED
         }
         fontImage = dev createImage imageInfo
-        val memReqs = dev getImageMemoryRequirements fontImage
+        val memReqs = dev.getImageMemoryRequirements(fontImage)
         val memAllocInfo = vk.MemoryAllocateInfo {
             allocationSize = memReqs.size
             memoryTypeIndex = device.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
@@ -207,7 +210,7 @@ class UIOverlay {
         // Image view
         val viewInfo = vk.ImageViewCreateInfo {
             image = fontImage
-            viewType = VkImageViewType.`2D`
+            viewType = VkImageViewType._2D
             format = VkFormat.R8G8B8A8_UNORM
             subresourceRange.apply {
                 aspectMask = VkImageAspect.COLOR_BIT.i
@@ -224,7 +227,7 @@ class UIOverlay {
                 VkBufferUsage.TRANSFER_SRC_BIT.i,
                 VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
                 stagingBuffer,
-                VkDeviceSize(uploadSize.L))
+                uploadSize)
 
         stagingBuffer.mapping { pData ->
             memCopy(fontData.adr, pData, uploadSize)
@@ -305,8 +308,8 @@ class UIOverlay {
         var updateCmdBuffers = false
 
         // Note: Alignment is done inside buffer creation
-        val vertexBufferSize = VkDeviceSize(drawData.totalVtxCount * DrawVert.size.L)
-        val indexBufferSize = VkDeviceSize(drawData.totalIdxCount * DrawIdx.BYTES.L)
+        val vertexBufferSize = VkDeviceSize(drawData.totalVtxCount * DrawVert.size)
+        val indexBufferSize = VkDeviceSize(drawData.totalIdxCount * DrawIdx.BYTES)
 
         // Update buffers only if vertex or index count has been changed compared to current buffer size
         if (vertexBufferSize.isEmpty || indexBufferSize.isEmpty)
@@ -324,7 +327,7 @@ class UIOverlay {
         }
 
         // Index buffer
-        val indexSize = VkDeviceSize(drawData.totalIdxCount * DrawIdx.BYTES.L)
+        val indexSize = VkDeviceSize(drawData.totalIdxCount * DrawIdx.BYTES)
         if (indexBuffer.buffer.L == NULL || indexCount < drawData.totalIdxCount) {
             indexBuffer.unmap()
             indexBuffer.destroy()
@@ -340,17 +343,18 @@ class UIOverlay {
 
         for (cmdList in drawData.cmdLists) {
             var ofs = 0
-            for (v in cmdList.vtxBuffer) {
-                v.to(vtxDst, ofs)
-                ofs += DrawVert.size
-            }
-            ofs = 0
-            for (i in cmdList.idxBuffer) {
-                memPutInt(idxDst + ofs, i)
-                ofs += Int.BYTES
-            }
-            vtxDst += cmdList.vtxBuffer.size
-            idxDst += cmdList.idxBuffer.size
+            TODO()
+//            for (v in cmdList.vtxBuffer) {
+//                v.to(vtxDst, ofs)
+//                ofs += DrawVert.size
+//            }
+//            ofs = 0
+//            for (i in cmdList.idxBuffer) {
+//                memPutInt(idxDst + ofs, i)
+//                ofs += Int.BYTES
+//            }
+//            vtxDst += cmdList.vtxBuffer.size
+//            idxDst += cmdList.idxBuffer.size
         }
 
         // Flush to make writes visible to GPU
@@ -366,7 +370,7 @@ class UIOverlay {
         var vertexOffset = 0
         var indexOffset = 0
 
-        if (drawData == null || drawData.cmdListsCount == 0)
+        if (drawData == null || drawData.cmdLists.size == 0)
             return
 
         bindPipeline(VkPipelineBindPoint.GRAPHICS, pipeline)

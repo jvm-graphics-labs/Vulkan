@@ -22,9 +22,9 @@ import glm_.vec2.operators.div
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
 import imgui.*
-import imgui.functionalProgramming.withWindow
+import imgui.dsl.window
+import imgui.imgui.Context
 import kool.adr
-import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryStack.stackGet
 import org.lwjgl.system.MemoryUtil.NULL
@@ -32,15 +32,15 @@ import org.lwjgl.system.MemoryUtil.memPutInt
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkQueue
 import vkk.*
-import vulkan.ENABLE_VALIDATION
+import vkk.entities.*
+import vkk.extensionFunctions.*
 import vulkan.assetPath
 import vulkan.base.*
 import vulkan.rotateLeft
-import vulkan.to
 import java.nio.ByteBuffer
 
 
-fun main(args: Array<String>) {
+fun main() {
     VulkanExample().apply {
         setupWindow()
         initVulkan()
@@ -69,20 +69,20 @@ object uiSettings {
 class ImGUI(val example: VulkanExampleBase) {
 
     // Vulkan resources for rendering the UI
-    var sampler = VkSampler(NULL)
+    var sampler = VkSampler.NULL
     val vertexBuffer = Buffer()
     val indexBuffer = Buffer()
     var vertexCount = 0
     var indexCount = 0
-    var fontMemory = VkDeviceMemory(NULL)
-    var fontImage = VkImage(NULL)
-    var fontView = VkImageView(NULL)
-    var pipelineCache = VkPipelineCache(NULL)
-    var pipelineLayout = VkPipelineLayout(NULL)
-    var pipeline = VkPipeline(NULL)
-    var descriptorPool = VkDescriptorPool(NULL)
-    var descriptorSetLayout = VkDescriptorSetLayout(NULL)
-    var descriptorSet = VkDescriptorSet(NULL)
+    var fontMemory = VkDeviceMemory.NULL
+    var fontImage = VkImage.NULL
+    var fontView = VkImageView.NULL
+    var pipelineCache = VkPipelineCache.NULL
+    var pipelineLayout = VkPipelineLayout.NULL
+    var pipeline = VkPipeline.NULL
+    var descriptorPool = VkDescriptorPool.NULL
+    var descriptorSetLayout = VkDescriptorSetLayout.NULL
+    var descriptorSet = VkDescriptorSet.NULL
     lateinit var device: VulkanDevice
 
     val dev get() = device.logicalDevice!!
@@ -152,19 +152,19 @@ class ImGUI(val example: VulkanExampleBase) {
 
         // Create target image for copy
         val imageInfo = vk.ImageCreateInfo {
-            imageType = VkImageType.`2D`
+            imageType = VkImageType._2D
             format = VkFormat.R8G8B8A8_UNORM
             extent(size, 1)
             mipLevels = 1
             arrayLayers = 1
-            samples = VkSampleCount.`1_BIT`
+            samples = VkSampleCount._1_BIT
             tiling = VkImageTiling.OPTIMAL
             usage = VkImageUsage.SAMPLED_BIT or VkImageUsage.TRANSFER_DST_BIT
             sharingMode = VkSharingMode.EXCLUSIVE
             initialLayout = VkImageLayout.UNDEFINED
         }
         fontImage = dev createImage imageInfo
-        val memReqs = dev getImageMemoryRequirements fontImage
+        val memReqs = dev.getImageMemoryRequirements(fontImage)
         val memAllocInfo = vk.MemoryAllocateInfo {
             allocationSize = memReqs.size
             memoryTypeIndex = device.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
@@ -175,7 +175,7 @@ class ImGUI(val example: VulkanExampleBase) {
         // Image view
         val viewInfo = vk.ImageViewCreateInfo {
             image = fontImage
-            viewType = VkImageViewType.`2D`
+            viewType = VkImageViewType._2D
             format = VkFormat.R8G8B8A8_UNORM
             subresourceRange.apply {
                 aspectMask = VkImageAspect.COLOR_BIT.i
@@ -299,7 +299,7 @@ class ImGUI(val example: VulkanExampleBase) {
 
         val viewportState = vk.PipelineViewportStateCreateInfo(1, 1, 0)
 
-        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 
         val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
         val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
@@ -319,7 +319,7 @@ class ImGUI(val example: VulkanExampleBase) {
         // Vertex bindings an attributes based on ImGui vertex definition
         val vertexInputBinding = vk.VertexInputBindingDescription(0, DrawVert.size, VkVertexInputRate.VERTEX)
         val vertexInputAttributes = vk.VertexInputAttributeDescription(
-                0, 0, VkFormat.R32G32_SFLOAT, DrawVert.ofsPos,  // Location 0: Position
+                0, 0, VkFormat.R32G32_SFLOAT, DrawVert.ofsPos.i,  // Location 0: Position // TODO remove .i
                 0, 1, VkFormat.R32G32_SFLOAT, DrawVert.ofsUv,   // Location 1: UV
                 0, 2, VkFormat.R8G8B8A8_UNORM, DrawVert.ofsCol) // Location 0: Color
         val vertexInputState = vk.PipelineVertexInputStateCreateInfo {
@@ -371,7 +371,7 @@ class ImGUI(val example: VulkanExampleBase) {
             inputVec3("rotation", example.camera.rotation/*, 2*/)
 
             setNextWindowSize(Vec2(200), Cond.FirstUseEver)
-            withWindow("Example settings") {
+            window("Example settings") {
                 checkbox("Render models", uiSettings::displayModels)
                 checkbox("Display logos", uiSettings::displayLogos)
                 checkbox("Display background", uiSettings::displayBackground)
@@ -425,20 +425,21 @@ class ImGUI(val example: VulkanExampleBase) {
         var vtxDst = vertexBuffer.mapped
         var idxDst = indexBuffer.mapped
 
-        for (n in 0 until drawData.cmdListsCount) {
+        for (n in 0 until drawData.cmdLists.size) {
             val cmdList = drawData.cmdLists[n]
             var ofs = 0
-            for (v in cmdList.vtxBuffer) {
-                v.to(vtxDst, ofs)
-                ofs += DrawVert.size
-            }
-            ofs = 0
-            for (i in cmdList.idxBuffer) {
-                memPutInt(idxDst + ofs, i)
-                ofs += Int.BYTES
-            }
-            vtxDst += cmdList.vtxBuffer.size
-            idxDst += cmdList.idxBuffer.size
+            TODO()
+//            for (v in cmdList.vtxBuffer) {
+//                v.to(vtxDst, ofs)
+//                ofs += DrawVert.size
+//            }
+//            ofs = 0
+//            for (i in cmdList.idxBuffer) {
+//                memPutInt(idxDst + ofs, i)
+//                ofs += Int.BYTES
+//            }
+//            vtxDst += cmdList.vtxBuffer.size
+//            idxDst += cmdList.idxBuffer.size
         }
 
         // Flush to make writes visible to GPU
@@ -464,7 +465,7 @@ class ImGUI(val example: VulkanExampleBase) {
         var vertexOffset = 0
         var indexOffset = 0
 
-        if (drawData.cmdListsCount > 0) {
+        if (drawData.cmdLists.size > 0) {
 
             bindVertexBuffers(vertexBuffer.buffer)
             bindIndexBuffer(indexBuffer.buffer, VkDeviceSize(0), VkIndexType.UINT32) // jvm imgui uses int, not shorts
@@ -512,10 +513,10 @@ class VulkanExample : VulkanExampleBase() {
         override var fieldOrder = arrayOf("projection", "modelview", "lightPos")
     }
 
-    var pipelineLayout = VkPipelineLayout(NULL)
-    var pipeline = VkPipeline(NULL)
-    var descriptorSetLayout = VkDescriptorSetLayout(NULL)
-    var descriptorSet = VkDescriptorSet(NULL)
+    var pipelineLayout = VkPipelineLayout.NULL
+    var pipeline = VkPipeline.NULL
+    var descriptorSetLayout = VkDescriptorSetLayout.NULL
+    var descriptorSet = VkDescriptorSet.NULL
 
     init {
         title = "Vulkan Example - ImGui"
@@ -663,7 +664,7 @@ class VulkanExample : VulkanExampleBase() {
 
         val viewportState = vk.PipelineViewportStateCreateInfo(1, 1, 0)
 
-        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 
         val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
         val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
@@ -774,8 +775,9 @@ class VulkanExample : VulkanExampleBase() {
             deltaTime = frameTimer
 
             mousePos = this@VulkanExample.mousePos
-            mouseDown[0] = window.mouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
-            mouseDown[1] = window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
+            TODO()
+//            mouseDown[0] = window.mouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
+//            mouseDown[1] = window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
         }
 
         draw()

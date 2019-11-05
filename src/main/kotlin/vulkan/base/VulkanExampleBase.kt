@@ -11,10 +11,10 @@ import glm_.vec4.Vec4
 import graphics.scenery.spirvcrossj.Loader
 import graphics.scenery.spirvcrossj.libspirvcrossj
 import imgui.*
-import imgui.functionalProgramming.withStyleVar
-import imgui.functionalProgramming.withWindow
-import kool.intBufferBig
-import kool.stak
+import imgui.dsl.withStyleVar
+import kool.intBufferOf
+import kool.isValid
+import kool.set
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.system.MemoryStack
@@ -22,9 +22,6 @@ import org.lwjgl.system.MemoryStack.stackGet
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
-import uno.buffer.intBufferOf
-import uno.glfw.*
-import uno.glfw.windowHint.Api
 import vkk.*
 import vulkan.ENABLE_VALIDATION
 import vulkan.assetPath
@@ -44,6 +41,13 @@ import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.VK_MAKE_VERSION
 import org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_APPLICATION_INFO
 import org.lwjgl.vulkan.VkApplicationInfo
+import uno.glfw.*
+import uno.glfw.windowHint.Api
+import vkk.VkResult.Companion.ERROR_OUT_OF_DATE_KHR
+import vkk.VkResult.Companion.SUBOPTIMAL_KHR
+import vkk.entities.*
+import vkk.extensionFunctions.*
+import vkk.stak
 import vulkan.base.VulkanExampleBase.settings.validation
 import java.nio.ByteBuffer
 
@@ -98,7 +102,7 @@ abstract class VulkanExampleBase {
     /** Depth buffer format (selected during Vulkan initialization) */
     var depthFormat = VkFormat.UNDEFINED
     /** Command buffer pool */
-    var cmdPool = VkCommandPool(NULL)
+    var cmdPool = VkCommandPool.NULL
     /** @brief Pipeline stages used to wait at for graphics queue submissions */
     val submitPipelineStages = intBufferOf(VkPipelineStage.COLOR_ATTACHMENT_OUTPUT_BIT.i)
     /** Contains command buffers and semaphores to be presented to the queue    */
@@ -106,29 +110,29 @@ abstract class VulkanExampleBase {
     /** Command buffers used for rendering  */
     lateinit var drawCmdBuffers: Array<VkCommandBuffer>
     /** Global render pass for frame buffer writes  */
-    var renderPass = VkRenderPass(NULL)
+    var renderPass = VkRenderPass.NULL
     /** List of available frame buffers (same as number of swap chain images)   */
-    var frameBuffers = vkFramebufferArrayOf()
+    var frameBuffers = VkFramebuffer_Array()
     /** Active frame buffer index   */
     var currentBuffer = 0
     /** Descriptor set pool */
-    var descriptorPool = VkDescriptorPool(NULL)
+    var descriptorPool = VkDescriptorPool.NULL
     /** List of shader modules created (stored for cleanup) */
     val shaderModules = ArrayList<VkShaderModule>()
     // Pipeline cache object
-    var pipelineCache = VkPipelineCache(NULL)
+    var pipelineCache = VkPipelineCache.NULL
     // Wraps the swap chain to present images (framebuffers) to the windowing system
     var swapChain = VulkanSwapChain()
 
     // Synchronization semaphores
     object semaphores {
         // Swap chain image presentation
-        var presentComplete = VkSemaphore(NULL)
+        var presentComplete = VkSemaphore.NULL
         // Command buffer submission and execution
-        var renderComplete = VkSemaphore(NULL)
+        var renderComplete = VkSemaphore.NULL
     }
 
-    var waitFences = vkFenceArrayOf()
+    var waitFences = VkFence_Array()
 
     var prepared = false
     val size = Vec2i(1280, 720)
@@ -309,9 +313,9 @@ abstract class VulkanExampleBase {
     protected val depthStencil = DepthStencil()
 
     class DepthStencil {
-        var image = VkImage(NULL)
-        var mem = VkDeviceMemory(NULL)
-        var view = VkImageView(NULL)
+        var image = VkImage.NULL
+        var mem = VkDeviceMemory.NULL
+        var view = VkImageView.NULL
     }
 
 //    struct {
@@ -336,7 +340,7 @@ abstract class VulkanExampleBase {
                 destroyDescriptorPool(descriptorPool)
             destroyCommandBuffers()
             destroyRenderPass(renderPass)
-            destroyFramebuffers(frameBuffers)
+            frameBuffers.forEach { destroyFramebuffer(it) }
 
             destroyShaderModules(shaderModules)
             destroyImageView(depthStencil.view)
@@ -384,10 +388,10 @@ abstract class VulkanExampleBase {
         }
 
         // Get number of available physical devices and Enumerate devices
-        val physicalDevices = vk.enumeratePhysicalDevices(instance)
+        val physicalDevices = instance.enumeratePhysicalDevices
 
         // Physical device
-        val gpuCount = physicalDevices.size
+        val gpuCount = physicalDevices.rem
         assert(gpuCount > 0)
 
         // GPU selection
@@ -477,7 +481,7 @@ abstract class VulkanExampleBase {
         /*  Set up submit info structure
             Semaphores will stay the same during application lifetime
             Command buffer submission info is set by each example   */
-        submitInfo = cVkSubmitInfo {
+        submitInfo = VkSubmitInfo.calloc().apply {
             waitDstStageMask = submitPipelineStages
             waitSemaphoreCount = 1
             waitSemaphore = semaphores.presentComplete
@@ -575,7 +579,7 @@ abstract class VulkanExampleBase {
     fun createSynchronizationPrimitives() {
         // Wait fences to sync command buffer access
         val fenceCreateInfo = vk.FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT)
-        waitFences = initVkFenceArray(drawCmdBuffers.size) { device createFence fenceCreateInfo }
+        waitFences = VkFence_Array(drawCmdBuffers.size) { device createFence fenceCreateInfo }
     }
 
     /** Creates a new (graphics) command pool object storing command buffers    */
@@ -592,12 +596,12 @@ abstract class VulkanExampleBase {
     open fun setupDepthStencil() {
 
         val image = vk.ImageCreateInfo {
-            imageType = VkImageType.`2D`
+            imageType = VkImageType._2D
             format = depthFormat
             extent.set(size.x, size.y, 1)
             mipLevels = 1
             arrayLayers = 1
-            samples = VkSampleCount.`1_BIT`
+            samples = VkSampleCount._1_BIT
             tiling = VkImageTiling.OPTIMAL
             usage = VkImageUsage.DEPTH_STENCIL_ATTACHMENT_BIT or VkImageUsage.TRANSFER_SRC_BIT
             flags = 0
@@ -609,7 +613,7 @@ abstract class VulkanExampleBase {
         }
 
         val depthStencilView = vk.ImageViewCreateInfo {
-            viewType = VkImageViewType.`2D`
+            viewType = VkImageViewType._2D
             format = depthFormat
             flags = 0
             subresourceRange.apply {
@@ -622,7 +626,7 @@ abstract class VulkanExampleBase {
         }
 
         depthStencil.image = device createImage image
-        val memReqs = device getImageMemoryRequirements depthStencil.image
+        val memReqs = device.getImageMemoryRequirements(depthStencil.image)
         memAlloc.allocationSize = memReqs.size
         memAlloc.memoryTypeIndex = vulkanDevice.getMemoryType(memReqs.memoryTypeBits, VkMemoryProperty.DEVICE_LOCAL_BIT)
         depthStencil.mem = device allocateMemory memAlloc
@@ -636,7 +640,7 @@ abstract class VulkanExampleBase {
      *  Can be overriden in derived class to setup a custom framebuffer (e.g. for MSAA) */
     open fun setupFrameBuffer() = stak {
 
-        val attachments = it.vkImageViewBufferBig(2)
+        val attachments = vk.ImageView_Buffer(2) // TODO check
 
         // Depth/Stencil attachment is the same for all frame buffers
         attachments[1] = depthStencil.view
@@ -652,8 +656,8 @@ abstract class VulkanExampleBase {
         }
 
         // Create frame buffers for every swap chain image
-        frameBuffers = initVkFramebufferArray(swapChain.imageCount) { i ->
-            attachments[0] = swapChain.buffers[i].view
+        frameBuffers = VkFramebuffer_Array(swapChain.imageCount) {
+            attachments[0] = swapChain.buffers[it].view
             device createFramebuffer frameBufferCreateInfo
         }
     }
@@ -666,7 +670,7 @@ abstract class VulkanExampleBase {
         // Color attachment
         with(attachments[0]) {
             format = swapChain.colorFormat
-            samples = VkSampleCount.`1_BIT`
+            samples = VkSampleCount._1_BIT
             loadOp = VkAttachmentLoadOp.CLEAR
             storeOp = VkAttachmentStoreOp.STORE
             stencilLoadOp = VkAttachmentLoadOp.DONT_CARE
@@ -677,7 +681,7 @@ abstract class VulkanExampleBase {
         // Depth attachment
         with(attachments[1]) {
             format = depthFormat
-            samples = VkSampleCount.`1_BIT`
+            samples = VkSampleCount._1_BIT
             loadOp = VkAttachmentLoadOp.CLEAR
             storeOp = VkAttachmentStoreOp.STORE
             stencilLoadOp = VkAttachmentLoadOp.CLEAR
@@ -686,10 +690,9 @@ abstract class VulkanExampleBase {
             finalLayout = VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         }
 
-        val colorReference = vk.AttachmentReference(1) {
-            attachment = 0
-            layout = VkImageLayout.COLOR_ATTACHMENT_OPTIMAL
-        }
+        val colorReference = vk.AttachmentReference(1) // TODO more functional?
+        colorReference[0].attachment = 0
+        colorReference[0].layout = VkImageLayout.COLOR_ATTACHMENT_OPTIMAL
 
         val depthReference = vk.AttachmentReference {
             attachment = 1
@@ -748,7 +751,7 @@ abstract class VulkanExampleBase {
     fun setupSwapChain() = swapChain.create(size, settings.vsync)
 
     /** Check if command buffers are valid (!= NULL) */
-    fun checkCommandBuffers() = drawCmdBuffers.all { it.isValid() }
+    fun checkCommandBuffers() = drawCmdBuffers.all { it.isValid }
 
     /** Create command buffers for drawing commands */
     fun createCommandBuffers() {
@@ -773,7 +776,7 @@ abstract class VulkanExampleBase {
             commandBufferCount = 1
         }
 
-        val cmdBuffer = device allocateCommandBuffer cmdBufAllocateInfo
+        val cmdBuffer: VkCommandBuffer = device.allocateCommandBuffers(cmdBufAllocateInfo)
 
         // If requested, also start the new command buffer
         if (begin)
@@ -878,7 +881,7 @@ abstract class VulkanExampleBase {
         }
 
         // Flush device to make sure all resources can be freed
-        if (device.isValid())
+        if (device.isValid)
             device.waitIdle()
     }
 
@@ -930,8 +933,9 @@ abstract class VulkanExampleBase {
                 deltaTime = frameTimer
 
                 mousePos put this@VulkanExampleBase.mousePos
-                mouseDown[0] = window.mouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
-                mouseDown[1] = window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
+                TODO()
+//                mouseDown[0] = window.mouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
+//                mouseDown[1] = window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
             }
 
             newFrame()
@@ -941,7 +945,7 @@ abstract class VulkanExampleBase {
                 setNextWindowPos(Vec2(10))
                 setNextWindowSize(Vec2(), Cond.FirstUseEver)
 
-                withWindow("Vulkan Example", null, WindowFlag.AlwaysAutoResize or WindowFlag.NoResize or WindowFlag.NoMove) {
+                dsl.window("Vulkan Example", null, WindowFlag.AlwaysAutoResize or WindowFlag.NoResize or WindowFlag.NoMove) {
 
                     textUnformatted(title)
                     textUnformatted(deviceProperties.deviceName)
@@ -991,7 +995,7 @@ abstract class VulkanExampleBase {
 
         val res = swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete)
 
-        if (res != SUCCESS && res != SUBOPTIMAL_KHR)
+        if (res != VkResult.SUCCESS && res != SUBOPTIMAL_KHR)
             if (res == ERROR_OUT_OF_DATE_KHR) {
                 // Swap chain is no longer compatible with the surface and needs to be recreated
                 windowResize(window.size)
@@ -1106,33 +1110,34 @@ abstract class VulkanExampleBase {
     fun mouseMoved(newPos: Vec2) {
 
         val deltaPos = mousePos - newPos
-        if (deltaPos allEqual 0f) return
+        if (deltaPos.allEqual(0f)) return
 
 //        if (settings.overlay) {
 //            ImGuiIO& io = ImGui::GetIO();
 //            handled = io.WantCaptureMouse;
 //        }
 
-        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT)) {
-            zoom += deltaPos.y * .005f * zoomSpeed
-            camera translate Vec3(0f, 0f, deltaPos.y * .005f * zoomSpeed)
-            mousePos put newPos
-            viewChanged()
-        }
-        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
-            val deltaPos3 = Vec3(deltaPos.y, -deltaPos.x, 0f) * 1.25f * rotationSpeed
-            rotation += deltaPos3
-            camera rotate deltaPos3
-            mousePos put newPos
-            viewChanged()
-        }
-        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_MIDDLE)) {
-            val deltaPos3 = Vec3(deltaPos, 0f) * 0.01f
-            cameraPos -= deltaPos3
-            camera translate -deltaPos3
-            mousePos put newPos
-            viewChanged()
-        }
+        TODO()
+//        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT)) {
+//            zoom += deltaPos.y * .005f * zoomSpeed
+//            camera translate Vec3(0f, 0f, deltaPos.y * .005f * zoomSpeed)
+//            mousePos put newPos
+//            viewChanged()
+//        }
+//        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
+//            val deltaPos3 = Vec3(deltaPos.y, -deltaPos.x, 0f) * 1.25f * rotationSpeed
+//            rotation += deltaPos3
+//            camera rotate deltaPos3
+//            mousePos put newPos
+//            viewChanged()
+//        }
+//        if (GLFW_PRESS == window.mouseButton(GLFW_MOUSE_BUTTON_MIDDLE)) {
+//            val deltaPos3 = Vec3(deltaPos, 0f) * 0.01f
+//            cameraPos -= deltaPos3
+//            camera translate -deltaPos3
+//            mousePos put newPos
+//            viewChanged()
+//        }
         mousePos(newPos)
     }
 

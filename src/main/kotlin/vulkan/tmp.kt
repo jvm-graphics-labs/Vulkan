@@ -3,15 +3,26 @@ package vulkan
 import glm_.BYTES
 import imgui.DrawVert
 import kool.Ptr
+import kool.adr
+import kool.rem
+import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.Configuration
 import org.lwjgl.system.MemoryStack
+import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memPutFloat
 import org.lwjgl.system.MemoryUtil.memPutInt
+import org.lwjgl.vulkan.VkInstance
+import org.lwjgl.vulkan.VkPhysicalDevice
+import uno.glfw.GlfwWindow
+import vkk.VK_CHECK_RESULT
+import vkk.VkPhysicalDevice_Buffer
+import vkk.VkPresentModeKHR_Buffer
+import vkk.entities.VkImageView_Buffer
+import vkk.entities.VkSurfaceKHR
+import vkk.stak
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.ExecutorService
-
-
 
 
 fun FloatArray.rotateLeft(amount: Int) {
@@ -46,7 +57,7 @@ class Task(val name: String) : Runnable {
             }
 }
 
-fun main(args: Array<String>) {
+fun main() {
 //    val executor = Executors.newFixedThreadPool(5)
 //
 //    for (i in 1..5) {
@@ -82,3 +93,11 @@ fun MemoryStack.reset() {
     val size = Configuration.STACK_SIZE.get(64) * 1024
     pointer = size
 }
+
+val VkPresentModeKHR_Buffer.indices: IntRange
+    get() = 0 until rem
+
+infix fun GlfwWindow.createSurface(instance: VkInstance): VkSurfaceKHR =
+        VkSurfaceKHR(stak.longAddress {
+            VK_CHECK_RESULT(GLFWVulkan.nglfwCreateWindowSurface(instance.adr, handle.L, MemoryUtil.NULL, it))
+        })

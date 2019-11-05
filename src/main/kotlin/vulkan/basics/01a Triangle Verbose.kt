@@ -1,12 +1,12 @@
 package vulkan.basics
 
-import glm_.*
+import glm_.L
+import glm_.f
 import glm_.func.rad
+import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.vec3.Vec3
-import kool.bufferBig
-import kool.cap
-import kool.free
+import kool.*
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
@@ -14,19 +14,19 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
 import uno.buffer.floatBufferOf
 import uno.buffer.intBufferOf
-import uno.buffer.toBuffer
 import uno.glfw.glfw
 import vkk.*
+import vkk.entities.*
 import vulkan.UINT64_MAX
-import vulkan.useStaging
 import vulkan.assetPath
 import vulkan.base.VulkanExampleBase
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
+import vulkan.useStaging
 import java.io.File
 import java.nio.ByteBuffer
 
 
-fun main(args: Array<String>) {
+fun main() {
     TriangleVerbose().apply {
         setupWindow()
         initVulkan()
@@ -99,7 +99,7 @@ private class TriangleVerbose : VulkanExampleBase() {
         }
 
         val size = Mat4.size * 3
-        val buffer = bufferBig(size)
+        val buffer = Buffer(size)
         val address = MemoryUtil.memAddress(buffer)
     }
 
@@ -167,8 +167,8 @@ private class TriangleVerbose : VulkanExampleBase() {
         vkDestroySemaphore(device, presentCompleteSemaphore, null)
         vkDestroySemaphore(device, renderCompleteSemaphore, null)
 
-        for (fence in waitFences)
-            vkDestroyFence(device, fence.L, null)
+        for (i in waitFences.indices)
+            vkDestroyFence(device, waitFences[i], null)
 
         super.destroy()
     }
@@ -214,7 +214,7 @@ private class TriangleVerbose : VulkanExampleBase() {
                 // Create in signaled state so we don't wait on first render of each command buffer
                 .flags(VK_FENCE_CREATE_SIGNALED_BIT)
         val pFence = MemoryUtil.memAllocLong(1)
-        waitFences = vkFenceArrayBig(drawCmdBuffers.size)
+        waitFences = VkFence_Array(drawCmdBuffers.size)
         for (i in drawCmdBuffers.indices) {
             VK_CHECK_RESULT(vkCreateFence(device, fenceCreateInfo, null, pFence))
             waitFences[i] = VkFence(pFence[0])
@@ -348,14 +348,13 @@ private class TriangleVerbose : VulkanExampleBase() {
             vkCmdSetViewport(drawCmdBuffers[i], 0, viewport)
 
             // Update dynamic scissor state
-            val scissor = VkRect2D.calloc(1).apply {
-                extent()
+            val scissor = VkRect2D.calloc(1)
+            scissor[0].extent()
                         .width(size.x)
                         .height(size.y)
-                offset()
+            scissor[0].offset()
                         .x(0)
                         .y(0)
-            }
             vkCmdSetScissor(drawCmdBuffers[i], 0, scissor)
 
             val pDescriptorSet = MemoryUtil.memAllocLong(1)
@@ -464,12 +463,12 @@ private class TriangleVerbose : VulkanExampleBase() {
                 -1f, +1f, +0f, 0f, 1f, 0f,
                 +0f, -1f, +0f, 0f, 0f, 1f)
 
-        val vertexBufferSize = vertexBuffer.size.L
+        val vertexBufferSize = vertexBuffer.rem.L
 
         // Setup indices
         val indexBuffer = intBufferOf(0, 1, 2)
         indices.count = indexBuffer.cap
-        val indexBufferSize = indexBuffer.size.L
+        val indexBufferSize = indexBuffer.rem.L
 
         val memAlloc = VkMemoryAllocateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
@@ -827,7 +826,7 @@ private class TriangleVerbose : VulkanExampleBase() {
      *  Note: Override of virtual function in the base class and called from within VulkanExampleBase::prepare  */
     override fun setupFrameBuffer() {
         // Create a frame buffer for every image in the swapchain
-        frameBuffers = initVkFramebufferArray(swapChain.imageCount) { i ->
+        frameBuffers = VkFramebuffer_Array(swapChain.imageCount) { i ->
             val attachments = MemoryUtil.memAllocLong(2)
             attachments[0] = swapChain.buffers[i].view.L  // Color attachment is the view of the swapchain image
             attachments[1] = depthStencil.view.L            // Depth/Stencil attachment is the same for all frame buffers

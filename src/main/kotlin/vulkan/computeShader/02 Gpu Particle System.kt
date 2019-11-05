@@ -33,7 +33,7 @@
 //import kotlin.math.sin
 //
 //
-//fun main(args: Array<String>) {
+//fun main() {
 //    GpuParticleSystem().apply {
 //        setupWindow()
 //        initVulkan()
@@ -61,10 +61,10 @@
 //
 //    /** Resources for the graphics part of the example */
 //    object graphics {
-//        var descriptorSetLayout = VkDescriptorSetLayout(NULL)     // Particle system rendering shader binding layout
-//        var descriptorSet = VkDescriptorSet(NULL)                // Particle system rendering shader bindings
-//        var pipelineLayout = VkPipelineLayout(NULL)             // Layout of the graphics pipeline
-//        var pipeline = VkPipeline(NULL)                        // Particle rendering pipeline
+//        var descriptorSetLayout = VkDescriptorSetLayout.NULL     // Particle system rendering shader binding layout
+//        var descriptorSet = VkDescriptorSet.NULL                // Particle system rendering shader bindings
+//        var pipelineLayout = VkPipelineLayout.NULL             // Layout of the graphics pipeline
+//        var pipeline = VkPipeline.NULL                        // Particle rendering pipeline
 //    }
 //
 //    /** Resources for the compute part of the example */
@@ -73,13 +73,13 @@
 //        val storageBuffer = Buffer()                    // (Shader) storage buffer object containing the particles
 //        val uniformBuffer = Buffer()                    // Uniform buffer object containing particle system parameters
 //        lateinit var queue: VkQueue                                // Separate queue for compute commands (queue family may differ from the one used for graphics)
-//        var commandPool = VkCommandPool(NULL)                     // Use a separate command pool (queue family may differ from the one used for graphics)
+//        var commandPool = VkCommandPool.NULL                     // Use a separate command pool (queue family may differ from the one used for graphics)
 //        lateinit var commandBuffer: VkCommandBuffer                 // Command buffer storing the dispatch commands and barriers
-//        var fence = VkFence(NULL)                                // Synchronization fence to avoid rewriting compute CB if still in use
-//        var descriptorSetLayout = VkDescriptorSetLayout(NULL)     // Compute shader binding layout
-//        var descriptorSet = VkDescriptorSet(NULL)                 // Compute shader bindings
-//        var pipelineLayout = VkPipelineLayout(NULL)            // Layout of the compute pipeline
-//        var pipeline = VkPipeline(NULL)                         // Compute pipeline for updating particle positions
+//        var fence = VkFence.NULL                                // Synchronization fence to avoid rewriting compute CB if still in use
+//        var descriptorSetLayout = VkDescriptorSetLayout.NULL     // Compute shader binding layout
+//        var descriptorSet = VkDescriptorSet.NULL                 // Compute shader bindings
+//        var pipelineLayout = VkPipelineLayout.NULL            // Layout of the compute pipeline
+//        var pipeline = VkPipeline.NULL                         // Compute pipeline for updating particle positions
 //
 //        object ubo {                            // Compute shader uniform block object
 //            var deltaT = 0f                            //		Frame delta time
@@ -270,7 +270,7 @@
 //        }
 //
 //
-//        val storageBufferSize = VkDeviceSize(PARTICLE_COUNT * Particle.size.L)
+//        val storageBufferSize = VkDeviceSize(PARTICLE_COUNT * Particle.size)
 //
 //        // Staging
 //        // SSBO won't be changed on the host after upload so copy to device local memory
@@ -376,7 +376,7 @@
 //
 //        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 //
 //        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
 //        val dynamicState = vk.PipelineDynamicStateCreateInfo(dynamicStateEnables)
@@ -483,7 +483,7 @@
 //                VkBufferUsage.UNIFORM_BUFFER_BIT.i,
 //                VkMemoryProperty.HOST_VISIBLE_BIT or VkMemoryProperty.HOST_COHERENT_BIT,
 //                compute.uniformBuffer,
-//                VkDeviceSize(compute.ubo.size.L))
+//                VkDeviceSize(compute.ubo.size))
 //
 //        // Map for host access
 //                        compute.uniformBuffer.map()

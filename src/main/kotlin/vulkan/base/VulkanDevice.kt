@@ -2,17 +2,19 @@ package vulkan.base
 
 import glm_.L
 import glm_.i
-import kool.adr
-import kool.remSize
+import kool.*
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.MemoryUtil.memCopy
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
-import uno.kotlin.getValue
-import uno.kotlin.setValue
 import vkk.*
+import vkk.entities.VkBuffer
+import vkk.entities.VkCommandPool
+import vkk.entities.VkDeviceMemory
+import vkk.entities.VkDeviceSize
+import vkk.extensionFunctions.*
 import vulkan.base.tools.DEFAULT_FENCE_TIMEOUT
 import kotlin.reflect.KMutableProperty0
 
@@ -42,7 +44,7 @@ constructor(
     val supportedExtensions: ArrayList<String>
 
     /** @brief Default command pool for the graphics queue family index */
-    var commandPool = VkCommandPool(NULL)
+    var commandPool = VkCommandPool.NULL
 
     /** @brief Set to true when the debug marker extension is detected */
     var enableDebugMarkers = false
@@ -215,7 +217,7 @@ constructor(
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
         val deviceCreateInfo = vk.DeviceCreateInfo {
-            this.queueCreateInfos = queueCreateInfos.toBufferStack()
+            this.queueCreateInfos_ = queueCreateInfos
             this.enabledFeatures = enabledFeatures
         }
 
@@ -230,7 +232,7 @@ constructor(
 
         val result = vk.createDevice(physicalDevice, deviceCreateInfo, ::logicalDevice)
 
-        if (result == SUCCESS)
+        if (result == VkResult.SUCCESS)
         // Create a default command pool for graphics command buffers
             commandPool = createCommandPool(queueFamilyIndices.graphics)
 
@@ -268,7 +270,7 @@ constructor(
         buffer = dev createBuffer bufferCreateInfo
 
         // Create the memory backing up the buffer handle
-        val memReqs = dev getBufferMemoryRequirements buffer
+        val memReqs = dev.getBufferMemoryRequirements(buffer)
         val memAlloc = vk.MemoryAllocateInfo {
             allocationSize = memReqs.size
             // Find a memory type index that fits the properties of the buffer
@@ -278,7 +280,7 @@ constructor(
 
         // If a pointer to the buffer data has been passed, map the buffer and copy over the data
         if (data != NULL)
-            dev.mappingMemory(pMemory(), VkDeviceSize(0), size) { mapped ->
+            dev.mappedMemory(pMemory(), VkDeviceSize(0), size) { mapped ->
                 memCopy(data, mapped, size.L)
                 // If host coherency hasn't been requested, do a manual flush to make writes visible
                 if (memoryPropertyFlags hasnt VkMemoryProperty.HOST_COHERENT_BIT) {
@@ -297,7 +299,7 @@ constructor(
     }
 
     fun createBuffer(usageFlags: VkBufferUsageFlags, memoryPropertyFlags: VkMemoryPropertyFlags, buffer: Buffer, bytes: java.nio.Buffer) =
-            createBuffer(usageFlags, memoryPropertyFlags, buffer, VkDeviceSize(bytes.remSize.L), bytes.adr)
+            createBuffer(usageFlags, memoryPropertyFlags, buffer, VkDeviceSize(bytes.remSize), bytes.adr)
 
     /**
      * Create a buffer on the device
@@ -318,7 +320,7 @@ constructor(
         buffer.buffer = logicalDevice!!.createBuffer(usageFlags, size)
 
         // Create the memory backing up the buffer handle
-        val memReqs = logicalDevice!! getBufferMemoryRequirements buffer.buffer
+        val memReqs = logicalDevice!!.getBufferMemoryRequirements(buffer.buffer)
         val memAlloc = vk.MemoryAllocateInfo {
             allocationSize = memReqs.size
             // Find a memory type index that fits the properties of the buffer
@@ -407,7 +409,7 @@ constructor(
 
         val cmdBufAllocateInfo = vk.CommandBufferAllocateInfo(commandPool, level, 1)
 
-        val cmdBuffer = logicalDevice!! allocateCommandBuffer cmdBufAllocateInfo
+        val cmdBuffer: VkCommandBuffer = logicalDevice!!.allocateCommandBuffers(cmdBufAllocateInfo)
 
         // If requested, also start recording for the new command buffer
         if (begin)
@@ -428,7 +430,7 @@ constructor(
      */
     fun flushCommandBuffer(commandBuffer: VkCommandBuffer, queue: VkQueue, free: Boolean = true) {
 
-        if (commandBuffer.isInvalid())
+        if (commandBuffer.isInvalid)
             return
 
         commandBuffer.end()
@@ -439,7 +441,7 @@ constructor(
             // Submit to the queue
             queue.submit(submitInfo, fence)
             // Wait for the fence to signal that command buffer has finished executing
-            logicalDevice!!.waitForFence(fence, true, DEFAULT_FENCE_TIMEOUT)
+            logicalDevice!!.waitForFences(fence, true, DEFAULT_FENCE_TIMEOUT)
         }
 
         if (free)

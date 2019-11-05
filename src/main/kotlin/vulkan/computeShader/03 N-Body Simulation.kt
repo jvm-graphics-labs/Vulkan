@@ -29,7 +29,7 @@
 //import kotlin.math.sin
 //
 //
-//fun main(args: Array<String>) {
+//fun main() {
 //    NBodySimulation().apply {
 //        setupWindow()
 //        initVulkan()
@@ -58,10 +58,10 @@
 //    /** Resources for the graphics part of the example */
 //    object graphics {
 //        val uniformBuffer = Buffer()                            // Contains scene matrices
-//        var descriptorSetLayout= VkDescriptorSetLayout (NULL)   // Particle system rendering shader binding layout
-//        var descriptorSet= VkDescriptorSet (NULL)               // Particle system rendering shader bindings
-//        var pipelineLayout= VkPipelineLayout (NULL)             // Layout of the graphics pipeline
-//        var pipeline= VkPipeline(NULL)                         // Particle rendering pipeline
+//        var descriptorSetLayout= VkDescriptorSetLayout.NULL   // Particle system rendering shader binding layout
+//        var descriptorSet= VkDescriptorSet.NULL               // Particle system rendering shader bindings
+//        var pipelineLayout= VkPipelineLayout.NULL             // Layout of the graphics pipeline
+//        var pipeline= VkPipeline.NULL                         // Particle rendering pipeline
 //
 //        object ubo {
 //            var projection = Mat4()
@@ -85,18 +85,18 @@
 //        val storageBuffer = Buffer()                            // (Shader) storage buffer object containing the particles
 //        val uniformBuffer = Buffer()                            // Uniform buffer object containing particle system parameters
 //        lateinit var queue: VkQueue                             // Separate queue for compute commands (queue family may differ from the one used for graphics)
-//        var commandPool= VkCommandPool (NULL)                   // Use a separate command pool (queue family may differ from the one used for graphics)
+//        var commandPool= VkCommandPool.NULL                   // Use a separate command pool (queue family may differ from the one used for graphics)
 //        lateinit var commandBuffer: VkCommandBuffer             // Command buffer storing the dispatch commands and barriers
-//        var fence= VkFence (NULL)                               // Synchronization fence to avoid rewriting compute CB if still in use
-//        var descriptorSetLayout= VkDescriptorSetLayout (NULL)   // Compute shader binding layout
-//        var descriptorSet= VkDescriptorSet (NULL)               // Compute shader bindings
-//        var pipelineLayout= VkPipelineLayout (NULL)             // Layout of the compute pipeline
-//        var pipelineCalculate= VkPipeline (NULL)                // Compute pipeline for N-Body velocity calculation (1st pass)
-//        var pipelineIntegrate= VkPipeline (NULL)                // Compute pipeline for euler integration (2nd pass)
-//        var blur= VkPipeline (NULL)
-//        var pipelineLayoutBlur= VkPipelineLayout (NULL)
-//        var descriptorSetLayoutBlur= VkDescriptorSetLayout (NULL)
-//        var descriptorSetBlur= VkDescriptorSet (NULL)
+//        var fence= VkFence.NULL                               // Synchronization fence to avoid rewriting compute CB if still in use
+//        var descriptorSetLayout= VkDescriptorSetLayout.NULL   // Compute shader binding layout
+//        var descriptorSet= VkDescriptorSet.NULL               // Compute shader bindings
+//        var pipelineLayout= VkPipelineLayout.NULL             // Layout of the compute pipeline
+//        var pipelineCalculate= VkPipeline.NULL               // Compute pipeline for N-Body velocity calculation (1st pass)
+//        var pipelineIntegrate= VkPipeline.NULL                // Compute pipeline for euler integration (2nd pass)
+//        var blur= VkPipeline.NULL
+//        var pipelineLayoutBlur= VkPipelineLayout.NULL
+//        var descriptorSetLayoutBlur= VkDescriptorSetLayout.NULL
+//        var descriptorSetBlur= VkDescriptorSet.NULL
 //
 //        object ubo {
 //            // Compute shader uniform block object
@@ -452,7 +452,7 @@
 //
 //        val viewportState = vk.PipelineViewportStateCreateInfo(1, 1)
 //
-//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount.`1_BIT`)
+//        val multisampleState = vk.PipelineMultisampleStateCreateInfo(VkSampleCount._1_BIT)
 //
 //        val dynamicStateEnables = listOf(VkDynamicState.VIEWPORT, VkDynamicState.SCISSOR)
 //

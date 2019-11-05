@@ -15,6 +15,10 @@ import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.VkDescriptorBufferInfo
 import org.lwjgl.vulkan.VkDevice
 import vkk.*
+import vkk.entities.VkBuffer
+import vkk.entities.VkDeviceMemory
+import vkk.entities.VkDeviceSize
+import vkk.extensionFunctions.*
 import vulkan.VK_WHOLE_SIZE
 
 /**
@@ -24,8 +28,8 @@ import vulkan.VK_WHOLE_SIZE
 class Buffer {
 
     lateinit var device: VkDevice
-    var buffer = VkBuffer(NULL)
-    var memory = VkDeviceMemory(NULL)
+    var buffer = VkBuffer.NULL
+    var memory = VkDeviceMemory.NULL
     val descriptor: VkDescriptorBufferInfo = VkDescriptorBufferInfo.calloc()
     var size = VkDeviceSize(0)
     var alignment = VkDeviceSize(0)
