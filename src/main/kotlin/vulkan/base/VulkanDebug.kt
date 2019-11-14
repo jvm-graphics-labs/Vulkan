@@ -1,11 +1,12 @@
 package vulkan.base
 
 import glm_.vec4.Vec4
-import imgui.plusAssign
 import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.system.MemoryUtil.memUTF8
 import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_FALSE
+import uno.kotlin.plusAssign
 import vkk.*
 import vkk.entities.VkDebugReportCallback
 import vkk.entities.VkSemaphore
@@ -44,7 +45,7 @@ object debug {
             prefix += "DEBUG"
 
         // Display message to default output (console/logcat)
-        val debugMessage = "$prefix: [$layerPrefix] Code $msgCode : $msg"
+        val debugMessage = "$prefix: [${memUTF8(layerPrefix)}] Code $msgCode : ${memUTF8(msg)}"
 
         when {
             flags has VkDebugReport.ERROR_BIT_EXT -> System.err

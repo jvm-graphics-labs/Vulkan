@@ -1,7 +1,7 @@
 package vulkan
 
 import glm_.BYTES
-import imgui.DrawVert
+//import imgui.DrawVert
 import kool.Ptr
 import kool.adr
 import kool.rem
@@ -31,18 +31,18 @@ fun FloatArray.rotateLeft(amount: Int) {
         set(i, backup[(i + amount) % size])
 }
 
-fun DrawVert.to(ptr: Ptr, offset: Int) {
-    var ofs = offset
-    memPutFloat(ptr, pos.x)
-    ofs += Float.BYTES
-    memPutFloat(ptr + ofs, pos.y)
-    ofs += Float.BYTES
-    memPutFloat(ptr, uv.x)
-    ofs += Float.BYTES
-    memPutFloat(ptr + ofs, uv.y)
-    ofs += Float.BYTES
-    memPutInt(ptr + ofs, col)
-}
+//fun DrawVert.to(ptr: Ptr, offset: Int) {
+//    var ofs = offset
+//    memPutFloat(ptr, pos.x)
+//    ofs += Float.BYTES
+//    memPutFloat(ptr + ofs, pos.y)
+//    ofs += Float.BYTES
+//    memPutFloat(ptr, uv.x)
+//    ofs += Float.BYTES
+//    memPutFloat(ptr + ofs, uv.y)
+//    ofs += Float.BYTES
+//    memPutInt(ptr + ofs, col)
+//}
 
 
 class Task(val name: String) : Runnable {

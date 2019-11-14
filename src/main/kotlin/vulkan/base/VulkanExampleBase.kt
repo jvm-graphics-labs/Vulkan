@@ -10,8 +10,8 @@ import glm_.vec3.Vec3
 import glm_.vec4.Vec4
 import graphics.scenery.spirvcrossj.Loader
 import graphics.scenery.spirvcrossj.libspirvcrossj
-import imgui.*
-import imgui.dsl.withStyleVar
+//import imgui.*
+//import imgui.dsl.withStyleVar
 import kool.intBufferOf
 import kool.isValid
 import kool.set
@@ -70,7 +70,7 @@ abstract class VulkanExampleBase {
     /** Destination dimensions for resizing the window  */
     val destSize = Vec2i()
     var resizing = false
-    val uiOverlay = UIOverlay()
+//    val uiOverlay = UIOverlay() TODO
 
     /** Frame counter to display fps    */
     var frameCounter = 0
@@ -355,7 +355,8 @@ abstract class VulkanExampleBase {
         }
 
         if (settings.overlay)
-            uiOverlay.freeResources()
+            TODO()
+//            uiOverlay.freeResources()
 
         vulkanDevice.destroy()
 
@@ -822,14 +823,15 @@ abstract class VulkanExampleBase {
         setupFrameBuffer()
         settings.overlay = settings.overlay && !benchmark.active
         if (settings.overlay)
-            uiOverlay.apply {
-                device = vulkanDevice
-                queue = this@VulkanExampleBase.queue
-                shaders[0].loadShader("$assetPath/shaders/base/uioverlay.vert.spv", VkShaderStage.VERTEX_BIT)
-                shaders[1].loadShader("$assetPath/shaders/base/uioverlay.frag.spv", VkShaderStage.FRAGMENT_BIT)
-                prepareResources()
-                preparePipeline(pipelineCache, renderPass)
-            }
+            TODO()
+//            uiOverlay.apply {
+//                device = vulkanDevice
+//                queue = this@VulkanExampleBase.queue
+//                shaders[0].loadShader("$assetPath/shaders/base/uioverlay.vert.spv", VkShaderStage.VERTEX_BIT)
+//                shaders[1].loadShader("$assetPath/shaders/base/uioverlay.frag.spv", VkShaderStage.FRAGMENT_BIT)
+//                prepareResources()
+//                preparePipeline(pipelineCache, renderPass)
+//            }
     }
 
     /** Load a SPIR-V shader    */
@@ -924,46 +926,46 @@ abstract class VulkanExampleBase {
     fun updateOverlay() {
 
         if (!settings.overlay) return
-
-        ImGui.apply {
-
-            io.apply {
-
-                displaySize put size
-                deltaTime = frameTimer
-
-                mousePos put this@VulkanExampleBase.mousePos
-                TODO()
-//                mouseDown[0] = window.mouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
-//                mouseDown[1] = window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
-            }
-
-            newFrame()
-
-            withStyleVar(StyleVar.WindowRounding, 0f) {
-
-                setNextWindowPos(Vec2(10))
-                setNextWindowSize(Vec2(), Cond.FirstUseEver)
-
-                dsl.window("Vulkan Example", null, WindowFlag.AlwaysAutoResize or WindowFlag.NoResize or WindowFlag.NoMove) {
-
-                    textUnformatted(title)
-                    textUnformatted(deviceProperties.deviceName)
-//                    text("%.2f ms/frame (%.1d fps)", 1000f / lastFPS, lastFPS)
-
-                    pushItemWidth(110f * uiOverlay.scale)
-                    uiOverlay.onUpdate()
-                    popItemWidth()
-                }
-            }
-            render()
-            TODO()//ImplGL3.renderDrawData(ImGui.drawData!!)
-
-            if (uiOverlay.update() || uiOverlay.updated) {
-                buildCommandBuffers()
-                uiOverlay.updated = false
-            }
-        }
+        TODO()
+//        ImGui.apply {
+//
+//            io.apply {
+//
+//                displaySize put size
+//                deltaTime = frameTimer
+//
+//                mousePos put this@VulkanExampleBase.mousePos
+//                TODO()
+////                mouseDown[0] = window.mouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
+////                mouseDown[1] = window.mouseButton(GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
+//            }
+//
+//            newFrame()
+//
+//            withStyleVar(StyleVar.WindowRounding, 0f) {
+//
+//                setNextWindowPos(Vec2(10))
+//                setNextWindowSize(Vec2(), Cond.FirstUseEver)
+//
+//                dsl.window("Vulkan Example", null, WindowFlag.AlwaysAutoResize or WindowFlag.NoResize or WindowFlag.NoMove) {
+//
+//                    textUnformatted(title)
+//                    textUnformatted(deviceProperties.deviceName)
+////                    text("%.2f ms/frame (%.1d fps)", 1000f / lastFPS, lastFPS)
+//
+//                    pushItemWidth(110f * uiOverlay.scale)
+//                    uiOverlay.onUpdate()
+//                    popItemWidth()
+//                }
+//            }
+//            render()
+//            TODO()//ImplGL3.renderDrawData(ImGui.drawData!!)
+//
+//            if (uiOverlay.update() || uiOverlay.updated) {
+//                buildCommandBuffers()
+//                uiOverlay.updated = false
+//            }
+//        }
     }
 
     fun VkCommandBuffer.drawUI() {
@@ -972,8 +974,8 @@ abstract class VulkanExampleBase {
 
             setViewport(vk.Viewport(size))
             setScissor(vk.Rect2D(size))
-
-            uiOverlay.apply { draw() }
+            TODO()
+//            uiOverlay.apply { draw() }
         }
     }
 
@@ -1009,7 +1011,7 @@ abstract class VulkanExampleBase {
 //    /** @brief (Virtual) Called before the UI overlay is created, can be used to do a custom setup e.g. with different renderpass */
 //    virtual void OnSetupUIOverlay(vks::UIOverlayCreateInfo &createInfo);
     /** @brief (Virtual) Called when the UI overlay is updating, can be used to add custom elements to the overlay */
-    open fun UIOverlay.onUpdate() {}
+//    open fun UIOverlay.onUpdate() {} TODO
 
     /** Called if the window is resized and some resources have to be recreated    */
     fun windowResize(newSize: Vec2i) {
@@ -1044,7 +1046,8 @@ abstract class VulkanExampleBase {
 
         if (newSize allGreaterThan 0) {
             if (settings.overlay)
-                uiOverlay.resize(newSize)
+                TODO()
+//                uiOverlay.resize(newSize)
             camera.updateAspectRatio(newSize.aspect)
         }
 
@@ -1081,7 +1084,7 @@ abstract class VulkanExampleBase {
     fun keyPressBase(key: Int) {
         when (key) {
             GLFW_KEY_P -> paused = !paused
-            GLFW_KEY_F1 -> if (settings.overlay) uiOverlay.visible = !uiOverlay.visible
+            GLFW_KEY_F1 -> TODO()//if (settings.overlay) uiOverlay.visible = !uiOverlay.visible
             GLFW_KEY_ESCAPE -> window.shouldClose = true
         }
         if (camera.type == Camera.CameraType.firstPerson)

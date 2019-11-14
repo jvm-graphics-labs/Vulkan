@@ -1,11 +1,11 @@
-package main;
+package main2;
 
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.VK10.*;
-import static main.VKUtil.*;
+import static main2.VKUtil.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 
@@ -786,8 +786,8 @@ public class TriangleDemo {
 
         // Load shaders
         VkPipelineShaderStageCreateInfo.Buffer shaderStages = VkPipelineShaderStageCreateInfo.calloc(2);
-        shaderStages.get(0).set(loadShader(device, "triangle.vert", VK_SHADER_STAGE_VERTEX_BIT));
-        shaderStages.get(1).set(loadShader(device, "triangle.frag", VK_SHADER_STAGE_FRAGMENT_BIT));
+        shaderStages.get(0).set(loadShader(device, "helloWorld/triangle.vert", VK_SHADER_STAGE_VERTEX_BIT));
+        shaderStages.get(1).set(loadShader(device, "helloWorld/triangle.frag", VK_SHADER_STAGE_FRAGMENT_BIT));
 
         // Create the pipeline layout that is used to generate the rendering pipelines that
         // are based on this descriptor set layout

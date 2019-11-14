@@ -13,7 +13,7 @@ plugins {
 group = 'com.github.kotlin_graphics'
 
 application {
-    mainClassName = 'main.TriangleDemo'
+    mainClassName = "vulkan.basics.TriangleVerboseKt"
 }
 
 ext {
@@ -21,9 +21,9 @@ ext {
     kotlin = 'org.jetbrains.kotlin:kotlin'
     kotlin_version = '1.3.50'
 //    kotlintest_version = '3.4.0'
-    assimp_version = '648d602f6854279643a7e4934be0d9b31167fdc8'
-    imgui_version = '145229edbf69ae3366ae57414cf6dd75950c5bca'
-    uno_version = '45be476e2cd87bec2ed0a9bf279b3cddc73ffcb9'
+//    assimp_version = '648d602f6854279643a7e4934be0d9b31167fdc8'
+//    imgui_version = '145229edbf69ae3366ae57414cf6dd75950c5bca'
+    uno_version = '4c6b2be09fdec57e3695c9cab40d321eedde1712'
     vkk_version = '9fcbd74dffdbada82c12e5cfc20bd749650e39c9'
 //    gln_version = '2f36e649bb3037981a625a3a2a1c0316adb05fd6'
     gli_version = '336a02f5acd5db7f5c34cb673512714f1856577e'
@@ -40,8 +40,8 @@ dependencies {
     implementation "$kotlin-reflect"
 
     def kx = 'com.github.kotlin-graphics'
-    implementation "$kx:assimp:$assimp_version"
-    ["core", "gl", "vk"].each { implementation "${kx}.imgui:imgui-$it:$imgui_version" }
+//    implementation "$kx:assimp:$assimp_version"
+//    ["core", "gl", "vk"].each { implementation "${kx}.imgui:imgui-$it:$imgui_version" }
     ["core", "gl", "vk"].each { implementation "${kx}.uno-sdk:uno-$it:$uno_version" }
     implementation "$kx:vkk:$vkk_version"
     implementation "$kx:gli:$gli_version"
@@ -56,8 +56,8 @@ dependencies {
     ext.lwjglVersion = "3.2.3"
     ["", "-glfw", "-jemalloc", "-openal", "-opengl", "-stb", "-vulkan", "-shaderc"].each {
         implementation "org.lwjgl:lwjgl$it:$lwjgl_version"
-        if(it != "-vulkan")
-        runtime "org.lwjgl:lwjgl$it:$lwjgl_version:natives-$lwjgl_natives"
+        if (it != "-vulkan")
+            implementation "org.lwjgl:lwjgl$it:$lwjgl_version:natives-$lwjgl_natives"
     }
 
     ext.spirvCross = "graphics.scenery:spirvcrossj:0.5.0-1.1.85"
@@ -67,7 +67,7 @@ dependencies {
 
 repositories {
     mavenCentral()
-    jcenter() 
+    jcenter()
 //    maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
 //    maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots/") }
     maven { setUrl('https://jitpack.io') }

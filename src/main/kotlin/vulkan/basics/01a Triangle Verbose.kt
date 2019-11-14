@@ -7,13 +7,12 @@ import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.vec3.Vec3
 import kool.*
+import org.lwjgl.system.Configuration
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
-import uno.buffer.floatBufferOf
-import uno.buffer.intBufferOf
 import uno.glfw.glfw
 import vkk.*
 import vkk.entities.*
@@ -728,12 +727,12 @@ private class TriangleVerbose : VulkanExampleBase() {
 
     fun setupDescriptorSet() {
         // Allocate a new descriptor set from the global descriptor pool
-        val pDescriptorSetLayour = MemoryUtil.memAllocLong(1)
-        pDescriptorSetLayour[0] = descriptorSetLayout
+        val pDescriptorSetLayout = MemoryUtil.memAllocLong(1)
+        pDescriptorSetLayout[0] = descriptorSetLayout
         val allocInfo = VkDescriptorSetAllocateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO)
                 .descriptorPool(descriptorPool.L)
-                .pSetLayouts(pDescriptorSetLayour)
+                .pSetLayouts(pDescriptorSetLayout)
 
         val pDescriptorSet = MemoryUtil.memAllocLong(1)
         VK_CHECK_RESULT(vkAllocateDescriptorSets(device, allocInfo, pDescriptorSet))
@@ -746,6 +745,7 @@ private class TriangleVerbose : VulkanExampleBase() {
                 // Binding 0 : Uniform buffer
                 .sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
                 .dstSet(descriptorSet)
+                .descriptorCount(1)
                 .descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
                 .pBufferInfo(uniformBufferVS.descriptor)
                 // Binds this uniform buffer to binding point 0
@@ -753,7 +753,7 @@ private class TriangleVerbose : VulkanExampleBase() {
 
         vkUpdateDescriptorSets(device, writeDescriptorSet, null)
 
-        pDescriptorSetLayour.free()
+        pDescriptorSetLayout.free()
         allocInfo.free()
         pDescriptorSet.free()
         writeDescriptorSet.free()

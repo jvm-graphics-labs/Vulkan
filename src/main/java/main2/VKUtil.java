@@ -1,10 +1,11 @@
-package main;
+package main2;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.shaderc.ShadercIncludeResolve;
 import org.lwjgl.util.shaderc.ShadercIncludeResult;
 import org.lwjgl.util.shaderc.ShadercIncludeResultRelease;
+import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo;
 import org.lwjgl.vulkan.VkSpecializationInfo;
@@ -15,7 +16,6 @@ import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 
-import static main.VKFactory.VkShaderModuleCreateInfo;
 import static org.lwjgl.BufferUtils.createByteBuffer;
 import static org.lwjgl.system.MemoryUtil.memFree;
 import static org.lwjgl.system.MemoryUtil.memUTF8;
@@ -101,6 +101,7 @@ public class VKUtil {
 
     public static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
         ByteBuffer buffer;
+//        URL a = this.getClass().getResource("helloWorld/triangle.vert");
         URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
         if (url == null)
             throw new IOException("Classpath resource not found: " + resource);
@@ -151,7 +152,7 @@ public class VKUtil {
                                   MemoryStack stack, VkDevice device, String classPath, int stage) throws IOException {
         ByteBuffer shaderCode = glslToSpirv(classPath, stage);
         LongBuffer pShaderModule = stack.mallocLong(1);
-        _CHECK_(vkCreateShaderModule(device, VkShaderModuleCreateInfo(stack)
+        _CHECK_(VK10.vkCreateShaderModule(device, VKFactory.VkShaderModuleCreateInfo(stack)
                         .pCode(shaderCode)
                         .flags(0), null, pShaderModule),
                 "Failed to create shader module");

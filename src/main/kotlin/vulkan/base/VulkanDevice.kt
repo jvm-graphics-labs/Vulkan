@@ -1,10 +1,11 @@
 package vulkan.base
 
-import glm_.L
 import glm_.i
 import kool.*
+import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.MemoryUtil.memCopy
+import org.lwjgl.system.Pointer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugMarker.VK_EXT_DEBUG_MARKER_EXTENSION_NAME
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -211,13 +212,24 @@ constructor(
                 } else queueFamilyIndices.graphics  // Else we use the same queue
 
         // Create the logical device representation
-        val deviceExtensions = ArrayList<String>(enabledExtensions)
+        val deviceExtensions = ArrayList(enabledExtensions)
         if (useSwapChain)
         // If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
             deviceExtensions += VK_KHR_SWAPCHAIN_EXTENSION_NAME
 
         val deviceCreateInfo = vk.DeviceCreateInfo {
-            this.queueCreateInfos_ = queueCreateInfos
+            this.queueCreateInfos = VkDeviceQueueCreateInfo.calloc(queueCreateInfos.size).also {
+                it[0].apply {
+                    type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
+                    queueFamilyIndex = queueFamilyIndices.graphics
+                    queuePriorities = FloatBuffer(1) { defaultQueuePriority }
+                }
+                it[1].apply {
+                    type = VkStructureType.DEVICE_QUEUE_CREATE_INFO
+                    queueFamilyIndex = queueCreateInfos[1].queueFamilyIndex
+                    queuePriorities = FloatBuffer(1) { defaultQueuePriority }
+                }
+            }
             this.enabledFeatures = enabledFeatures
         }
 
